@@ -19,4 +19,11 @@
 
   <icon>freecad/gridfinity_workbench/icons/gridfinity_workbench_icon.svg</icon>
 
+  <content>
+    <workbench>
+      <classname>GridfinityWorkbench</classname>
+      <subdirectory>./</subdirectory>
+    </workbench>
+  </content>
+
 </package>
