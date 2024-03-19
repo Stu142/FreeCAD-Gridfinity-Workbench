@@ -60,6 +60,33 @@ def MakeStackingLip(self, obj):
 
     stacking_lip_path = createRoundedRectangle(obj.xTotalWidth, obj.yTotalWidth, 0, obj.BinOuterRadius)
     stacking_lip_path.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
+    ST1 = App.Vector(-obj.BinUnit/2,0,0)
+    ST2 = App.Vector(-obj.BinUnit/2,0,4)
+    ST3 = App.Vector(-20.35,0,4)
+    ST4 = App.Vector(-18.85,0,2.5)
+    ST5 = App.Vector(-18.85,0,0.7)
+    ST6 = App.Vector(-18.15,0,0)
+
+    STL1 = Part.LineSegment(ST1, ST2)
+    STL2 = Part.LineSegment(ST2, ST3)
+    STL3 = Part.LineSegment(ST3, ST4)
+    STL4 = Part.LineSegment(ST4, ST5)
+    STL5 = Part.LineSegment(ST5, ST6)
+    STL6 = Part.LineSegment(ST6, ST1)
+
+    STS1 = Part.Shape([STL1, STL2, STL3, STL4, STL5, STL6])
+
+    wire = Part.Wire(STS1.Edges)
+
+    stacking_lip = Part.Wire(stacking_lip_path).makePipe(wire)
+
+    stacking_lip = Part.makeSolid(stacking_lip)
+    return stacking_lip
+
+def MakeBinWall(self, obj):
+
+    stacking_lip_path = createRoundedRectangle(obj.xTotalWidth, obj.yTotalWidth, 0, obj.BinOuterRadius)
+    stacking_lip_path.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
     ST1 = App.Vector(-20.75,0,0)
     ST2 = App.Vector(-20.75,0,4)
     ST3 = App.Vector(-20.35,0,4)

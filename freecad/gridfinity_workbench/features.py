@@ -315,15 +315,7 @@ class Baseplate(FoundationGridfinity):
         solid_center= RoundedRectangleExtrude(obj.xTotalWidth, obj.yTotalWidth, -obj.TotalHeight, obj.TotalHeight, obj.BinOuterRadius)
         solid_center.translate(App.Vector(obj.xTotalWidth/2-obj.GridSize/2,obj.yTotalWidth/2-obj.GridSize/2,0))
         fuse_total = Part.Shape.cut(solid_center, fuse_total)
-        #fuse_total = Part.Shape.fuse(fuse_total, solid_center)
-        """
-        if obj.StackingLip == True:
-            stacking_lip = MakeStackingLip(self, obj)
-            fuse_total = Part.Shape.fuse(stacking_lip,fuse_total)
 
-        holes = MakeBottomHoles(self, obj)
-        fuse_total = Part.Shape.cut(fuse_total, holes)
-        """
         return fuse_total
 
     def __getstate__(self):
