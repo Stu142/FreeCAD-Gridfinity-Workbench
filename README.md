@@ -12,9 +12,9 @@ This Workbench will generate several variations of parametric Gridfinity bins an
 
 # How to Use
 
-![tree_view](https://github.com/Stu142/FreeCAD-Gridfinity-Workbench/assets/images/tree_view.png)
+![tree_view](https://github.com/Stu142/FreeCAD-Gridfinity-Workbench/Assets/Images/tree_view.png)
 
-![property_view](https://github.com/Stu142/FreeCAD-Gridfinity-Workbench/assets/images/property_view.png)
+![property_view](https://github.com/Stu142/FreeCAD-Gridfinity-Workbench/Assets/Images/property_view.png)
 
 # Installation
 - Install using the built-in FreeCAD addon manager 
