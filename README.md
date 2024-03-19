@@ -14,9 +14,8 @@ This Workbench will generate several variations of parametric Gridfinity bins an
 
 
 # Installation
-Install using the built in FreeCAD addon manager 
-
-Alternatively download and place the files in the FreeCAD/Mod File. 
+- Install using the built-in FreeCAD addon manager 
+- Alternatively, download and place the files in the FreeCAD/Mod File. 
 
 # dependencies
 - This Workbench has been verified as working on FreeCAD 0.21.1 and 0.21.2
