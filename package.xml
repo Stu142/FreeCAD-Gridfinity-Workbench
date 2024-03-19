@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<package format="1" xmlns="https://wiki.freecad.org/Package_Metadata">
+
+  <name>Gridfinity Workbench</name>
+
+  <description>This Workbench will generate several variations of parametric Gridfinity bins and baseplates that can be easily customized. </description>
+
+  <version>0.1.0</version>
+
+  <date>2024-03-19</date>
+
+  <license file="LICENSE">LGPLv2.1</license>
+
+  <url branch="master" type="repository">https://github.com/Stu142/FreeCAD-Gridfinity-Workbench</url>
+
+  <url type="readme">https://github.com/Stu142/FreeCAD-Gridfinity-Workbench/blob/master/README.md</url>
+
+  <author email="stu142design@gmail.com">Stuart</author>
+
+  <icon>freecad/gridfinity_workbench/icons/gridfinity_workbench_icon.svg</icon>
+
+</package>
