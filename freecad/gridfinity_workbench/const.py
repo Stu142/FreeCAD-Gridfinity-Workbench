@@ -32,4 +32,6 @@ SCREW_HOLE_DEPTH = 6
 
 MAGNET_HOLE_DISTANCE_FROM_EDGE = 8
 
-#Starting values that are used to create the initial shape and can be edited by the Gridfinity Properties.
+STACKING_LIP_TOP_LEDGE = 0.4
+STACKING_LIP_BOTTOM_CHAMFER = 0.7
+STACKING_LIP_VERTICAL_SECTION = 1.8
