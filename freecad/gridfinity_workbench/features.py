@@ -91,9 +91,7 @@ class BinBlank(FoundationGridfinity):
         self.add_custom_bin_properties(obj)
         self.add_reference_properties(obj)
         self.add_expert_properties(obj)
-
-        obj.addProperty("App::PropertyLength","WallThickness", "GridfinityNonStandard", "for stacking lip").WallThickness = 1
-        obj.setEditorMode("WallThickness",2)
+        self.add_hidden_properties(obj)
 
         obj.Proxy = self
 
@@ -140,13 +138,16 @@ class BinBlank(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","StackingLipBottomChamfer", "zzExpertOnly", "Bottom Chamfer of the Stacking lip<br> <br> default = 0.7 mm",1).StackingLipBottomChamfer = STACKING_LIP_BOTTOM_CHAMFER
         obj.addProperty("App::PropertyLength","StackingLipVerticalSection", "zzExpertOnly", "vertical section of the Stacking lip<br> <br> default = 1.8 mm",1).StackingLipVerticalSection= STACKING_LIP_VERTICAL_SECTION
 
+    def add_hidden_properties(self, obj):
+        obj.addProperty("App::PropertyLength","WallThickness", "GridfinityNonStandard", "for stacking lip").WallThickness = 1
+        obj.setEditorMode("WallThickness",2)
 
     def generate_gridfinity_shape(self, obj):
 
         obj.xTotalWidth = obj.xGridUnits*obj.GridSize-obj.Tolerance*2
         obj.yTotalWidth = obj.yGridUnits*obj.GridSize-obj.Tolerance*2
         obj.BaseProfileHeight = obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+obj.BaseProfileTopChamfer
-        obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Tolerance
+        obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
 
         if obj.NonStandardHeight ==True:
             obj.TotalHeight = obj.CustomHeight
@@ -163,9 +164,9 @@ class BinBlank(FoundationGridfinity):
         if obj.StackingLip == True:
             stacking_lip = MakeStackingLip(self, obj)
             fuse_total = Part.Shape.fuse(stacking_lip,fuse_total)
-
-        holes = MakeBottomHoles(self, obj)
-        fuse_total = Part.Shape.cut(fuse_total, holes)
+        if obj.ScrewHoles == True or obj.MagnetHoles == True:
+            holes = MakeBottomHoles(self, obj)
+            fuse_total = Part.Shape.cut(fuse_total, holes)
 
         return fuse_total
 
@@ -242,7 +243,7 @@ class SimpleStorageBin(FoundationGridfinity):
         obj.xTotalWidth = obj.xGridUnits*obj.GridSize-obj.Tolerance*2
         obj.yTotalWidth = obj.yGridUnits*obj.GridSize-obj.Tolerance*2
         obj.BaseProfileHeight = obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+obj.BaseProfileTopChamfer
-        obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Tolerance
+        obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
 
         if obj.NonStandardHeight ==True:
             obj.TotalHeight = obj.CustomHeight
@@ -263,8 +264,9 @@ class SimpleStorageBin(FoundationGridfinity):
             stacking_lip = MakeStackingLip(self, obj)
             fuse_total = Part.Shape.fuse(stacking_lip,fuse_total)
 
-        holes = MakeBottomHoles(self, obj)
-        fuse_total = Part.Shape.cut(fuse_total, holes)
+        if obj.ScrewHoles == True or obj.MagnetHoles == True:
+            holes = MakeBottomHoles(self, obj)
+            fuse_total = Part.Shape.cut(fuse_total, holes)
 
         return fuse_total
 
