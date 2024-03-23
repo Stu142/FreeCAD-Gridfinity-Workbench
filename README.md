@@ -12,11 +12,13 @@ This Workbench will generate several variations of parametric Gridfinity bins an
 
 # How to Use
 Select the bin or baseplate you wish to edit in the feature tree.
-![tree_view](/Assets/Images/tree_view.png)
-
 Select the Property view tab on the bottom right and change the values. Hit enter or click on the model viewing area to update the model. 
+![tree_view](/Assets/Videos/blank_bin_demo.gif)
+![tree_view](/Assets/Videos/storage_bin_demo.gif)
 
-![property_view](/Assets/Images/property_view.png)
+
+
+
 
 # Installation
 - Install using the built-in FreeCAD addon manager 
