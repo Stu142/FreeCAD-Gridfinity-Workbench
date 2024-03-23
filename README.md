@@ -1,6 +1,8 @@
 # FreeCAD Gridfinity Workbench
 This Workbench will generate several variations of parametric Gridfinity bins and baseplates that can be easily customized. 
 
+If you get value from my work, consider supporting me at [stu142.com/supportme](stu142.com/supportme)
+
 ### Bin Features
 - Customize units long and wide
 - Magnet and screw holes on or off
