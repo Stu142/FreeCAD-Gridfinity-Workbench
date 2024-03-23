@@ -325,7 +325,7 @@ class Baseplate(FoundationGridfinity):
         obj.yTotalWidth = obj.yGridUnits*obj.GridSize
         obj.BaseProfileHeight = obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+obj.BaseProfileTopChamfer
         obj.TotalHeight = obj.BaseProfileHeight
-        obj.BinUnit = obj.BinUnit - obj.BaseplateTopLedgeWidth *2 + obj.Tolerance*2
+        obj.BinUnit = obj.GridSize - obj.BaseplateTopLedgeWidth *2
 
         fuse_total = MakeBinBase(self, obj)
         solid_center= RoundedRectangleExtrude(obj.xTotalWidth, obj.yTotalWidth, -obj.TotalHeight, obj.TotalHeight, obj.BinOuterRadius)
