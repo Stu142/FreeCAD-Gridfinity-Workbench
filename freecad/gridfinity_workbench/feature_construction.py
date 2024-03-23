@@ -152,13 +152,117 @@ def MakeBinBase(self, obj):
         xtranslate += 42
 
     return totalassembly2
-"""
-def FunctionBinBase(self, obj):
+def MakeBaseplateCenterCut(self, obj):
 
-    comp2 = BinBase(self, obj)
-    comptotal = Part.Shape.fuse(stacking_lip,comp2)
-    return comptotal
-"""
+    inframedis = obj.GridSize/2-obj.BaseProfileTopChamfer-obj.BaseProfileBottomChamfer - obj.BaseplateTopLedgeWidth
+    magedge = obj.GridSize/2 - obj.MagnetHoleDistanceFromEdge - obj.MagnetHoleDiameter/2 - obj.MagnetEdgeThickness
+    magcenter = obj.GridSize/2 - obj.MagnetHoleDistanceFromEdge
+    smfillpos = inframedis - obj.SmallFillet +obj.SmallFillet * math.sin(math.pi/4)
+    smfillposmag = magedge- obj.SmallFillet + obj.SmallFillet * math.sin(math.pi/4)
+    smfilloffcen = obj.GridSize/2 - obj.MagnetHoleDistanceFromEdge - obj.MagnetHoleDiameter/2 -obj.MagnetEdgeThickness - obj.SmallFillet
+    smfillins = inframedis - obj.SmallFillet
+    bigfillpos =obj.GridSize/2 - obj.MagnetHoleDistanceFromEdge - (obj.MagnetHoleDiameter/2+obj.MagnetEdgeThickness) * math.sin(math.pi/4)
+
+
+    V1 = App.Vector(-smfilloffcen,-inframedis,0)
+    V2 = App.Vector(-magedge,-smfillins,0)
+    V3 = App.Vector(-magedge,-magcenter,0)
+    V4 = App.Vector(-magcenter,-magedge,0)
+    V5 = App.Vector(-smfillins,-magedge,0)
+    V6 = App.Vector(-inframedis,-smfilloffcen,0)
+
+    VA1 = App.Vector(-smfillposmag,-smfillpos,0)
+    VA2 = App.Vector(-bigfillpos,-bigfillpos,0)
+    VA3 = App.Vector(-smfillpos,-smfillposmag,0)
+
+    V7 = App.Vector(-inframedis,smfilloffcen,0)
+    V8 = App.Vector(-smfillins,magedge,0)
+    V9 = App.Vector(-magcenter,magedge,0)
+    V10 = App.Vector(-magedge,magcenter,0)
+    V11 = App.Vector(-magedge,smfillins,0)
+    V12 = App.Vector(-smfilloffcen,inframedis,0)
+
+    VA4 = App.Vector(-smfillpos,smfillposmag,0)
+    VA5 = App.Vector(-bigfillpos,bigfillpos,0)
+    VA6 = App.Vector(-smfillposmag,smfillpos,0)
+
+    V13 = App.Vector(smfilloffcen,inframedis,0)
+    V14= App.Vector(magedge,smfillins,0)
+    V15= App.Vector(magedge,magcenter,0)
+    V16= App.Vector(magcenter,magedge,0)
+    V17= App.Vector(smfillins,magedge,0)
+    V18= App.Vector(inframedis,smfilloffcen,0)
+
+    VA7 = App.Vector(smfillposmag,smfillpos,0)
+    VA8 = App.Vector(bigfillpos, bigfillpos,0)
+    VA9 = App.Vector(smfillpos,smfillposmag,0)
+
+    V19= App.Vector(inframedis,-smfilloffcen,0)
+    V20= App.Vector(smfillins,-magedge,0)
+    V21= App.Vector(magcenter,-magedge,0)
+    V22 = App.Vector(magedge,-magcenter,0)
+    V23= App.Vector(magedge,-smfillins,0)
+    V24 = App.Vector(smfilloffcen,-inframedis,0)
+
+    VA10 = App.Vector(smfillpos,-smfillposmag,0)
+    VA11= App.Vector(bigfillpos,-bigfillpos,0)
+    VA12 = App.Vector(smfillposmag,-smfillpos,0)
+
+    L1 = Part.LineSegment(V24,V1)
+    AR1 = Part.Arc(V1,VA1,V2)
+    L2 = Part.LineSegment(V2,V3)
+    AR2 = Part.Arc(V3,VA2,V4)
+    L3 = Part.LineSegment(V4,V5)
+    AR3 = Part.Arc(V5,VA3,V6)
+    L4 = Part.LineSegment(V6,V7)
+    AR4 = Part.Arc(V7,VA4,V8)
+    L5 = Part.LineSegment(V8,V9)
+    AR5 = Part.Arc(V9,VA5,V10)
+    L6 = Part.LineSegment(V10,V11)
+    AR6 = Part.Arc(V11,VA6,V12)
+    L7 = Part.LineSegment(V12,V13)
+    AR7 = Part.Arc(V13,VA7,V14)
+    L8 = Part.LineSegment(V14,V15)
+    AR8 = Part.Arc(V15,VA8,V16)
+    L9 = Part.LineSegment(V16,V17)
+    AR9 = Part.Arc(V17,VA9,V18)
+    L10 = Part.LineSegment(V18,V19)
+    AR10 = Part.Arc(V19,VA10,V20)
+    L11 = Part.LineSegment(V20,V21)
+    AR11 = Part.Arc(V21,VA11,V22)
+    L12 = Part.LineSegment(V22,V23)
+    AR12 = Part.Arc(V23,VA12,V24)
+    xtranslate = 0
+    ytranslate = 0
+
+    S1 = Part.Shape([L1,AR1,L2,AR2,L3,AR3,L4,AR4,L5,AR5,L6,AR6,L7,AR7,L8,AR8,L9,AR9,L10,AR10,L11,AR11,L12,AR12])
+
+    wire = Part.Wire(S1.Edges)
+
+    face = Part.Face(wire)
+
+
+
+    for x in range(obj.xGridUnits):
+        ytranslate = 0
+        for y in range(obj.yGridUnits):
+
+            HM1 = face.extrude(App.Vector(0,0,-obj.TotalHeight))
+
+            HM1.translate(App.Vector(xtranslate,ytranslate,0))
+            if y>0:
+                HM2 = Part.Solid.fuse(HM1,HM2)
+            else:
+                HM2 = HM1
+            ytranslate += 42
+        if x>0:
+            HM3 = Part.Solid.fuse(HM3,HM2)
+        else:
+            HM3 = HM2
+        xtranslate += 42
+
+    return HM3
+
 def MakeBottomHoles(self, obj):
     hole_pos = obj.GridSize/2-obj.MagnetHoleDistanceFromEdge
     sq_bridge2_pos = -obj.GridSize/2+obj.MagnetHoleDistanceFromEdge+obj.ScrewHoleDiameter/2

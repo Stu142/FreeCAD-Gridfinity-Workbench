@@ -5,14 +5,18 @@ import math
 import FreeCAD as App
 import Part
 from .version import __version__
-from .feature_construction import MakeStackingLip, MakeBinBase, RoundedRectangleExtrude, MakeBottomHoles, MakeBinWall
+from .feature_construction import MakeStackingLip, MakeBinBase, RoundedRectangleExtrude, MakeBottomHoles, MakeBinWall, MakeBaseplateCenterCut
+from .baseplate_feature_construction import MakeBaseplateMagnetHoles, MakeBPScrewBottomCham, MakeBPConnectionHoles
 from Part import Shape, Wire, Face, makeLoft, BSplineSurface, \
     makePolygon, makeHelix, makeShell, makeSolid, LineSegment
-from .const import BIN_BASE_TOP_CHAMFER, BIN_BASE_BOTTOM_CHAMFER, BIN_BASE_VERTICAL_SECTION, GRID_SIZE, BIN_OUTER_RADIUS, BIN_UNIT, BIN_BASE_VERTICAL_RADIUS, BIN_BASE_BOTTOM_RADIUS, TOLERANCE, MAGNET_HOLE_DIAMETER, MAGNET_HOLE_DEPTH, MAGNET_HOLE_DISTANCE_FROM_EDGE, SCREW_HOLE_DIAMETER, SCREW_HOLE_DEPTH, BASEPLATE_BOTTOM_CHAMFER, BASEPLATE_VERTICAL_SECTION, BASEPLATE_TOP_CHAMFER, BASEPLATE_TOP_LEDGE_WIDTH, BASEPLATE_OUTER_RADIUS, BASEPLATE_VERTICAL_RADIUS, BASEPLATE_BOTTOM_RADIUS, STACKING_LIP_TOP_LEDGE,STACKING_LIP_BOTTOM_CHAMFER,STACKING_LIP_VERTICAL_SECTION, HEIGHT_UNIT
+from .const import BIN_BASE_TOP_CHAMFER, BIN_BASE_BOTTOM_CHAMFER, BIN_BASE_VERTICAL_SECTION, GRID_SIZE, BIN_OUTER_RADIUS, BIN_UNIT, BIN_BASE_VERTICAL_RADIUS, BIN_BASE_BOTTOM_RADIUS, TOLERANCE, MAGNET_HOLE_DIAMETER, MAGNET_HOLE_DEPTH, MAGNET_HOLE_DISTANCE_FROM_EDGE, SCREW_HOLE_DIAMETER, SCREW_HOLE_DEPTH, BASEPLATE_BOTTOM_CHAMFER, BASEPLATE_VERTICAL_SECTION, BASEPLATE_TOP_CHAMFER, BASEPLATE_TOP_LEDGE_WIDTH, BASEPLATE_OUTER_RADIUS, BASEPLATE_VERTICAL_RADIUS, BASEPLATE_BOTTOM_RADIUS, STACKING_LIP_TOP_LEDGE,STACKING_LIP_BOTTOM_CHAMFER,STACKING_LIP_VERTICAL_SECTION, HEIGHT_UNIT, BASEPLATE_SMALL_FILLET, MAGNET_BASE, MAGNET_EDGE_THICKNESS, MAGNET_BASE_HOLE, MAGNET_CHAMFER, BASE_THICKNESS, MAGNET_BOTTOM_CHAMFER, CONNECTION_HOLE_DIAMETER
 
 __all__ = ["BinBlank",
            "SimpleStorageBin",
-           "Baseplate"]
+           "Baseplate",
+           "MagnetBaseplate",
+           "ScrewTogetherBaseplate",
+           "EcoBin"]
 
 
 def fcvec(x):
@@ -29,7 +33,7 @@ class ViewProviderGridfinity(object):
         self._check_attr()
         dirname = os.path.dirname(__file__)
         self.icon_fn = icon_fn or os.path.join(dirname, "icons", "gridfinity_workbench_icon.svg")
-
+        App.Console.PrintMessage("works until here\n")
     def _check_attr(self):
         ''' Check for missing attributes. '''
         if not hasattr(self, "icon_fn"):
@@ -55,7 +59,6 @@ class FoundationGridfinity(object):
         obj.addProperty("App::PropertyString", "version", "version", "Gridfinity Workbench Version", 1)
         obj.version = __version__
         self.make_attachable(obj)
-
     def make_attachable(self, obj):
         # Needed to make this object attachable
         pass
@@ -336,3 +339,198 @@ class Baseplate(FoundationGridfinity):
 
     def __setstate__(self, state):
         return None
+
+class MagnetBaseplate(FoundationGridfinity):
+
+    def __init__(self, obj):
+        super(MagnetBaseplate, self).__init__(obj)
+
+        obj.addProperty("App::PropertyPythonObject",
+                        "Bin", "base", "python gridfinity object")
+
+        self.add_bin_properties(obj)
+        self.add_reference_properties(obj)
+        self.add_expert_properties(obj)
+        self.add_custom_baseplate_properties(obj)
+        self.add_hidded_properties(obj)
+
+
+        obj.Proxy = self
+
+    def add_bin_properties(self, obj):
+
+        obj.addProperty("App::PropertyInteger","xGridUnits","Gridfinity","Length of the edges of the outline").xGridUnits=2
+        obj.addProperty("App::PropertyInteger","yGridUnits","Gridfinity","Height of the extrusion").yGridUnits=2
+        obj.addProperty("App::PropertyBool","MagnetHoles","Gridfinity","MagnetHoles").MagnetHoles = True
+
+
+    def add_reference_properties(self, obj):
+        obj.addProperty("App::PropertyLength","xTotalWidth","ReferenceDimensions","total width of bin in x direction", 1)
+        obj.addProperty("App::PropertyLength","yTotalWidth","ReferenceDimensions","total width of bin in y direction", 1)
+        obj.addProperty("App::PropertyLength","TotalHeight","ReferenceDimensions","total height of the baseplate", 1)
+        obj.addProperty("App::PropertyLength","BaseProfileHeight","ReferenceDimensions","Height of the Gridfinity Base Profile", 1)
+
+
+    def add_custom_baseplate_properties(self, obj):
+        obj.addProperty("App::PropertyLength","SmallFillet","NonStandard","Small fillet on iside of baseplate <br> <br> default = 1 mm").SmallFillet = BASEPLATE_SMALL_FILLET
+        obj.addProperty("App::PropertyLength","MagnetHoleDiameter", "NonStandard", "Diameter of Magnet Holes <br> <br> default = 6.5 mm").MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
+        obj.addProperty("App::PropertyLength","MagnetHoleDepth", "NonStandard", "Depth of Magnet Holes <br> <br> default = 2.4 mm").MagnetHoleDepth = MAGNET_HOLE_DEPTH
+        obj.addProperty("App::PropertyLength","MagnetEdgeThickness", "NonStandard", "Thickness of edge holding magnets in place <br> <br> default = 1.2 mm").MagnetEdgeThickness = MAGNET_EDGE_THICKNESS
+        obj.addProperty("App::PropertyLength","MagnetBase", "NonStandard", "Thickness of base under the magnets <br> <br> default = 0.4 mm").MagnetBase = MAGNET_BASE
+        obj.addProperty("App::PropertyLength","MagnetBaseHole", "NonStandard", "Diameter of the hole at the bottom of the magnet cutout <br> <br> default = 3 mm").MagnetBaseHole = MAGNET_BASE_HOLE
+        obj.addProperty("App::PropertyLength","MagnetChamfer", "NonStandard", "Chamfer at top of magnet hole <br> <br> default = 0.4 mm").MagnetChamfer = MAGNET_CHAMFER
+
+    def add_expert_properties(self, obj):
+        obj.addProperty("App::PropertyLength","BaseProfileBottomChamfer", "zzExpertOnly", "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",1).BaseProfileBottomChamfer=BASEPLATE_BOTTOM_CHAMFER
+        obj.addProperty("App::PropertyLength","BaseProfileVerticalSection", "zzExpertOnly", "Height of the vertical section in bin base profile",1).BaseProfileVerticalSection=BASEPLATE_VERTICAL_SECTION
+        obj.addProperty("App::PropertyLength","BaseProfileTopChamfer", "zzExpertOnly", "Height of the top chamfer in the bin base profile",1).BaseProfileTopChamfer=BASEPLATE_TOP_CHAMFER
+        obj.addProperty("App::PropertyLength","BaseplateProfileTotalHeight", "zzExpertOnly", "Height of the bin base profile",1)
+        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid").GridSize = GRID_SIZE
+        obj.addProperty("App::PropertyLength","HeightUnitValue", "zzExpertOnly", "height per unit, default is 7mm",1).HeightUnitValue = 7
+        obj.addProperty("App::PropertyLength","BinOuterRadius", "zzExpertOnly", "Outer radius of the baseplate",1).BinOuterRadius = BASEPLATE_OUTER_RADIUS
+        obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the baseplate profile Vertical section",1).BinVerticalRadius = BASEPLATE_VERTICAL_RADIUS
+        obj.addProperty("App::PropertyLength","BinBottomRadius", "zzExpertOnly", "bottom of baseplate corner radius",1).BinBottomRadius = BASEPLATE_BOTTOM_RADIUS
+        obj.addProperty("App::PropertyLength","BaseplateTopLedgeWidth", "zzExpertOnly", "Top ledge of baseplate",1).BaseplateTopLedgeWidth = BASEPLATE_TOP_LEDGE_WIDTH
+        obj.addProperty("App::PropertyLength","BinUnit", "zzExpertOnly", "Width of a single bin unit",1).BinUnit = BIN_UNIT
+        obj.addProperty("App::PropertyLength","Tolerance", "zzExpertOnly", "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",1).Tolerance = TOLERANCE
+        obj.addProperty("App::PropertyLength","MagnetHoleDistanceFromEdge", "zzExpertOnly", "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",1).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
+
+    def add_hidded_properties(self,obj):
+        obj.addProperty("App::PropertyLength","BaseThickness", "NonStandard", "Thickness of base under the normal baseplate  profile <br> <br> default = 6.4 mm").BaseThickness = BASE_THICKNESS
+        obj.setEditorMode("BaseThickness",2)
+
+    def generate_gridfinity_shape(self, obj):
+
+        obj.xTotalWidth = obj.xGridUnits*obj.GridSize
+        obj.yTotalWidth = obj.yGridUnits*obj.GridSize
+
+
+        #Bottom of Bin placement, used for ability to reuse previous features.
+        obj.BaseProfileHeight = obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+obj.BaseProfileTopChamfer
+
+        #actaully the total height of the baseplate
+        obj.TotalHeight = obj.BaseProfileHeight + obj.MagnetHoleDepth + obj.MagnetBase
+
+        obj.BinUnit = obj.GridSize - obj.BaseplateTopLedgeWidth *2
+
+        fuse_total = MakeBinBase(self, obj)
+        fuse_total.translate(App.Vector(0,0,obj.TotalHeight - obj.BaseProfileHeight))
+
+        solid_center= RoundedRectangleExtrude(obj.xTotalWidth, obj.yTotalWidth, -obj.TotalHeight, obj.TotalHeight, obj.BinOuterRadius)
+        solid_center.translate(App.Vector(obj.xTotalWidth/2-obj.GridSize/2,obj.yTotalWidth/2-obj.GridSize/2,0))
+        fuse_total = Part.Shape.cut(solid_center, fuse_total)
+
+        cutout = MakeBaseplateCenterCut(self, obj)
+        fuse_total = Part.Shape.cut(fuse_total, cutout)
+
+        magholes = MakeBaseplateMagnetHoles(self, obj)
+        fuse_total = Part.Shape.cut(fuse_total, magholes)
+
+        return fuse_total
+
+    def __getstate__(self):
+        return None
+
+    def __setstate__(self, state):
+        return None
+
+class ScrewTogetherBaseplate(FoundationGridfinity):
+
+    def __init__(self, obj):
+        super(ScrewTogetherBaseplate, self).__init__(obj)
+
+        obj.addProperty("App::PropertyPythonObject",
+                        "Bin", "base", "python gridfinity object")
+
+        self.add_bin_properties(obj)
+        self.add_reference_properties(obj)
+        self.add_expert_properties(obj)
+        self.add_custom_baseplate_properties(obj)
+
+
+        obj.Proxy = self
+
+    def add_bin_properties(self, obj):
+
+        obj.addProperty("App::PropertyInteger","xGridUnits","Gridfinity","Length of the edges of the outline").xGridUnits=2
+        obj.addProperty("App::PropertyInteger","yGridUnits","Gridfinity","Height of the extrusion").yGridUnits=2
+
+
+    def add_reference_properties(self, obj):
+        obj.addProperty("App::PropertyLength","xTotalWidth","ReferenceDimensions","total width of bin in x direction", 1)
+        obj.addProperty("App::PropertyLength","yTotalWidth","ReferenceDimensions","total width of bin in y direction", 1)
+        obj.addProperty("App::PropertyLength","TotalHeight","ReferenceDimensions","total height of the baseplate", 1)
+        obj.addProperty("App::PropertyLength","BaseProfileHeight","ReferenceDimensions","Height of the Gridfinity Base Profile", 1)
+
+
+    def add_custom_baseplate_properties(self, obj):
+        obj.addProperty("App::PropertyLength","SmallFillet","NonStandard","Small fillet on iside of baseplate <br> <br> default = 1 mm").SmallFillet = BASEPLATE_SMALL_FILLET
+        obj.addProperty("App::PropertyLength","MagnetHoleDiameter", "NonStandard", "Diameter of Magnet Holes <br> <br> default = 6.5 mm").MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
+        obj.addProperty("App::PropertyLength","MagnetHoleDepth", "NonStandard", "Depth of Magnet Holes <br> <br> default = 2.4 mm").MagnetHoleDepth = MAGNET_HOLE_DEPTH
+        obj.addProperty("App::PropertyLength","MagnetEdgeThickness", "NonStandard", "Thickness of edge holding magnets in place <br> <br> default = 1.2 mm").MagnetEdgeThickness = MAGNET_EDGE_THICKNESS
+        obj.addProperty("App::PropertyLength","BaseThickness", "NonStandard", "Thickness of base under the normal baseplate  profile <br> <br> default = 6.4 mm").BaseThickness = BASE_THICKNESS
+        obj.addProperty("App::PropertyLength","MagnetBaseHole", "NonStandard", "Diameter of the hole at the bottom of the magnet cutout <br> <br> default = 3 mm").MagnetBaseHole = MAGNET_BASE_HOLE
+        obj.addProperty("App::PropertyLength","MagnetChamfer", "NonStandard", "Chamfer at top of magnet hole <br> <br> default = 0.4 mm").MagnetChamfer = MAGNET_CHAMFER
+        obj.addProperty("App::PropertyLength","MagnetBottomChamfer", "NonStandard", "Chamfer at bottom of magnet hole <br> <br> default = 2 mm").MagnetBottomChamfer = MAGNET_BOTTOM_CHAMFER
+        obj.addProperty("App::PropertyLength","ScrewHoleDiameter", "NonStandard", "Diameter of screw holes inside magnet holes <br> <br> default = 3 mm").ScrewHoleDiameter =  SCREW_HOLE_DIAMETER
+        obj.addProperty("App::PropertyLength","ConnectionHoleDiameter", "NonStandard", "Holes on the sides to connect multiple baseplates together <br> <br> default = 3.2 mm").ConnectionHoleDiameter = CONNECTION_HOLE_DIAMETER
+
+    def add_expert_properties(self, obj):
+        obj.addProperty("App::PropertyLength","BaseProfileBottomChamfer", "zzExpertOnly", "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",1).BaseProfileBottomChamfer=BASEPLATE_BOTTOM_CHAMFER
+        obj.addProperty("App::PropertyLength","BaseProfileVerticalSection", "zzExpertOnly", "Height of the vertical section in bin base profile",1).BaseProfileVerticalSection=BASEPLATE_VERTICAL_SECTION
+        obj.addProperty("App::PropertyLength","BaseProfileTopChamfer", "zzExpertOnly", "Height of the top chamfer in the bin base profile",1).BaseProfileTopChamfer=BASEPLATE_TOP_CHAMFER
+        obj.addProperty("App::PropertyLength","BaseplateProfileTotalHeight", "zzExpertOnly", "Height of the bin base profile",1)
+        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid").GridSize = GRID_SIZE
+        obj.addProperty("App::PropertyLength","HeightUnitValue", "zzExpertOnly", "height per unit, default is 7mm",1).HeightUnitValue = 7
+        obj.addProperty("App::PropertyLength","BinOuterRadius", "zzExpertOnly", "Outer radius of the baseplate",1).BinOuterRadius = BASEPLATE_OUTER_RADIUS
+        obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the baseplate profile Vertical section",1).BinVerticalRadius = BASEPLATE_VERTICAL_RADIUS
+        obj.addProperty("App::PropertyLength","BinBottomRadius", "zzExpertOnly", "bottom of baseplate corner radius",1).BinBottomRadius = BASEPLATE_BOTTOM_RADIUS
+        obj.addProperty("App::PropertyLength","BaseplateTopLedgeWidth", "zzExpertOnly", "Top ledge of baseplate",1).BaseplateTopLedgeWidth = BASEPLATE_TOP_LEDGE_WIDTH
+        obj.addProperty("App::PropertyLength","BinUnit", "zzExpertOnly", "Width of a single bin unit",1).BinUnit = BIN_UNIT
+        obj.addProperty("App::PropertyLength","Tolerance", "zzExpertOnly", "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm").Tolerance = TOLERANCE
+        obj.addProperty("App::PropertyLength","MagnetHoleDistanceFromEdge", "zzExpertOnly", "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm").MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
+
+
+    def generate_gridfinity_shape(self, obj):
+
+        obj.xTotalWidth = obj.xGridUnits*obj.GridSize
+        obj.yTotalWidth = obj.yGridUnits*obj.GridSize
+
+        #Bottom of Bin placement, used for ability to reuse previous features.
+        obj.BaseProfileHeight = obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+obj.BaseProfileTopChamfer
+
+        #actaully the total height of the baseplate
+        obj.TotalHeight = obj.BaseProfileHeight + obj.BaseThickness
+
+        obj.BinUnit = obj.GridSize - obj.BaseplateTopLedgeWidth *2
+
+        fuse_total = MakeBinBase(self, obj)
+        fuse_total.translate(App.Vector(0,0,obj.TotalHeight - obj.BaseProfileHeight))
+
+        solid_center= RoundedRectangleExtrude(obj.xTotalWidth, obj.yTotalWidth, -obj.TotalHeight, obj.TotalHeight, obj.BinOuterRadius)
+        solid_center.translate(App.Vector(obj.xTotalWidth/2-obj.GridSize/2,obj.yTotalWidth/2-obj.GridSize/2,0))
+        fuse_total = Part.Shape.cut(solid_center, fuse_total)
+
+        cutout = MakeBaseplateCenterCut(self, obj)
+        fuse_total = Part.Shape.cut(fuse_total, cutout)
+
+        magholes = MakeBaseplateMagnetHoles(self, obj)
+        fuse_total = Part.Shape.cut(fuse_total, magholes)
+
+        magchamfer = MakeBPScrewBottomCham(self, obj)
+        fuse_total = Part.Shape.cut(fuse_total, magchamfer)
+
+        conholes = MakeBPConnectionHoles(self, obj)
+        fuse_total = Part.Shape.cut(fuse_total, conholes)
+        #fuse_total = Part.Shape.fuse(fuse_total, conholes)
+
+        print(obj.BinUnit)
+
+        return fuse_total
+
+    def __getstate__(self):
+        return None
+
+    def __setstate__(self, state):
+        return None
+

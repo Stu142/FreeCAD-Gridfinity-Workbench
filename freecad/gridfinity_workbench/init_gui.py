@@ -21,7 +21,9 @@ class GridfinityWorkbench(Workbench):
     toolbox = [
         "CreateBinBlank",
         "CreateSimpleStorageBin",
-        "CreateBaseplate"]
+        "CreateBaseplate",
+        "CreateMagnetBaseplate",
+        "CreateScrewTogetherBaseplate"]
 
     def GetClassName(self):
         return "Gui::PythonWorkbench"
@@ -34,25 +36,27 @@ class GridfinityWorkbench(Workbench):
         from .commands import CreateBinBlank
         from .commands import CreateSimpleStorageBin
         from .commands import CreateBaseplate
+        from .commands import CreateMagnetBaseplate
+        from .commands import CreateScrewTogetherBaseplate
+
         App.Console.PrintMessage("switching to Gridfinity Workbench\n")
 
         self.appendToolbar("Tools", self.toolbox)
         self.appendMenu("Tools", self.toolbox)
+
         Gui.addCommand('CreateBinBlank', CreateBinBlank())
         Gui.addCommand('CreateSimpleStorageBin', CreateSimpleStorageBin())
         Gui.addCommand('CreateBaseplate', CreateBaseplate())
+        Gui.addCommand('CreateMagnetBaseplate', CreateMagnetBaseplate())
+        Gui.addCommand('CreateScrewTogetherBaseplate', CreateScrewTogetherBaseplate())
+
 
     def Activated(self):
-        '''
-        code which should be computed when a user switch to this workbench
-        '''
         pass
 
     def Deactivated(self):
-        '''
-        code which should be computed when this workbench is deactivated
-        '''
         pass
 
 
 Gui.addWorkbench(GridfinityWorkbench())
+

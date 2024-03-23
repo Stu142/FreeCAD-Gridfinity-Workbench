@@ -1,7 +1,7 @@
 import os
 import FreeCAD
 import FreeCADGui as Gui
-from .features import BinBlank, Baseplate, SimpleStorageBin
+from .features import BinBlank, Baseplate, SimpleStorageBin, MagnetBaseplate, ScrewTogetherBaseplate
 
 class ViewProviderGridfinity(object):
     def __init__(self, obj, icon_fn=None):
@@ -47,7 +47,6 @@ class BaseCommand(object):
 
     def Activated(self):
         Gui.doCommand("import freecad.gridfinity_workbench.commands")
-        #Gui.doCommand("freecad.gridfinity_workbench.commands.CreateBinBlank.create()")
         Gui.doCommandGui("freecad.gridfinity_workbench.commands.{}.create()".format(self.__class__.__name__))
         FreeCAD.ActiveDocument.recompute()
         Gui.SendMsgToActiveView("ViewFit")
@@ -87,7 +86,7 @@ class CreateBinBlank(BaseCommand):
     Pixmap = os.path.join(BaseCommand.ICONDIR, 'BinBlank.svg')
     MenuText = 'Gridfinity Blank Bin'
     ToolTip = 'Create a Gridfinity Blank bin'
-    FreeCAD.Console.PrintMessage("CreateBlankBin function has been run\n")
+    #FreeCAD.Console.PrintMessage("CreateBlankBin function has been run\n")
 
 class CreateSimpleStorageBin(BaseCommand):
     NAME = "SimpleStorageBin"
@@ -95,13 +94,30 @@ class CreateSimpleStorageBin(BaseCommand):
     Pixmap = os.path.join(BaseCommand.ICONDIR, 'SimpleStorageBin.svg')
     MenuText = 'Gridfinity Simple Storage Bin'
     ToolTip = 'Create a Gridfinity Simple Storage Bin'
-    FreeCAD.Console.PrintMessage("CreateSimpleStorageBin function has been run\n")
+    #FreeCAD.Console.PrintMessage("CreateSimpleStorageBin function has been run\n")
 
 class CreateBaseplate(BaseCommand):
     NAME = "Baseplate"
     GRIDFINITY_FUNCTION = Baseplate
     Pixmap = os.path.join(BaseCommand.ICONDIR, 'Baseplate.svg')
-    MenuText = 'Gridfinity Bin Base'
+    MenuText = 'Gridfinity simple baseplate'
     ToolTip = 'Create a Gridfinity Baseplate'
-    FreeCAD.Console.PrintMessage("CreateBaseplate function has been run\n")
+    #FreeCAD.Console.PrintMessage("CreateBaseplate function has been run\n")
+
+class CreateMagnetBaseplate(BaseCommand):
+    NAME = "MagnetBaseplate"
+    GRIDFINITY_FUNCTION = MagnetBaseplate
+    Pixmap = os.path.join(BaseCommand.ICONDIR, 'magnet_baseplate.svg')
+    MenuText = 'Gridfinity magnet baseplate'
+    ToolTip = 'Create a Gridfinity Baseplate'
+    #FreeCAD.Console.PrintMessage("CreateMagnetBaseplate function has been run\n")
+
+class CreateScrewTogetherBaseplate(BaseCommand):
+    NAME = "ScrewTogetherBaseplate"
+    GRIDFINITY_FUNCTION = ScrewTogetherBaseplate
+    Pixmap = os.path.join(BaseCommand.ICONDIR, 'screw_together_baseplate.svg')
+    MenuText = 'Gridfinity Screw together baseplate'
+    ToolTip = 'Create a Gridfinity Screw Together Baseplate'
+    #FreeCAD.Console.PrintMessage("CreateScrewTogetherBaseplate function has been run\n")
+
 
