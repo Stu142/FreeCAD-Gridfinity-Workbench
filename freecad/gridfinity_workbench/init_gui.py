@@ -21,6 +21,8 @@ class GridfinityWorkbench(Workbench):
     toolbox = [
         "CreateBinBlank",
         "CreateSimpleStorageBin",
+        "CreateEcoBin",
+        "CreatePartsBin",
         "CreateBaseplate",
         "CreateMagnetBaseplate",
         "CreateScrewTogetherBaseplate"]
@@ -35,6 +37,8 @@ class GridfinityWorkbench(Workbench):
         """
         from .commands import CreateBinBlank
         from .commands import CreateSimpleStorageBin
+        from .commands import CreateEcoBin
+        from .commands import CreatePartsBin
         from .commands import CreateBaseplate
         from .commands import CreateMagnetBaseplate
         from .commands import CreateScrewTogetherBaseplate
@@ -46,6 +50,8 @@ class GridfinityWorkbench(Workbench):
 
         Gui.addCommand('CreateBinBlank', CreateBinBlank())
         Gui.addCommand('CreateSimpleStorageBin', CreateSimpleStorageBin())
+        Gui.addCommand('CreateEcoBin', CreateEcoBin())
+        Gui.addCommand('CreatePartsBin', CreatePartsBin())
         Gui.addCommand('CreateBaseplate', CreateBaseplate())
         Gui.addCommand('CreateMagnetBaseplate', CreateMagnetBaseplate())
         Gui.addCommand('CreateScrewTogetherBaseplate', CreateScrewTogetherBaseplate())
