@@ -5,7 +5,7 @@ import math
 import FreeCAD as App
 import Part
 from .version import __version__
-from .feature_construction import MakeStackingLip, MakeBinBase, RoundedRectangleExtrude, MakeBottomHoles, MakeBinWall, MakeBaseplateCenterCut
+from .feature_construction import MakeStackingLip, MakeBinBase, RoundedRectangleExtrude, MakeBottomHoles, MakeBinWall, MakeBaseplateCenterCut, MakeCompartements
 from .baseplate_feature_construction import MakeBaseplateMagnetHoles, MakeBPScrewBottomCham, MakeBPConnectionHoles
 from Part import Shape, Wire, Face, makeLoft, BSplineSurface, \
     makePolygon, makeHelix, makeShell, makeSolid, LineSegment
@@ -200,6 +200,8 @@ class SimpleStorageBin(FoundationGridfinity):
         obj.addProperty("App::PropertyBool","StackingLip","Gridfinity","Toggle the stacking lip on or off").StackingLip=True
         obj.addProperty("App::PropertyBool","MagnetHoles","Gridfinity","Toggle the magnet holes on or off").MagnetHoles = True
         obj.addProperty("App::PropertyBool","ScrewHoles","Gridfinity","Toggle the screw holes on or off").ScrewHoles = True
+        obj.addProperty("App::PropertyInteger","xDividers","Gridfinity","Select the Number of Dividers in the x direction").xDividers = 0
+        obj.addProperty("App::PropertyInteger","yDividers","Gridfinity","Select the number of Dividers in the y direction").yDividers = 0
 
 
     def add_custom_bin_properties(self, obj):
@@ -212,6 +214,7 @@ class SimpleStorageBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","ScrewHoleDepth", "GridfinityNonStandard", "Depth of Screw Holes <br> <br> default = 6.0 mm").ScrewHoleDepth = SCREW_HOLE_DEPTH
         obj.addProperty("App::PropertyLength","WallThickness", "GridfinityNonStandard", "Wall thickness of the bin <br> <br> default = 1.0 mm").WallThickness = 1.0
         obj.addProperty("App::PropertyLength","InsideFilletRadius", "GridfinityNonStandard", "inside fillet at the bottom of the bin <br> <br> default = 1.85 mm").InsideFilletRadius = 1.85
+        obj.addProperty("App::PropertyLength","DividerThickness", "GridfinityNonStandard", "Thickness of the dividers <br> <br> default = 1.2 mm").DividerThickness = 1.2
 
     def add_reference_properties(self, obj):
         obj.addProperty("App::PropertyLength","xTotalWidth","ReferenceDimensions","total width of bin in x direction", 1)
@@ -253,13 +256,13 @@ class SimpleStorageBin(FoundationGridfinity):
 
         fuse_total = MakeBinBase(self, obj)
 
-        bin_wall = MakeBinWall(self, obj)
-        fuse_total = Part.Shape.fuse(bin_wall,fuse_total)
-
-        solid_center= RoundedRectangleExtrude(obj.xTotalWidth-(obj.WallThickness+obj.InsideFilletRadius)*2, obj.yTotalWidth-(obj.WallThickness+obj.InsideFilletRadius)*2, -obj.TotalHeight+obj.BaseProfileHeight, obj.HeightUnitValue-obj.BaseProfileHeight, obj.BinOuterRadius-obj.WallThickness-obj.InsideFilletRadius)
+        solid_center= RoundedRectangleExtrude(obj.xTotalWidth, obj.yTotalWidth, -obj.TotalHeight+obj.BaseProfileHeight, obj.TotalHeight-obj.BaseProfileHeight, obj.BinOuterRadius)
         solid_center.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
         fuse_total = fuse_total.fuse(solid_center)
 
+        compartements = MakeCompartements(self, obj)
+
+        fuse_total = fuse_total.cut(compartements)
 
         if obj.StackingLip == True:
             stacking_lip = MakeStackingLip(self, obj)

@@ -7,6 +7,7 @@ import FreeCAD as App
 
 unitmm = Units.Quantity("1 mm")
 
+zero_mm = Units.Quantity("0 mm")
 
 def createRoundedRectangle(xwidth, ywidth, zsketchplane, radius):
     xfarv = xwidth/2
@@ -89,6 +90,71 @@ def MakeStackingLip(self, obj):
     stacking_lip = Part.makeSolid(stacking_lip)
     return stacking_lip
 
+def MakeCompartements(self, obj):
+
+
+    func_fuse= RoundedRectangleExtrude(obj.xTotalWidth-obj.WallThickness*2, obj.yTotalWidth-obj.WallThickness*2, -obj.TotalHeight+obj.HeightUnitValue, obj.TotalHeight-obj.HeightUnitValue, obj.BinOuterRadius-obj.WallThickness)
+    func_fuse.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
+
+    if obj.xDividers == 0 and obj.yDividers == 0:
+            #Fillet Bottom edges
+            b_edges = []
+            for idx_edge, edge in enumerate(func_fuse.Edges):
+                z0 = edge.Vertexes[0].Point.z
+                z1 = edge.Vertexes[1].Point.z
+
+                if z0 < 0 and z1 < 0:
+                    b_edges.append(edge)
+
+            func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
+
+    else:
+        xcomp_w = (obj.xTotalWidth-obj.WallThickness*2-obj.xDividers*obj.DividerThickness)/(obj.xDividers+1)
+        ycomp_w = (obj.yTotalWidth-obj.WallThickness*2-obj.yDividers*obj.DividerThickness)/(obj.yDividers+1)
+
+
+        xtranslate = zero_mm + xcomp_w + obj.WallThickness
+        ytranslate = zero_mm + ycomp_w + obj.WallThickness
+
+        # dividers in x direction
+        for x in range(obj.xDividers):
+            comp = Part.makeBox(obj.DividerThickness,obj.yTotalWidth,obj.TotalHeight,App.Vector(-obj.BinUnit/2+obj.DividerThickness,-obj.BinUnit/2,0),App.Vector(0,0,-1))
+            print(xtranslate)
+            comp.translate(App.Vector(xtranslate,0,0))
+            if x>0:
+                xdiv = xdiv.fuse(comp)
+
+            else:
+                xdiv = comp
+            xtranslate += xcomp_w+obj.DividerThickness
+
+        # dividers in y direction
+        for y in range(obj.yDividers):
+            comp = Part.makeBox(obj.xTotalWidth,obj.DividerThickness,obj.TotalHeight,App.Vector(-obj.BinUnit/2+obj.xTotalWidth,-obj.BinUnit/2,0),App.Vector(0,0,-1))
+
+            comp.translate(App.Vector(0,ytranslate,0))
+            if y>0:
+                ydiv = ydiv.fuse(comp)
+            else:
+                ydiv = comp
+            ytranslate += ycomp_w+obj.DividerThickness
+
+        if obj.xDividers > 0:
+            func_fuse = func_fuse.cut(xdiv)
+        if obj.yDividers > 0:
+            func_fuse = func_fuse.cut(ydiv)
+        b_edges = []
+        for idx_edge, edge in enumerate(func_fuse.Edges):
+            z0 = edge.Vertexes[0].Point.z
+            z1 = edge.Vertexes[1].Point.z
+
+            if z0 < 0 or z1 < 0:
+                b_edges.append(edge)
+
+        func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
+
+    return func_fuse
+
 def MakeBinWall(self, obj):
 
     bin_wall_path = createRoundedRectangle(obj.xTotalWidth, obj.yTotalWidth, 0, obj.BinOuterRadius)
@@ -125,10 +191,10 @@ def MakeBinBase(self, obj):
     basecomp = []
     bt_cmf_width = obj.BinUnit - 2*obj.BaseProfileBottomChamfer-2*obj.BaseProfileTopChamfer
     vert_width = obj.BinUnit - 2*obj.BaseProfileTopChamfer
-    xtranslate = 0
-    ytranslate = 0
+    xtranslate = zero_mm
+    ytranslate = zero_mm
     for x in range(obj.xGridUnits):
-        ytranslate = 0
+        ytranslate = zero_mm
         for y in range(obj.yGridUnits):
             bottom_chamfer = RoundedRectangleChamfer(bt_cmf_width, bt_cmf_width, -obj.TotalHeight,obj.BaseProfileBottomChamfer, obj.BinBottomRadius)
 
@@ -144,12 +210,12 @@ def MakeBinBase(self, obj):
                 totalassembly1 = Part.Solid.fuse(assembly,totalassembly1)
             else:
                 totalassembly1 = assembly
-            ytranslate += 42
+            ytranslate += obj.GridSize
         if x>0:
             totalassembly2 = Part.Solid.fuse(totalassembly2,totalassembly1)
         else:
             totalassembly2 = totalassembly1
-        xtranslate += 42
+        xtranslate += obj.GridSize
 
     return totalassembly2
 def MakeBaseplateCenterCut(self, obj):
@@ -232,8 +298,8 @@ def MakeBaseplateCenterCut(self, obj):
     AR11 = Part.Arc(V21,VA11,V22)
     L12 = Part.LineSegment(V22,V23)
     AR12 = Part.Arc(V23,VA12,V24)
-    xtranslate = 0
-    ytranslate = 0
+    xtranslate = zero_mm
+    ytranslate = zero_mm
 
     S1 = Part.Shape([L1,AR1,L2,AR2,L3,AR3,L4,AR4,L5,AR5,L6,AR6,L7,AR7,L8,AR8,L9,AR9,L10,AR10,L11,AR11,L12,AR12])
 
@@ -244,7 +310,7 @@ def MakeBaseplateCenterCut(self, obj):
 
 
     for x in range(obj.xGridUnits):
-        ytranslate = 0
+        ytranslate = zero_mm
         for y in range(obj.yGridUnits):
 
             HM1 = face.extrude(App.Vector(0,0,-obj.TotalHeight))
@@ -254,12 +320,12 @@ def MakeBaseplateCenterCut(self, obj):
                 HM2 = Part.Solid.fuse(HM1,HM2)
             else:
                 HM2 = HM1
-            ytranslate += 42
+            ytranslate += obj.GridSize
         if x>0:
             HM3 = Part.Solid.fuse(HM3,HM2)
         else:
             HM3 = HM2
-        xtranslate += 42
+        xtranslate += obj.GridSize
 
     return HM3
 
@@ -270,11 +336,11 @@ def MakeBottomHoles(self, obj):
     sqbr1_depth = obj.MagnetHoleDepth+obj.SequentialBridgingLayerHeight
     sqbr2_depth = obj.MagnetHoleDepth+obj.SequentialBridgingLayerHeight*2
 
-    xtranslate = 0
-    ytranslate = 0
+    xtranslate = zero_mm
+    ytranslate = zero_mm
     if obj.MagnetHoles == True:
         for x in range(obj.xGridUnits):
-            ytranslate = 0
+            ytranslate = zero_mm
             for y in range(obj.yGridUnits):
                 C1 = Part.makeCylinder(obj.MagnetHoleDiameter/2, obj.MagnetHoleDepth, App.Vector(-hole_pos,-hole_pos,-obj.TotalHeight), App.Vector(0,0,1))
                 C2 = Part.makeCylinder(obj.MagnetHoleDiameter/2, obj.MagnetHoleDepth, App.Vector(hole_pos,-hole_pos,-obj.TotalHeight), App.Vector(0,0,1))
@@ -290,19 +356,19 @@ def MakeBottomHoles(self, obj):
                     HM2 = Part.Solid.fuse(HM1,HM2)
                 else:
                     HM2 = HM1
-                ytranslate += 42
+                ytranslate += obj.GridSize
             if x>0:
                 HM3 = Part.Solid.fuse(HM3,HM2)
             else:
                 HM3 = HM2
-            xtranslate += 42
+            xtranslate += obj.GridSize
 
-    xtranslate = 0
-    ytranslate = 0
+    xtranslate = zero_mm
+    ytranslate = zero_mm
 
     if obj.ScrewHoles == True:
         for x in range(obj.xGridUnits):
-            ytranslate = 0
+            ytranslate = zero_mm
             for y in range(obj.yGridUnits):
                 CS1 = Part.makeCylinder(obj.ScrewHoleDiameter/2, obj.ScrewHoleDepth, App.Vector(-hole_pos,-hole_pos,-obj.TotalHeight), App.Vector(0,0,1))
                 CS2 = Part.makeCylinder(obj.ScrewHoleDiameter/2, obj.ScrewHoleDepth, App.Vector(hole_pos,-hole_pos,-obj.TotalHeight), App.Vector(0,0,1))
@@ -317,18 +383,18 @@ def MakeBottomHoles(self, obj):
                     HS2 = Part.Solid.fuse(HM1,HS2)
                 else:
                     HS2 = HM1
-                ytranslate += 42
+                ytranslate += obj.GridSize
             if x>0:
                 HS3 = Part.Solid.fuse(HS3,HS2)
             else:
                 HS3 = HS2
-            xtranslate += 42
+            xtranslate += obj.GridSize
 
-    xtranslate = 0
-    ytranslate = 0
+    xtranslate = zero_mm
+    ytranslate = zero_mm
     if obj.ScrewHoles == True and obj.MagnetHoles == True:
         for x in range(obj.xGridUnits):
-            ytranslate = 0
+            ytranslate = zero_mm
             for y in range(obj.yGridUnits):
                 B1 = Part.makeBox(obj.ScrewHoleDiameter, obj.ScrewHoleDiameter, sqbr2_depth, App.Vector(-sq_bridge2_pos,-sq_bridge2_pos,-obj.TotalHeight), App.Vector(0,0,1))
                 B2 = Part.makeBox(obj.ScrewHoleDiameter, obj.ScrewHoleDiameter, sqbr2_depth, App.Vector(-obj.GridSize/2+obj.MagnetHoleDistanceFromEdge-obj.ScrewHoleDiameter/2,-sq_bridge2_pos,-obj.TotalHeight), App.Vector(0,0,1))
@@ -417,12 +483,12 @@ def MakeBottomHoles(self, obj):
                     HSQ2 = Part.Solid.fuse(HM1,HSQ2)
                 else:
                     HSQ2 = HM1
-                ytranslate += 42
+                ytranslate += obj.GridSize
             if x>0:
                 HSQ3 = Part.Solid.fuse(HSQ3,HSQ2)
             else:
                 HSQ3 = HSQ2
-            xtranslate += 42
+            xtranslate += obj.GridSize
 
     if obj.ScrewHoles == True and obj.MagnetHoles == False:
         fusetotal = HS3
