@@ -119,7 +119,6 @@ def MakeCompartements(self, obj):
         # dividers in x direction
         for x in range(obj.xDividers):
             comp = Part.makeBox(obj.DividerThickness,obj.yTotalWidth,obj.TotalHeight,App.Vector(-obj.BinUnit/2+obj.DividerThickness,-obj.BinUnit/2,0),App.Vector(0,0,-1))
-            print(xtranslate)
             comp.translate(App.Vector(xtranslate,0,0))
             if x>0:
                 xdiv = xdiv.fuse(comp)
@@ -499,4 +498,115 @@ def MakeBottomHoles(self, obj):
 
     return fusetotal
 
+def MakeEcoBinCut(self, obj):
 
+    func_fuse= RoundedRectangleExtrude(obj.xTotalWidth-obj.WallThickness*2, obj.yTotalWidth-obj.WallThickness*2, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness, obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness, obj.BinOuterRadius-obj.WallThickness)
+    func_fuse.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
+
+    base_offset = obj.BaseWallThickness * math.tan(math.pi/8)
+    bt_cmf_width = obj.BinUnit - 2*obj.BaseProfileTopChamfer - obj.BaseWallThickness*2 - 0.4*unitmm*2
+    vert_width = obj.BinUnit - 2*obj.BaseProfileTopChamfer - obj.BaseWallThickness*2
+    bt_chf_rad = obj.BinVerticalRadius - 0.4*unitmm - obj.BaseWallThickness
+
+    if bt_chf_rad <= 0.01 :
+        bt_chf_rad = 0.1*unitmm
+    xtranslate = zero_mm
+    ytranslate = zero_mm
+
+    for x in range(obj.xGridUnits):
+        ytranslate = zero_mm
+        for y in range(obj.yGridUnits):
+
+            bottom_chamfer = RoundedRectangleChamfer(bt_cmf_width, bt_cmf_width, -obj.TotalHeight + obj.BaseWallThickness,0.4*unitmm, bt_chf_rad)
+
+            vertical_section = RoundedRectangleExtrude(vert_width, vert_width, -obj.TotalHeight + obj.BaseWallThickness + 0.4*unitmm, obj.BaseProfileVerticalSection + obj.BaseProfileBottomChamfer + base_offset - obj.BaseWallThickness - 0.4*unitmm, obj.BinVerticalRadius-obj.BaseWallThickness)
+            assembly = Part.Shape.fuse(bottom_chamfer,vertical_section)
+
+            top_chamfer = RoundedRectangleChamfer(vert_width, vert_width, -obj.TotalHeight + obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection + base_offset, obj.BaseProfileTopChamfer+ obj.BaseWallThickness, obj.BinVerticalRadius-obj.BaseWallThickness)
+            assembly = Part.Solid.fuse(assembly,top_chamfer)
+
+
+            assembly.translate(App.Vector(xtranslate,ytranslate,0))
+            if y>0:
+                totalassembly1 = Part.Solid.fuse(assembly,totalassembly1)
+            else:
+                totalassembly1 = assembly
+            ytranslate += obj.GridSize
+        if x>0:
+            totalassembly2 = Part.Solid.fuse(totalassembly2,totalassembly1)
+        else:
+            totalassembly2 = totalassembly1
+        xtranslate += obj.GridSize
+
+    func_fuse = func_fuse.fuse(totalassembly2)
+
+    outer_trim1= RoundedRectangleExtrude(obj.xTotalWidth-obj.WallThickness*2, obj.yTotalWidth-obj.WallThickness*2, -obj.TotalHeight, obj.TotalHeight, obj.BinOuterRadius-obj.WallThickness)
+    outer_trim1.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
+
+    outer_trim2= RoundedRectangleExtrude(obj.xTotalWidth+20*unitmm, obj.yTotalWidth+20*unitmm, -obj.TotalHeight , obj.TotalHeight - obj.BaseProfileHeight, obj.BinOuterRadius)
+    outer_trim2.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
+
+    outer_trim2= outer_trim2.cut(outer_trim1)
+
+    func_fuse = func_fuse.cut(outer_trim2)
+
+    func_fuse = Part.Solid.removeSplitter(func_fuse)
+    # Dividers
+
+    if obj.xDividers == 0 and obj.yDividers == 0:
+            #Fillet Bottom edges
+            b_edges = []
+            for idx_edge, edge in enumerate(func_fuse.Edges):
+                z0 = edge.Vertexes[0].Point.z
+                z1 = edge.Vertexes[1].Point.z
+
+                if z0 != z1:
+                    b_edges.append(edge)
+
+            #func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
+
+    else:
+        xcomp_w = (obj.xTotalWidth-obj.WallThickness*2-obj.xDividers*obj.DividerThickness)/(obj.xDividers+1)
+        ycomp_w = (obj.yTotalWidth-obj.WallThickness*2-obj.yDividers*obj.DividerThickness)/(obj.yDividers+1)
+
+
+        xtranslate = zero_mm + xcomp_w + obj.WallThickness
+        ytranslate = zero_mm + ycomp_w + obj.WallThickness
+
+        # dividers in x direction
+        for x in range(obj.xDividers):
+            comp = Part.makeBox(obj.DividerThickness,obj.yTotalWidth,obj.TotalHeight,App.Vector(-obj.BinUnit/2+obj.DividerThickness,-obj.BinUnit/2,0),App.Vector(0,0,-1))
+            comp.translate(App.Vector(xtranslate,0,0))
+            if x>0:
+                xdiv = xdiv.fuse(comp)
+
+            else:
+                xdiv = comp
+            xtranslate += xcomp_w+obj.DividerThickness
+
+        # dividers in y direction
+        for y in range(obj.yDividers):
+            comp = Part.makeBox(obj.xTotalWidth,obj.DividerThickness,obj.TotalHeight,App.Vector(-obj.BinUnit/2+obj.xTotalWidth,-obj.BinUnit/2,0),App.Vector(0,0,-1))
+
+            comp.translate(App.Vector(0,ytranslate,0))
+            if y>0:
+                ydiv = ydiv.fuse(comp)
+            else:
+                ydiv = comp
+            ytranslate += ycomp_w+obj.DividerThickness
+
+        if obj.xDividers > 0:
+            func_fuse = func_fuse.cut(xdiv)
+        if obj.yDividers > 0:
+            func_fuse = func_fuse.cut(ydiv)
+        b_edges = []
+        for idx_edge, edge in enumerate(func_fuse.Edges):
+            z0 = edge.Vertexes[0].Point.z
+            z1 = edge.Vertexes[1].Point.z
+
+            if z0 < 0 or z1 < 0:
+                b_edges.append(edge)
+
+        func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
+
+    return func_fuse
