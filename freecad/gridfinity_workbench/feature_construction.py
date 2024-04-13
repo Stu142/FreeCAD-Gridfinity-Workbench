@@ -507,9 +507,25 @@ def MakeEcoBinCut(self, obj):
     bt_cmf_width = obj.BinUnit - 2*obj.BaseProfileTopChamfer - obj.BaseWallThickness*2 - 0.4*unitmm*2
     vert_width = obj.BinUnit - 2*obj.BaseProfileTopChamfer - obj.BaseWallThickness*2
     bt_chf_rad = obj.BinVerticalRadius - 0.4*unitmm - obj.BaseWallThickness
+    v_chf_rad = obj.BinVerticalRadius - obj.BaseWallThickness
+
+    if obj.MagnetHoles == True:
+        magoffset = obj.MagnetHoleDepth
+        if (obj.MagnetHoleDepth+obj.BaseWallThickness) > (obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+base_offset):
+            tp_chf_offset = (obj.MagnetHoleDepth+obj.BaseWallThickness) - (obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+base_offset)
+        else:
+            tp_chf_offset = 0*unitmm
+    else:
+        magoffset = 0*unitmm
+        tp_chf_offset = 0*unitmm
 
     if bt_chf_rad <= 0.01 :
-        bt_chf_rad = 0.1*unitmm
+        bt_chf_rad = 0.01*unitmm
+
+    if v_chf_rad <= 0.01 :
+        v_chf_rad = 0.01*unitmm
+
+
     xtranslate = zero_mm
     ytranslate = zero_mm
 
@@ -517,12 +533,12 @@ def MakeEcoBinCut(self, obj):
         ytranslate = zero_mm
         for y in range(obj.yGridUnits):
 
-            bottom_chamfer = RoundedRectangleChamfer(bt_cmf_width, bt_cmf_width, -obj.TotalHeight + obj.BaseWallThickness,0.4*unitmm, bt_chf_rad)
+            bottom_chamfer = RoundedRectangleChamfer(bt_cmf_width, bt_cmf_width, -obj.TotalHeight + obj.BaseWallThickness + magoffset,0.4*unitmm, bt_chf_rad)
 
-            vertical_section = RoundedRectangleExtrude(vert_width, vert_width, -obj.TotalHeight + obj.BaseWallThickness + 0.4*unitmm, obj.BaseProfileVerticalSection + obj.BaseProfileBottomChamfer + base_offset - obj.BaseWallThickness - 0.4*unitmm, obj.BinVerticalRadius-obj.BaseWallThickness)
+            vertical_section = RoundedRectangleExtrude(vert_width, vert_width, -obj.TotalHeight + obj.BaseWallThickness + 0.4*unitmm + magoffset, obj.BaseProfileVerticalSection + obj.BaseProfileBottomChamfer + base_offset - obj.BaseWallThickness - 0.4*unitmm, v_chf_rad)
             assembly = Part.Shape.fuse(bottom_chamfer,vertical_section)
 
-            top_chamfer = RoundedRectangleChamfer(vert_width, vert_width, -obj.TotalHeight + obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection + base_offset, obj.BaseProfileTopChamfer+ obj.BaseWallThickness, obj.BinVerticalRadius-obj.BaseWallThickness)
+            top_chamfer = RoundedRectangleChamfer(vert_width+tp_chf_offset, vert_width+tp_chf_offset, -obj.TotalHeight + obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection + base_offset+tp_chf_offset, obj.BaseProfileTopChamfer+ obj.BaseWallThickness - tp_chf_offset, v_chf_rad)
             assembly = Part.Solid.fuse(assembly,top_chamfer)
 
 
@@ -553,60 +569,48 @@ def MakeEcoBinCut(self, obj):
     func_fuse = Part.Solid.removeSplitter(func_fuse)
     # Dividers
 
-    if obj.xDividers == 0 and obj.yDividers == 0:
-            #Fillet Bottom edges
-            b_edges = []
-            for idx_edge, edge in enumerate(func_fuse.Edges):
-                z0 = edge.Vertexes[0].Point.z
-                z1 = edge.Vertexes[1].Point.z
-
-                if z0 != z1:
-                    b_edges.append(edge)
-
-            #func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
-
-    else:
-        xcomp_w = (obj.xTotalWidth-obj.WallThickness*2-obj.xDividers*obj.DividerThickness)/(obj.xDividers+1)
-        ycomp_w = (obj.yTotalWidth-obj.WallThickness*2-obj.yDividers*obj.DividerThickness)/(obj.yDividers+1)
+    xcomp_w = (obj.xTotalWidth-obj.WallThickness*2-obj.xDividers*obj.DividerThickness)/(obj.xDividers+1)
+    ycomp_w = (obj.yTotalWidth-obj.WallThickness*2-obj.yDividers*obj.DividerThickness)/(obj.yDividers+1)
 
 
-        xtranslate = zero_mm + xcomp_w + obj.WallThickness
-        ytranslate = zero_mm + ycomp_w + obj.WallThickness
+    xtranslate = zero_mm + xcomp_w + obj.WallThickness
+    ytranslate = zero_mm + ycomp_w + obj.WallThickness
 
-        # dividers in x direction
-        for x in range(obj.xDividers):
-            comp = Part.makeBox(obj.DividerThickness,obj.yTotalWidth,obj.TotalHeight,App.Vector(-obj.BinUnit/2+obj.DividerThickness,-obj.BinUnit/2,0),App.Vector(0,0,-1))
-            comp.translate(App.Vector(xtranslate,0,0))
-            if x>0:
-                xdiv = xdiv.fuse(comp)
+    # dividers in x direction
+    for x in range(obj.xDividers):
+        comp = Part.makeBox(obj.DividerThickness,obj.yTotalWidth,obj.TotalHeight,App.Vector(-obj.BinUnit/2+obj.DividerThickness,-obj.BinUnit/2,0),App.Vector(0,0,-1))
+        comp.translate(App.Vector(xtranslate,0,0))
+        if x>0:
+            xdiv = xdiv.fuse(comp)
 
-            else:
-                xdiv = comp
-            xtranslate += xcomp_w+obj.DividerThickness
+        else:
+            xdiv = comp
+        xtranslate += xcomp_w+obj.DividerThickness
 
-        # dividers in y direction
-        for y in range(obj.yDividers):
-            comp = Part.makeBox(obj.xTotalWidth,obj.DividerThickness,obj.TotalHeight,App.Vector(-obj.BinUnit/2+obj.xTotalWidth,-obj.BinUnit/2,0),App.Vector(0,0,-1))
+    # dividers in y direction
+    for y in range(obj.yDividers):
+        comp = Part.makeBox(obj.xTotalWidth,obj.DividerThickness,obj.TotalHeight,App.Vector(-obj.BinUnit/2+obj.xTotalWidth,-obj.BinUnit/2,0),App.Vector(0,0,-1))
 
-            comp.translate(App.Vector(0,ytranslate,0))
-            if y>0:
-                ydiv = ydiv.fuse(comp)
-            else:
-                ydiv = comp
-            ytranslate += ycomp_w+obj.DividerThickness
+        comp.translate(App.Vector(0,ytranslate,0))
+        if y>0:
+            ydiv = ydiv.fuse(comp)
+        else:
+            ydiv = comp
+        ytranslate += ycomp_w+obj.DividerThickness
 
-        if obj.xDividers > 0:
-            func_fuse = func_fuse.cut(xdiv)
-        if obj.yDividers > 0:
-            func_fuse = func_fuse.cut(ydiv)
-        b_edges = []
-        for idx_edge, edge in enumerate(func_fuse.Edges):
-            z0 = edge.Vertexes[0].Point.z
-            z1 = edge.Vertexes[1].Point.z
+    if obj.xDividers > 0:
+        func_fuse = func_fuse.cut(xdiv)
+    if obj.yDividers > 0:
+        func_fuse = func_fuse.cut(ydiv)
+    b_edges = []
+    for idx_edge, edge in enumerate(func_fuse.Edges):
+        z0 = edge.Vertexes[0].Point.z
+        z1 = edge.Vertexes[1].Point.z
 
-            if z0 < 0 or z1 < 0:
-                b_edges.append(edge)
-
+        hdif = abs(z0-z1)
+        if hdif > 7:
+            b_edges.append(edge)
+    if obj.xDividers != 0 or obj.yDividers != 0:
         func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
 
     return func_fuse

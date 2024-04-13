@@ -300,7 +300,7 @@ class EcoBin(FoundationGridfinity):
         obj.addProperty("App::PropertyInteger","yGridUnits","Gridfinity","Height of the extrusion").yGridUnits=2
         obj.addProperty("App::PropertyInteger","HeightUnits","Gridfinity","height of the bin in units, each unit is 7 mm").HeightUnits=6
         obj.addProperty("App::PropertyBool","StackingLip","Gridfinity","Toggle the stacking lip on or off").StackingLip=True
-        obj.addProperty("App::PropertyBool","MagnetHoles","Gridfinity","Toggle the magnet holes on or off").MagnetHoles = True
+        obj.addProperty("App::PropertyBool","MagnetHoles","Gridfinity","Toggle the magnet holes on or off").MagnetHoles = False
 
         obj.addProperty("App::PropertyInteger","xDividers","Gridfinity","Select the Number of Dividers in the x direction").xDividers = 0
         obj.addProperty("App::PropertyInteger","yDividers","Gridfinity","Select the number of Dividers in the y direction").yDividers = 0
@@ -314,7 +314,7 @@ class EcoBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","MagnetHoleDepth", "GridfinityNonStandard", "Depth of Magnet Holes <br> <br> default = 2.4 mm").MagnetHoleDepth = MAGNET_HOLE_DEPTH
         obj.addProperty("App::PropertyLength","WallThickness", "GridfinityNonStandard", "Wall thickness of the bin <br> <br> default = 0.8 mm").WallThickness = 0.8
         obj.addProperty("App::PropertyLength","InsideFilletRadius", "GridfinityNonStandard", "inside fillet at the bottom of the bin <br> <br> default = 1.85 mm").InsideFilletRadius = 1.85
-        obj.addProperty("App::PropertyLength","DividerThickness", "GridfinityNonStandard", "Thickness of the dividers, ideally an even multiple of layer width <br> <br> default = 1.2 mm").DividerThickness = 1.2
+        obj.addProperty("App::PropertyLength","DividerThickness", "GridfinityNonStandard", "Thickness of the dividers, ideally an even multiple of layer width <br> <br> default = 0.8 mm").DividerThickness = 0.8
 
     def add_reference_properties(self, obj):
         obj.addProperty("App::PropertyLength","xTotalWidth","ReferenceDimensions","total width of bin in x direction", 1)
