@@ -57,6 +57,49 @@ def RoundedRectangleExtrude(xwidth, ywidth, zsketchplane, height, radius):
     return face.extrude(App.Vector(0,0,height))
 
 
+def MakeLabelShelf(self, obj):
+
+    towall = -obj.BinUnit/2 + obj.WallThickness
+    tolabelend = -obj.BinUnit/2 + obj.StackingLipTopChamfer + obj.StackingLipTopLedge + obj.StackingLipBottomChamfer + obj.LabelShelfThickness
+    meetswallbottom = -obj.StackingLipTopChamfer - obj.StackingLipTopLedge - obj.StackingLipBottomChamfer - obj.LabelShelfThickness + obj.WallThickness
+
+    V1 = App.Vector(towall, 0, 0)
+    V2 = App.Vector(tolabelend, 0, 0)
+    V3 = App.Vector(tolabelend,0, -obj.LabelShelfVerticalThickness)
+    V4 = App.Vector(towall, 0, meetswallbottom)
+
+    L1 = Part.LineSegment(V1, V2)
+    L2 = Part.LineSegment(V2, V3)
+    L3 = Part.LineSegment(V3, V4)
+    L4 = Part.LineSegment(V4, V1)
+
+    S1 = Part.Shape([L1,L2,L3,L4])
+
+    wire = Part.Wire(S1.Edges)
+
+    face = Part.Face(wire)
+
+    funcfuse = face.extrude(App.Vector(0,42,0))
+
+
+    if obj.LabelShelfPlacement == "Center":
+        print("Label Shelf set to Center")
+
+    if obj.LabelShelfPlacement == "Full Width":
+        print("Label Shelf set to Full Width")
+
+    if obj.LabelShelfPlacement == "Left":
+        print("Label Shelf set to Left")
+
+    if obj.LabelShelfPlacement == "Right":
+        print("Label Shelf set to Right")
+
+    return funcfuse
+
+def MakeScoop(self, obj):
+
+    return funcfuse
+
 def MakeStackingLip(self, obj):
 
     stacking_lip_path = createRoundedRectangle(obj.xTotalWidth, obj.yTotalWidth, 0, obj.BinOuterRadius)

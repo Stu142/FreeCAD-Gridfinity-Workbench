@@ -5,11 +5,12 @@ import math
 import FreeCAD as App
 import Part
 from .version import __version__
-from .feature_construction import MakeStackingLip, MakeBinBase, RoundedRectangleExtrude, MakeBottomHoles, MakeBinWall, MakeBaseplateCenterCut, MakeCompartements, MakeEcoBinCut
+from .feature_construction import MakeStackingLip, MakeBinBase, RoundedRectangleExtrude, MakeBottomHoles, MakeBinWall, MakeBaseplateCenterCut, MakeCompartements, MakeEcoBinCut, MakeScoop, MakeLabelShelf
 from .baseplate_feature_construction import MakeBaseplateMagnetHoles, MakeBPScrewBottomCham, MakeBPConnectionHoles
 from Part import Shape, Wire, Face, makeLoft, BSplineSurface, \
     makePolygon, makeHelix, makeShell, makeSolid, LineSegment
-from .const import BIN_BASE_TOP_CHAMFER, BIN_BASE_BOTTOM_CHAMFER, BIN_BASE_VERTICAL_SECTION, GRID_SIZE, BIN_OUTER_RADIUS, BIN_UNIT, BIN_BASE_VERTICAL_RADIUS, BIN_BASE_BOTTOM_RADIUS, TOLERANCE, MAGNET_HOLE_DIAMETER, MAGNET_HOLE_DEPTH, MAGNET_HOLE_DISTANCE_FROM_EDGE, SCREW_HOLE_DIAMETER, SCREW_HOLE_DEPTH, BASEPLATE_BOTTOM_CHAMFER, BASEPLATE_VERTICAL_SECTION, BASEPLATE_TOP_CHAMFER, BASEPLATE_TOP_LEDGE_WIDTH, BASEPLATE_OUTER_RADIUS, BASEPLATE_VERTICAL_RADIUS, BASEPLATE_BOTTOM_RADIUS, STACKING_LIP_TOP_LEDGE,STACKING_LIP_BOTTOM_CHAMFER,STACKING_LIP_VERTICAL_SECTION, HEIGHT_UNIT, BASEPLATE_SMALL_FILLET, MAGNET_BASE, MAGNET_EDGE_THICKNESS, MAGNET_BASE_HOLE, MAGNET_CHAMFER, BASE_THICKNESS, MAGNET_BOTTOM_CHAMFER, CONNECTION_HOLE_DIAMETER
+
+from .const import BIN_BASE_TOP_CHAMFER, BIN_BASE_BOTTOM_CHAMFER, BIN_BASE_VERTICAL_SECTION, GRID_SIZE, BIN_OUTER_RADIUS, BIN_UNIT, BIN_BASE_VERTICAL_RADIUS, BIN_BASE_BOTTOM_RADIUS, TOLERANCE, MAGNET_HOLE_DIAMETER, MAGNET_HOLE_DEPTH, MAGNET_HOLE_DISTANCE_FROM_EDGE, SCREW_HOLE_DIAMETER, SCREW_HOLE_DEPTH, BASEPLATE_BOTTOM_CHAMFER, BASEPLATE_VERTICAL_SECTION, BASEPLATE_TOP_CHAMFER, BASEPLATE_TOP_LEDGE_WIDTH, BASEPLATE_OUTER_RADIUS, BASEPLATE_VERTICAL_RADIUS, BASEPLATE_BOTTOM_RADIUS, STACKING_LIP_TOP_LEDGE,STACKING_LIP_BOTTOM_CHAMFER,STACKING_LIP_VERTICAL_SECTION, HEIGHT_UNIT, BASEPLATE_SMALL_FILLET, MAGNET_BASE, MAGNET_EDGE_THICKNESS, MAGNET_BASE_HOLE, MAGNET_CHAMFER, BASE_THICKNESS, MAGNET_BOTTOM_CHAMFER, CONNECTION_HOLE_DIAMETER, LABEL_SHELF_THICKNESS, LABEL_SHELF_VERTICAL_THICKNESS
 
 __all__ = ["BinBlank",
            "SimpleStorageBin",
@@ -411,8 +412,13 @@ class PartsBin(FoundationGridfinity):
         obj.addProperty("App::PropertyBool","StackingLip","Gridfinity","Toggle the stacking lip on or off").StackingLip=True
         obj.addProperty("App::PropertyBool","MagnetHoles","Gridfinity","Toggle the magnet holes on or off").MagnetHoles = True
         obj.addProperty("App::PropertyBool","ScrewHoles","Gridfinity","Toggle the screw holes on or off").ScrewHoles = True
+        obj.addProperty("App::PropertyBool","Scoop","Gridfinity","Toggle the Scoop fillet on or off").Scoop = True
         obj.addProperty("App::PropertyInteger","xDividers","Gridfinity","Select the Number of Dividers in the x direction").xDividers = 0
-        obj.addProperty("App::PropertyInteger","yDividers","Gridfinity","Select the number of Dividers in the y direction").yDividers = 0
+        obj.addProperty("App::PropertyInteger","yDividers","Gridfinity","Select the number of Dividers in the y direction").yDividers = 1
+        obj.addProperty("App::PropertyEnumeration", "LabelShelfPlacement", "Gridfinity", "Choose the style of the label shelf")
+        obj.LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
+        obj.addProperty("App::PropertyEnumeration", "LabelShelfStyle", "Gridfinity", "Choose to turn the label shelf on or off")
+        obj.LabelShelfStyle = ["Standard", "Off", "Eco"]
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty("App::PropertyLength","CustomHeight","GridfinityNonStandard","total height of the bin using the custom heignt instead of incraments of 7 mm").CustomHeight = 42
@@ -425,6 +431,7 @@ class PartsBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","WallThickness", "GridfinityNonStandard", "Wall thickness of the bin <br> <br> default = 1.0 mm").WallThickness = 1.0
         obj.addProperty("App::PropertyLength","InsideFilletRadius", "GridfinityNonStandard", "inside fillet at the bottom of the bin <br> <br> default = 1.85 mm").InsideFilletRadius = 1.85
         obj.addProperty("App::PropertyLength","DividerThickness", "GridfinityNonStandard", "Thickness of the dividers, ideally an even multiple of layer width <br> <br> default = 1.2 mm").DividerThickness = 1.2
+        obj.addProperty("App::PropertyLength","LabelShelfThickness", "GridfinityNonStandard", "Thickness of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfThickness = LABEL_SHELF_THICKNESS
 
     def add_reference_properties(self, obj):
         obj.addProperty("App::PropertyLength","xTotalWidth","ReferenceDimensions","total width of bin in x direction", 1)
@@ -448,6 +455,7 @@ class PartsBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","StackingLipTopChamfer", "zzExpertOnly", "Top Chamfer of the Stacking lip",1)
         obj.addProperty("App::PropertyLength","StackingLipBottomChamfer", "zzExpertOnly", "Bottom Chamfer of the Stacking lip<br> <br> default = 0.7 mm",1).StackingLipBottomChamfer = STACKING_LIP_BOTTOM_CHAMFER
         obj.addProperty("App::PropertyLength","StackingLipVerticalSection", "zzExpertOnly", "vertical section of the Stacking lip<br> <br> default = 1.8 mm",1).StackingLipVerticalSection = STACKING_LIP_VERTICAL_SECTION
+        obj.addProperty("App::PropertyLength","LabelShelfVerticalThickness", "zzExpertOnly", "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm").LabelShelfVerticalThickness = LABEL_SHELF_VERTICAL_THICKNESS
 
 
 
@@ -480,6 +488,10 @@ class PartsBin(FoundationGridfinity):
         if obj.ScrewHoles == True or obj.MagnetHoles == True:
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
+
+        if obj.LabelShelfStyle != "Off":
+            label_shelf = MakeLabelShelf(self, obj)
+            fuse_total = fuse_total.fuse(label_shelf)
 
         return fuse_total
 
