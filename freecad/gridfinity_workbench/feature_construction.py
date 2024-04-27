@@ -60,8 +60,8 @@ def RoundedRectangleExtrude(xwidth, ywidth, zsketchplane, height, radius):
 def MakeLabelShelf(self, obj):
 
     towall = -obj.BinUnit/2 + obj.WallThickness
-    tolabelend = -obj.BinUnit/2 + obj.StackingLipTopChamfer + obj.StackingLipTopLedge + obj.StackingLipBottomChamfer + obj.LabelShelfThickness
-    meetswallbottom = -obj.StackingLipTopChamfer - obj.StackingLipTopLedge - obj.StackingLipBottomChamfer - obj.LabelShelfThickness + obj.WallThickness
+    tolabelend = -obj.BinUnit/2 + obj.StackingLipTopChamfer + obj.StackingLipTopLedge + obj.StackingLipBottomChamfer + obj.LabelShelfWidth
+    meetswallbottom = -obj.StackingLipTopChamfer - obj.StackingLipTopLedge - obj.StackingLipBottomChamfer - obj.LabelShelfWidth + obj.WallThickness
 
     V1 = App.Vector(towall, 0, 0)
     V2 = App.Vector(tolabelend, 0, 0)
@@ -79,7 +79,7 @@ def MakeLabelShelf(self, obj):
 
     face = Part.Face(wire)
 
-    funcfuse = face.extrude(App.Vector(0,42,0))
+    funcfuse = face.extrude(App.Vector(0,obj.LabelShelfLength,0))
 
 
     if obj.LabelShelfPlacement == "Center":
@@ -94,9 +94,75 @@ def MakeLabelShelf(self, obj):
     if obj.LabelShelfPlacement == "Right":
         print("Label Shelf set to Right")
 
+    """
+    b_edges = []
+    for idx_edge, edge in enumerate(funcfuse.Edges):
+        z0 = edge.Vertexes[0].Point.z
+        z1 = edge.Vertexes[1].Point.z
+
+        hdif = abs(z0-z1)
+        if hdif > obj.LabelShelfVerticalThickness:
+            b_edges.append(edge)
+
+    funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, b_edges)
+
+    h_edges = []
+    for idx_edge, edge in enumerate(funcfuse.Edges):
+        z0 = edge.Vertexes[0].Point.z
+        z1 = edge.Vertexes[1].Point.z
+
+        if z0 == -obj.LabelShelfVerticalThickness and z1 == -obj.LabelShelfVerticalThickness:
+            h_edges.append(edge)
+
+    funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
+    """
     return funcfuse
 
 def MakeScoop(self, obj):
+    V1 = App.Vector(obj.xTotalWidth-obj.BinUnit/2-obj.WallThickness, 0, -obj.UsableHeight + obj.ScoopRadius)
+    V2 = App.Vector(obj.xTotalWidth-obj.BinUnit/2-obj.WallThickness, 0, -obj.UsableHeight)
+    V3 = App.Vector(obj.xTotalWidth-obj.BinUnit/2-obj.WallThickness - obj.ScoopRadius, 0, -obj.UsableHeight)
+
+    L1 = Part.LineSegment(V1, V2)
+    L2 = Part.LineSegment(V2, V3)
+
+    VC1 = App.Vector(obj.xTotalWidth-obj.BinUnit/2-obj.WallThickness - obj.ScoopRadius + obj.ScoopRadius * math.sin(math.pi/4),0,-obj.UsableHeight + obj.ScoopRadius - obj.ScoopRadius * math.sin(math.pi/4))
+
+    C1 = Part.Arc(V1, VC1, V3)
+
+    S1 = Part.Shape([L1,L2,C1])
+
+    wire = Part.Wire(S1.Edges)
+
+    face = Part.Face(wire)
+
+    xdiv = obj.xDividers + 1
+    xtranslate = 0 * unitmm
+    compwidth = (obj.xTotalWidth - obj.WallThickness*2 - obj.DividerThickness*obj.xDividers)/(xdiv)
+
+    for x in range(xdiv):
+        scoop = face.extrude(App.Vector(0,obj.yTotalWidth - obj.WallThickness*2,0))
+        scoop.translate(App.Vector(-xtranslate,-obj.BinUnit/2 + obj.WallThickness,0))
+
+        b_edges = []
+        for idx_edge, edge in enumerate(scoop.Edges):
+            z0 = edge.Vertexes[0].Point.z
+            z1 = edge.Vertexes[1].Point.z
+            x0 = edge.Vertexes[0].Point.x
+            x1 = edge.Vertexes[1].Point.x
+
+            hdif = abs(z0-z1)
+            if hdif == obj.ScoopRadius and x0 == x1:
+                b_edges.append(edge)
+
+
+        xtranslate += compwidth + obj.DividerThickness
+        if x > 0:
+            scoop = scoop.makeFillet(obj.InsideFilletRadius, b_edges)
+            funcfuse = funcfuse.fuse(scoop)
+        else:
+            scoop = scoop.makeFillet(obj.BinOuterRadius-obj.WallThickness, b_edges)
+            funcfuse = scoop
 
     return funcfuse
 

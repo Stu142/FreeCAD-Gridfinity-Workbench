@@ -10,7 +10,7 @@ from .baseplate_feature_construction import MakeBaseplateMagnetHoles, MakeBPScre
 from Part import Shape, Wire, Face, makeLoft, BSplineSurface, \
     makePolygon, makeHelix, makeShell, makeSolid, LineSegment
 
-from .const import BIN_BASE_TOP_CHAMFER, BIN_BASE_BOTTOM_CHAMFER, BIN_BASE_VERTICAL_SECTION, GRID_SIZE, BIN_OUTER_RADIUS, BIN_UNIT, BIN_BASE_VERTICAL_RADIUS, BIN_BASE_BOTTOM_RADIUS, TOLERANCE, MAGNET_HOLE_DIAMETER, MAGNET_HOLE_DEPTH, MAGNET_HOLE_DISTANCE_FROM_EDGE, SCREW_HOLE_DIAMETER, SCREW_HOLE_DEPTH, BASEPLATE_BOTTOM_CHAMFER, BASEPLATE_VERTICAL_SECTION, BASEPLATE_TOP_CHAMFER, BASEPLATE_TOP_LEDGE_WIDTH, BASEPLATE_OUTER_RADIUS, BASEPLATE_VERTICAL_RADIUS, BASEPLATE_BOTTOM_RADIUS, STACKING_LIP_TOP_LEDGE,STACKING_LIP_BOTTOM_CHAMFER,STACKING_LIP_VERTICAL_SECTION, HEIGHT_UNIT, BASEPLATE_SMALL_FILLET, MAGNET_BASE, MAGNET_EDGE_THICKNESS, MAGNET_BASE_HOLE, MAGNET_CHAMFER, BASE_THICKNESS, MAGNET_BOTTOM_CHAMFER, CONNECTION_HOLE_DIAMETER, LABEL_SHELF_THICKNESS, LABEL_SHELF_VERTICAL_THICKNESS
+from .const import BIN_BASE_TOP_CHAMFER, BIN_BASE_BOTTOM_CHAMFER, BIN_BASE_VERTICAL_SECTION, GRID_SIZE, BIN_OUTER_RADIUS, BIN_UNIT, BIN_BASE_VERTICAL_RADIUS, BIN_BASE_BOTTOM_RADIUS, TOLERANCE, MAGNET_HOLE_DIAMETER, MAGNET_HOLE_DEPTH, MAGNET_HOLE_DISTANCE_FROM_EDGE, SCREW_HOLE_DIAMETER, SCREW_HOLE_DEPTH, BASEPLATE_BOTTOM_CHAMFER, BASEPLATE_VERTICAL_SECTION, BASEPLATE_TOP_CHAMFER, BASEPLATE_TOP_LEDGE_WIDTH, BASEPLATE_OUTER_RADIUS, BASEPLATE_VERTICAL_RADIUS, BASEPLATE_BOTTOM_RADIUS, STACKING_LIP_TOP_LEDGE,STACKING_LIP_BOTTOM_CHAMFER,STACKING_LIP_VERTICAL_SECTION, HEIGHT_UNIT, BASEPLATE_SMALL_FILLET, MAGNET_BASE, MAGNET_EDGE_THICKNESS, MAGNET_BASE_HOLE, MAGNET_CHAMFER, BASE_THICKNESS, MAGNET_BOTTOM_CHAMFER, CONNECTION_HOLE_DIAMETER, LABEL_SHELF_WIDTH, LABEL_SHELF_VERTICAL_THICKNESS, LABEL_SHELF_LENGTH, SCOOP_RADIUS
 
 __all__ = ["BinBlank",
            "SimpleStorageBin",
@@ -127,7 +127,7 @@ class BinBlank(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","BaseProfileBottomChamfer", "zzExpertOnly", "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",1).BaseProfileBottomChamfer=BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty("App::PropertyLength","BaseProfileVerticalSection", "zzExpertOnly", "Height of the vertical section in bin base profile",1).BaseProfileVerticalSection=BIN_BASE_VERTICAL_SECTION
         obj.addProperty("App::PropertyLength","BaseProfileTopChamfer", "zzExpertOnly", "Height of the top chamfer in the bin base profile",1).BaseProfileTopChamfer=BIN_BASE_TOP_CHAMFER
-        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid").GridSize = GRID_SIZE
+        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid",1).GridSize = GRID_SIZE
         obj.addProperty("App::PropertyLength","HeightUnitValue", "zzExpertOnly", "height per unit, default is 7mm",1).HeightUnitValue = 7
         obj.addProperty("App::PropertyLength","BinOuterRadius", "zzExpertOnly", "Outer radius of the bin",1).BinOuterRadius = BIN_OUTER_RADIUS
         obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the base profile Vertical section",1).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
@@ -226,7 +226,7 @@ class SimpleStorageBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","BaseProfileBottomChamfer", "zzExpertOnly", "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",1).BaseProfileBottomChamfer=BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty("App::PropertyLength","BaseProfileVerticalSection", "zzExpertOnly", "Height of the vertical section in bin base profile",1).BaseProfileVerticalSection=BIN_BASE_VERTICAL_SECTION
         obj.addProperty("App::PropertyLength","BaseProfileTopChamfer", "zzExpertOnly", "Height of the top chamfer in the bin base profile",1).BaseProfileTopChamfer=BIN_BASE_TOP_CHAMFER
-        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid").GridSize = GRID_SIZE
+        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid",1).GridSize = GRID_SIZE
         obj.addProperty("App::PropertyLength","HeightUnitValue", "zzExpertOnly", "height per unit, default is 7mm",1).HeightUnitValue = HEIGHT_UNIT
         obj.addProperty("App::PropertyLength","BinOuterRadius", "zzExpertOnly", "Outer radius of the bin",1).BinOuterRadius = BIN_OUTER_RADIUS
         obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the base profile Vertical section",1).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
@@ -327,7 +327,7 @@ class EcoBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","BaseProfileBottomChamfer", "zzExpertOnly", "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",1).BaseProfileBottomChamfer=BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty("App::PropertyLength","BaseProfileVerticalSection", "zzExpertOnly", "Height of the vertical section in bin base profile",1).BaseProfileVerticalSection=BIN_BASE_VERTICAL_SECTION
         obj.addProperty("App::PropertyLength","BaseProfileTopChamfer", "zzExpertOnly", "Height of the top chamfer in the bin base profile",1).BaseProfileTopChamfer=BIN_BASE_TOP_CHAMFER
-        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid").GridSize = GRID_SIZE
+        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid",1).GridSize = GRID_SIZE
         obj.addProperty("App::PropertyLength","HeightUnitValue", "zzExpertOnly", "height per unit, default is 7mm",1).HeightUnitValue = HEIGHT_UNIT
         obj.addProperty("App::PropertyLength","BinOuterRadius", "zzExpertOnly", "Outer radius of the bin",1).BinOuterRadius = BIN_OUTER_RADIUS
         obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the base profile Vertical section",1).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
@@ -431,19 +431,22 @@ class PartsBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","WallThickness", "GridfinityNonStandard", "Wall thickness of the bin <br> <br> default = 1.0 mm").WallThickness = 1.0
         obj.addProperty("App::PropertyLength","InsideFilletRadius", "GridfinityNonStandard", "inside fillet at the bottom of the bin <br> <br> default = 1.85 mm").InsideFilletRadius = 1.85
         obj.addProperty("App::PropertyLength","DividerThickness", "GridfinityNonStandard", "Thickness of the dividers, ideally an even multiple of layer width <br> <br> default = 1.2 mm").DividerThickness = 1.2
-        obj.addProperty("App::PropertyLength","LabelShelfThickness", "GridfinityNonStandard", "Thickness of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfThickness = LABEL_SHELF_THICKNESS
+        obj.addProperty("App::PropertyLength","LabelShelfWidth", "GridfinityNonStandard", "Thickness of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfWidth = LABEL_SHELF_WIDTH
+        obj.addProperty("App::PropertyLength","LabelShelfLength", "GridfinityNonStandard", "Length of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfLength = LABEL_SHELF_LENGTH
+        obj.addProperty("App::PropertyLength","ScoopRadius", "GridfinityNonStandard", "Radius of the Scoop <br> <br> default = 21 mm").ScoopRadius = SCOOP_RADIUS
 
     def add_reference_properties(self, obj):
         obj.addProperty("App::PropertyLength","xTotalWidth","ReferenceDimensions","total width of bin in x direction", 1)
         obj.addProperty("App::PropertyLength","yTotalWidth","ReferenceDimensions","total width of bin in y direction", 1)
         obj.addProperty("App::PropertyLength","TotalHeight","ReferenceDimensions","total height of the bin", 1)
         obj.addProperty("App::PropertyLength","BaseProfileHeight","ReferenceDimensions","Height of the Gridfinity Base Profile", 1)
+        obj.addProperty("App::PropertyLength","UsableHeight","ReferenceDimensions","Height of the bin minus the bottom unit, the amount of the bin that can be effectively used", 1)
 
     def add_expert_properties(self, obj):
         obj.addProperty("App::PropertyLength","BaseProfileBottomChamfer", "zzExpertOnly", "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",1).BaseProfileBottomChamfer=BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty("App::PropertyLength","BaseProfileVerticalSection", "zzExpertOnly", "Height of the vertical section in bin base profile",1).BaseProfileVerticalSection=BIN_BASE_VERTICAL_SECTION
         obj.addProperty("App::PropertyLength","BaseProfileTopChamfer", "zzExpertOnly", "Height of the top chamfer in the bin base profile",1).BaseProfileTopChamfer=BIN_BASE_TOP_CHAMFER
-        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid").GridSize = GRID_SIZE
+        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid",1).GridSize = GRID_SIZE
         obj.addProperty("App::PropertyLength","HeightUnitValue", "zzExpertOnly", "height per unit, default is 7mm",1).HeightUnitValue = HEIGHT_UNIT
         obj.addProperty("App::PropertyLength","BinOuterRadius", "zzExpertOnly", "Outer radius of the bin",1).BinOuterRadius = BIN_OUTER_RADIUS
         obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the base profile Vertical section",1).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
@@ -470,6 +473,8 @@ class PartsBin(FoundationGridfinity):
             obj.TotalHeight = obj.CustomHeight
         else:
             obj.TotalHeight = obj.HeightUnits*obj.HeightUnitValue
+        obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
+
 
         fuse_total = MakeBinBase(self, obj)
 
@@ -492,6 +497,10 @@ class PartsBin(FoundationGridfinity):
         if obj.LabelShelfStyle != "Off":
             label_shelf = MakeLabelShelf(self, obj)
             fuse_total = fuse_total.fuse(label_shelf)
+
+        if obj.Scoop == True:
+            scoop = MakeScoop(self, obj)
+            fuse_total = fuse_total.fuse(scoop)
 
         return fuse_total
 
