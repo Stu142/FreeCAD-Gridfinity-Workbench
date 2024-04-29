@@ -31,6 +31,11 @@ Select the Property view tab on the bottom right and change the values. Hit ente
 
 # Changlog
 
+**2024/04/28 Version 0.5.0**
+- Added label shelf generation for parts bin: Center, Full Width, Left, Right 
+- Added scoop option for parts bin 
+- Added Eco Bin 
+
 
 
 

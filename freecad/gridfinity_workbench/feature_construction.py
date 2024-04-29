@@ -125,17 +125,18 @@ def MakeLabelShelf(self, obj):
             if (y0-y1) == 0 and x1 == x2 and x0 == x2:
                 b_edges.append(edge)
 
-        funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, b_edges)
+        funcfuse = funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
 
-        h_edges = []
-        for idx_edge, edge in enumerate(funcfuse.Edges):
-            z0 = edge.Vertexes[0].Point.z
-            z1 = edge.Vertexes[1].Point.z
+        if obj.LabelShelfVerticalThickness > (obj.InsideFilletRadius/2):
+            h_edges = []
+            for idx_edge, edge in enumerate(funcfuse.Edges):
+                z0 = edge.Vertexes[0].Point.z
+                z1 = edge.Vertexes[1].Point.z
 
-            if z0 == -obj.LabelShelfVerticalThickness and z1 == -obj.LabelShelfVerticalThickness:
-                h_edges.append(edge)
+                if z0 == -obj.LabelShelfVerticalThickness and z1 == -obj.LabelShelfVerticalThickness:
+                    h_edges.append(edge)
 
-        funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
+            funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
 
 
     if obj.LabelShelfPlacement == "Center" and fwoverride == False:
@@ -166,21 +167,21 @@ def MakeLabelShelf(self, obj):
         else:
             funcfuse = Part.Solid.multiFuse(firstls,parts)
 
-        h_edges = []
-        for idx_edge, edge in enumerate(funcfuse.Edges):
-            z0 = edge.Vertexes[0].Point.z
-            z1 = edge.Vertexes[1].Point.z
+        if obj.LabelShelfVerticalThickness > (obj.InsideFilletRadius/2):
+            h_edges = []
+            for idx_edge, edge in enumerate(funcfuse.Edges):
+                z0 = edge.Vertexes[0].Point.z
+                z1 = edge.Vertexes[1].Point.z
 
-            if z0 == -obj.LabelShelfVerticalThickness and z1 == -obj.LabelShelfVerticalThickness:
-                h_edges.append(edge)
+                if z0 == -obj.LabelShelfVerticalThickness and z1 == -obj.LabelShelfVerticalThickness:
+                    h_edges.append(edge)
 
-        funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
+            funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
 
 
-    if obj.LabelShelfPlacement == "Left":
-        print("Label Shelf set to Left")
+    if obj.LabelShelfPlacement == "Left" and fwoverride == False:
         xtranslate = zeromm
-        ysp = -obj.BinUnit/2 + obj.WallThickness + ycompwidth/2 - obj.LabelShelfLength/2
+        ysp = -obj.BinUnit/2 + obj.WallThickness
         ytranslate = ysp
         parts = []
         for x in range(xdiv):
@@ -200,7 +201,60 @@ def MakeLabelShelf(self, obj):
 
             xtranslate += xcompwidth + obj.DividerThickness
 
-        if xdiv ==1:
+        if xdiv ==1 and ydiv == 1:
+            funcfuse = ls
+        else:
+            funcfuse = Part.Solid.multiFuse(firstls,parts)
+
+
+        y2 = -obj.BinUnit/2 + obj.WallThickness
+        b_edges = []
+        for idx_edge, edge in enumerate(funcfuse.Edges):
+            y0 = edge.Vertexes[0].Point.y
+            y1 = edge.Vertexes[1].Point.y
+            x0 = edge.Vertexes[0].Point.x
+            x1 = edge.Vertexes[1].Point.x
+
+            if y0 == y2 and y1 == y2 and x1 == y2 and x0 == y2:
+                b_edges.append(edge)
+
+        funcfuse = funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
+
+        if obj.LabelShelfVerticalThickness > (obj.InsideFilletRadius/2):
+            h_edges = []
+            for idx_edge, edge in enumerate(funcfuse.Edges):
+                z0 = edge.Vertexes[0].Point.z
+                z1 = edge.Vertexes[1].Point.z
+
+                if z0 == -obj.LabelShelfVerticalThickness and z1 == -obj.LabelShelfVerticalThickness:
+                    h_edges.append(edge)
+
+            funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
+
+
+    if obj.LabelShelfPlacement == "Right" and fwoverride == False:
+        xtranslate = zeromm
+        ysp = -obj.BinUnit/2 + obj.WallThickness + ycompwidth - obj.LabelShelfLength
+        ytranslate = ysp
+        parts = []
+        for x in range(xdiv):
+            ytranslate = ysp
+            for y in range(ydiv):
+
+                ls = face.extrude(App.Vector(0,obj.LabelShelfLength,0))
+
+                ls.translate(App.Vector(xtranslate,ytranslate,0))
+
+                if x == 0 and y == 0:
+                    firstls = ls
+                else:
+                    parts.append(ls)
+
+                ytranslate += ycompwidth + obj.DividerThickness
+
+            xtranslate += xcompwidth + obj.DividerThickness
+
+        if xdiv ==1 and ydiv == 1:
             funcfuse = ls
         else:
             funcfuse = Part.Solid.multiFuse(firstls,parts)
@@ -215,23 +269,21 @@ def MakeLabelShelf(self, obj):
             x0 = edge.Vertexes[0].Point.x
             x1 = edge.Vertexes[1].Point.x
 
-            if (y0 == y2 or y0 == x2) and (y1 == y2 or y1 == x2) and x1 == x2 and x0 == x2:
+            if y0 == y2 and y1 == y2 and x1 == x2 and x0 == x2:
                 b_edges.append(edge)
 
-        funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, b_edges)
+        funcfuse = funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
 
-        h_edges = []
-        for idx_edge, edge in enumerate(funcfuse.Edges):
-            z0 = edge.Vertexes[0].Point.z
-            z1 = edge.Vertexes[1].Point.z
+        if obj.LabelShelfVerticalThickness > (obj.InsideFilletRadius/2):
+            h_edges = []
+            for idx_edge, edge in enumerate(funcfuse.Edges):
+                z0 = edge.Vertexes[0].Point.z
+                z1 = edge.Vertexes[1].Point.z
 
-            if z0 == -obj.LabelShelfVerticalThickness and z1 == -obj.LabelShelfVerticalThickness:
-                h_edges.append(edge)
+                if z0 == -obj.LabelShelfVerticalThickness and z1 == -obj.LabelShelfVerticalThickness:
+                    h_edges.append(edge)
 
-        funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
-
-    if obj.LabelShelfPlacement == "Right":
-        print("Label Shelf set to Right")
+            funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
 
 
     return funcfuse
@@ -255,32 +307,43 @@ def MakeScoop(self, obj):
     face = Part.Face(wire)
 
     xdiv = obj.xDividers + 1
-    xtranslate = 0 * unitmm
+    xtranslate = 0 * unitmm -obj.WallThickness + obj.StackingLipTopLedge + obj.StackingLipTopChamfer + obj.StackingLipBottomChamfer
     compwidth = (obj.xTotalWidth - obj.WallThickness*2 - obj.DividerThickness*obj.xDividers)/(xdiv)
 
+    scoopbox = Part.makeBox(obj.StackingLipBottomChamfer + obj.StackingLipTopChamfer + obj.StackingLipTopLedge - obj.WallThickness ,obj.yTotalWidth-obj.WallThickness*2,obj.UsableHeight,App.Vector(obj.xTotalWidth - obj.BinUnit/2 - obj.WallThickness,-obj.BinUnit/2 + obj.WallThickness,0),App.Vector(0,0,-1))
+
+    parts = []
     for x in range(xdiv):
         scoop = face.extrude(App.Vector(0,obj.yTotalWidth - obj.WallThickness*2,0))
         scoop.translate(App.Vector(-xtranslate,-obj.BinUnit/2 + obj.WallThickness,0))
 
-        b_edges = []
-        for idx_edge, edge in enumerate(scoop.Edges):
-            z0 = edge.Vertexes[0].Point.z
-            z1 = edge.Vertexes[1].Point.z
-            x0 = edge.Vertexes[0].Point.x
-            x1 = edge.Vertexes[1].Point.x
-
-            hdif = abs(z0-z1)
-            if hdif == obj.ScoopRadius and x0 == x1:
-                b_edges.append(edge)
-
-
-        xtranslate += compwidth + obj.DividerThickness
         if x > 0:
-            scoop = scoop.makeFillet(obj.InsideFilletRadius, b_edges)
-            funcfuse = funcfuse.fuse(scoop)
+            xtranslate += compwidth + obj.DividerThickness
         else:
-            scoop = scoop.makeFillet(obj.BinOuterRadius-obj.WallThickness, b_edges)
+            xtranslate += + obj.WallThickness - obj.StackingLipTopLedge - obj.StackingLipTopChamfer - obj.StackingLipBottomChamfer + compwidth + obj.DividerThickness
+
+
+
+        if x > 0:
+            parts.append(scoop)
+        else:
             funcfuse = scoop
+    if x > 0:
+        funcfuse = funcfuse.multiFuse(parts)
+    funcfuse = funcfuse.fuse(scoopbox)
+
+    b_edges = []
+    for idx_edge, edge in enumerate(funcfuse.Edges):
+        z0 = edge.Vertexes[0].Point.z
+        z1 = edge.Vertexes[1].Point.z
+        x0 = edge.Vertexes[0].Point.x
+        x1 = edge.Vertexes[1].Point.x
+
+        hdif = abs(z0-z1)
+        if hdif == obj.UsableHeight and x0 == x1:
+            b_edges.append(edge)
+
+    funcfuse = funcfuse.makeFillet(obj.StackingLipBottomChamfer + obj.StackingLipTopChamfer + obj.StackingLipTopLedge - obj.WallThickness - 0.01*unitmm, b_edges)
 
     return funcfuse
 
@@ -792,8 +855,6 @@ def MakeEcoBinCut(self, obj):
     outer_trim2= outer_trim2.cut(outer_trim1)
 
     func_fuse = func_fuse.cut(outer_trim2)
-
-    func_fuse = Part.Solid.removeSplitter(func_fuse)
     # Dividers
 
     xcomp_w = (obj.xTotalWidth-obj.WallThickness*2-obj.xDividers*obj.DividerThickness)/(obj.xDividers+1)
