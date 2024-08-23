@@ -1,7 +1,7 @@
 import os
 import FreeCAD
 import FreeCADGui as Gui
-from .features import BinBlank, Baseplate, SimpleStorageBin, MagnetBaseplate, ScrewTogetherBaseplate, EcoBin, PartsBin
+from .features import BinBlank, BinBase, Baseplate, SimpleStorageBin, MagnetBaseplate, ScrewTogetherBaseplate, EcoBin, PartsBin
 
 class ViewProviderGridfinity(object):
     def __init__(self, obj, icon_fn=None):
@@ -85,7 +85,14 @@ class CreateBinBlank(BaseCommand):
     GRIDFINITY_FUNCTION = BinBlank
     Pixmap = os.path.join(BaseCommand.ICONDIR, 'BinBlank.svg')
     MenuText = 'Gridfinity Blank Bin'
-    ToolTip = 'Create a Gridfinity Blank bin'
+    ToolTip = 'Create a Gridfinity Blank Bin'
+
+class CreateBinBase(BaseCommand):
+    NAME = "BinBase"
+    GRIDFINITY_FUNCTION = BinBase
+    Pixmap = os.path.join(BaseCommand.ICONDIR, 'BinBase.svg')
+    MenuText = 'Gridfinity Bin Base'
+    ToolTip = 'Create a Gridfinity Bin Base'
 
 class CreateSimpleStorageBin(BaseCommand):
     NAME = "SimpleStorageBin"
