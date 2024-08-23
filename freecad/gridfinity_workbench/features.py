@@ -4,6 +4,7 @@ import numpy as np
 import math
 import FreeCAD as App
 import Part
+from FreeCAD import Units
 from .version import __version__
 from .feature_construction import MakeStackingLip, MakeBinBase, RoundedRectangleExtrude, MakeBottomHoles, MakeBinWall, MakeBaseplateCenterCut, MakeCompartements, MakeEcoBinCut, MakeScoop, MakeLabelShelf
 from .baseplate_feature_construction import MakeBaseplateMagnetHoles, MakeBPScrewBottomCham, MakeBPConnectionHoles
@@ -11,6 +12,8 @@ from Part import Shape, Wire, Face, makeLoft, BSplineSurface, \
     makePolygon, makeHelix, makeShell, makeSolid, LineSegment
 
 from .const import BIN_BASE_TOP_CHAMFER, BIN_BASE_BOTTOM_CHAMFER, BIN_BASE_VERTICAL_SECTION, GRID_SIZE, BIN_OUTER_RADIUS, BIN_UNIT, BIN_BASE_VERTICAL_RADIUS, BIN_BASE_BOTTOM_RADIUS, TOLERANCE, MAGNET_HOLE_DIAMETER, MAGNET_HOLE_DEPTH, MAGNET_HOLE_DISTANCE_FROM_EDGE, SCREW_HOLE_DIAMETER, SCREW_HOLE_DEPTH, BASEPLATE_BOTTOM_CHAMFER, BASEPLATE_VERTICAL_SECTION, BASEPLATE_TOP_CHAMFER, BASEPLATE_TOP_LEDGE_WIDTH, BASEPLATE_OUTER_RADIUS, BASEPLATE_VERTICAL_RADIUS, BASEPLATE_BOTTOM_RADIUS, STACKING_LIP_TOP_LEDGE,STACKING_LIP_BOTTOM_CHAMFER,STACKING_LIP_VERTICAL_SECTION, HEIGHT_UNIT, BASEPLATE_SMALL_FILLET, MAGNET_BASE, MAGNET_EDGE_THICKNESS, MAGNET_BASE_HOLE, MAGNET_CHAMFER, BASE_THICKNESS, MAGNET_BOTTOM_CHAMFER, CONNECTION_HOLE_DIAMETER, LABEL_SHELF_WIDTH, LABEL_SHELF_VERTICAL_THICKNESS, LABEL_SHELF_LENGTH, SCOOP_RADIUS
+
+unitmm = Units.Quantity("1 mm")
 
 __all__ = ["BinBlank",
            "SimpleStorageBin",
@@ -122,17 +125,18 @@ class BinBlank(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","yTotalWidth","ReferenceDimensions","total width of bin in y direction", 1)
         obj.addProperty("App::PropertyLength","TotalHeight","ReferenceDimensions","total height of the bin", 1)
         obj.addProperty("App::PropertyLength","BaseProfileHeight","ReferenceDimensions","Height of the Gridfinity Base Profile", 1)
+        obj.addProperty("App::PropertyLength","BinUnit", "ReferenceDimensions", "Width of a single bin unit",1).BinUnit = BIN_UNIT
 
     def add_expert_properties(self, obj):
         obj.addProperty("App::PropertyLength","BaseProfileBottomChamfer", "zzExpertOnly", "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",1).BaseProfileBottomChamfer=BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty("App::PropertyLength","BaseProfileVerticalSection", "zzExpertOnly", "Height of the vertical section in bin base profile",1).BaseProfileVerticalSection=BIN_BASE_VERTICAL_SECTION
         obj.addProperty("App::PropertyLength","BaseProfileTopChamfer", "zzExpertOnly", "Height of the top chamfer in the bin base profile",1).BaseProfileTopChamfer=BIN_BASE_TOP_CHAMFER
-        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid",1).GridSize = GRID_SIZE
+        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid").GridSize = GRID_SIZE
         obj.addProperty("App::PropertyLength","HeightUnitValue", "zzExpertOnly", "height per unit, default is 7mm",1).HeightUnitValue = 7
         obj.addProperty("App::PropertyLength","BinOuterRadius", "zzExpertOnly", "Outer radius of the bin",1).BinOuterRadius = BIN_OUTER_RADIUS
         obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the base profile Vertical section",1).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
         obj.addProperty("App::PropertyLength","BinBottomRadius", "zzExpertOnly", "bottom of bin corner radius",1).BinBottomRadius = BIN_BASE_BOTTOM_RADIUS
-        obj.addProperty("App::PropertyLength","BinUnit", "zzExpertOnly", "Width of a single bin unit",1).BinUnit = BIN_UNIT
+
         obj.addProperty("App::PropertyLength","Tolerance", "zzExpertOnly", "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",1).Tolerance = TOLERANCE
         obj.addProperty("App::PropertyLength","MagnetHoleDistanceFromEdge", "zzExpertOnly", "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",1).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
         obj.addProperty("App::PropertyLength","StackingLipTopLedge", "zzExpertOnly", "Top Ledge of the stacking lip <br> <br> default = 0.4 mm",1).StackingLipTopLedge = STACKING_LIP_TOP_LEDGE
@@ -150,6 +154,7 @@ class BinBlank(FoundationGridfinity):
         obj.yTotalWidth = obj.yGridUnits*obj.GridSize-obj.Tolerance*2
         obj.BaseProfileHeight = obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+obj.BaseProfileTopChamfer
         obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
+        obj.BinUnit = obj.GridSize - TOLERANCE*2*unitmm
 
         if obj.NonStandardHeight ==True:
             obj.TotalHeight = obj.CustomHeight
@@ -230,17 +235,18 @@ class SimpleStorageBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","TotalHeight","ReferenceDimensions","total height of the bin", 1)
         obj.addProperty("App::PropertyLength","BaseProfileHeight","ReferenceDimensions","Height of the Gridfinity Base Profile", 1)
         obj.addProperty("App::PropertyLength","UsableHeight","ReferenceDimensions","Height of the bin minus the bottom unit, the amount of the bin that can be effectively used", 1)
+        obj.addProperty("App::PropertyLength","BinUnit", "ReferenceDimensions", "Width of a single bin unit",1).BinUnit = BIN_UNIT
 
     def add_expert_properties(self, obj):
         obj.addProperty("App::PropertyLength","BaseProfileBottomChamfer", "zzExpertOnly", "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",1).BaseProfileBottomChamfer=BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty("App::PropertyLength","BaseProfileVerticalSection", "zzExpertOnly", "Height of the vertical section in bin base profile",1).BaseProfileVerticalSection=BIN_BASE_VERTICAL_SECTION
         obj.addProperty("App::PropertyLength","BaseProfileTopChamfer", "zzExpertOnly", "Height of the top chamfer in the bin base profile",1).BaseProfileTopChamfer=BIN_BASE_TOP_CHAMFER
-        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid",1).GridSize = GRID_SIZE
+        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid").GridSize = GRID_SIZE
         obj.addProperty("App::PropertyLength","HeightUnitValue", "zzExpertOnly", "height per unit, default is 7mm",1).HeightUnitValue = HEIGHT_UNIT
         obj.addProperty("App::PropertyLength","BinOuterRadius", "zzExpertOnly", "Outer radius of the bin",1).BinOuterRadius = BIN_OUTER_RADIUS
         obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the base profile Vertical section",1).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
         obj.addProperty("App::PropertyLength","BinBottomRadius", "zzExpertOnly", "bottom of bin corner radius",1).BinBottomRadius = BIN_BASE_BOTTOM_RADIUS
-        obj.addProperty("App::PropertyLength","BinUnit", "zzExpertOnly", "Width of a single bin unit",1).BinUnit = BIN_UNIT
+
         obj.addProperty("App::PropertyLength","Tolerance", "zzExpertOnly", "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",1).Tolerance = TOLERANCE
         obj.addProperty("App::PropertyLength","MagnetHoleDistanceFromEdge", "zzExpertOnly", "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",1).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
         obj.addProperty("App::PropertyLength","StackingLipTopLedge", "zzExpertOnly", "Top Ledge of the stacking lip <br> <br> default = 0.4 mm",1).StackingLipTopLedge = STACKING_LIP_TOP_LEDGE
@@ -257,6 +263,7 @@ class SimpleStorageBin(FoundationGridfinity):
         obj.yTotalWidth = obj.yGridUnits*obj.GridSize-obj.Tolerance*2
         obj.BaseProfileHeight = obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+obj.BaseProfileTopChamfer
         obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
+        obj.BinUnit = obj.GridSize - TOLERANCE*2*unitmm
 
         if obj.NonStandardHeight ==True:
             obj.TotalHeight = obj.CustomHeight
@@ -344,17 +351,18 @@ class EcoBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","yTotalWidth","ReferenceDimensions","total width of bin in y direction", 1)
         obj.addProperty("App::PropertyLength","TotalHeight","ReferenceDimensions","total height of the bin", 1)
         obj.addProperty("App::PropertyLength","BaseProfileHeight","ReferenceDimensions","Height of the Gridfinity Base Profile", 1)
+        obj.addProperty("App::PropertyLength","BinUnit", "ReferenceDimensions", "Width of a single bin unit",1).BinUnit = BIN_UNIT
 
     def add_expert_properties(self, obj):
         obj.addProperty("App::PropertyLength","BaseProfileBottomChamfer", "zzExpertOnly", "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",1).BaseProfileBottomChamfer=BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty("App::PropertyLength","BaseProfileVerticalSection", "zzExpertOnly", "Height of the vertical section in bin base profile",1).BaseProfileVerticalSection=BIN_BASE_VERTICAL_SECTION
         obj.addProperty("App::PropertyLength","BaseProfileTopChamfer", "zzExpertOnly", "Height of the top chamfer in the bin base profile",1).BaseProfileTopChamfer=BIN_BASE_TOP_CHAMFER
-        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid",1).GridSize = GRID_SIZE
+        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid").GridSize = GRID_SIZE
         obj.addProperty("App::PropertyLength","HeightUnitValue", "zzExpertOnly", "height per unit, default is 7mm",1).HeightUnitValue = HEIGHT_UNIT
         obj.addProperty("App::PropertyLength","BinOuterRadius", "zzExpertOnly", "Outer radius of the bin",1).BinOuterRadius = BIN_OUTER_RADIUS
         obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the base profile Vertical section",1).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
         obj.addProperty("App::PropertyLength","BinBottomRadius", "zzExpertOnly", "bottom of bin corner radius",1).BinBottomRadius = BIN_BASE_BOTTOM_RADIUS
-        obj.addProperty("App::PropertyLength","BinUnit", "zzExpertOnly", "Width of a single bin unit",1).BinUnit = BIN_UNIT
+
         obj.addProperty("App::PropertyLength","Tolerance", "zzExpertOnly", "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",1).Tolerance = TOLERANCE
         obj.addProperty("App::PropertyLength","MagnetHoleDistanceFromEdge", "zzExpertOnly", "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",1).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
         obj.addProperty("App::PropertyLength","StackingLipTopLedge", "zzExpertOnly", "Top Ledge of the stacking lip <br> <br> default = 0.4 mm",1).StackingLipTopLedge = STACKING_LIP_TOP_LEDGE
@@ -377,6 +385,7 @@ class EcoBin(FoundationGridfinity):
         obj.yTotalWidth = obj.yGridUnits*obj.GridSize-obj.Tolerance*2
         obj.BaseProfileHeight = obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+obj.BaseProfileTopChamfer
         obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
+        obj.BinUnit = obj.GridSize - TOLERANCE*2*unitmm
 
         if obj.NonStandardHeight ==True:
             obj.TotalHeight = obj.CustomHeight
@@ -464,17 +473,18 @@ class PartsBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","TotalHeight","ReferenceDimensions","total height of the bin", 1)
         obj.addProperty("App::PropertyLength","BaseProfileHeight","ReferenceDimensions","Height of the Gridfinity Base Profile", 1)
         obj.addProperty("App::PropertyLength","UsableHeight","ReferenceDimensions","Height of the bin minus the bottom unit, the amount of the bin that can be effectively used", 1)
+        obj.addProperty("App::PropertyLength","BinUnit", "ReferenceDimensions", "Width of a single bin unit",1).BinUnit = BIN_UNIT
 
     def add_expert_properties(self, obj):
         obj.addProperty("App::PropertyLength","BaseProfileBottomChamfer", "zzExpertOnly", "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",1).BaseProfileBottomChamfer=BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty("App::PropertyLength","BaseProfileVerticalSection", "zzExpertOnly", "Height of the vertical section in bin base profile",1).BaseProfileVerticalSection=BIN_BASE_VERTICAL_SECTION
         obj.addProperty("App::PropertyLength","BaseProfileTopChamfer", "zzExpertOnly", "Height of the top chamfer in the bin base profile",1).BaseProfileTopChamfer=BIN_BASE_TOP_CHAMFER
-        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid",1).GridSize = GRID_SIZE
+        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid").GridSize = GRID_SIZE
         obj.addProperty("App::PropertyLength","HeightUnitValue", "zzExpertOnly", "height per unit, default is 7mm",1).HeightUnitValue = HEIGHT_UNIT
         obj.addProperty("App::PropertyLength","BinOuterRadius", "zzExpertOnly", "Outer radius of the bin",1).BinOuterRadius = BIN_OUTER_RADIUS
         obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the base profile Vertical section",1).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
         obj.addProperty("App::PropertyLength","BinBottomRadius", "zzExpertOnly", "bottom of bin corner radius",1).BinBottomRadius = BIN_BASE_BOTTOM_RADIUS
-        obj.addProperty("App::PropertyLength","BinUnit", "zzExpertOnly", "Width of a single bin unit",1).BinUnit = BIN_UNIT
+
         obj.addProperty("App::PropertyLength","Tolerance", "zzExpertOnly", "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",1).Tolerance = TOLERANCE
         obj.addProperty("App::PropertyLength","MagnetHoleDistanceFromEdge", "zzExpertOnly", "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",1).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
         obj.addProperty("App::PropertyLength","StackingLipTopLedge", "zzExpertOnly", "Top Ledge of the stacking lip <br> <br> default = 0.4 mm",1).StackingLipTopLedge = STACKING_LIP_TOP_LEDGE
@@ -491,6 +501,7 @@ class PartsBin(FoundationGridfinity):
         obj.yTotalWidth = obj.yGridUnits*obj.GridSize-obj.Tolerance*2
         obj.BaseProfileHeight = obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+obj.BaseProfileTopChamfer
         obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
+        obj.BinUnit = obj.GridSize - TOLERANCE*2*unitmm
 
         if obj.NonStandardHeight ==True:
             obj.TotalHeight = obj.CustomHeight
@@ -573,7 +584,7 @@ class Baseplate(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the baseplate profile Vertical section",1).BinVerticalRadius = BASEPLATE_VERTICAL_RADIUS
         obj.addProperty("App::PropertyLength","BinBottomRadius", "zzExpertOnly", "bottom of baseplate corner radius",1).BinBottomRadius = BASEPLATE_BOTTOM_RADIUS
         obj.addProperty("App::PropertyLength","BaseplateTopLedgeWidth", "zzExpertOnly", "Top ledge of baseplate",1).BaseplateTopLedgeWidth = BASEPLATE_TOP_LEDGE_WIDTH
-        obj.addProperty("App::PropertyLength","BinUnit", "zzExpertOnly", "Width of a single bin unit",1).BinUnit = BIN_UNIT
+        obj.addProperty("App::PropertyLength","BinUnit", "zzExpertOnly", "Width of a single bin unit",2).BinUnit = BIN_UNIT
         obj.addProperty("App::PropertyLength","Tolerance", "zzExpertOnly", "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",1).Tolerance = TOLERANCE
         obj.addProperty("App::PropertyLength","MagnetHoleDistanceFromEdge", "zzExpertOnly", "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",1).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
 
@@ -649,7 +660,7 @@ class MagnetBaseplate(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the baseplate profile Vertical section",1).BinVerticalRadius = BASEPLATE_VERTICAL_RADIUS
         obj.addProperty("App::PropertyLength","BinBottomRadius", "zzExpertOnly", "bottom of baseplate corner radius",1).BinBottomRadius = BASEPLATE_BOTTOM_RADIUS
         obj.addProperty("App::PropertyLength","BaseplateTopLedgeWidth", "zzExpertOnly", "Top ledge of baseplate",1).BaseplateTopLedgeWidth = BASEPLATE_TOP_LEDGE_WIDTH
-        obj.addProperty("App::PropertyLength","BinUnit", "zzExpertOnly", "Width of a single bin unit",1).BinUnit = BIN_UNIT
+        obj.addProperty("App::PropertyLength","BinUnit", "zzExpertOnly", "Width of a single bin unit",2).BinUnit = BIN_UNIT
         obj.addProperty("App::PropertyLength","Tolerance", "zzExpertOnly", "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",1).Tolerance = TOLERANCE
         obj.addProperty("App::PropertyLength","MagnetHoleDistanceFromEdge", "zzExpertOnly", "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",1).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
 
@@ -744,7 +755,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the baseplate profile Vertical section",1).BinVerticalRadius = BASEPLATE_VERTICAL_RADIUS
         obj.addProperty("App::PropertyLength","BinBottomRadius", "zzExpertOnly", "bottom of baseplate corner radius",1).BinBottomRadius = BASEPLATE_BOTTOM_RADIUS
         obj.addProperty("App::PropertyLength","BaseplateTopLedgeWidth", "zzExpertOnly", "Top ledge of baseplate",1).BaseplateTopLedgeWidth = BASEPLATE_TOP_LEDGE_WIDTH
-        obj.addProperty("App::PropertyLength","BinUnit", "zzExpertOnly", "Width of a single bin unit",1).BinUnit = BIN_UNIT
+        obj.addProperty("App::PropertyLength","BinUnit", "zzExpertOnly", "Width of a single bin unit",2).BinUnit = BIN_UNIT
         obj.addProperty("App::PropertyLength","Tolerance", "zzExpertOnly", "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm").Tolerance = TOLERANCE
         obj.addProperty("App::PropertyLength","MagnetHoleDistanceFromEdge", "zzExpertOnly", "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm").MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
 

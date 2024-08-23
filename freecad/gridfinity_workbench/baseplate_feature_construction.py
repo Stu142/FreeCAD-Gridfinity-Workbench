@@ -4,7 +4,9 @@ import FreeCADGui
 import FreeCADGui as Gui
 import FreeCAD as App
 
+unitmm = Units.Quantity("1 mm")
 
+zeromm = Units.Quantity("0 mm")
 
 def MakeBaseplateMagnetHoles(self, obj):
 
@@ -40,11 +42,11 @@ def MakeBaseplateMagnetHoles(self, obj):
     CH4 = [CT4,CB4]
     CH4 = Part.makeLoft(CH4,True)
 
-    xtranslate = 0
-    ytranslate = 0
+    xtranslate = zeromm
+    ytranslate = zeromm
 
     for x in range(obj.xGridUnits):
-        ytranslate = 0
+        ytranslate = zeromm
         for y in range(obj.yGridUnits):
 
             HM1 = Part.Solid.multiFuse(C1,[C2,C3,C4,CA1,CA2,CA3,CA4,CH1,CH2,CH3,CH4])
@@ -54,12 +56,12 @@ def MakeBaseplateMagnetHoles(self, obj):
                 HM2 = Part.Solid.fuse(HM1,HM2)
             else:
                 HM2 = HM1
-            ytranslate += 42
+            ytranslate += obj.GridSize
         if x>0:
             HM3 = Part.Solid.fuse(HM3,HM2)
         else:
             HM3 = HM2
-        xtranslate += 42
+        xtranslate += obj.GridSize
 
     return HM3
 
@@ -86,11 +88,11 @@ def MakeBPScrewBottomCham(self,obj):
     CH4 = [CT4,CB4]
     CH4 = Part.makeLoft(CH4,True)
 
-    xtranslate = 0
-    ytranslate = 0
+    xtranslate = zeromm
+    ytranslate = zeromm
 
     for x in range(obj.xGridUnits):
-        ytranslate = 0
+        ytranslate = zeromm
         for y in range(obj.yGridUnits):
 
             HM1 = Part.Solid.multiFuse(CH1,[CH2,CH3,CH4])
@@ -100,12 +102,12 @@ def MakeBPScrewBottomCham(self,obj):
                 HM2 = Part.Solid.fuse(HM1,HM2)
             else:
                 HM2 = HM1
-            ytranslate += 42
+            ytranslate += obj.GridSize
         if x>0:
             HM3 = Part.Solid.fuse(HM3,HM2)
         else:
             HM3 = HM2
-        xtranslate += 42
+        xtranslate += obj.GridSize
 
     return HM3
 
@@ -121,7 +123,7 @@ def MakeBPConnectionHoles(self,obj):
     xtranslate = 0
     ytranslate = 0
     for x in range(obj.xGridUnits):
-        ytranslate = 0
+        ytranslate = zeromm
 
         HX1 = Part.Solid.fuse(C1,C2)
 
@@ -131,13 +133,13 @@ def MakeBPConnectionHoles(self,obj):
         else:
             HX2 = HX1
 
-        xtranslate += 42
+        xtranslate += obj.GridSize
 
-    xtranslate = 0
-    ytranslate = 0
+    xtranslate = zeromm
+    ytranslate = zeromm
 
     for x in range(obj.yGridUnits):
-        xtranslate = 0
+        xtranslate = zerommzeromm
 
         HY1 = Part.Solid.fuse(C3,C4)
 
@@ -147,7 +149,7 @@ def MakeBPConnectionHoles(self,obj):
         else:
             HY2 = HY1
 
-        ytranslate += 42
+        ytranslate += obj.GridSize
 
     con_holes = Part.Solid.fuse(HX2,HY2)
     return con_holes
