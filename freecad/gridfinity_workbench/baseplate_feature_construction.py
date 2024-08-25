@@ -120,8 +120,9 @@ def MakeBPConnectionHoles(self,obj):
     C3 = Part.makeCylinder(obj.ConnectionHoleDiameter/2, obj.BaseThickness, App.Vector(-obj.GridSize/2,0,-obj.TotalHeight+obj.BaseThickness/2), App.Vector(1,0,0))
     C4 = Part.makeCylinder(obj.ConnectionHoleDiameter/2, obj.BaseThickness, App.Vector(-obj.GridSize/2+obj.xTotalWidth-obj.BaseThickness,0,-obj.TotalHeight+obj.BaseThickness/2), App.Vector(1,0,0))
 
-    xtranslate = 0
-    ytranslate = 0
+    xtranslate = zeromm
+    ytranslate = zeromm
+
     for x in range(obj.xGridUnits):
         ytranslate = zeromm
 
@@ -139,7 +140,7 @@ def MakeBPConnectionHoles(self,obj):
     ytranslate = zeromm
 
     for x in range(obj.yGridUnits):
-        xtranslate = zerommzeromm
+        xtranslate = zeromm
 
         HY1 = Part.Solid.fuse(C3,C4)
 
