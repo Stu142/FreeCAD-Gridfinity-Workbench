@@ -565,6 +565,8 @@ class PartsBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","LabelShelfWidth", "GridfinityNonStandard", "Thickness of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfWidth = LABEL_SHELF_WIDTH
         obj.addProperty("App::PropertyLength","LabelShelfLength", "GridfinityNonStandard", "Length of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfLength = LABEL_SHELF_LENGTH
         obj.addProperty("App::PropertyLength","ScoopRadius", "GridfinityNonStandard", "Radius of the Scoop <br> <br> default = 21 mm").ScoopRadius = SCOOP_RADIUS
+        obj.addProperty("App::PropertyLength","xDividerHeight", "GridfinityNonStandard", "Custom Height of x dividers <br> <br> default = 0 mm = normal height").xDividerHeight = 24
+        obj.addProperty("App::PropertyLength","yDividerHeight", "GridfinityNonStandard", "Custom Height of y dividers <br> <br> default = 0 mm = normal height").yDividerHeight = 30
 
     def add_reference_properties(self, obj):
         obj.addProperty("App::PropertyLength","xTotalWidth","ReferenceDimensions","total width of bin in x direction", 1)
@@ -638,6 +640,7 @@ class PartsBin(FoundationGridfinity):
         fuse_total = Part.Solid.removeSplitter(fuse_total)
 
         return fuse_total
+        #return compartements
 
     def __getstate__(self):
         return None

@@ -408,7 +408,7 @@ def MakeCompartements(self, obj):
 
         # dividers in x direction
         for x in range(obj.xDividers):
-            comp = Part.makeBox(obj.DividerThickness,obj.yTotalWidth,obj.TotalHeight,App.Vector(-obj.BinUnit/2+obj.DividerThickness,-obj.BinUnit/2,0),App.Vector(0,0,-1))
+            comp = Part.makeBox(obj.DividerThickness,obj.yTotalWidth,obj.xDividerHeight,App.Vector(-obj.BinUnit/2+obj.DividerThickness,-obj.BinUnit/2,-obj.TotalHeight),App.Vector(0,0,1))
             comp.translate(App.Vector(xtranslate,0,0))
             if x>0:
                 xdiv = xdiv.fuse(comp)
@@ -419,7 +419,7 @@ def MakeCompartements(self, obj):
 
         # dividers in y direction
         for y in range(obj.yDividers):
-            comp = Part.makeBox(obj.xTotalWidth,obj.DividerThickness,obj.TotalHeight,App.Vector(-obj.BinUnit/2+obj.xTotalWidth,-obj.BinUnit/2,0),App.Vector(0,0,-1))
+            comp = Part.makeBox(obj.xTotalWidth,obj.DividerThickness,obj.yDividerHeight,App.Vector(-obj.BinUnit/2,-obj.BinUnit/2,-obj.TotalHeight),App.Vector(0,0,1))
 
             comp.translate(App.Vector(0,ytranslate,0))
             if y>0:
@@ -437,7 +437,14 @@ def MakeCompartements(self, obj):
             z0 = edge.Vertexes[0].Point.z
             z1 = edge.Vertexes[1].Point.z
 
-            if z0 < 0 or z1 < 0:
+            xdivlowtop = obj.TotalHeight - obj.xDividerHeight
+            ydivlowtop = obj.TotalHeight - obj.yDividerHeight
+
+            divlowtop = xdivlowtop if xdivlowtop > ydivlowtop else ydivlowtop
+
+            #if z0 < 0 or z1 < 0 or (z0 == divlowtop and z1 == divlowtop):
+                #b_edges.append(edge)
+            if z0 != z1:
                 b_edges.append(edge)
 
         func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
