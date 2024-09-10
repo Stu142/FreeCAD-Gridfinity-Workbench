@@ -20,6 +20,7 @@ class GridfinityWorkbench(Workbench):
     Icon = os.path.join(ICONPATH, "gridfinity_workbench_icon.svg")
     toolbox = [
         "CreateBinBlank",
+        "CreateBinBase",
         "CreateSimpleStorageBin",
         "CreateEcoBin",
         "CreatePartsBin",
@@ -36,6 +37,7 @@ class GridfinityWorkbench(Workbench):
         here is the place to import all the commands
         """
         from .commands import CreateBinBlank
+        from .commands import CreateBinBase
         from .commands import CreateSimpleStorageBin
         from .commands import CreateEcoBin
         from .commands import CreatePartsBin
@@ -49,6 +51,7 @@ class GridfinityWorkbench(Workbench):
         self.appendMenu("Tools", self.toolbox)
 
         Gui.addCommand('CreateBinBlank', CreateBinBlank())
+        Gui.addCommand('CreateBinBase', CreateBinBase())
         Gui.addCommand('CreateSimpleStorageBin', CreateSimpleStorageBin())
         Gui.addCommand('CreateEcoBin', CreateEcoBin())
         Gui.addCommand('CreatePartsBin', CreatePartsBin())
