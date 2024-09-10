@@ -274,6 +274,8 @@ class BinBase(FoundationGridfinity):
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
+        #fuse_total.translate(App.Vector(obj.BinUnit/2*4,obj.BinUnit/2*4,0))
+
         return fuse_total
 
     def __getstate__(self):
@@ -327,6 +329,8 @@ class SimpleStorageBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","LabelShelfWidth", "GridfinityNonStandard", "Thickness of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfWidth = LABEL_SHELF_WIDTH
         obj.addProperty("App::PropertyLength","LabelShelfLength", "GridfinityNonStandard", "Length of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfLength = LABEL_SHELF_LENGTH
         obj.addProperty("App::PropertyLength","ScoopRadius", "GridfinityNonStandard", "Radius of the Scoop <br> <br> default = 21 mm").ScoopRadius = SCOOP_RADIUS
+        obj.addProperty("App::PropertyLength","xDividerHeight", "GridfinityNonStandard", "Custom Height of x dividers <br> <br> default = 0 mm = full height").xDividerHeight = 0
+        obj.addProperty("App::PropertyLength","yDividerHeight", "GridfinityNonStandard", "Custom Height of y dividers <br> <br> default = 0 mm = full height").yDividerHeight = 0
 
     def add_reference_properties(self, obj):
         obj.addProperty("App::PropertyLength","xTotalWidth","ReferenceDimensions","total width of bin in x direction", 1)
@@ -358,6 +362,8 @@ class SimpleStorageBin(FoundationGridfinity):
 
     def generate_gridfinity_shape(self, obj):
 
+        ## Parameter Calculations
+
         obj.xTotalWidth = obj.xGridUnits*obj.GridSize-obj.Tolerance*2
         obj.yTotalWidth = obj.yGridUnits*obj.GridSize-obj.Tolerance*2
         obj.BaseProfileHeight = obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+obj.BaseProfileTopChamfer
@@ -370,7 +376,23 @@ class SimpleStorageBin(FoundationGridfinity):
             obj.TotalHeight = obj.HeightUnits*obj.HeightUnitValue
         obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
 
+        ## Error Checking
 
+
+        divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05*unitmm
+        if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
+            obj.xDividerHeight = divmin
+            App.Console.PrintWarning("Divider Height must be equal to or greater than:  ")
+            App.Console.PrintWarning(divmin)
+            App.Console.PrintWarning("\n")
+
+        if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
+            obj.yDividerHeight = divmin
+            App.Console.PrintWarning("Divider Height must be equal to or greater than:  ")
+            App.Console.PrintWarning(divmin)
+            App.Console.PrintWarning("\n")
+
+        ## Bin Construction
         fuse_total = MakeBinBase(self, obj)
 
         solid_center= RoundedRectangleExtrude(obj.xTotalWidth, obj.yTotalWidth, -obj.TotalHeight+obj.BaseProfileHeight, obj.TotalHeight-obj.BaseProfileHeight, obj.BinOuterRadius)
@@ -398,6 +420,8 @@ class SimpleStorageBin(FoundationGridfinity):
             fuse_total = fuse_total.fuse(scoop)
 
         fuse_total = Part.Solid.removeSplitter(fuse_total)
+
+        #fuse_total.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
 
         return fuse_total
 
@@ -442,8 +466,10 @@ class EcoBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","MagnetHoleDiameter", "GridfinityNonStandard", "Diameter of Magnet Holes <br> <br> default = 6.5 mm").MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
         obj.addProperty("App::PropertyLength","MagnetHoleDepth", "GridfinityNonStandard", "Depth of Magnet Holes <br> <br> default = 2.4 mm").MagnetHoleDepth = MAGNET_HOLE_DEPTH
         obj.addProperty("App::PropertyLength","WallThickness", "GridfinityNonStandard", "Wall thickness of the bin <br> <br> default = 0.8 mm").WallThickness = 0.8
-        obj.addProperty("App::PropertyLength","InsideFilletRadius", "GridfinityNonStandard", "inside fillet at the bottom of the bin <br> <br> default = 1.85 mm").InsideFilletRadius = 1.85
+        obj.addProperty("App::PropertyLength","InsideFilletRadius", "GridfinityNonStandard", "inside fillet at the bottom of the bin <br> <br> default = 1.5 mm").InsideFilletRadius = 1.5
         obj.addProperty("App::PropertyLength","DividerThickness", "GridfinityNonStandard", "Thickness of the dividers, ideally an even multiple of layer width <br> <br> default = 0.8 mm").DividerThickness = 0.8
+        obj.addProperty("App::PropertyLength","xDividerHeight", "GridfinityNonStandard", "Custom Height of x dividers <br> <br> default = 0 mm = full height").xDividerHeight = 0
+        obj.addProperty("App::PropertyLength","yDividerHeight", "GridfinityNonStandard", "Custom Height of y dividers <br> <br> default = 0 mm = full height").yDividerHeight = 0
 
     def add_reference_properties(self, obj):
         obj.addProperty("App::PropertyLength","xTotalWidth","ReferenceDimensions","total width of bin in x direction", 1)
@@ -479,6 +505,7 @@ class EcoBin(FoundationGridfinity):
         obj.setEditorMode("ScrewHoleDepth",2)
 
     def generate_gridfinity_shape(self, obj):
+        ## Parameter Calculation
 
         obj.xTotalWidth = obj.xGridUnits*obj.GridSize-obj.Tolerance*2
         obj.yTotalWidth = obj.yGridUnits*obj.GridSize-obj.Tolerance*2
@@ -490,6 +517,28 @@ class EcoBin(FoundationGridfinity):
             obj.TotalHeight = obj.CustomHeight
         else:
             obj.TotalHeight = obj.HeightUnits*obj.HeightUnitValue
+
+        ## Error Checking
+
+        # Divider Minimum Height
+        divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05*unitmm
+        if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
+            obj.xDividerHeight = divmin
+            App.Console.PrintWarning("Divider Height must be equal to or greater than:  ")
+            App.Console.PrintWarning(divmin)
+            App.Console.PrintWarning("\n")
+
+        if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
+            obj.yDividerHeight = divmin
+            App.Console.PrintWarning("Divider Height must be equal to or greater than:  ")
+            App.Console.PrintWarning(divmin)
+            App.Console.PrintWarning("\n")
+
+        if obj.InsideFilletRadius > (1.6*unitmm):
+            obj.InsideFilletRadius = 1.6*unitmm
+            App.Console.PrintWarning("Divider Height must be equal to or less than:  1.6 mm\n")
+
+        ## Bin Construction
 
         fuse_total = MakeBinBase(self, obj)
 
@@ -565,8 +614,8 @@ class PartsBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","LabelShelfWidth", "GridfinityNonStandard", "Thickness of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfWidth = LABEL_SHELF_WIDTH
         obj.addProperty("App::PropertyLength","LabelShelfLength", "GridfinityNonStandard", "Length of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfLength = LABEL_SHELF_LENGTH
         obj.addProperty("App::PropertyLength","ScoopRadius", "GridfinityNonStandard", "Radius of the Scoop <br> <br> default = 21 mm").ScoopRadius = SCOOP_RADIUS
-        obj.addProperty("App::PropertyLength","xDividerHeight", "GridfinityNonStandard", "Custom Height of x dividers <br> <br> default = 0 mm = normal height").xDividerHeight = 24
-        obj.addProperty("App::PropertyLength","yDividerHeight", "GridfinityNonStandard", "Custom Height of y dividers <br> <br> default = 0 mm = normal height").yDividerHeight = 30
+        obj.addProperty("App::PropertyLength","xDividerHeight", "GridfinityNonStandard", "Custom Height of x dividers <br> <br> default = 0 mm = full height").xDividerHeight = 0
+        obj.addProperty("App::PropertyLength","yDividerHeight", "GridfinityNonStandard", "Custom Height of y dividers <br> <br> default = 0 mm = full height").yDividerHeight = 0
 
     def add_reference_properties(self, obj):
         obj.addProperty("App::PropertyLength","xTotalWidth","ReferenceDimensions","total width of bin in x direction", 1)
@@ -598,6 +647,8 @@ class PartsBin(FoundationGridfinity):
 
     def generate_gridfinity_shape(self, obj):
 
+        ## Calculated Properties
+
         obj.xTotalWidth = obj.xGridUnits*obj.GridSize-obj.Tolerance*2
         obj.yTotalWidth = obj.yGridUnits*obj.GridSize-obj.Tolerance*2
         obj.BaseProfileHeight = obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+obj.BaseProfileTopChamfer
@@ -610,6 +661,27 @@ class PartsBin(FoundationGridfinity):
             obj.TotalHeight = obj.HeightUnits*obj.HeightUnitValue
         obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
 
+        ## Error Checking
+
+        # Divider Minimum Height
+        divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05*unitmm
+        if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
+            obj.xDividerHeight = divmin
+            App.Console.PrintWarning("Divider Height must be equal to or greater than:  ")
+            App.Console.PrintWarning(divmin)
+            App.Console.PrintWarning("\n")
+
+        if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
+            obj.yDividerHeight = divmin
+            App.Console.PrintWarning("Divider Height must be equal to or greater than:  ")
+            App.Console.PrintWarning(divmin)
+            App.Console.PrintWarning("\n")
+
+        if obj.xDividerHeight < obj.TotalHeight and obj.LabelShelfStyle != "Off" and obj.xDividerHeight != 0 and obj.xDividers != 0:
+            obj.LabelShelfStyle = "Off"
+            App.Console.PrintWarning("Label Shelf turned off for less than full height x dividers")
+
+        ## Bin Construction
 
         fuse_total = MakeBinBase(self, obj)
 
@@ -640,7 +712,7 @@ class PartsBin(FoundationGridfinity):
         fuse_total = Part.Solid.removeSplitter(fuse_total)
 
         return fuse_total
-        #return compartements
+
 
     def __getstate__(self):
         return None
@@ -893,8 +965,6 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
 
         conholes = MakeBPConnectionHoles(self, obj)
         fuse_total = Part.Shape.cut(fuse_total, conholes)
-
-        print(obj.BinUnit)
 
         return fuse_total
 

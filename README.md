@@ -30,6 +30,10 @@ Select the Property view tab on the bottom right and change the values. Hit ente
 - This Workbench has been verified as working on FreeCAD 0.21.1 and 0.21.2
 
 # Changlog
+**2024/09/10 Version 0.6.0**
+- Added Bin Base generation
+- Added custom independent x and y divider height parameter
+- Move generation location to 0,0
 
 **2024/04/28 Version 0.5.0**
 - Added label shelf generation for parts bin: Center, Full Width, Left, Right 

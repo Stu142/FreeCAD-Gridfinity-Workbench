@@ -289,14 +289,35 @@ def MakeLabelShelf(self, obj):
     return funcfuse
 
 def MakeScoop(self, obj):
-    V1 = App.Vector(obj.xTotalWidth-obj.BinUnit/2-obj.WallThickness, 0, -obj.UsableHeight + obj.ScoopRadius)
+    scooprad1 = obj.ScoopRadius+1*unitmm
+    scooprad2 = obj.ScoopRadius+1*unitmm
+    scooprad3 = obj.ScoopRadius+1*unitmm
+
+    xcomp_w = (obj.xTotalWidth-obj.WallThickness*2-obj.xDividers*obj.DividerThickness)/(obj.xDividers+1)
+
+    xdivscoop = obj.xDividerHeight - obj.HeightUnitValue
+
+    if obj.ScoopRadius > xdivscoop and obj.xDividerHeight != 0:
+        scooprad1 = xdivscoop-unitmm
+    if obj.ScoopRadius > xcomp_w and obj.xDividers > 0:
+        scooprad2 = xcomp_w-2*unitmm
+    if obj.ScoopRadius > obj.UsableHeight > 0:
+        scooprad3 = obj.UsableHeight
+
+    scooprad = min(obj.ScoopRadius,scooprad1,scooprad2,scooprad3)
+
+    if scooprad <= 0:
+        App.Console.PrintMessage("scooop could not be made due to bin selected parameters\n")
+        return
+
+    V1 = App.Vector(obj.xTotalWidth-obj.BinUnit/2-obj.WallThickness, 0, -obj.UsableHeight + scooprad)
     V2 = App.Vector(obj.xTotalWidth-obj.BinUnit/2-obj.WallThickness, 0, -obj.UsableHeight)
-    V3 = App.Vector(obj.xTotalWidth-obj.BinUnit/2-obj.WallThickness - obj.ScoopRadius, 0, -obj.UsableHeight)
+    V3 = App.Vector(obj.xTotalWidth-obj.BinUnit/2-obj.WallThickness - scooprad, 0, -obj.UsableHeight)
 
     L1 = Part.LineSegment(V1, V2)
     L2 = Part.LineSegment(V2, V3)
 
-    VC1 = App.Vector(obj.xTotalWidth-obj.BinUnit/2-obj.WallThickness - obj.ScoopRadius + obj.ScoopRadius * math.sin(math.pi/4),0,-obj.UsableHeight + obj.ScoopRadius - obj.ScoopRadius * math.sin(math.pi/4))
+    VC1 = App.Vector(obj.xTotalWidth-obj.BinUnit/2-obj.WallThickness - scooprad + scooprad * math.sin(math.pi/4),0,-obj.UsableHeight + scooprad - scooprad * math.sin(math.pi/4))
 
     C1 = Part.Arc(V1, VC1, V3)
 
@@ -382,8 +403,10 @@ def MakeStackingLip(self, obj):
 
 def MakeCompartements(self, obj):
 
+    xdivheight = obj.xDividerHeight if obj.xDividerHeight !=0 else obj.TotalHeight
+    ydivheight = obj.yDividerHeight if obj.yDividerHeight !=0 else obj.TotalHeight
 
-    func_fuse= RoundedRectangleExtrude(obj.xTotalWidth-obj.WallThickness*2, obj.yTotalWidth-obj.WallThickness*2, -obj.TotalHeight+obj.HeightUnitValue, obj.TotalHeight-obj.HeightUnitValue, obj.BinOuterRadius-obj.WallThickness)
+    func_fuse= RoundedRectangleExtrude(obj.xTotalWidth-obj.WallThickness*2, obj.yTotalWidth-obj.WallThickness*2, -obj.UsableHeight, obj.UsableHeight, obj.BinOuterRadius-obj.WallThickness)
     func_fuse.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
 
     if obj.xDividers == 0 and obj.yDividers == 0:
@@ -403,30 +426,30 @@ def MakeCompartements(self, obj):
         ycomp_w = (obj.yTotalWidth-obj.WallThickness*2-obj.yDividers*obj.DividerThickness)/(obj.yDividers+1)
 
 
-        xtranslate = zeromm + xcomp_w + obj.WallThickness
+        xtranslate = zeromm + xcomp_w + obj.WallThickness - obj.DividerThickness
         ytranslate = zeromm + ycomp_w + obj.WallThickness
 
         # dividers in x direction
         for x in range(obj.xDividers):
-            comp = Part.makeBox(obj.DividerThickness,obj.yTotalWidth,obj.xDividerHeight,App.Vector(-obj.BinUnit/2+obj.DividerThickness,-obj.BinUnit/2,-obj.TotalHeight),App.Vector(0,0,1))
+            comp = Part.makeBox(obj.DividerThickness,obj.yTotalWidth,xdivheight,App.Vector(-obj.BinUnit/2+obj.DividerThickness,-obj.BinUnit/2,-obj.TotalHeight),App.Vector(0,0,1))
             comp.translate(App.Vector(xtranslate,0,0))
             if x>0:
                 xdiv = xdiv.fuse(comp)
 
             else:
                 xdiv = comp
-            xtranslate += xcomp_w+obj.DividerThickness
+            xtranslate += xcomp_w +obj.DividerThickness
 
         # dividers in y direction
         for y in range(obj.yDividers):
-            comp = Part.makeBox(obj.xTotalWidth,obj.DividerThickness,obj.yDividerHeight,App.Vector(-obj.BinUnit/2,-obj.BinUnit/2,-obj.TotalHeight),App.Vector(0,0,1))
+            comp = Part.makeBox(obj.xTotalWidth,obj.DividerThickness,ydivheight,App.Vector(-obj.BinUnit/2,-obj.BinUnit/2,-obj.TotalHeight),App.Vector(0,0,1))
 
             comp.translate(App.Vector(0,ytranslate,0))
             if y>0:
                 ydiv = ydiv.fuse(comp)
             else:
                 ydiv = comp
-            ytranslate += ycomp_w+obj.DividerThickness
+            ytranslate += ycomp_w +obj.DividerThickness
 
         if obj.xDividers > 0:
             func_fuse = func_fuse.cut(xdiv)
@@ -437,14 +460,10 @@ def MakeCompartements(self, obj):
             z0 = edge.Vertexes[0].Point.z
             z1 = edge.Vertexes[1].Point.z
 
-            xdivlowtop = obj.TotalHeight - obj.xDividerHeight
-            ydivlowtop = obj.TotalHeight - obj.yDividerHeight
-
-            divlowtop = xdivlowtop if xdivlowtop > ydivlowtop else ydivlowtop
-
-            #if z0 < 0 or z1 < 0 or (z0 == divlowtop and z1 == divlowtop):
-                #b_edges.append(edge)
             if z0 != z1:
+                b_edges.append(edge)
+
+            if z0 <= -obj.UsableHeight and z1 <= -obj.UsableHeight:
                 b_edges.append(edge)
 
         func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
@@ -867,13 +886,15 @@ def MakeEcoBinCut(self, obj):
     xcomp_w = (obj.xTotalWidth-obj.WallThickness*2-obj.xDividers*obj.DividerThickness)/(obj.xDividers+1)
     ycomp_w = (obj.yTotalWidth-obj.WallThickness*2-obj.yDividers*obj.DividerThickness)/(obj.yDividers+1)
 
+    xdivheight = obj.xDividerHeight if obj.xDividerHeight !=0 else obj.TotalHeight
+    ydivheight = obj.yDividerHeight if obj.yDividerHeight !=0 else obj.TotalHeight
 
-    xtranslate = zeromm + xcomp_w + obj.WallThickness
+    xtranslate = zeromm + xcomp_w + obj.WallThickness - obj.DividerThickness
     ytranslate = zeromm + ycomp_w + obj.WallThickness
 
     # dividers in x direction
     for x in range(obj.xDividers):
-        comp = Part.makeBox(obj.DividerThickness,obj.yTotalWidth,obj.TotalHeight,App.Vector(-obj.BinUnit/2+obj.DividerThickness,-obj.BinUnit/2,0),App.Vector(0,0,-1))
+        comp = Part.makeBox(obj.DividerThickness,obj.yTotalWidth,xdivheight,App.Vector(-obj.BinUnit/2+obj.DividerThickness,-obj.BinUnit/2,-obj.TotalHeight),App.Vector(0,0,1))
         comp.translate(App.Vector(xtranslate,0,0))
         if x>0:
             xdiv = xdiv.fuse(comp)
@@ -884,8 +905,7 @@ def MakeEcoBinCut(self, obj):
 
     # dividers in y direction
     for y in range(obj.yDividers):
-        comp = Part.makeBox(obj.xTotalWidth,obj.DividerThickness,obj.TotalHeight,App.Vector(-obj.BinUnit/2+obj.xTotalWidth,-obj.BinUnit/2,0),App.Vector(0,0,-1))
-
+        comp = Part.makeBox(obj.xTotalWidth,obj.DividerThickness,ydivheight,App.Vector(-obj.BinUnit/2,-obj.BinUnit/2,-obj.TotalHeight),App.Vector(0,0,1))
         comp.translate(App.Vector(0,ytranslate,0))
         if y>0:
             ydiv = ydiv.fuse(comp)
@@ -898,13 +918,16 @@ def MakeEcoBinCut(self, obj):
     if obj.yDividers > 0:
         func_fuse = func_fuse.cut(ydiv)
     b_edges = []
+
+    divfil = -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1*unitmm
     for idx_edge, edge in enumerate(func_fuse.Edges):
         z0 = edge.Vertexes[0].Point.z
         z1 = edge.Vertexes[1].Point.z
 
-        hdif = abs(z0-z1)
-        if hdif > 7:
-            b_edges.append(edge)
+        if z1 != z0:
+            if z1 >= divfil or z0 >= divfil:
+                b_edges.append(edge)
+
     if obj.xDividers != 0 or obj.yDividers != 0:
         func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
 
