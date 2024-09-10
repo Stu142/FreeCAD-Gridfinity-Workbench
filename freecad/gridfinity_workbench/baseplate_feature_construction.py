@@ -123,7 +123,6 @@ def MakeBPConnectionHoles(self,obj):
     xtranslate = zeromm
     ytranslate = zeromm
 
-
     for x in range(obj.xGridUnits):
         ytranslate = zeromm
 
@@ -139,8 +138,6 @@ def MakeBPConnectionHoles(self,obj):
 
     xtranslate = zeromm
     ytranslate = zeromm
-
-
 
     for x in range(obj.yGridUnits):
         xtranslate = zeromm
