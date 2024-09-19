@@ -3,14 +3,10 @@ This Workbench will generate several variations of parametric Gridfinity bins an
 
 If you get value from my work, consider supporting me at [stu142.com/supportme](https://stu142.com/supportme)
 
-### Bin Features
-- Customize units long and wide
-- Magnet and screw holes on or off
-- Stacking lip on or off
-- sequential bridging for clean screw hole printing
-
-### Baseplate Features
-- Customize units long and wide
+# Customizable Parameters
+| Bin Parameters | Baseplate Parameters|
+|-----|-------|
+|![bin parameters](/Assets/Images/property_view/bin_properties.png)|![bin parameters](/Assets/Images/property_view/baseplate_properties.png)|
 
 # How to Use
 Select the bin or baseplate you wish to edit in the feature tree.
