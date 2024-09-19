@@ -5,7 +5,7 @@ If you get value from my work on this project which took a lot of time, consider
 
 # Customizable Parameters
 | Bin Parameters | Baseplate Parameters|
-|-----|-------|
+|:-----:|:-------:|
 |![bin parameters](/Assets/Images/property_view/bin_properties.png)|![bin parameters](/Assets/Images/property_view/baseplate_properties.png)|
 
 # How to Use
@@ -15,15 +15,11 @@ Select the Property view tab on the bottom right and change the values. Hit ente
 ![tree_view](/Assets/Videos/storage_bin_demo.gif)
 
 # Bin Generation
-| Bin Style | Generated Bin|
-|-----|-------|
-|Bin Blank|![bin parameters](/Assets/Images/Bins/bin_blank.png)|
-|Simple Storage Bin|![bin parameters](/Assets/Images/Bins/simple_storage_bin.png)|
-|Eco Bin|![bin parameters](/Assets/Images/Bins/eco_bin.png)|
-|Parts Bin|![bin parameters](/Assets/Images/Bins/parts_bin.png)|
-|Bin Base|![bin parameters](/Assets/Images/Bins/bin_base.png)|
-
-
+|Bin Blank | Simple Storage Bin|Eco Bin|
+|:-------:|:-------:|:-------:|
+| ![](/Assets/Images/Bins/bin_blank.png)|![](/Assets/Images/Bins/simple_storage_bin.png)|![](/Assets/Images/Bins/eco_bin.png)|
+|Parts Bin|Bin Base|
+|![](/Assets/Images/Bins/parts_bin.png)|![](/Assets/Images/Bins/bin_base.png)|
 # Installation
 - Install using the built-in FreeCAD addon manager 
 - Alternatively, download and place the files in the FreeCAD/Mod File. 
