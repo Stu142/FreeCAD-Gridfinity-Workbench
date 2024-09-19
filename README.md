@@ -14,8 +14,14 @@ Select the Property view tab on the bottom right and change the values. Hit ente
 ![tree_view](/Assets/Videos/blank_bin_demo.gif)
 ![tree_view](/Assets/Videos/storage_bin_demo.gif)
 
-
-
+# Bin Generation
+| Bin Style | Generated Bin|
+|-----|-------|
+|Bin Blank|![bin parameters](/Assets/Images/Bins/bin_blank.png)|
+|Simple Storage Bin|![bin parameters](/Assets/Images/Bins/simple_storage_bin.png)|
+|Eco Bin|![bin parameters](/Assets/Images/Bins/eco_bin.png)|
+|Parts Bin|![bin parameters](/Assets/Images/Bins/parts_bin.png)|
+|Bin Base|![bin parameters](/Assets/Images/Bins/bin_base.png)|
 
 
 # Installation
