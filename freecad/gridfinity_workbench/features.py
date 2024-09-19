@@ -536,7 +536,7 @@ class EcoBin(FoundationGridfinity):
 
         if obj.InsideFilletRadius > (1.6*unitmm):
             obj.InsideFilletRadius = 1.6*unitmm
-            App.Console.PrintWarning("Divider Height must be equal to or less than:  1.6 mm\n")
+            App.Console.PrintWarning("Inside Fillet Radius must be equal to or less than:  1.6 mm\n")
 
         ## Bin Construction
 
