@@ -20,19 +20,22 @@ Select the Property view tab on the bottom right and change the values. Hit ente
 |Bin Blank | Simple Storage Bin|Eco Bin|
 |:-------:|:-------:|:-------:|
 | ![](/Assets/Images/Bins/bin_blank.png)|![](/Assets/Images/Bins/simple_storage_bin.png)|![](/Assets/Images/Bins/eco_bin.png)|
-|Parts Bin|Bin Base|
+|**Parts Bin**|**Bin Base**|
 |![](/Assets/Images/Bins/parts_bin.png)|![](/Assets/Images/Bins/bin_base.png)|
 
 ## Bin Bottoms
-| Custom Divider Height|Scoop|
+|Screw and Magnet Bottom|Magnet Bottom|
 |:-------:|:-------:|
-| ![](/Assets/Images/divider_height.png)|![](/Assets/Images/scoop.png)|
+| ![](/Assets/Images/bin_bottoms/screw_magnet_bottom.png)|![](/Assets/Images/bin_bottoms/magnet_bottom.png)|
+|**Screw Bottom**|**Plain**|
+|![](/Assets/Images/bin_bottoms/screw_bottom.png)|![](/Assets/Images/bin_bottoms/nothing_bottom.png)|
+
 ## Bin Label Shelf
 |Center|Full Width|
 |:-------:|:-------:|
-| ![](/Assets/Images/divider_height.png)|![](/Assets/Images/scoop.png)|
+| ![](/Assets/Images/label/center_label.png)|![](/Assets/Images/label/full_width_label.png)|
 |**Left**|**Right**|
-|![](/Assets/Images/Bins/parts_bin.png)|![](/Assets/Images/Bins/bin_base.png)|
+|![](/Assets/Images/label/left_label.png)|![](/Assets/Images/label/right_label.png)|
 
 ## Bin Other features
 | Custom Divider Height|Scoop|
