@@ -1,7 +1,9 @@
 # FreeCAD Gridfinity Workbench
 This Workbench will generate several variations of parametric Gridfinity bins and baseplates that can be easily customized. Gridfinity was created by Zach Freedman; if you are new, watch the intro video [Zach's intro video](https://www.youtube.com/watch?v=ra_9zU-mnl8).
 
-If you get value from my work on this project which took a lot of time, consider supporting me at [stu142.com/supportme](https://stu142.com/supportme)
+If you get value from my work on this project, which took a lot of time, consider supporting me at [stu142.com/supportme](https://stu142.com/supportme)
+
+If you want more information about the Gridfinity Spec, check out the documentation I have made at [https://github.com/Stu142/Gridfinity-Documentation](https://github.com/Stu142/Gridfinity-Documentation)
 
 # Customizable Parameters
 | Bin Parameters | Baseplate Parameters|
@@ -20,6 +22,27 @@ Select the Property view tab on the bottom right and change the values. Hit ente
 | ![](/Assets/Images/Bins/bin_blank.png)|![](/Assets/Images/Bins/simple_storage_bin.png)|![](/Assets/Images/Bins/eco_bin.png)|
 |Parts Bin|Bin Base|
 |![](/Assets/Images/Bins/parts_bin.png)|![](/Assets/Images/Bins/bin_base.png)|
+
+## Bin Bottoms
+| Custom Divider Height|Scoop|
+|:-------:|:-------:|
+| ![](/Assets/Images/divider_height.png)|![](/Assets/Images/scoop.png)|
+## Bin Label Shelf
+|Center|Full Width|
+|:-------:|:-------:|
+| ![](/Assets/Images/divider_height.png)|![](/Assets/Images/scoop.png)|
+|**Left**|**Right**|
+|![](/Assets/Images/Bins/parts_bin.png)|![](/Assets/Images/Bins/bin_base.png)|
+
+## Bin Other features
+| Custom Divider Height|Scoop|
+|:-------:|:-------:|
+| ![](/Assets/Images/divider_height.png)|![](/Assets/Images/scoop.png)|
+# Baseplate Generation
+|Baseplate | Magnet Baseplate|Screw Together Baseplate|
+|:-------:|:-------:|:-------:|
+| ![](/Assets/Images/baseplates/baseplate.png)|![](/Assets/Images/baseplates/magnet_baseplate.png)|![](/Assets/Images/baseplates/screw_baseplate.png)|
+
 # Installation
 - Install using the built-in FreeCAD addon manager 
 - Alternatively, download and place the files in the FreeCAD/Mod File. 
