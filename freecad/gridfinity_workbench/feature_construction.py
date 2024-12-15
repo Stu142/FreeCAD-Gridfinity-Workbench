@@ -3,7 +3,6 @@ import FreeCAD, Part, math
 import FreeCADGui
 import FreeCADGui as Gui
 import FreeCAD as App
-from math import sqrt, sin, radians
 
 
 unitmm = Units.Quantity("1 mm")
@@ -79,8 +78,8 @@ def MakeLabelShelf(self, obj):
     side_a = abs(towall - tolabelend) 
     beta = shelf_angle
     alpha = 90-beta
-    side_c = side_a/sin(radians(alpha))
-    side_b = sqrt(-pow(side_a,2)+pow(side_c,2))
+    side_c = side_a/math.sin(math.radians(alpha))
+    side_b = math.sqrt(-pow(side_a,2)+pow(side_c,2))
     V4_Z = -obj.LabelShelfVerticalThickness - side_b * unitmm
 
     V1 = App.Vector(towall, 0, 0)
