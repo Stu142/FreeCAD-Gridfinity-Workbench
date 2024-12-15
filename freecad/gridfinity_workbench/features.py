@@ -313,7 +313,7 @@ class SimpleStorageBin(FoundationGridfinity):
         obj.addProperty("App::PropertyEnumeration", "LabelShelfPlacement", "Gridfinity", "Choose the style of the label shelf")
         obj.LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
         obj.addProperty("App::PropertyEnumeration", "LabelShelfStyle", "Gridfinity", "Choose to turn the label shelf on or off")
-        obj.LabelShelfStyle = [ "Off", "Standard"]
+        obj.LabelShelfStyle = [ "Off", "Standard", "Overhang"]
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty("App::PropertyLength","CustomHeight","GridfinityNonStandard","total height of the bin using the custom heignt instead of incraments of 7 mm").CustomHeight = 42
@@ -599,7 +599,7 @@ class PartsBin(FoundationGridfinity):
         obj.addProperty("App::PropertyEnumeration", "LabelShelfPlacement", "Gridfinity", "Choose the style of the label shelf")
         obj.LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
         obj.addProperty("App::PropertyEnumeration", "LabelShelfStyle", "Gridfinity", "Choose to turn the label shelf on or off")
-        obj.LabelShelfStyle = ["Standard", "Off"]
+        obj.LabelShelfStyle = ["Standard", "Off", "Overhang"]
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty("App::PropertyLength","CustomHeight","GridfinityNonStandard","total height of the bin using the custom heignt instead of incraments of 7 mm").CustomHeight = 42
