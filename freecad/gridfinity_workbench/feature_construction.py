@@ -3,6 +3,7 @@ import FreeCAD, Part, math
 import FreeCADGui
 import FreeCADGui as Gui
 import FreeCAD as App
+from math import sqrt, sin, radians
 
 
 unitmm = Units.Quantity("1 mm")
@@ -69,10 +70,18 @@ def MakeLabelShelf(self, obj):
     xcompwidth = (obj.xTotalWidth - obj.WallThickness*2 - obj.DividerThickness*obj.xDividers)/(xdiv)
     ycompwidth = (obj.yTotalWidth - obj.WallThickness*2 - obj.DividerThickness*obj.yDividers)/(ydiv)
 
+    #Calculate V4 Z coordinate by using an angle
+    side_a = abs(towall - tolabelend) 
+    beta = obj.LabelShelfAngle.Value
+    alpha = 90-beta
+    side_c = side_a/sin(radians(alpha))
+    side_b = sqrt(-pow(side_a,2)+pow(side_c,2))
+    V4_Z = -obj.LabelShelfVerticalThickness - side_b * unitmm
+
     V1 = App.Vector(towall, 0, 0)
     V2 = App.Vector(tolabelend, 0, 0)
     V3 = App.Vector(tolabelend,0, -obj.LabelShelfVerticalThickness)
-    V4 = App.Vector(towall, 0, meetswallbottom)
+    V4 = App.Vector(towall, 0, V4_Z)
 
     L1 = Part.LineSegment(V1, V2)
     L2 = Part.LineSegment(V2, V3)
