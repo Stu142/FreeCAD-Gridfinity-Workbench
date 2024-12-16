@@ -6,7 +6,7 @@ import FreeCAD as App
 import Part
 from FreeCAD import Units
 from .version import __version__
-from .feature_construction import MakeStackingLip, MakeBinBase, RoundedRectangleExtrude, MakeBottomHoles, MakeBinWall, MakeBaseplateCenterCut, MakeCompartements, MakeEcoBinCut, MakeScoop, MakeLabelShelf
+from .feature_construction import MakeStackingLip, MakeBinBase, RoundedRectangleExtrude, MakeBottomHoles, MakeBinWall, MakeBaseplateCenterCut, MakeCompartements, MakeEcoBinCut, MakeScoop, LabelShelf
 from .baseplate_feature_construction import MakeBaseplateMagnetHoles, MakeBPScrewBottomCham, MakeBPConnectionHoles
 from Part import Shape, Wire, Face, makeLoft, BSplineSurface, \
     makePolygon, makeHelix, makeShell, makeSolid, LineSegment
@@ -297,6 +297,8 @@ class SimpleStorageBin(FoundationGridfinity):
         self.add_reference_properties(obj)
         self.add_expert_properties(obj)
 
+        self.features = [LabelShelf(obj)]
+
         obj.Proxy = self
 
     def add_bin_properties(self, obj):
@@ -310,10 +312,6 @@ class SimpleStorageBin(FoundationGridfinity):
         obj.addProperty("App::PropertyBool","Scoop","Gridfinity","Toggle the Scoop fillet on or off").Scoop = False
         obj.addProperty("App::PropertyInteger","xDividers","Gridfinity","Select the Number of Dividers in the x direction").xDividers = 0
         obj.addProperty("App::PropertyInteger","yDividers","Gridfinity","Select the number of Dividers in the y direction").yDividers = 0
-        obj.addProperty("App::PropertyEnumeration", "LabelShelfPlacement", "Gridfinity", "Choose the style of the label shelf")
-        obj.LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
-        obj.addProperty("App::PropertyEnumeration", "LabelShelfStyle", "Gridfinity", "Choose to turn the label shelf on or off")
-        obj.LabelShelfStyle = [ "Off", "Standard"]
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty("App::PropertyLength","CustomHeight","GridfinityNonStandard","total height of the bin using the custom heignt instead of incraments of 7 mm").CustomHeight = 42
@@ -326,8 +324,6 @@ class SimpleStorageBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","WallThickness", "GridfinityNonStandard", "Wall thickness of the bin <br> <br> default = 1.0 mm").WallThickness = 1.0
         obj.addProperty("App::PropertyLength","InsideFilletRadius", "GridfinityNonStandard", "inside fillet at the bottom of the bin <br> <br> default = 1.85 mm").InsideFilletRadius = 1.85
         obj.addProperty("App::PropertyLength","DividerThickness", "GridfinityNonStandard", "Thickness of the dividers, ideally an even multiple of layer width <br> <br> default = 1.2 mm").DividerThickness = 1.2
-        obj.addProperty("App::PropertyLength","LabelShelfWidth", "GridfinityNonStandard", "Thickness of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfWidth = LABEL_SHELF_WIDTH
-        obj.addProperty("App::PropertyLength","LabelShelfLength", "GridfinityNonStandard", "Length of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfLength = LABEL_SHELF_LENGTH
         obj.addProperty("App::PropertyLength","ScoopRadius", "GridfinityNonStandard", "Radius of the Scoop <br> <br> default = 21 mm").ScoopRadius = SCOOP_RADIUS
         obj.addProperty("App::PropertyLength","xDividerHeight", "GridfinityNonStandard", "Custom Height of x dividers <br> <br> default = 0 mm = full height").xDividerHeight = 0
         obj.addProperty("App::PropertyLength","yDividerHeight", "GridfinityNonStandard", "Custom Height of y dividers <br> <br> default = 0 mm = full height").yDividerHeight = 0
@@ -356,8 +352,6 @@ class SimpleStorageBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","StackingLipTopChamfer", "zzExpertOnly", "Top Chamfer of the Stacking lip",1)
         obj.addProperty("App::PropertyLength","StackingLipBottomChamfer", "zzExpertOnly", "Bottom Chamfer of the Stacking lip<br> <br> default = 0.7 mm",1).StackingLipBottomChamfer = STACKING_LIP_BOTTOM_CHAMFER
         obj.addProperty("App::PropertyLength","StackingLipVerticalSection", "zzExpertOnly", "vertical section of the Stacking lip<br> <br> default = 1.8 mm",1).StackingLipVerticalSection = STACKING_LIP_VERTICAL_SECTION
-        obj.addProperty("App::PropertyLength","LabelShelfVerticalThickness", "zzExpertOnly", "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm").LabelShelfVerticalThickness = LABEL_SHELF_VERTICAL_THICKNESS
-
 
 
     def generate_gridfinity_shape(self, obj):
@@ -411,9 +405,10 @@ class SimpleStorageBin(FoundationGridfinity):
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
-        if obj.LabelShelfStyle != "Off":
-            label_shelf = MakeLabelShelf(self, obj)
-            fuse_total = fuse_total.fuse(label_shelf)
+        for feature in self.features:
+            feature_obj = feature.Make(obj)
+            if feature_obj:
+                fuse_total = fuse_total.fuse(feature_obj)
 
         if obj.Scoop == True:
             scoop = MakeScoop(self, obj)
@@ -444,6 +439,8 @@ class EcoBin(FoundationGridfinity):
         self.add_custom_bin_properties(obj)
         self.add_reference_properties(obj)
         self.add_expert_properties(obj)
+
+        self.features = [LabelShelf(obj)]
 
         obj.Proxy = self
 
@@ -557,6 +554,11 @@ class EcoBin(FoundationGridfinity):
         if obj.MagnetHoles == True:
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
+        
+        for feature in self.features:
+            feature_obj = feature.Make(obj)
+            if feature_obj:
+                fuse_total = fuse_total.fuse(feature_obj)
 
         fuse_total = Part.Solid.removeSplitter(fuse_total)
 
@@ -582,6 +584,8 @@ class PartsBin(FoundationGridfinity):
         self.add_reference_properties(obj)
         self.add_expert_properties(obj)
 
+        self.features = [LabelShelf(obj, style=LabelShelf.Style.STANDARD)]
+
         obj.Proxy = self
 
     def add_bin_properties(self, obj):
@@ -595,10 +599,6 @@ class PartsBin(FoundationGridfinity):
         obj.addProperty("App::PropertyBool","Scoop","Gridfinity","Toggle the Scoop fillet on or off").Scoop = True
         obj.addProperty("App::PropertyInteger","xDividers","Gridfinity","Select the Number of Dividers in the x direction").xDividers = 0
         obj.addProperty("App::PropertyInteger","yDividers","Gridfinity","Select the number of Dividers in the y direction").yDividers = 1
-        obj.addProperty("App::PropertyEnumeration", "LabelShelfPlacement", "Gridfinity", "Choose the style of the label shelf")
-        obj.LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
-        obj.addProperty("App::PropertyEnumeration", "LabelShelfStyle", "Gridfinity", "Choose to turn the label shelf on or off")
-        obj.LabelShelfStyle = ["Standard", "Off"]
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty("App::PropertyLength","CustomHeight","GridfinityNonStandard","total height of the bin using the custom heignt instead of incraments of 7 mm").CustomHeight = 42
@@ -611,8 +611,6 @@ class PartsBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","WallThickness", "GridfinityNonStandard", "Wall thickness of the bin <br> <br> default = 1.0 mm").WallThickness = 1.0
         obj.addProperty("App::PropertyLength","InsideFilletRadius", "GridfinityNonStandard", "inside fillet at the bottom of the bin <br> <br> default = 1.85 mm").InsideFilletRadius = 1.85
         obj.addProperty("App::PropertyLength","DividerThickness", "GridfinityNonStandard", "Thickness of the dividers, ideally an even multiple of layer width <br> <br> default = 1.2 mm").DividerThickness = 1.2
-        obj.addProperty("App::PropertyLength","LabelShelfWidth", "GridfinityNonStandard", "Thickness of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfWidth = LABEL_SHELF_WIDTH
-        obj.addProperty("App::PropertyLength","LabelShelfLength", "GridfinityNonStandard", "Length of the Label Shelf <br> <br> default = 1.2 mm").LabelShelfLength = LABEL_SHELF_LENGTH
         obj.addProperty("App::PropertyLength","ScoopRadius", "GridfinityNonStandard", "Radius of the Scoop <br> <br> default = 21 mm").ScoopRadius = SCOOP_RADIUS
         obj.addProperty("App::PropertyLength","xDividerHeight", "GridfinityNonStandard", "Custom Height of x dividers <br> <br> default = 0 mm = full height").xDividerHeight = 0
         obj.addProperty("App::PropertyLength","yDividerHeight", "GridfinityNonStandard", "Custom Height of y dividers <br> <br> default = 0 mm = full height").yDividerHeight = 0
@@ -641,7 +639,6 @@ class PartsBin(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","StackingLipTopChamfer", "zzExpertOnly", "Top Chamfer of the Stacking lip",1)
         obj.addProperty("App::PropertyLength","StackingLipBottomChamfer", "zzExpertOnly", "Bottom Chamfer of the Stacking lip<br> <br> default = 0.7 mm",1).StackingLipBottomChamfer = STACKING_LIP_BOTTOM_CHAMFER
         obj.addProperty("App::PropertyLength","StackingLipVerticalSection", "zzExpertOnly", "vertical section of the Stacking lip<br> <br> default = 1.8 mm",1).StackingLipVerticalSection = STACKING_LIP_VERTICAL_SECTION
-        obj.addProperty("App::PropertyLength","LabelShelfVerticalThickness", "zzExpertOnly", "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm").LabelShelfVerticalThickness = LABEL_SHELF_VERTICAL_THICKNESS
 
 
 
@@ -701,9 +698,10 @@ class PartsBin(FoundationGridfinity):
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
-        if obj.LabelShelfStyle != "Off":
-            label_shelf = MakeLabelShelf(self, obj)
-            fuse_total = fuse_total.fuse(label_shelf)
+        for feature in self.features:
+            feature_obj = feature.Make(obj)
+            if feature_obj:
+                fuse_total = fuse_total.fuse(feature_obj)
 
         if obj.Scoop == True:
             scoop = MakeScoop(self, obj)
