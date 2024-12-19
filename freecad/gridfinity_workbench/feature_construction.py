@@ -1,12 +1,9 @@
-from FreeCAD import Base, Units
-import FreeCAD, Part, math
-import FreeCADGui
-import FreeCADGui as Gui
+from FreeCAD import Units
+import Part
+import math
 import FreeCAD as App
 
-
 unitmm = Units.Quantity("1 mm")
-
 zeromm = Units.Quantity("0 mm")
 
 def createRoundedRectangle(xwidth, ywidth, zsketchplane, radius):
