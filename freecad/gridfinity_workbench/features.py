@@ -1,5 +1,7 @@
 from __future__ import division
 import os
+import numpy as np
+import math
 import FreeCAD as App
 import Part
 from FreeCAD import Units
@@ -179,15 +181,9 @@ class BinBlank(FoundationGridfinity):
         ).xGridUnits = 2
         obj.addProperty(
             "App::PropertyInteger",
-            "yGridUnits",
-            "Gridfinity",
-            "Height of the extrusion",
-        ).yGridUnits = 2
-        obj.addProperty(
-            "App::PropertyInteger",
             "HeightUnits",
             "Gridfinity",
-            "height of the bin in units, each is 7 mm",
+            "Height of the bin in units, each is 7 mm",
         ).HeightUnits = 6
         obj.addProperty(
             "App::PropertyBool",
@@ -206,14 +202,14 @@ class BinBlank(FoundationGridfinity):
             "ScrewHoles",
             "Gridfinity",
             "Toggle the screw holes on or off",
-        ).ScrewHoles = True
+        ).ScrewHoles = False
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty(
             "App::PropertyLength",
             "CustomHeight",
             "GridfinityNonStandard",
-            "total height of the bin using the custom heignt instead of incraments of 7 mm",
+            "total height of the bin using the custom height instead of increments of 7 mm",
         ).CustomHeight = 42
         obj.addProperty(
             "App::PropertyLength",
@@ -227,6 +223,13 @@ class BinBlank(FoundationGridfinity):
             "GridfinityNonStandard",
             "use a custom height if selected",
         ).NonStandardHeight = False
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "GridfinityNonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = ["Hex", "Round"]
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -499,14 +502,14 @@ class BinBase(FoundationGridfinity):
             "ScrewHoles",
             "Gridfinity",
             "Toggle the screw holes on or off",
-        ).ScrewHoles = True
+        ).ScrewHoles = False
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty(
             "App::PropertyLength",
             "CustomHeight",
             "GridfinityNonStandard",
-            "total height of the bin using the custom heignt instead of incraments of 7 mm",
+            "total height of the bin using the custom heignt instead of increments of 7 mm",
         ).CustomHeight = 42
         obj.addProperty(
             "App::PropertyLength",
@@ -520,6 +523,13 @@ class BinBase(FoundationGridfinity):
             "GridfinityNonStandard",
             "use a custom height if selected",
         ).NonStandardHeight = False
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "GridfinityNonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = ["Hex", "Round"]
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -766,15 +776,9 @@ class SimpleStorageBin(FoundationGridfinity):
         ).xGridUnits = 2
         obj.addProperty(
             "App::PropertyInteger",
-            "yGridUnits",
-            "Gridfinity",
-            "Height of the extrusion",
-        ).yGridUnits = 2
-        obj.addProperty(
-            "App::PropertyInteger",
             "HeightUnits",
             "Gridfinity",
-            "height of the bin in units, each unit is 7 mm",
+            "Height of the bin in units, each unit is 7 mm",
         ).HeightUnits = 6
         obj.addProperty(
             "App::PropertyBool",
@@ -793,7 +797,13 @@ class SimpleStorageBin(FoundationGridfinity):
             "ScrewHoles",
             "Gridfinity",
             "Toggle the screw holes on or off",
-        ).ScrewHoles = True
+        ).ScrewHoles = False
+        obj.addProperty(
+            "App::PropertyBool",
+            "Scoop",
+            "Gridfinity",
+            "Toggle the Scoop fillet on or off",
+        ).Scoop = False
         obj.addProperty(
             "App::PropertyBool",
             "Scoop",
@@ -832,7 +842,7 @@ class SimpleStorageBin(FoundationGridfinity):
             "App::PropertyLength",
             "CustomHeight",
             "GridfinityNonStandard",
-            "total height of the bin using the custom heignt instead of incraments of 7 mm",
+            "total height of the bin using the custom height instead of increments of 7 mm",
         ).CustomHeight = 42
         obj.addProperty(
             "App::PropertyLength",
@@ -846,6 +856,13 @@ class SimpleStorageBin(FoundationGridfinity):
             "GridfinityNonStandard",
             "use a custom height if selected",
         ).NonStandardHeight = False
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "GridfinityNonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = ["Hex", "Round"]
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -1229,7 +1246,7 @@ class EcoBin(FoundationGridfinity):
             "App::PropertyLength",
             "CustomHeight",
             "GridfinityNonStandard",
-            "total height of the bin using the custom heignt instead of incraments of 7 mm",
+            "total height of the bin using the custom heignt instead of increments of 7 mm",
         ).CustomHeight = 42
         obj.addProperty(
             "App::PropertyLength",
@@ -1243,6 +1260,13 @@ class EcoBin(FoundationGridfinity):
             "GridfinityNonStandard",
             "use a custom height if selected",
         ).NonStandardHeight = False
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "GridfinityNonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = ["Hex", "Round"]
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -1583,7 +1607,13 @@ class PartsBin(FoundationGridfinity):
             "ScrewHoles",
             "Gridfinity",
             "Toggle the screw holes on or off",
-        ).ScrewHoles = True
+        ).ScrewHoles = False
+        obj.addProperty(
+            "App::PropertyBool",
+            "Scoop",
+            "Gridfinity",
+            "Toggle the Scoop fillet on or off",
+        ).Scoop = True
         obj.addProperty(
             "App::PropertyBool",
             "Scoop",
@@ -1622,7 +1652,7 @@ class PartsBin(FoundationGridfinity):
             "App::PropertyLength",
             "CustomHeight",
             "GridfinityNonStandard",
-            "total height of the bin using the custom heignt instead of incraments of 7 mm",
+            "total height of the bin using the custom heignt instead of increments of 7 mm",
         ).CustomHeight = 42
         obj.addProperty(
             "App::PropertyLength",
@@ -1636,6 +1666,13 @@ class PartsBin(FoundationGridfinity):
             "GridfinityNonStandard",
             "use a custom height if selected",
         ).NonStandardHeight = False
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "GridfinityNonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = ["Hex", "Round"]
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
