@@ -815,6 +815,7 @@ def MakeBottomHoles(self, obj):
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
                     C1 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
 
                     p = App.ActiveDocument.addObject("Part::RegularPolygon")
                     p.Polygon = nSides
@@ -823,6 +824,7 @@ def MakeBottomHoles(self, obj):
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
                     C2 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
 
                     p = App.ActiveDocument.addObject("Part::RegularPolygon")
                     p.Polygon = nSides
@@ -831,6 +833,7 @@ def MakeBottomHoles(self, obj):
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
                     C3 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
 
                     p = App.ActiveDocument.addObject("Part::RegularPolygon")
                     p.Polygon = nSides
@@ -839,6 +842,7 @@ def MakeBottomHoles(self, obj):
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
                     C4 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
 
                 else:
                     C1 = Part.makeCylinder(
