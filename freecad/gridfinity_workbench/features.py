@@ -171,7 +171,7 @@ class BinBlank(FoundationGridfinity):
         ).MagnetHoles = True
         obj.addProperty(
             "App::PropertyBool", "ScrewHoles", "Gridfinity", "Toggle the screw holes on or off"
-        ).ScrewHoles = True
+        ).ScrewHoles = False
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty(
@@ -189,6 +189,13 @@ class BinBlank(FoundationGridfinity):
         obj.addProperty(
             "App::PropertyBool", "NonStandardHeight", "GridfinityNonStandard", "use a custom height if selected"
         ).NonStandardHeight = False
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "GridfinityNonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = ["Hex", "Round"]
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -391,7 +398,7 @@ class BinBase(FoundationGridfinity):
         ).MagnetHoles = True
         obj.addProperty(
             "App::PropertyBool", "ScrewHoles", "Gridfinity", "Toggle the screw holes on or off"
-        ).ScrewHoles = True
+        ).ScrewHoles = False
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty(
@@ -619,7 +626,7 @@ class SimpleStorageBin(FoundationGridfinity):
         ).MagnetHoles = True
         obj.addProperty(
             "App::PropertyBool", "ScrewHoles", "Gridfinity", "Toggle the screw holes on or off"
-        ).ScrewHoles = True
+        ).ScrewHoles = False
         obj.addProperty("App::PropertyBool", "Scoop", "Gridfinity", "Toggle the Scoop fillet on or off").Scoop = False
         obj.addProperty(
             "App::PropertyInteger", "xDividers", "Gridfinity", "Select the Number of Dividers in the x direction"
