@@ -1,12 +1,9 @@
-from FreeCAD import Base, Units
-import FreeCAD, Part, math
-import FreeCADGui
-import FreeCADGui as Gui
+from FreeCAD import Units
+import Part
+import math
 import FreeCAD as App
 
-
 unitmm = Units.Quantity("1 mm")
-
 zeromm = Units.Quantity("0 mm")
 
 def createRoundedRectangle(xwidth, ywidth, zsketchplane, radius):
@@ -89,7 +86,7 @@ def MakeLabelShelf(self, obj):
         fwoverride = True
 
 
-    if obj.LabelShelfPlacement == "Full Width" or fwoverride == True:
+    if obj.LabelShelfPlacement == "Full Width" or fwoverride:
 
         fw = obj.yTotalWidth - obj.WallThickness*2
         ytranslate = -obj.BinUnit/2 + obj.WallThickness
@@ -139,7 +136,7 @@ def MakeLabelShelf(self, obj):
             funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
 
 
-    if obj.LabelShelfPlacement == "Center" and fwoverride == False:
+    if obj.LabelShelfPlacement == "Center" and not fwoverride:
 
         xtranslate = zeromm
         ysp = -obj.BinUnit/2 + obj.WallThickness + ycompwidth/2 - obj.LabelShelfLength/2
@@ -179,7 +176,7 @@ def MakeLabelShelf(self, obj):
             funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
 
 
-    if obj.LabelShelfPlacement == "Left" and fwoverride == False:
+    if obj.LabelShelfPlacement == "Left" and not fwoverride:
         xtranslate = zeromm
         ysp = -obj.BinUnit/2 + obj.WallThickness
         ytranslate = ysp
@@ -232,7 +229,7 @@ def MakeLabelShelf(self, obj):
             funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
 
 
-    if obj.LabelShelfPlacement == "Right" and fwoverride == False:
+    if obj.LabelShelfPlacement == "Right" and not fwoverride:
         xtranslate = zeromm
         ysp = -obj.BinUnit/2 + obj.WallThickness + ycompwidth - obj.LabelShelfLength
         ytranslate = ysp
@@ -653,7 +650,7 @@ def MakeBottomHoles(self, obj):
 
     xtranslate = zeromm
     ytranslate = zeromm
-    if obj.MagnetHoles == True:
+    if obj.MagnetHoles:
         for x in range(obj.xGridUnits):
             ytranslate = zeromm
             for y in range(obj.yGridUnits):
@@ -681,7 +678,7 @@ def MakeBottomHoles(self, obj):
     xtranslate = zeromm
     ytranslate = zeromm
 
-    if obj.ScrewHoles == True:
+    if obj.ScrewHoles:
         for x in range(obj.xGridUnits):
             ytranslate = zeromm
             for y in range(obj.yGridUnits):
@@ -707,7 +704,7 @@ def MakeBottomHoles(self, obj):
 
     xtranslate = zeromm
     ytranslate = zeromm
-    if obj.ScrewHoles == True and obj.MagnetHoles == True:
+    if obj.ScrewHoles and obj.MagnetHoles:
         for x in range(obj.xGridUnits):
             ytranslate = zeromm
             for y in range(obj.yGridUnits):
@@ -805,11 +802,11 @@ def MakeBottomHoles(self, obj):
                 HSQ3 = HSQ2
             xtranslate += obj.GridSize
 
-    if obj.ScrewHoles == True and obj.MagnetHoles == False:
+    if obj.ScrewHoles and not obj.MagnetHoles:
         fusetotal = HS3
-    if obj.MagnetHoles == True and obj.ScrewHoles == False:
+    if obj.MagnetHoles and not obj.ScrewHoles:
         fusetotal = HM3
-    if obj.ScrewHoles == True and obj.MagnetHoles == True:
+    if obj.ScrewHoles and obj.MagnetHoles:
         fusetotal = Part.Solid.multiFuse(HM3,[HS3,HSQ3])
 
     return fusetotal
@@ -825,7 +822,7 @@ def MakeEcoBinCut(self, obj):
     bt_chf_rad = obj.BinVerticalRadius - 0.4*unitmm - obj.BaseWallThickness
     v_chf_rad = obj.BinVerticalRadius - obj.BaseWallThickness
 
-    if obj.MagnetHoles == True:
+    if obj.MagnetHoles:
         magoffset = obj.MagnetHoleDepth
         if (obj.MagnetHoleDepth+obj.BaseWallThickness) > (obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+base_offset):
             tp_chf_offset = (obj.MagnetHoleDepth+obj.BaseWallThickness) - (obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+base_offset)

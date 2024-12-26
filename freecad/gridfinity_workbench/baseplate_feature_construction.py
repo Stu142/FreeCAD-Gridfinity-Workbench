@@ -1,7 +1,5 @@
-from FreeCAD import Base, Units
-import FreeCAD, Part, math
-import FreeCADGui
-import FreeCADGui as Gui
+from FreeCAD import Units
+import Part
 import FreeCAD as App
 
 unitmm = Units.Quantity("1 mm")
