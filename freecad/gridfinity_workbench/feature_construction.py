@@ -803,7 +803,7 @@ def MakeBottomHoles(self, obj):
         for x in range(obj.xGridUnits):
             ytranslate = zeromm
             for y in range(obj.yGridUnits):
-                if obj.MagnetHolesHexShape:
+                if obj.MagnetHolesShape == "Hex":
                     nSides = 6
 
                     rot = App.Rotation(App.Vector(0, 0, 1), 0)
@@ -813,32 +813,32 @@ def MakeBottomHoles(self, obj):
                     p.Circumradius = obj.MagnetHoleDiameter / 2
                     p.Placement = App.Placement(App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight), rot)
                     p.recompute()
-                    ext = Part.Wire(p.Shape.Edges).extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
-                    C1 = Part.Solid(ext)
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C1 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
 
                     p = App.ActiveDocument.addObject("Part::RegularPolygon")
                     p.Polygon = nSides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
                     p.Placement = App.Placement(App.Vector(hole_pos, -hole_pos, -obj.TotalHeight), rot)
                     p.recompute()
-                    ext = Part.Wire(p.Shape.Edges).extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
-                    C2 = Part.Solid(ext)
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C2 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
 
                     p = App.ActiveDocument.addObject("Part::RegularPolygon")
                     p.Polygon = nSides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
                     p.Placement = App.Placement(App.Vector(-hole_pos, hole_pos, -obj.TotalHeight), rot)
                     p.recompute()
-                    ext = Part.Wire(p.Shape.Edges).extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
-                    C3 = Part.Solid(ext)
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C3 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
 
                     p = App.ActiveDocument.addObject("Part::RegularPolygon")
                     p.Polygon = nSides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
                     p.Placement = App.Placement(App.Vector(hole_pos, hole_pos, -obj.TotalHeight), rot)
                     p.recompute()
-                    ext = Part.Wire(p.Shape.Edges).extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
-                    C4 = Part.Solid(ext)
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C4 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
 
                 else:
                     C1 = Part.makeCylinder(

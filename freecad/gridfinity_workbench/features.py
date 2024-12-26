@@ -410,11 +410,12 @@ class BinBase(FoundationGridfinity):
             "App::PropertyBool", "NonStandardHeight", "GridfinityNonStandard", "use a custom height if selected"
         ).NonStandardHeight = False
         obj.addProperty(
-            "App::PropertyBool",
-            "MagnetHolesHexShape",
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
             "GridfinityNonStandard",
-            "Use hex shaped press fit magnet holes <br> <br> default = True. <br> Round if False",
-        ).MagnetHolesHexShape = True
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = ["Hex", "Round"]
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -652,11 +653,12 @@ class SimpleStorageBin(FoundationGridfinity):
             "App::PropertyBool", "NonStandardHeight", "GridfinityNonStandard", "use a custom height if selected"
         ).NonStandardHeight = False
         obj.addProperty(
-            "App::PropertyBool",
-            "MagnetHolesHexShape",
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
             "GridfinityNonStandard",
-            "Use hex shaped press fit magnet holes <br> <br> default = True. <br> Round if False",
-        ).MagnetHolesHexShape = True
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = ["Hex", "Round"]
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -975,11 +977,12 @@ class EcoBin(FoundationGridfinity):
             "App::PropertyBool", "NonStandardHeight", "GridfinityNonStandard", "use a custom height if selected"
         ).NonStandardHeight = False
         obj.addProperty(
-            "App::PropertyBool",
-            "MagnetHolesHexShape",
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
             "GridfinityNonStandard",
-            "Use hex shaped press fit magnet holes <br> <br> default = True. <br> Round if False",
-        ).MagnetHolesHexShape = True
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = ["Hex", "Round"]
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -1277,11 +1280,12 @@ class PartsBin(FoundationGridfinity):
             "App::PropertyBool", "NonStandardHeight", "GridfinityNonStandard", "use a custom height if selected"
         ).NonStandardHeight = False
         obj.addProperty(
-            "App::PropertyBool",
-            "MagnetHolesHexShape",
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
             "GridfinityNonStandard",
-            "Use hex shaped press fit magnet holes <br> <br> default = True. <br> Round if False",
-        ).MagnetHolesHexShape = True
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = ["Hex", "Round"]
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
