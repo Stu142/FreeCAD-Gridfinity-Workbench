@@ -20,7 +20,6 @@ from .baseplate_feature_construction import (
     MakeBPScrewBottomCham,
     MakeBPConnectionHoles,
 )
-
 from .const import (
     BIN_BASE_TOP_CHAMFER,
     BIN_BASE_BOTTOM_CHAMFER,
@@ -58,7 +57,6 @@ from .const import (
     LABEL_SHELF_WIDTH,
     LABEL_SHELF_VERTICAL_THICKNESS,
     LABEL_SHELF_LENGTH,
-    LABEL_SHELF_ANGLE,
     SCOOP_RADIUS,
 )
 
@@ -827,7 +825,7 @@ class SimpleStorageBin(FoundationGridfinity):
             "Gridfinity",
             "Choose to turn the label shelf on or off",
         )
-        obj.LabelShelfStyle = ["Off", "Standard", "Overhang"]
+        obj.LabelShelfStyle = ["Off", "Standard"]
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty(
@@ -902,12 +900,6 @@ class SimpleStorageBin(FoundationGridfinity):
             "GridfinityNonStandard",
             "Length of the Label Shelf <br> <br> default = 1.2 mm",
         ).LabelShelfLength = LABEL_SHELF_LENGTH
-        obj.addProperty(
-            "App::PropertyAngle",
-            "LabelShelfAngle",
-            "GridfinityNonStandard",
-            "Angle of the bottom part of the Label <br> <br> default = 42º",
-        ).LabelShelfAngle = LABEL_SHELF_ANGLE
         obj.addProperty(
             "App::PropertyLength",
             "ScoopRadius",
@@ -1623,7 +1615,7 @@ class PartsBin(FoundationGridfinity):
             "Gridfinity",
             "Choose to turn the label shelf on or off",
         )
-        obj.LabelShelfStyle = ["Standard", "Off", "Overhang"]
+        obj.LabelShelfStyle = ["Standard", "Off"]
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty(
@@ -1698,12 +1690,6 @@ class PartsBin(FoundationGridfinity):
             "GridfinityNonStandard",
             "Length of the Label Shelf <br> <br> default = 1.2 mm",
         ).LabelShelfLength = LABEL_SHELF_LENGTH
-        obj.addProperty(
-            "App::PropertyAngle",
-            "LabelShelfAngle",
-            "GridfinityNonStandard",
-            "Angle of the bottom part of the Label <br> <br> default = 42º",
-        ).LabelShelfAngle = LABEL_SHELF_ANGLE
         obj.addProperty(
             "App::PropertyLength",
             "ScoopRadius",
