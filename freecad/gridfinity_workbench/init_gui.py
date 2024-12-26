@@ -47,8 +47,8 @@ class GridfinityWorkbench(Workbench):
 
         App.Console.PrintMessage("switching to Gridfinity Workbench\n")
 
-        self.appendToolbar("Tools", self.toolbox)
-        self.appendMenu("Tools", self.toolbox)
+        self.appendToolbar("Gridfinity", self.toolbox)
+        self.appendMenu("Gridfinity", self.toolbox)
 
         Gui.addCommand('CreateBinBlank', CreateBinBlank())
         Gui.addCommand('CreateBinBase', CreateBinBase())
