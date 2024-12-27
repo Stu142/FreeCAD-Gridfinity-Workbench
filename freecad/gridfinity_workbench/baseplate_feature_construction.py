@@ -201,17 +201,19 @@ def MakeBPScrewBottomCham(self, obj):
     xtranslate = zeromm
     ytranslate = zeromm
 
+    HM1 = Part.Solid.multiFuse(CH1, [CH2, CH3, CH4])
+
     for x in range(obj.xGridUnits):
         ytranslate = zeromm
         for y in range(obj.yGridUnits):
 
-            HM1 = Part.Solid.multiFuse(CH1, [CH2, CH3, CH4])
+            hm1 = HM1.copy()
 
-            HM1.translate(App.Vector(xtranslate, ytranslate, 0))
+            hm1.translate(App.Vector(xtranslate, ytranslate, 0))
             if y > 0:
-                HM2 = Part.Solid.fuse(HM1, HM2)
+                HM2 = Part.Solid.fuse(hm1, HM2)
             else:
-                HM2 = HM1
+                HM2 = hm1
             ytranslate += obj.GridSize
         if x > 0:
             HM3 = Part.Solid.fuse(HM3, HM2)
@@ -256,33 +258,33 @@ def MakeBPConnectionHoles(self, obj):
 
     xtranslate = zeromm
     ytranslate = zeromm
+    HX1 = Part.Solid.fuse(C1, C2)
 
     for x in range(obj.xGridUnits):
         ytranslate = zeromm
 
-        HX1 = Part.Solid.fuse(C1, C2)
-
-        HX1.translate(App.Vector(xtranslate, ytranslate, 0))
+        hx1 = HX1.copy()
+        hx1.translate(App.Vector(xtranslate, ytranslate, 0))
         if x > 0:
-            HX2 = Part.Solid.fuse(HX1, HX2)
+            HX2 = Part.Solid.fuse(hx1, HX2)
         else:
-            HX2 = HX1
+            HX2 = hx1
 
         xtranslate += obj.GridSize
 
     xtranslate = zeromm
     ytranslate = zeromm
+    HY1 = Part.Solid.fuse(C3, C4)
 
     for x in range(obj.yGridUnits):
         xtranslate = zeromm
 
-        HY1 = Part.Solid.fuse(C3, C4)
-
-        HY1.translate(App.Vector(xtranslate, ytranslate, 0))
+        hy1 = HY1.copy()
+        hy1.translate(App.Vector(xtranslate, ytranslate, 0))
         if x > 0:
-            HY2 = Part.Solid.fuse(HY1, HY2)
+            HY2 = Part.Solid.fuse(hy1, HY2)
         else:
-            HY2 = HY1
+            HY2 = hy1
 
         ytranslate += obj.GridSize
 
