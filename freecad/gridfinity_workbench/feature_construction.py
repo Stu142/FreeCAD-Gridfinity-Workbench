@@ -794,6 +794,10 @@ def MakeBottomHoles(self, obj):
     sqbr1_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight
     sqbr2_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight * 2
 
+    # This could be sped up if by creating copies of Solids and moving those.
+    # Create 1 hole, copy it 3x and move it to the correct position.
+    # Then create copies of the fused 4 holes and move them to the correct position per row & col.
+
     xtranslate = zeromm
     ytranslate = zeromm
     if obj.MagnetHoles:
