@@ -115,22 +115,29 @@ def MakeBaseplateMagnetHoles(self, obj):
     xtranslate = zeromm
     ytranslate = zeromm
 
+    HM1 = Part.Solid.multiFuse(C1, [C2, C3, C4, CA1, CA2, CA3, CA4, CH1, CH2, CH3, CH4])
+
     for x in range(obj.xGridUnits):
         ytranslate = zeromm
+
         for y in range(obj.yGridUnits):
+            hm1 = HM1.copy()
 
-            HM1 = Part.Solid.multiFuse(C1, [C2, C3, C4, CA1, CA2, CA3, CA4, CH1, CH2, CH3, CH4])
+            # Translate for next hole
+            hm1.translate(App.Vector(xtranslate, ytranslate, 0))
 
-            HM1.translate(App.Vector(xtranslate, ytranslate, 0))
             if y > 0:
-                HM2 = Part.Solid.fuse(HM1, HM2)
+                HM2 = Part.Solid.fuse(hm1, HM2)
             else:
-                HM2 = HM1
-            ytranslate += obj.GridSize
+                HM2 = hm1
+
+            ytranslate += obj.GridSize  # Track position
+
         if x > 0:
             HM3 = Part.Solid.fuse(HM3, HM2)
         else:
             HM3 = HM2
+
         xtranslate += obj.GridSize
 
     return HM3
