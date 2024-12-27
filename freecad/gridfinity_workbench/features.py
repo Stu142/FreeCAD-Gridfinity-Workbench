@@ -70,6 +70,8 @@ __all__ = [
     "EcoBin",
 ]
 
+HOLE_SHAPES = ["Round", "Hex"]
+
 
 def fcvec(x):
     if len(x) == 2:
@@ -192,7 +194,7 @@ class BinBlank(FoundationGridfinity):
             "GridfinityNonStandard",
             "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
         )
-        obj.MagnetHolesShape = ["Hex", "Round"]
+        obj.MagnetHolesShape = HOLE_SHAPES
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -419,7 +421,7 @@ class BinBase(FoundationGridfinity):
             "GridfinityNonStandard",
             "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
         )
-        obj.MagnetHolesShape = ["Hex", "Round"]
+        obj.MagnetHolesShape = HOLE_SHAPES
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -662,7 +664,7 @@ class SimpleStorageBin(FoundationGridfinity):
             "GridfinityNonStandard",
             "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
         )
-        obj.MagnetHolesShape = ["Hex", "Round"]
+        obj.MagnetHolesShape = HOLE_SHAPES
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -986,7 +988,7 @@ class EcoBin(FoundationGridfinity):
             "GridfinityNonStandard",
             "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
         )
-        obj.MagnetHolesShape = ["Hex", "Round"]
+        obj.MagnetHolesShape = HOLE_SHAPES
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -1289,7 +1291,7 @@ class PartsBin(FoundationGridfinity):
             "GridfinityNonStandard",
             "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
         )
-        obj.MagnetHolesShape = ["Hex", "Round"]
+        obj.MagnetHolesShape = HOLE_SHAPES
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
