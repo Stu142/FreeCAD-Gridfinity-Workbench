@@ -1,15 +1,11 @@
 from __future__ import division
 import os
-import numpy as np
-import math
 import FreeCAD as App
 import Part
 from FreeCAD import Units
 from .version import __version__
-from .feature_construction import MakeStackingLip, MakeBinBase, RoundedRectangleExtrude, MakeBottomHoles, MakeBinWall, MakeBaseplateCenterCut, MakeCompartements, MakeEcoBinCut, MakeScoop, MakeLabelShelf
+from .feature_construction import MakeStackingLip, MakeBinBase, RoundedRectangleExtrude, MakeBottomHoles, MakeBaseplateCenterCut, MakeCompartements, MakeEcoBinCut, MakeScoop, MakeLabelShelf
 from .baseplate_feature_construction import MakeBaseplateMagnetHoles, MakeBPScrewBottomCham, MakeBPConnectionHoles
-from Part import Shape, Wire, Face, makeLoft, BSplineSurface, \
-    makePolygon, makeHelix, makeShell, makeSolid, LineSegment
 
 from .const import BIN_BASE_TOP_CHAMFER, BIN_BASE_BOTTOM_CHAMFER, BIN_BASE_VERTICAL_SECTION, GRID_SIZE, BIN_OUTER_RADIUS, BIN_UNIT, BIN_BASE_VERTICAL_RADIUS, BIN_BASE_BOTTOM_RADIUS, TOLERANCE, MAGNET_HOLE_DIAMETER, MAGNET_HOLE_DEPTH, MAGNET_HOLE_DISTANCE_FROM_EDGE, SCREW_HOLE_DIAMETER, SCREW_HOLE_DEPTH, BASEPLATE_BOTTOM_CHAMFER, BASEPLATE_VERTICAL_SECTION, BASEPLATE_TOP_CHAMFER, BASEPLATE_TOP_LEDGE_WIDTH, BASEPLATE_OUTER_RADIUS, BASEPLATE_VERTICAL_RADIUS, BASEPLATE_BOTTOM_RADIUS, STACKING_LIP_TOP_LEDGE,STACKING_LIP_BOTTOM_CHAMFER,STACKING_LIP_VERTICAL_SECTION, HEIGHT_UNIT, BASEPLATE_SMALL_FILLET, MAGNET_BASE, MAGNET_EDGE_THICKNESS, MAGNET_BASE_HOLE, MAGNET_CHAMFER, BASE_THICKNESS, MAGNET_BOTTOM_CHAMFER, CONNECTION_HOLE_DIAMETER, LABEL_SHELF_WIDTH, LABEL_SHELF_VERTICAL_THICKNESS, LABEL_SHELF_LENGTH, LABEL_SHELF_ANGLE, SCOOP_RADIUS
 
@@ -70,7 +66,7 @@ class FoundationGridfinity(object):
 
     def execute(self, fp):
         gridfinity_shape = self.generate_gridfinity_shape(fp)
-        if hasattr(fp, "BaseFeature") and fp.BaseFeature != None:
+        if hasattr(fp, "BaseFeature") and fp.BaseFeature is not None:
             # we're inside a PartDesign Body, thus need to fuse with the base feature
             gridfinity_shape.Placement = fp.Placement # ensure the bin is placed correctly before fusing
             result_shape = fp.BaseFeature.Shape.fuse(gridfinity_shape)
@@ -156,7 +152,7 @@ class BinBlank(FoundationGridfinity):
         obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
         obj.BinUnit = obj.GridSize - TOLERANCE*2*unitmm
 
-        if obj.NonStandardHeight ==True:
+        if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
         else:
             obj.TotalHeight = obj.HeightUnits*obj.HeightUnitValue
@@ -168,10 +164,10 @@ class BinBlank(FoundationGridfinity):
 
         fuse_total = Part.Shape.fuse(fuse_total, solid_center )
 
-        if obj.StackingLip == True:
+        if obj.StackingLip:
             stacking_lip = MakeStackingLip(self, obj)
             fuse_total = Part.Shape.fuse(stacking_lip,fuse_total)
-        if obj.ScrewHoles == True or obj.MagnetHoles == True:
+        if obj.ScrewHoles or obj.MagnetHoles:
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
@@ -255,7 +251,7 @@ class BinBase(FoundationGridfinity):
         obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
         obj.BinUnit = obj.GridSize - TOLERANCE*2*unitmm
 
-        if obj.NonStandardHeight ==True:
+        if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
         else:
             obj.TotalHeight = obj.HeightUnits*obj.HeightUnitValue
@@ -267,10 +263,10 @@ class BinBase(FoundationGridfinity):
 
         fuse_total = Part.Shape.fuse(fuse_total, solid_center )
 
-        if obj.StackingLip == True:
+        if obj.StackingLip:
             stacking_lip = MakeStackingLip(self, obj)
             fuse_total = Part.Shape.fuse(stacking_lip,fuse_total)
-        if obj.ScrewHoles == True or obj.MagnetHoles == True:
+        if obj.ScrewHoles or obj.MagnetHoles:
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
@@ -371,7 +367,7 @@ class SimpleStorageBin(FoundationGridfinity):
         obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
         obj.BinUnit = obj.GridSize - TOLERANCE*2*unitmm
 
-        if obj.NonStandardHeight ==True:
+        if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
         else:
             obj.TotalHeight = obj.HeightUnits*obj.HeightUnitValue
@@ -404,11 +400,11 @@ class SimpleStorageBin(FoundationGridfinity):
 
         fuse_total = fuse_total.cut(compartements)
 
-        if obj.StackingLip == True:
+        if obj.StackingLip:
             stacking_lip = MakeStackingLip(self, obj)
             fuse_total = Part.Shape.fuse(stacking_lip,fuse_total)
 
-        if obj.ScrewHoles == True or obj.MagnetHoles == True:
+        if obj.ScrewHoles or obj.MagnetHoles:
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
@@ -416,7 +412,7 @@ class SimpleStorageBin(FoundationGridfinity):
             label_shelf = MakeLabelShelf(self, obj)
             fuse_total = fuse_total.fuse(label_shelf)
 
-        if obj.Scoop == True:
+        if obj.Scoop:
             scoop = MakeScoop(self, obj)
             fuse_total = fuse_total.fuse(scoop)
 
@@ -514,7 +510,7 @@ class EcoBin(FoundationGridfinity):
         obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
         obj.BinUnit = obj.GridSize - TOLERANCE*2*unitmm
 
-        if obj.NonStandardHeight ==True:
+        if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
         else:
             obj.TotalHeight = obj.HeightUnits*obj.HeightUnitValue
@@ -551,11 +547,11 @@ class EcoBin(FoundationGridfinity):
 
         fuse_total = fuse_total.cut(compartements)
 
-        if obj.StackingLip == True:
+        if obj.StackingLip:
             stacking_lip = MakeStackingLip(self, obj)
             fuse_total = Part.Shape.fuse(stacking_lip,fuse_total)
 
-        if obj.MagnetHoles == True:
+        if obj.MagnetHoles:
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
@@ -657,7 +653,7 @@ class PartsBin(FoundationGridfinity):
         obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
         obj.BinUnit = obj.GridSize - TOLERANCE*2*unitmm
 
-        if obj.NonStandardHeight ==True:
+        if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
         else:
             obj.TotalHeight = obj.HeightUnits*obj.HeightUnitValue
@@ -695,11 +691,11 @@ class PartsBin(FoundationGridfinity):
 
         fuse_total = fuse_total.cut(compartements)
 
-        if obj.StackingLip == True:
+        if obj.StackingLip:
             stacking_lip = MakeStackingLip(self, obj)
             fuse_total = Part.Shape.fuse(stacking_lip,fuse_total)
 
-        if obj.ScrewHoles == True or obj.MagnetHoles == True:
+        if obj.ScrewHoles or obj.MagnetHoles:
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
@@ -707,7 +703,7 @@ class PartsBin(FoundationGridfinity):
             label_shelf = MakeLabelShelf(self, obj)
             fuse_total = fuse_total.fuse(label_shelf)
 
-        if obj.Scoop == True:
+        if obj.Scoop:
             scoop = MakeScoop(self, obj)
             fuse_total = fuse_total.fuse(scoop)
 

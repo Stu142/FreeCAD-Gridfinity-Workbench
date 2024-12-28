@@ -5,9 +5,9 @@ from freecad.gridfinity_workbench import ICONPATH
 
 try:
     from FreeCADGui import Workbench
-except ImportError as e:
+except ImportError:
     App.Console.PrintWarning(
-        "you are using the GearWorkbench with an old version of FreeCAD (<0.16)")
+        "you are using the GridfinityWorkbench with an old version of FreeCAD (<0.16)")
     App.Console.PrintWarning(
         "the class Workbench is loaded, although not imported: magic")
 
@@ -47,8 +47,8 @@ class GridfinityWorkbench(Workbench):
 
         App.Console.PrintMessage("switching to Gridfinity Workbench\n")
 
-        self.appendToolbar("Tools", self.toolbox)
-        self.appendMenu("Tools", self.toolbox)
+        self.appendToolbar("Gridfinity", self.toolbox)
+        self.appendMenu("Gridfinity", self.toolbox)
 
         Gui.addCommand('CreateBinBlank', CreateBinBlank())
         Gui.addCommand('CreateBinBase', CreateBinBase())
