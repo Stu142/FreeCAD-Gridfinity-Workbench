@@ -50,8 +50,14 @@ Select the Property view tab on the bottom right and change the values. Hit ente
 - Install using the built-in FreeCAD addon manager 
 - Alternatively, download and place the files in the FreeCAD/Mod File. 
 
-# dependencies
-- This Workbench has been verified as working on FreeCAD 0.21.1 and 0.21.2
+# Dependencies
+- This Workbench has been verified as working on FreeCAD 0.21.1, 0.21.2 and 1.0.0
+
+# Contributions
+- Clone this repository
+- Create a Pull Request
+  - Keep in mind that this repository enforces some coding standards/rules
+    - formatting: ruff formatting is used in this repository. Configure ruff as auto formatter in your IDE or run `ruff format`
 
 # Changlog
 **2024/09/10 Version 0.6.0**
