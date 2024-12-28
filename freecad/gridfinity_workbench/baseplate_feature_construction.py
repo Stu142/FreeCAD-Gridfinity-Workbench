@@ -8,7 +8,6 @@ zeromm = Units.Quantity("0 mm")
 
 
 def MakeBaseplateMagnetHoles(self, obj):
-
     hole_pos = obj.GridSize / 2 - obj.MagnetHoleDistanceFromEdge
 
     C1 = Part.makeCylinder(
@@ -144,7 +143,6 @@ def MakeBaseplateMagnetHoles(self, obj):
 
 
 def MakeBPScrewBottomCham(self, obj):
-
     hole_pos = obj.GridSize / 2 - obj.MagnetHoleDistanceFromEdge
 
     CT1 = Part.makeCircle(
@@ -206,7 +204,6 @@ def MakeBPScrewBottomCham(self, obj):
     for x in range(obj.xGridUnits):
         ytranslate = zeromm
         for y in range(obj.yGridUnits):
-
             hm1 = HM1.copy()
 
             hm1.translate(App.Vector(xtranslate, ytranslate, 0))
@@ -225,7 +222,6 @@ def MakeBPScrewBottomCham(self, obj):
 
 
 def MakeBPConnectionHoles(self, obj):
-
     C1 = Part.makeCylinder(
         obj.ConnectionHoleDiameter / 2,
         obj.BaseThickness,
@@ -236,7 +232,9 @@ def MakeBPConnectionHoles(self, obj):
         obj.ConnectionHoleDiameter / 2,
         obj.BaseThickness,
         App.Vector(
-            0, -obj.GridSize / 2 + obj.yTotalWidth - obj.BaseThickness, -obj.TotalHeight + obj.BaseThickness / 2
+            0,
+            -obj.GridSize / 2 + obj.yTotalWidth - obj.BaseThickness,
+            -obj.TotalHeight + obj.BaseThickness / 2,
         ),
         App.Vector(0, 1, 0),
     )
@@ -251,7 +249,9 @@ def MakeBPConnectionHoles(self, obj):
         obj.ConnectionHoleDiameter / 2,
         obj.BaseThickness,
         App.Vector(
-            -obj.GridSize / 2 + obj.xTotalWidth - obj.BaseThickness, 0, -obj.TotalHeight + obj.BaseThickness / 2
+            -obj.GridSize / 2 + obj.xTotalWidth - obj.BaseThickness,
+            0,
+            -obj.TotalHeight + obj.BaseThickness / 2,
         ),
         App.Vector(1, 0, 0),
     )
