@@ -26,7 +26,8 @@ class GridfinityWorkbench(Workbench):
         "CreatePartsBin",
         "CreateBaseplate",
         "CreateMagnetBaseplate",
-        "CreateScrewTogetherBaseplate"]
+        "CreateScrewTogetherBaseplate",
+        "CreateLBinBlank"]
 
     def GetClassName(self):
         return "Gui::PythonWorkbench"
@@ -44,6 +45,7 @@ class GridfinityWorkbench(Workbench):
         from .commands import CreateBaseplate
         from .commands import CreateMagnetBaseplate
         from .commands import CreateScrewTogetherBaseplate
+        from .commands import CreateLBinBlank
 
         App.Console.PrintMessage("switching to Gridfinity Workbench\n")
 
@@ -58,6 +60,7 @@ class GridfinityWorkbench(Workbench):
         Gui.addCommand('CreateBaseplate', CreateBaseplate())
         Gui.addCommand('CreateMagnetBaseplate', CreateMagnetBaseplate())
         Gui.addCommand('CreateScrewTogetherBaseplate', CreateScrewTogetherBaseplate())
+        Gui.addCommand('CreateLBinBlank', CreateLBinBlank())
 
 
     def Activated(self):
