@@ -6,9 +6,10 @@ from FreeCAD import Units
 from .version import __version__
 from .feature_construction import MakeStackingLip, MakeBinBase, RoundedRectangleExtrude, MakeBottomHoles, MakeBaseplateCenterCut, MakeCompartements, MakeEcoBinCut, MakeScoop, MakeLabelShelf
 from .baseplate_feature_construction import MakeBaseplateMagnetHoles, MakeBPScrewBottomCham, MakeBPConnectionHoles
-from .feature_construction_complex_bin import MakeLBinBlank
 
-from .defaults import BIN_BASE_TOP_CHAMFER, BIN_BASE_BOTTOM_CHAMFER, BIN_BASE_VERTICAL_SECTION, GRID_SIZE, BIN_OUTER_RADIUS, BIN_UNIT, BIN_BASE_VERTICAL_RADIUS, BIN_BASE_BOTTOM_RADIUS, CLEARANCE, MAGNET_HOLE_DIAMETER, MAGNET_HOLE_DEPTH, MAGNET_HOLE_DISTANCE_FROM_EDGE, SCREW_HOLE_DIAMETER, SCREW_HOLE_DEPTH, BASEPLATE_BOTTOM_CHAMFER, BASEPLATE_VERTICAL_SECTION, BASEPLATE_TOP_CHAMFER, BASEPLATE_TOP_LEDGE_WIDTH, BASEPLATE_OUTER_RADIUS, BASEPLATE_VERTICAL_RADIUS, BASEPLATE_BOTTOM_RADIUS, STACKING_LIP_TOP_LEDGE,STACKING_LIP_BOTTOM_CHAMFER,STACKING_LIP_VERTICAL_SECTION, HEIGHT_UNIT, BASEPLATE_SMALL_FILLET, MAGNET_BASE, MAGNET_EDGE_THICKNESS, MAGNET_BASE_HOLE, MAGNET_CHAMFER, BASE_THICKNESS, MAGNET_BOTTOM_CHAMFER, CONNECTION_HOLE_DIAMETER, LABEL_SHELF_WIDTH, LABEL_SHELF_VERTICAL_THICKNESS, LABEL_SHELF_LENGTH, SCOOP_RADIUS
+from .feature_construction_complex_bin import MakeLBinBlank, MakeComplexStackingLip
+
+from .defaults import BIN_BASE_TOP_CHAMFER, BIN_BASE_BOTTOM_CHAMFER, BIN_BASE_VERTICAL_SECTION, GRID_SIZE, BIN_OUTER_RADIUS, BIN_UNIT, BIN_BASE_VERTICAL_RADIUS, BIN_BASE_BOTTOM_RADIUS, CLEARANCE, MAGNET_HOLE_DIAMETER, MAGNET_HOLE_DEPTH, MAGNET_HOLE_DISTANCE_FROM_EDGE, SCREW_HOLE_DIAMETER, SCREW_HOLE_DEPTH, BASEPLATE_BOTTOM_CHAMFER, BASEPLATE_VERTICAL_SECTION, BASEPLATE_TOP_CHAMFER, BASEPLATE_TOP_LEDGE_WIDTH, BASEPLATE_OUTER_RADIUS, BASEPLATE_VERTICAL_RADIUS, BASEPLATE_BOTTOM_RADIUS, STACKING_LIP_TOP_LEDGE,STACKING_LIP_BOTTOM_CHAMFER,STACKING_LIP_VERTICAL_SECTION, HEIGHT_UNIT, BASEPLATE_SMALL_FILLET, MAGNET_BASE, MAGNET_EDGE_THICKNESS, MAGNET_BASE_HOLE, MAGNET_CHAMFER, BASE_THICKNESS, MAGNET_BOTTOM_CHAMFER, CONNECTION_HOLE_DIAMETER, LABEL_SHELF_WIDTH, LABEL_SHELF_VERTICAL_THICKNESS, LABEL_SHELF_LENGTH, SCOOP_RADIUS, X_GRID_SIZE, Y_GRID_SIZE
 
 
 unitmm = Units.Quantity("1 mm")
@@ -420,7 +421,7 @@ class SimpleStorageBin(FoundationGridfinity):
 
         fuse_total = Part.Solid.removeSplitter(fuse_total)
 
-        #fuse_total.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
+        #fuse_total.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0)) testing moving finished part but doesn't work
 
         return fuse_total
 
@@ -992,10 +993,10 @@ class LBinBlank(FoundationGridfinity):
 
     def add_bin_properties(self, obj):
 
-        obj.addProperty("App::PropertyInteger","AGridUnits","Gridfinity","Length of the edges of the outline").AGridUnits=3
-        obj.addProperty("App::PropertyInteger","BGridUnits","Gridfinity","Height of the extrusion").BGridUnits=1
-        obj.addProperty("App::PropertyInteger","CGridUnits","Gridfinity","Height of the extrusion").CGridUnits=1
-        obj.addProperty("App::PropertyInteger","DGridUnits","Gridfinity","Height of the extrusion").DGridUnits=1
+        obj.addProperty("App::PropertyInteger","aGridUnits","Gridfinity","Length of the edges of the outline").aGridUnits=3
+        obj.addProperty("App::PropertyInteger","bGridUnits","Gridfinity","Height of the extrusion").bGridUnits=1
+        obj.addProperty("App::PropertyInteger","cGridUnits","Gridfinity","Height of the extrusion").cGridUnits=1
+        obj.addProperty("App::PropertyInteger","dGridUnits","Gridfinity","Height of the extrusion").dGridUnits=1
         obj.addProperty("App::PropertyInteger","HeightUnits","Gridfinity","height of the bin in units, each is 7 mm").HeightUnits=6
         obj.addProperty("App::PropertyBool","StackingLip","Gridfinity","Toggle the stacking lip on or off").StackingLip=True
         obj.addProperty("App::PropertyBool","MagnetHoles","Gridfinity","Toggle the magnet holes on or off").MagnetHoles = True
@@ -1016,13 +1017,20 @@ class LBinBlank(FoundationGridfinity):
         obj.addProperty("App::PropertyLength","yTotalWidth","ReferenceDimensions","total width of bin in y direction", 1)
         obj.addProperty("App::PropertyLength","TotalHeight","ReferenceDimensions","total height of the bin", 1)
         obj.addProperty("App::PropertyLength","BaseProfileHeight","ReferenceDimensions","Height of the Gridfinity Base Profile", 1)
-        obj.addProperty("App::PropertyLength","BinUnit", "ReferenceDimensions", "Width of a single bin unit",1).BinUnit = BIN_UNIT
+        obj.addProperty("App::PropertyLength","xBinUnit", "ReferenceDimensions", "Width of a single bin unit",1).xBinUnit = BIN_UNIT
+        obj.addProperty("App::PropertyLength","yBinUnit", "ReferenceDimensions", "Width of a single bin unit",1).yBinUnit = BIN_UNIT
+
+        obj.addProperty("App::PropertyLength","aTotalDimension","ReferenceDimensions","total width of a dimension", 1)
+        obj.addProperty("App::PropertyLength","bTotalDimension","ReferenceDimensions","total width of b dimension", 1)
+        obj.addProperty("App::PropertyLength","cTotalDimension","ReferenceDimensions","total width of c dimension", 1)
+        obj.addProperty("App::PropertyLength","dTotalDimension","ReferenceDimensions","total width of d dimension", 1)
 
     def add_expert_properties(self, obj):
         obj.addProperty("App::PropertyLength","BaseProfileBottomChamfer", "zzExpertOnly", "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",1).BaseProfileBottomChamfer=BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty("App::PropertyLength","BaseProfileVerticalSection", "zzExpertOnly", "Height of the vertical section in bin base profile",1).BaseProfileVerticalSection=BIN_BASE_VERTICAL_SECTION
         obj.addProperty("App::PropertyLength","BaseProfileTopChamfer", "zzExpertOnly", "Height of the top chamfer in the bin base profile",1).BaseProfileTopChamfer=BIN_BASE_TOP_CHAMFER
-        obj.addProperty("App::PropertyLength","GridSize", "zzExpertOnly", "Size of the Grid").GridSize = GRID_SIZE
+        obj.addProperty("App::PropertyLength","xGridSize", "zzExpertOnly", "Size of the Grid").xGridSize = X_GRID_SIZE
+        obj.addProperty("App::PropertyLength","yGridSize", "zzExpertOnly", "Size of the Grid").yGridSize = Y_GRID_SIZE
         obj.addProperty("App::PropertyLength","HeightUnitValue", "zzExpertOnly", "height per unit, default is 7mm",1).HeightUnitValue = 7
         obj.addProperty("App::PropertyLength","BinOuterRadius", "zzExpertOnly", "Outer radius of the bin",1).BinOuterRadius = BIN_OUTER_RADIUS
         obj.addProperty("App::PropertyLength","BinVerticalRadius", "zzExpertOnly", "Radius of the base profile Vertical section",1).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
@@ -1046,16 +1054,17 @@ class LBinBlank(FoundationGridfinity):
         else:
             obj.TotalHeight = obj.HeightUnits*obj.HeightUnitValue
 
-        """
-        obj.xTotalWidth = obj.xGridUnits*obj.GridSize-obj.Clearance*2
-        obj.yTotalWidth = obj.yGridUnits*obj.GridSize-obj.Clearance*2
-        obj.BaseProfileHeight = obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection+obj.BaseProfileTopChamfer
+        obj.BaseProfileHeight = obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection + obj.BaseProfileTopChamfer
         obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
-        obj.BinUnit = obj.GridSize - CLEARANCE*2*unitmm
+        obj.xBinUnit = obj.xGridSize - CLEARANCE*2*unitmm
+        obj.yBinUnit = obj.yGridSize - CLEARANCE*2*unitmm
 
+        obj.aTotalDimension = obj.aGridUnits*obj.xGridSize-obj.Clearance * 2
+        obj.bTotalDimension = obj.bGridUnits*obj.yGridSize-obj.Clearance * 2
+        obj.cTotalDimension = obj.cGridUnits*obj.xGridSize-obj.Clearance * 2
+        obj.dTotalDimension = obj.dGridUnits*obj.yGridSize
 
-
-
+        """
         fuse_total = MakeBinBase(self, obj)
         solid_center= RoundedRectangleExtrude(obj.xTotalWidth, obj.yTotalWidth, -obj.TotalHeight+obj.BaseProfileHeight, obj.TotalHeight-obj.BaseProfileHeight, obj.BinOuterRadius)
         solid_center.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
@@ -1071,6 +1080,10 @@ class LBinBlank(FoundationGridfinity):
         """
 
         fuse_total = MakeLBinBlank(self, obj)
+
+        if obj.StackingLip:
+            stacking_lip = MakeComplexStackingLip(self, obj)
+            fuse_total = Part.Shape.fuse(stacking_lip,fuse_total)
 
         return fuse_total
 

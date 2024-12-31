@@ -39,11 +39,11 @@ def createRoundedL(A, B, C, D, xoffset, yoffset, zsketchplane, radius):
     L5X = xoffset + A
     L5Y1 = yoffset + B - radius
     # L5Y2 = L1Y1
-    #ARC5X = ARC4X
+    # ARC5X = ARC4X
     ARC5Y = yoffset + radius - radius * math.sin(math.pi/4)
 
-    #L6X1 = L4X2
-    #L6X2 = L2X1
+    # L6X1 = L4X2
+    # L6X2 = L2X1
     L6Y = yoffset
     # ARC6X = ARC1X
     ARC6Y = yoffset + radius - radius * math.sin(math.pi/4)
@@ -67,23 +67,6 @@ def createRoundedL(A, B, C, D, xoffset, yoffset, zsketchplane, radius):
     L6V2 = App.Vector(L2X1, L6Y, zsketchplane)
     ARC6V = App.Vector(ARC1X, ARC6Y, zsketchplane)
 
-    #xfarv = xwidth/2
-    #yfarv = ywidth/2
-    #xclosev = xwidth/2-radius
-    #yclosev = ywidth/2-radius
-    #xarcv = xwidth / 2 - radius + radius * math.sin(math.pi/4)
-    #yarcv = ywidth / 2 - radius + radius * math.sin(math.pi/4)
-
-    #V1 = App.Vector(-xclosev,yfarv, zsketchplane)
-    #V2 = App.Vector(xclosev, yfarv, zsketchplane)
-    #V3 = App.Vector(xfarv, yclosev, zsketchplane)
-    #V4 = App.Vector(xfarv, -yclosev, zsketchplane)
-    #V5 = App.Vector(xclosev, -yfarv, zsketchplane)
-    #V6 = App.Vector(-xclosev, -yfarv, zsketchplane)
-    #V7 = App.Vector(-xfarv, -yclosev, zsketchplane)
-    #V8 = App.Vector(-xfarv, yclosev, zsketchplane)
-
-
     L1 = Part.LineSegment(L1V1, L1V2)
     ARC1 = Part.Arc(L1V2, ARC1V, L2V1)
     L2 = Part.LineSegment(L2V1, L2V2)
@@ -104,10 +87,10 @@ def createRoundedL(A, B, C, D, xoffset, yoffset, zsketchplane, radius):
     return wire
 
 #def RoundedLChamfer(xwidth, ywidth, zsketchplane, height, radius):
-    #w1 = createRoundedRectangle(xwidth, ywidth, zsketchplane, radius)
-    #w2 = createRoundedRectangle(xwidth+2*height, ywidth+2*height, zsketchplane+height, radius+height)
-    #wires = [w1,w2]
-    #return Part.makeLoft(wires,True)
+    # w1 = createRoundedRectangle(xwidth, ywidth, zsketchplane, radius)
+    # w2 = createRoundedRectangle(xwidth+2*height, ywidth+2*height, zsketchplane+height, radius+height)
+    # wires = [w1,w2]
+    # return Part.makeLoft(wires,True)
 
 def RoundedLExtrude(A, B, C, D, xoffset, yoffset, zsketchplane, radius, height):
     w1 = createRoundedL(A, B, C, D, xoffset, yoffset, zsketchplane, radius)
@@ -117,56 +100,64 @@ def RoundedLExtrude(A, B, C, D, xoffset, yoffset, zsketchplane, radius, height):
 
 def MakeLBinBlank(self, obj):
 
-    binlayout = [[None for x in range(obj.BGridUnits + obj.DGridUnits)] for y in range(obj.AGridUnits)]
+    binlayout = [[None for x in range(obj.bGridUnits + obj.dGridUnits)] for y in range(obj.aGridUnits)]
 
-    for x in range(obj.AGridUnits):
-        for y in range(obj.BGridUnits + obj.DGridUnits):
-            if x < obj.CGridUnits:
+    for x in range(obj.aGridUnits):
+        for y in range(obj.bGridUnits + obj.dGridUnits):
+            if x < obj.cGridUnits:
                 binlayout[x][y] = 1
-            if y < obj.BGridUnits:
+            if y < obj.bGridUnits:
                 binlayout[x][y] = 1
-
 
     components=[]
     basecomp = []
-    bt_cmf_width = obj.BinUnit - 2*obj.BaseProfileBottomChamfer-2*obj.BaseProfileTopChamfer
-    vert_width = obj.BinUnit - 2*obj.BaseProfileTopChamfer
+    x_bt_cmf_width = obj.xBinUnit - 2*obj.BaseProfileBottomChamfer-2*obj.BaseProfileTopChamfer
+    y_bt_cmf_width = obj.yBinUnit - 2*obj.BaseProfileBottomChamfer-2*obj.BaseProfileTopChamfer
+    x_vert_width = obj.xBinUnit - 2*obj.BaseProfileTopChamfer
+    y_vert_width = obj.yBinUnit - 2*obj.BaseProfileTopChamfer
     xtranslate = zeromm
     ytranslate = zeromm
-    for x in range(obj.AGridUnits):
+
+    bottom_chamfer = RoundedRectangleChamfer(x_bt_cmf_width, y_bt_cmf_width, -obj.TotalHeight,obj.BaseProfileBottomChamfer, obj.BinBottomRadius)
+
+    vertical_section = RoundedRectangleExtrude(x_vert_width, y_vert_width, -obj.TotalHeight +obj.BaseProfileBottomChamfer, obj.BaseProfileVerticalSection, obj.BinVerticalRadius)
+    assembly = Part.Shape.fuse(bottom_chamfer,vertical_section)
+
+    top_chamfer = RoundedRectangleChamfer(x_vert_width, y_vert_width, -obj.TotalHeight+obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection, obj.BaseProfileTopChamfer, obj.BinVerticalRadius)
+    assembly = Part.Solid.fuse(assembly,top_chamfer)
+
+
+    for x in range(obj.aGridUnits):
         ytranslate = zeromm
-        for y in range(obj.BGridUnits + obj.DGridUnits):
+        for y in range(obj.bGridUnits + obj.dGridUnits):
 
             if binlayout[x][y]:
+                b = assembly.copy()
 
-                bottom_chamfer = RoundedRectangleChamfer(bt_cmf_width, bt_cmf_width, -obj.TotalHeight,obj.BaseProfileBottomChamfer, obj.BinBottomRadius)
-
-                vertical_section = RoundedRectangleExtrude(vert_width, vert_width, -obj.TotalHeight +obj.BaseProfileBottomChamfer, obj.BaseProfileVerticalSection, obj.BinVerticalRadius)
-                assembly = Part.Shape.fuse(bottom_chamfer,vertical_section)
-
-                top_chamfer = RoundedRectangleChamfer(vert_width, vert_width, -obj.TotalHeight+obj.BaseProfileBottomChamfer+obj.BaseProfileVerticalSection, obj.BaseProfileTopChamfer, obj.BinVerticalRadius)
-                assembly = Part.Solid.fuse(assembly,top_chamfer)
-
-
-                assembly.translate(App.Vector(xtranslate,ytranslate,0))
-
+                b.translate(App.Vector(xtranslate,ytranslate,0))
 
             if y>0:
-                totalassembly1 = Part.Solid.fuse(assembly,totalassembly1)
+                totalassembly1 = Part.Solid.fuse(b,totalassembly1)
             else:
-                totalassembly1 = assembly
-            ytranslate += obj.GridSize
+                totalassembly1 = b
+            ytranslate += obj.yGridSize
         if x>0:
-            totalassembly2 = Part.Solid.fuse(totalassembly2,totalassembly1)
+            func_fuse = Part.Solid.fuse(func_fuse,totalassembly1)
         else:
-            totalassembly2 = totalassembly1
-        xtranslate += obj.GridSize
+            func_fuse = totalassembly1
+        xtranslate += obj.xGridSize
 
-    return totalassembly2
 
-    L = RoundedLExtrude(obj.AGridUnits * obj.GridSize, obj.BGridUnits * obj.GridSize, obj.CGridUnits * obj.GridSize, obj.DGridUnits * obj.GridSize, obj.Clearance, obj.Clearance, 0 * unitmm, obj.BinOuterRadius, obj.TotalHeight)
+    func_fuse.translate(App.Vector(obj.xBinUnit / 2 + obj.Clearance,obj.yBinUnit / 2 + obj.Clearance, 0))
 
-    return L
+    lsolid = RoundedLExtrude(obj.aTotalDimension, obj.bTotalDimension, obj.cTotalDimension, obj.dTotalDimension, obj.Clearance, obj.Clearance, 0 * unitmm, obj.BinOuterRadius, -obj.TotalHeight + obj.BaseProfileHeight)
+
+    func_fuse = func_fuse.fuse(lsolid)
+
+
+
+    return func_fuse
+
 
 def createRoundedRectangle(xwidth, ywidth, zsketchplane, radius):
     xfarv = xwidth/2
@@ -214,4 +205,41 @@ def RoundedRectangleExtrude(xwidth, ywidth, zsketchplane, height, radius):
     w1 = createRoundedRectangle(xwidth, ywidth, zsketchplane, radius)
     face = Part.Face(w1)
     return face.extrude(App.Vector(0,0,height))
+
+def MakeComplexStackingLip(self, obj):
+
+    stacking_lip_path = createRoundedL(obj.aTotalDimension, obj.bTotalDimension, obj.cTotalDimension, obj.dTotalDimension, obj.Clearance, obj.Clearance, 0 * unitmm, obj.BinOuterRadius)
+
+    #stacking_lip_path = createRoundedRectangle(obj.xTotalWidth, obj.yTotalWidth, 0, obj.BinOuterRadius)
+
+    stacking_lip_path.translate(App.Vector(0, 0, 20))
+
+    ST1 = App.Vector(obj.Clearance,obj.yGridSize/2,0)
+    ST2 = App.Vector(obj.Clearance,obj.yGridSize/2 ,obj.StackingLipBottomChamfer+obj.StackingLipVerticalSection+obj.StackingLipTopChamfer)
+    ST3 = App.Vector(obj.Clearance + obj.StackingLipTopLedge,obj.yGridSize/2,obj.StackingLipBottomChamfer+obj.StackingLipVerticalSection+obj.StackingLipTopChamfer)
+    ST4 = App.Vector(obj.Clearance + obj.StackingLipTopLedge+obj.StackingLipTopChamfer,obj.yGridSize/2,obj.StackingLipBottomChamfer+obj.StackingLipVerticalSection)
+    ST5 = App.Vector(obj.Clearance + obj.StackingLipTopLedge+obj.StackingLipTopChamfer,obj.yGridSize/2,obj.StackingLipBottomChamfer)
+    ST6 = App.Vector(obj.Clearance + obj.StackingLipTopLedge+obj.StackingLipTopChamfer+obj.StackingLipBottomChamfer,obj.yGridSize/2,0)
+    ST7 = App.Vector(obj.Clearance + obj.StackingLipTopLedge+obj.StackingLipTopChamfer+obj.StackingLipBottomChamfer,obj.yGridSize/2,-obj.StackingLipVerticalSection)
+    ST8 = App.Vector(obj.Clearance + obj.WallThickness,obj.yGridSize/2,-obj.StackingLipVerticalSection-(obj.StackingLipTopLedge+obj.StackingLipTopChamfer+obj.StackingLipBottomChamfer-obj.WallThickness))
+    ST9 = App.Vector(obj.Clearance + obj.WallThickness,obj.yGridSize/2,0)
+
+    STL1 = Part.LineSegment(ST1, ST2)
+    STL2 = Part.LineSegment(ST2, ST3)
+    STL3 = Part.LineSegment(ST3, ST4)
+    STL4 = Part.LineSegment(ST4, ST5)
+    STL5 = Part.LineSegment(ST5, ST6)
+    STL6 = Part.LineSegment(ST6, ST7)
+    STL7 = Part.LineSegment(ST7, ST8)
+    STL8 = Part.LineSegment(ST8, ST9)
+    STL9 = Part.LineSegment(ST9, ST1)
+
+    STS1 = Part.Shape([STL1, STL2, STL3, STL4, STL5, STL6, STL7, STL8, STL9])
+
+    wire = Part.Wire(STS1.Edges)
+
+    stacking_lip = Part.Wire(stacking_lip_path).makePipe(wire)
+
+    stacking_lip = Part.makeSolid(stacking_lip)
+    return stacking_lip
 
