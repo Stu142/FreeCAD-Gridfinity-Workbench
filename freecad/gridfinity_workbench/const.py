@@ -1,4 +1,4 @@
-#Gridfinity Standard Dimensions are placed here, changing theses values will alter the dimensions of the bins and baseplates generated which may result in non compatable bins. Alternativly you can make a custom grid size to your liking.
+# Gridfinity Standard Dimensions are placed here, changing theses values will alter the dimensions of the bins and baseplates generated which may result in non compatable bins. Alternativly you can make a custom grid size to your liking.
 
 GRID_SIZE = 42
 HEIGHT_UNIT = 7
@@ -22,7 +22,7 @@ BASEPLATE_BOTTOM_RADIUS = 1.15
 
 TOLERANCE = 0.25
 
-BIN_UNIT = GRID_SIZE - TOLERANCE*2
+BIN_UNIT = GRID_SIZE - TOLERANCE * 2
 
 MAGNET_HOLE_DIAMETER = 6.5
 MAGNET_HOLE_DEPTH = 2.4
@@ -36,19 +36,19 @@ STACKING_LIP_TOP_LEDGE = 0.4
 STACKING_LIP_BOTTOM_CHAMFER = 0.7
 STACKING_LIP_VERTICAL_SECTION = 1.8
 
-#Magenet baseplate specific
+# Magenet baseplate specific
 BASEPLATE_SMALL_FILLET = 1
 MAGNET_EDGE_THICKNESS = 1.2
 MAGNET_BASE = 0.4
 MAGNET_BASE_HOLE = 3
 MAGNET_CHAMFER = 0.4
 
-#Screw Together Baseplate Specific
+# Screw Together Baseplate Specific
 CONNECTION_HOLE_DIAMETER = 3.2
 MAGNET_BOTTOM_CHAMFER = 2
 BASE_THICKNESS = 6.4
 
-#Parts Bin Specific
+# Parts Bin Specific
 LABEL_SHELF_WIDTH = 12
 LABEL_SHELF_VERTICAL_THICKNESS = 1.2
 LABEL_SHELF_LENGTH = 42

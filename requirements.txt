@@ -1,0 +1,2 @@
+freecad-stubs==1.0.17
+ruff==0.8.4
