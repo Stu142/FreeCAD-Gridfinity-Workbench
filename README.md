@@ -1,5 +1,5 @@
 # FreeCAD Gridfinity Workbench
-This Workbench will generate several variations of parametric Gridfinity bins and baseplates that can be easily customized. Gridfinity was created by Zach Freedman; if you are new, watch the intro video [Zach's intro video](https://www.youtube.com/watch?v=ra_9zU-mnl8).
+This Workbench will generate several variations of parametric Gridfinity bins and baseplates that can be easily customized. Gridfinity was created by Zack Freedman; if you are new, watch the intro video [Zack's intro video](https://www.youtube.com/watch?v=ra_9zU-mnl8).
 
 If you get value from my work on this project, which took a lot of time, consider supporting me at [stu142.com/supportme](https://stu142.com/supportme)
 
