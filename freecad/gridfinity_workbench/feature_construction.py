@@ -14,7 +14,14 @@ def createRoundedRectangle(xwidth, ywidth, zsketchplane, radius):
     yclosev = ywidth / 2 - radius
     xarcv = xwidth / 2 - radius + radius * math.sin(math.pi / 4)
     yarcv = ywidth / 2 - radius + radius * math.sin(math.pi / 4)
+    xfarv = xwidth / 2
+    yfarv = ywidth / 2
+    xclosev = xwidth / 2 - radius
+    yclosev = ywidth / 2 - radius
+    xarcv = xwidth / 2 - radius + radius * math.sin(math.pi / 4)
+    yarcv = ywidth / 2 - radius + radius * math.sin(math.pi / 4)
 
+    V1 = App.Vector(-xclosev, yfarv, zsketchplane)
     V1 = App.Vector(-xclosev, yfarv, zsketchplane)
     V2 = App.Vector(xclosev, yfarv, zsketchplane)
     V3 = App.Vector(xfarv, yclosev, zsketchplane)
@@ -57,6 +64,7 @@ def RoundedRectangleChamfer(xwidth, ywidth, zsketchplane, height, radius):
 def RoundedRectangleExtrude(xwidth, ywidth, zsketchplane, height, radius):
     w1 = createRoundedRectangle(xwidth, ywidth, zsketchplane, radius)
     face = Part.Face(w1)
+    return face.extrude(App.Vector(0, 0, height))
     return face.extrude(App.Vector(0, 0, height))
 
 
@@ -108,6 +116,7 @@ def MakeLabelShelf(self, obj):
     V1 = App.Vector(towall, 0, 0)
     V2 = App.Vector(tolabelend, 0, 0)
     V3 = App.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness)
+    V3 = App.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness)
     V4 = App.Vector(towall, 0, meetswallbottom)
 
     L1 = Part.LineSegment(V1, V2)
@@ -115,6 +124,7 @@ def MakeLabelShelf(self, obj):
     L3 = Part.LineSegment(V3, V4)
     L4 = Part.LineSegment(V4, V1)
 
+    S1 = Part.Shape([L1, L2, L3, L4])
     S1 = Part.Shape([L1, L2, L3, L4])
 
     wire = Part.Wire(S1.Edges)
@@ -133,7 +143,9 @@ def MakeLabelShelf(self, obj):
             ls = face.extrude(App.Vector(0, fw, 0))
 
             ls = face.extrude(App.Vector(0, fw, 0))
+            ls = face.extrude(App.Vector(0, fw, 0))
 
+            ls.translate(App.Vector(xtranslate, ytranslate, 0))
             ls.translate(App.Vector(xtranslate, ytranslate, 0))
 
             if x == 0:
@@ -191,7 +203,9 @@ def MakeLabelShelf(self, obj):
                 ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
 
                 ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
+                ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
 
+                ls.translate(App.Vector(xtranslate, ytranslate, 0))
                 ls.translate(App.Vector(xtranslate, ytranslate, 0))
 
                 if x == 0 and y == 0:
@@ -338,6 +352,9 @@ def MakeScoop(self, obj):
     scooprad1 = obj.ScoopRadius + 1 * unitmm
     scooprad2 = obj.ScoopRadius + 1 * unitmm
     scooprad3 = obj.ScoopRadius + 1 * unitmm
+    scooprad1 = obj.ScoopRadius + 1 * unitmm
+    scooprad2 = obj.ScoopRadius + 1 * unitmm
+    scooprad3 = obj.ScoopRadius + 1 * unitmm
 
     xcomp_w = (
         obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness
@@ -346,6 +363,7 @@ def MakeScoop(self, obj):
     xdivscoop = obj.xDividerHeight - obj.HeightUnitValue
 
     if obj.ScoopRadius > xdivscoop and obj.xDividerHeight != 0:
+        scooprad1 = xdivscoop - unitmm
         scooprad1 = xdivscoop - unitmm
     if obj.ScoopRadius > xcomp_w and obj.xDividers > 0:
         scooprad2 = xcomp_w - 2 * unitmm
@@ -432,6 +450,14 @@ def MakeScoop(self, obj):
         if x > 0:
             xtranslate += compwidth + obj.DividerThickness
         else:
+            xtranslate += (
+                +obj.WallThickness
+                - obj.StackingLipTopLedge
+                - obj.StackingLipTopChamfer
+                - obj.StackingLipBottomChamfer
+                + compwidth
+                + obj.DividerThickness
+            )
             xtranslate += (
                 +obj.WallThickness
                 - obj.StackingLipTopLedge
@@ -580,6 +606,11 @@ def MakeCompartements(self, obj):
     )
 
     if obj.xDividers == 0 and obj.yDividers == 0:
+        # Fillet Bottom edges
+        b_edges = []
+        for idx_edge, edge in enumerate(func_fuse.Edges):
+            z0 = edge.Vertexes[0].Point.z
+            z1 = edge.Vertexes[1].Point.z
         # Fillet Bottom edges
         b_edges = []
         for idx_edge, edge in enumerate(func_fuse.Edges):
@@ -780,6 +811,14 @@ def MakeBinBase(self, obj):
                 obj.BinVerticalRadius,
             )
             assembly = Part.Shape.fuse(bottom_chamfer, vertical_section)
+            vertical_section = RoundedRectangleExtrude(
+                vert_width,
+                vert_width,
+                -obj.TotalHeight + obj.BaseProfileBottomChamfer,
+                obj.BaseProfileVerticalSection,
+                obj.BinVerticalRadius,
+            )
+            assembly = Part.Shape.fuse(bottom_chamfer, vertical_section)
 
             top_chamfer = RoundedRectangleChamfer(
                 vert_width,
@@ -795,9 +834,14 @@ def MakeBinBase(self, obj):
             assembly.translate(App.Vector(xtranslate, ytranslate, 0))
             if y > 0:
                 totalassembly1 = Part.Solid.fuse(assembly, totalassembly1)
+            assembly.translate(App.Vector(xtranslate, ytranslate, 0))
+            if y > 0:
+                totalassembly1 = Part.Solid.fuse(assembly, totalassembly1)
             else:
                 totalassembly1 = assembly
             ytranslate += obj.GridSize
+        if x > 0:
+            totalassembly2 = Part.Solid.fuse(totalassembly2, totalassembly1)
         if x > 0:
             totalassembly2 = Part.Solid.fuse(totalassembly2, totalassembly1)
         else:
@@ -971,6 +1015,8 @@ def MakeBottomHoles(self, obj):
 
     sqbr1_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight
     sqbr2_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight * 2
+    sqbr1_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight
+    sqbr2_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight * 2
 
     xtranslate = zeromm
     ytranslate = zeromm
@@ -986,7 +1032,9 @@ def MakeBottomHoles(self, obj):
                     p = App.ActiveDocument.addObject("Part::RegularPolygon")
                     p.Polygon = nSides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
-                    p.Placement = App.Placement(App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight), rot)
+                    p.Placement = App.Placement(
+                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight), rot
+                    )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
                     C1 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
@@ -995,7 +1043,9 @@ def MakeBottomHoles(self, obj):
                     p = App.ActiveDocument.addObject("Part::RegularPolygon")
                     p.Polygon = nSides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
-                    p.Placement = App.Placement(App.Vector(hole_pos, -hole_pos, -obj.TotalHeight), rot)
+                    p.Placement = App.Placement(
+                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight), rot
+                    )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
                     C2 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
@@ -1004,7 +1054,9 @@ def MakeBottomHoles(self, obj):
                     p = App.ActiveDocument.addObject("Part::RegularPolygon")
                     p.Polygon = nSides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
-                    p.Placement = App.Placement(App.Vector(-hole_pos, hole_pos, -obj.TotalHeight), rot)
+                    p.Placement = App.Placement(
+                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight), rot
+                    )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
                     C3 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
@@ -1013,7 +1065,83 @@ def MakeBottomHoles(self, obj):
                     p = App.ActiveDocument.addObject("Part::RegularPolygon")
                     p.Polygon = nSides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
-                    p.Placement = App.Placement(App.Vector(hole_pos, hole_pos, -obj.TotalHeight), rot)
+                    p.Placement = App.Placement(
+                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight), rot
+                    )
+                    p.recompute()
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C4 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
+
+                else:
+                    C1 = Part.makeCylinder(
+                        obj.MagnetHoleDiameter / 2,
+                        obj.MagnetHoleDepth,
+                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
+                        App.Vector(0, 0, 1),
+                    )
+                    C2 = Part.makeCylinder(
+                        obj.MagnetHoleDiameter / 2,
+                        obj.MagnetHoleDepth,
+                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
+                        App.Vector(0, 0, 1),
+                    )
+                    C3 = Part.makeCylinder(
+                        obj.MagnetHoleDiameter / 2,
+                        obj.MagnetHoleDepth,
+                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
+                        App.Vector(0, 0, 1),
+                    )
+                    C4 = Part.makeCylinder(
+                        obj.MagnetHoleDiameter / 2,
+                        obj.MagnetHoleDepth,
+                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight),
+                        App.Vector(0, 0, 1),
+                    )
+                if obj.MagnetHolesShape == "Hex":
+                    nSides = 6
+
+                    rot = App.Rotation(App.Vector(0, 0, 1), 0)
+
+                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = nSides
+                    p.Circumradius = obj.MagnetHoleDiameter / 2
+                    p.Placement = App.Placement(
+                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight), rot
+                    )
+                    p.recompute()
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C1 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
+
+                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = nSides
+                    p.Circumradius = obj.MagnetHoleDiameter / 2
+                    p.Placement = App.Placement(
+                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight), rot
+                    )
+                    p.recompute()
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C2 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
+
+                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = nSides
+                    p.Circumradius = obj.MagnetHoleDiameter / 2
+                    p.Placement = App.Placement(
+                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight), rot
+                    )
+                    p.recompute()
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C3 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
+
+                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = nSides
+                    p.Circumradius = obj.MagnetHoleDiameter / 2
+                    p.Placement = App.Placement(
+                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight), rot
+                    )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
                     C4 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
