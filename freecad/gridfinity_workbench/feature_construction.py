@@ -65,7 +65,6 @@ def RoundedRectangleExtrude(xwidth, ywidth, zsketchplane, height, radius):
     w1 = createRoundedRectangle(xwidth, ywidth, zsketchplane, radius)
     face = Part.Face(w1)
     return face.extrude(App.Vector(0, 0, height))
-    return face.extrude(App.Vector(0, 0, height))
 
 
 def MakeLabelShelf(self, obj):
@@ -584,9 +583,6 @@ def MakeStackingLip(self, obj):
 
 
 def MakeCompartements(self, obj):
-    xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
-    ydivheight = obj.yDividerHeight if obj.yDividerHeight != 0 else obj.TotalHeight
-
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
     ydivheight = obj.yDividerHeight if obj.yDividerHeight != 0 else obj.TotalHeight
 

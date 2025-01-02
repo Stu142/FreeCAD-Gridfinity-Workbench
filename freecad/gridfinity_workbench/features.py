@@ -66,17 +66,7 @@ from .const import (
 
 unitmm = Units.Quantity("1 mm")
 
-__all__ = [
-    "BinBlank",
-    "SimpleStorageBin",
-    "PartsBin",
-    "Baseplate",
-    "MagnetBaseplate",
-    "ScrewTogetherBaseplate",
-    "EcoBin",
-]
 
-HOLE_SHAPES = ["Round", "Hex"]
 __all__ = [
     "BinBlank",
     "SimpleStorageBin",
@@ -93,9 +83,7 @@ HOLE_SHAPES = ["Round", "Hex"]
 def fcvec(x):
     if len(x) == 2:
         return App.Vector(x[0], x[1], 0)
-        return App.Vector(x[0], x[1], 0)
     else:
-        return App.Vector(x[0], x[1], x[2])
         return App.Vector(x[0], x[1], x[2])
 
 
@@ -315,7 +303,7 @@ class BinBlank(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty(
@@ -618,7 +606,7 @@ class BinBase(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty(
@@ -1381,7 +1369,7 @@ class EcoBin(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty(
@@ -1841,7 +1829,7 @@ class PartsBin(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty(
@@ -2105,7 +2093,7 @@ class Baseplate(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BASEPLATE_BOTTOM_CHAMFER
         obj.addProperty(
@@ -2338,7 +2326,7 @@ class MagnetBaseplate(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BASEPLATE_BOTTOM_CHAMFER
         obj.addProperty(
@@ -2607,7 +2595,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BASEPLATE_BOTTOM_CHAMFER
         obj.addProperty(
