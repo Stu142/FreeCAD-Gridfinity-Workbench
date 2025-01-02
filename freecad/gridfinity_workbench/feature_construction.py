@@ -115,7 +115,6 @@ def MakeLabelShelf(self, obj):
     V1 = App.Vector(towall, 0, 0)
     V2 = App.Vector(tolabelend, 0, 0)
     V3 = App.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness)
-    V3 = App.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness)
     V4 = App.Vector(towall, 0, meetswallbottom)
 
     L1 = Part.LineSegment(V1, V2)
@@ -123,7 +122,6 @@ def MakeLabelShelf(self, obj):
     L3 = Part.LineSegment(V3, V4)
     L4 = Part.LineSegment(V4, V1)
 
-    S1 = Part.Shape([L1, L2, L3, L4])
     S1 = Part.Shape([L1, L2, L3, L4])
 
     wire = Part.Wire(S1.Edges)
@@ -142,9 +140,7 @@ def MakeLabelShelf(self, obj):
             ls = face.extrude(App.Vector(0, fw, 0))
 
             ls = face.extrude(App.Vector(0, fw, 0))
-            ls = face.extrude(App.Vector(0, fw, 0))
 
-            ls.translate(App.Vector(xtranslate, ytranslate, 0))
             ls.translate(App.Vector(xtranslate, ytranslate, 0))
 
             if x == 0:
@@ -201,10 +197,6 @@ def MakeLabelShelf(self, obj):
             for y in range(ydiv):
                 ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
 
-                ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
-                ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
-
-                ls.translate(App.Vector(xtranslate, ytranslate, 0))
                 ls.translate(App.Vector(xtranslate, ytranslate, 0))
 
                 if x == 0 and y == 0:
@@ -243,8 +235,6 @@ def MakeLabelShelf(self, obj):
         for x in range(xdiv):
             ytranslate = ysp
             for y in range(ydiv):
-                ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
-
                 ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
 
                 ls.translate(App.Vector(xtranslate, ytranslate, 0))
@@ -300,8 +290,6 @@ def MakeLabelShelf(self, obj):
             for y in range(ydiv):
                 ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
 
-                ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
-
                 ls.translate(App.Vector(xtranslate, ytranslate, 0))
 
                 if x == 0 and y == 0:
@@ -351,9 +339,6 @@ def MakeScoop(self, obj):
     scooprad1 = obj.ScoopRadius + 1 * unitmm
     scooprad2 = obj.ScoopRadius + 1 * unitmm
     scooprad3 = obj.ScoopRadius + 1 * unitmm
-    scooprad1 = obj.ScoopRadius + 1 * unitmm
-    scooprad2 = obj.ScoopRadius + 1 * unitmm
-    scooprad3 = obj.ScoopRadius + 1 * unitmm
 
     xcomp_w = (
         obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness
@@ -362,7 +347,6 @@ def MakeScoop(self, obj):
     xdivscoop = obj.xDividerHeight - obj.HeightUnitValue
 
     if obj.ScoopRadius > xdivscoop and obj.xDividerHeight != 0:
-        scooprad1 = xdivscoop - unitmm
         scooprad1 = xdivscoop - unitmm
     if obj.ScoopRadius > xcomp_w and obj.xDividers > 0:
         scooprad2 = xcomp_w - 2 * unitmm
@@ -835,9 +819,6 @@ def MakeBinBase(self, obj):
                 totalassembly1 = Part.Solid.fuse(assembly, totalassembly1)
             else:
                 totalassembly1 = assembly
-            ytranslate += obj.GridSize
-        if x > 0:
-            totalassembly2 = Part.Solid.fuse(totalassembly2, totalassembly1)
         if x > 0:
             totalassembly2 = Part.Solid.fuse(totalassembly2, totalassembly1)
         else:
@@ -986,8 +967,6 @@ def MakeBaseplateCenterCut(self, obj):
         for y in range(obj.yGridUnits):
             HM1 = face.extrude(App.Vector(0, 0, -obj.TotalHeight))
 
-            HM1 = face.extrude(App.Vector(0, 0, -obj.TotalHeight))
-
             HM1.translate(App.Vector(xtranslate, ytranslate, 0))
             if y > 0:
                 HM2 = Part.Solid.fuse(HM1, HM2)
@@ -1009,8 +988,6 @@ def MakeBottomHoles(self, obj):
         -obj.GridSize / 2 + obj.MagnetHoleDistanceFromEdge + obj.ScrewHoleDiameter / 2
     )
 
-    sqbr1_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight
-    sqbr2_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight * 2
     sqbr1_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight
     sqbr2_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight * 2
 

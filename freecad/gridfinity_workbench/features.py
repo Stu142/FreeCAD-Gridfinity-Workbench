@@ -2,8 +2,6 @@ from __future__ import division
 import os
 import numpy as np
 import math
-import numpy as np
-import math
 import FreeCAD as App
 import Part
 from FreeCAD import Units
@@ -99,7 +97,6 @@ class ViewProviderGridfinity(object):
         App.Console.PrintMessage("works until here\n")
 
     def _check_attr(self):
-        """Check for missing attributes."""
         """Check for missing attributes."""
         if not hasattr(self, "icon_fn"):
             setattr(
@@ -445,7 +442,6 @@ class BinBlank(FoundationGridfinity):
         if obj.StackingLip:
             stacking_lip = MakeStackingLip(self, obj)
             fuse_total = Part.Shape.fuse(stacking_lip, fuse_total)
-            fuse_total = Part.Shape.fuse(stacking_lip, fuse_total)
         if obj.ScrewHoles or obj.MagnetHoles:
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
@@ -724,7 +720,6 @@ class BinBase(FoundationGridfinity):
             obj.TotalHeight = obj.CustomHeight
         else:
             obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
-            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
 
         fuse_total = MakeBinBase(self, obj)
         solid_center = RoundedRectangleExtrude(
@@ -743,17 +738,14 @@ class BinBase(FoundationGridfinity):
         )
 
         fuse_total = Part.Shape.fuse(fuse_total, solid_center)
-        fuse_total = Part.Shape.fuse(fuse_total, solid_center)
 
         if obj.StackingLip:
             stacking_lip = MakeStackingLip(self, obj)
-            fuse_total = Part.Shape.fuse(stacking_lip, fuse_total)
             fuse_total = Part.Shape.fuse(stacking_lip, fuse_total)
         if obj.ScrewHoles or obj.MagnetHoles:
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
-        # fuse_total.translate(App.Vector(obj.BinUnit/2*4,obj.BinUnit/2*4,0))
         # fuse_total.translate(App.Vector(obj.BinUnit/2*4,obj.BinUnit/2*4,0))
 
         return fuse_total
@@ -1115,12 +1107,10 @@ class SimpleStorageBin(FoundationGridfinity):
             obj.TotalHeight = obj.CustomHeight
         else:
             obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
-            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
         obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
 
         ## Error Checking
 
-        divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
         divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
         if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
             obj.xDividerHeight = divmin
@@ -1164,7 +1154,6 @@ class SimpleStorageBin(FoundationGridfinity):
         if obj.StackingLip:
             stacking_lip = MakeStackingLip(self, obj)
             fuse_total = Part.Shape.fuse(stacking_lip, fuse_total)
-            fuse_total = Part.Shape.fuse(stacking_lip, fuse_total)
 
         if obj.ScrewHoles or obj.MagnetHoles:
             holes = MakeBottomHoles(self, obj)
@@ -1180,7 +1169,6 @@ class SimpleStorageBin(FoundationGridfinity):
 
         fuse_total = Part.Solid.removeSplitter(fuse_total)
 
-        # fuse_total.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
         # fuse_total.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
 
         return fuse_total
@@ -1517,12 +1505,10 @@ class EcoBin(FoundationGridfinity):
             obj.TotalHeight = obj.CustomHeight
         else:
             obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
-            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
 
         ## Error Checking
 
         # Divider Minimum Height
-        divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
         divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
         if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
             obj.xDividerHeight = divmin
@@ -1572,7 +1558,6 @@ class EcoBin(FoundationGridfinity):
 
         if obj.StackingLip:
             stacking_lip = MakeStackingLip(self, obj)
-            fuse_total = Part.Shape.fuse(stacking_lip, fuse_total)
             fuse_total = Part.Shape.fuse(stacking_lip, fuse_total)
 
         if obj.MagnetHoles:
