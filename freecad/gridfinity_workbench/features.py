@@ -59,6 +59,7 @@ from .const import (
     LABEL_SHELF_WIDTH,
     LABEL_SHELF_VERTICAL_THICKNESS,
     LABEL_SHELF_LENGTH,
+    LABEL_SHELF_ANGLE,
     SCOOP_RADIUS,
 )
 
@@ -182,6 +183,12 @@ class BinBlank(FoundationGridfinity):
             "Gridfinity",
             "Length of the edges of the outline",
         ).xGridUnits = 2
+        obj.addProperty(
+            "App::PropertyInteger",
+            "yGridUnits",
+            "Gridfinity",
+            "Length of the edges of the outline",
+        ).yGridUnits = 2
         obj.addProperty(
             "App::PropertyInteger",
             "HeightUnits",
@@ -781,6 +788,12 @@ class SimpleStorageBin(FoundationGridfinity):
         ).xGridUnits = 2
         obj.addProperty(
             "App::PropertyInteger",
+            "yGridUnits",
+            "Gridfinity",
+            "Length of the edges of the outline",
+        ).yGridUnits = 2
+        obj.addProperty(
+            "App::PropertyInteger",
             "HeightUnits",
             "Gridfinity",
             "Height of the bin in units, each unit is 7 mm",
@@ -803,12 +816,6 @@ class SimpleStorageBin(FoundationGridfinity):
             "Gridfinity",
             "Toggle the screw holes on or off",
         ).ScrewHoles = False
-        obj.addProperty(
-            "App::PropertyBool",
-            "Scoop",
-            "Gridfinity",
-            "Toggle the Scoop fillet on or off",
-        ).Scoop = False
         obj.addProperty(
             "App::PropertyBool",
             "Scoop",
@@ -840,7 +847,7 @@ class SimpleStorageBin(FoundationGridfinity):
             "Gridfinity",
             "Choose to turn the label shelf on or off",
         )
-        obj.LabelShelfStyle = ["Off", "Standard"]
+        obj.LabelShelfStyle = ["Off", "Standard", "Overhang"]
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty(
@@ -922,6 +929,12 @@ class SimpleStorageBin(FoundationGridfinity):
             "GridfinityNonStandard",
             "Length of the Label Shelf <br> <br> default = 1.2 mm",
         ).LabelShelfLength = LABEL_SHELF_LENGTH
+        obj.addProperty(
+            "App::PropertyAngle",
+            "LabelShelfAngle",
+            "GridfinityNonStandard",
+            "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
+        ).LabelShelfAngle = LABEL_SHELF_ANGLE
         obj.addProperty(
             "App::PropertyLength",
             "ScoopRadius",
@@ -1634,12 +1647,6 @@ class PartsBin(FoundationGridfinity):
             "Toggle the Scoop fillet on or off",
         ).Scoop = True
         obj.addProperty(
-            "App::PropertyBool",
-            "Scoop",
-            "Gridfinity",
-            "Toggle the Scoop fillet on or off",
-        ).Scoop = True
-        obj.addProperty(
             "App::PropertyInteger",
             "xDividers",
             "Gridfinity",
@@ -1664,7 +1671,7 @@ class PartsBin(FoundationGridfinity):
             "Gridfinity",
             "Choose to turn the label shelf on or off",
         )
-        obj.LabelShelfStyle = ["Standard", "Off"]
+        obj.LabelShelfStyle = ["Standard", "Off", "Overhang"]
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty(
@@ -1746,6 +1753,12 @@ class PartsBin(FoundationGridfinity):
             "GridfinityNonStandard",
             "Length of the Label Shelf <br> <br> default = 1.2 mm",
         ).LabelShelfLength = LABEL_SHELF_LENGTH
+        obj.addProperty(
+            "App::PropertyAngle",
+            "LabelShelfAngle",
+            "GridfinityNonStandard",
+            "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
+        ).LabelShelfAngle = LABEL_SHELF_ANGLE
         obj.addProperty(
             "App::PropertyLength",
             "ScoopRadius",

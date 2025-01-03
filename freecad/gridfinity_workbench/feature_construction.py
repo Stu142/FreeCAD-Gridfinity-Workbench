@@ -68,6 +68,230 @@ def RoundedRectangleExtrude(xwidth, ywidth, zsketchplane, height, radius):
 
 
 def MakeLabelShelf(self, obj):
+
+    towall = -obj.BinUnit / 2 + obj.WallThickness
+    tolabelend = (
+        -obj.BinUnit / 2
+        + obj.StackingLipTopChamfer
+        + obj.StackingLipTopLedge
+        + obj.StackingLipBottomChamfer
+        + obj.LabelShelfWidth
+    )
+    meetswallbottom = (
+        -obj.StackingLipTopChamfer
+        - obj.StackingLipTopLedge
+        - obj.StackingLipBottomChamfer
+        - obj.LabelShelfWidth
+        + obj.WallThickness
+    )
+    shelf_angle = obj.LabelShelfAngle.Value
+    shelf_placement = obj.LabelShelfPlacement
+
+    xdiv = obj.xDividers + 1
+    ydiv = obj.yDividers + 1
+    xcompwidth = (
+        obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers
+    ) / (xdiv)
+    ycompwidth = (
+        obj.yTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.yDividers
+    ) / (ydiv)
+
+    if obj.LabelShelfStyle == "Overhang":
+        shelf_angle = 0
+        shelf_placement = "Full Width"
+
+    # Calculate V4 Z coordinate by using an angle
+    side_a = abs(towall - tolabelend)
+    beta = shelf_angle
+    alpha = 90 - beta
+    side_c = side_a / math.sin(math.radians(alpha))
+    side_b = math.sqrt(-pow(side_a, 2) + pow(side_c, 2))
+    V4_Z = -obj.LabelShelfVerticalThickness - side_b * unitmm
+
+    V1 = App.Vector(towall, 0, 0)
+    V2 = App.Vector(tolabelend, 0, 0)
+    V3 = App.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness)
+    V4 = App.Vector(towall, 0, V4_Z)
+
+    L1 = Part.LineSegment(V1, V2)
+    L2 = Part.LineSegment(V2, V3)
+    L3 = Part.LineSegment(V3, V4)
+    L4 = Part.LineSegment(V4, V1)
+
+    S1 = Part.Shape([L1, L2, L3, L4])
+
+    wire = Part.Wire(S1.Edges)
+
+    face = Part.Face(wire)
+
+    if obj.LabelShelfLength > ycompwidth:
+        shelf_placement = "Full Width"
+
+    # Label placement specific code
+    if shelf_placement == "Full Width":
+        fw = obj.yTotalWidth - obj.WallThickness * 2
+        ytranslate = -obj.BinUnit / 2 + obj.WallThickness
+        xtranslate = zeromm
+        parts = []
+        for x in range(xdiv):
+            ls = face.extrude(App.Vector(0, fw, 0))
+
+            ls.translate(App.Vector(xtranslate, ytranslate, 0))
+
+            if x == 0:
+                firstls = ls
+            else:
+                parts.append(ls)
+
+            xtranslate += xcompwidth + obj.DividerThickness
+
+        if xdiv == 1:
+            funcfuse = ls
+        else:
+            funcfuse = Part.Solid.multiFuse(firstls, parts)
+
+        x2 = -obj.BinUnit / 2 + obj.WallThickness
+        b_edges = []
+        for idx_edge, edge in enumerate(funcfuse.Edges):
+            y0 = edge.Vertexes[0].Point.y
+            y1 = edge.Vertexes[1].Point.y
+            x0 = edge.Vertexes[0].Point.x
+            x1 = edge.Vertexes[1].Point.x
+
+            if (y0 - y1) == 0 and x1 == x2 and x0 == x2:
+                b_edges.append(edge)
+
+        funcfuse = funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
+
+    if shelf_placement == "Center":
+        xtranslate = zeromm
+        ysp = (
+            -obj.BinUnit / 2
+            + obj.WallThickness
+            + ycompwidth / 2
+            - obj.LabelShelfLength / 2
+        )
+        ytranslate = ysp
+        parts = []
+        for x in range(xdiv):
+            ytranslate = ysp
+            for y in range(ydiv):
+                ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
+
+                ls.translate(App.Vector(xtranslate, ytranslate, 0))
+
+                if x == 0 and y == 0:
+                    firstls = ls
+                else:
+                    parts.append(ls)
+
+                ytranslate += ycompwidth + obj.DividerThickness
+
+            xtranslate += xcompwidth + obj.DividerThickness
+
+        if xdiv == 1 and ydiv == 1:
+            funcfuse = ls
+        else:
+            funcfuse = Part.Solid.multiFuse(firstls, parts)
+
+    if shelf_placement == "Left":
+        xtranslate = zeromm
+        ysp = -obj.BinUnit / 2 + obj.WallThickness
+        ytranslate = ysp
+        parts = []
+        for x in range(xdiv):
+            ytranslate = ysp
+            for y in range(ydiv):
+                ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
+
+                ls.translate(App.Vector(xtranslate, ytranslate, 0))
+
+                if x == 0 and y == 0:
+                    firstls = ls
+                else:
+                    parts.append(ls)
+
+                ytranslate += ycompwidth + obj.DividerThickness
+
+            xtranslate += xcompwidth + obj.DividerThickness
+
+        if xdiv == 1 and ydiv == 1:
+            funcfuse = ls
+        else:
+            funcfuse = Part.Solid.multiFuse(firstls, parts)
+
+        y2 = -obj.BinUnit / 2 + obj.WallThickness
+        b_edges = []
+        for idx_edge, edge in enumerate(funcfuse.Edges):
+            y0 = edge.Vertexes[0].Point.y
+            y1 = edge.Vertexes[1].Point.y
+            x0 = edge.Vertexes[0].Point.x
+            x1 = edge.Vertexes[1].Point.x
+
+            if y0 == y2 and y1 == y2 and x1 == y2 and x0 == y2:
+                b_edges.append(edge)
+
+        funcfuse = funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
+
+    if shelf_placement == "Right":
+        xtranslate = zeromm
+        ysp = -obj.BinUnit / 2 + obj.WallThickness + ycompwidth - obj.LabelShelfLength
+        ytranslate = ysp
+        parts = []
+        for x in range(xdiv):
+            ytranslate = ysp
+            for y in range(ydiv):
+                ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
+
+                ls.translate(App.Vector(xtranslate, ytranslate, 0))
+
+                if x == 0 and y == 0:
+                    firstls = ls
+                else:
+                    parts.append(ls)
+
+                ytranslate += ycompwidth + obj.DividerThickness
+
+            xtranslate += xcompwidth + obj.DividerThickness
+
+        if xdiv == 1 and ydiv == 1:
+            funcfuse = ls
+        else:
+            funcfuse = Part.Solid.multiFuse(firstls, parts)
+
+        y2 = obj.yTotalWidth - obj.BinUnit / 2 - obj.WallThickness
+        x2 = -obj.BinUnit / 2 + obj.WallThickness
+        b_edges = []
+        for idx_edge, edge in enumerate(funcfuse.Edges):
+            y0 = edge.Vertexes[0].Point.y
+            y1 = edge.Vertexes[1].Point.y
+            x0 = edge.Vertexes[0].Point.x
+            x1 = edge.Vertexes[1].Point.x
+
+            if y0 == y2 and y1 == y2 and x1 == x2 and x0 == x2:
+                b_edges.append(edge)
+
+        funcfuse = funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
+
+    # For all label placements
+    h_edges = []
+    for edge in funcfuse.Edges:
+        z0 = edge.Vertexes[0].Point.z
+        z1 = edge.Vertexes[1].Point.z
+
+        if (
+            z0 == -obj.LabelShelfVerticalThickness
+            and z1 == -obj.LabelShelfVerticalThickness
+        ):
+            h_edges.append(edge)
+
+    funcfuse = funcfuse.makeFillet(
+        obj.LabelShelfVerticalThickness.Value - 0.01, h_edges
+    )
+
+    return funcfuse
+
+    """
     towall = -obj.BinUnit / 2 + obj.WallThickness
     tolabelend = (
         -obj.BinUnit / 2
@@ -101,8 +325,9 @@ def MakeLabelShelf(self, obj):
         - obj.LabelShelfWidth
         + obj.WallThickness
     )
+    shelf_angle = obj.LabelShelfAngle.Value
+    shelf_placement = obj.LabelShelfPlacement
 
-    fwoverride = False
     xdiv = obj.xDividers + 1
     ydiv = obj.yDividers + 1
     xcompwidth = (
@@ -112,10 +337,22 @@ def MakeLabelShelf(self, obj):
         obj.yTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.yDividers
     ) / (ydiv)
 
+    if obj.LabelShelfStyle == "Overhang":
+            shelf_angle = 0
+            shelf_placement = "Full Width"
+
+    #Calculate V4 Z coordinate by using an angle
+    side_a = abs(towall - tolabelend)
+    beta = shelf_angle
+    alpha = 90 - beta
+    side_c = side_a/math.sin(math.radians(alpha))
+    side_b = math.sqrt(-pow(side_a,2) + pow(side_c,2))
+    V4_Z = -obj.LabelShelfVerticalThickness - side_b * unitmm
+
     V1 = App.Vector(towall, 0, 0)
     V2 = App.Vector(tolabelend, 0, 0)
     V3 = App.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness)
-    V4 = App.Vector(towall, 0, meetswallbottom)
+    V4 = App.Vector(towall, 0, V4_Z)
 
     L1 = Part.LineSegment(V1, V2)
     L2 = Part.LineSegment(V2, V3)
@@ -131,7 +368,7 @@ def MakeLabelShelf(self, obj):
     if obj.LabelShelfLength > ycompwidth:
         shelf_placement = "Full Width"
 
-    if obj.LabelShelfPlacement == "Full Width" or fwoverride:
+    if obj.LabelShelfPlacement == "Full Width":
         fw = obj.yTotalWidth - obj.WallThickness * 2
         ytranslate = -obj.BinUnit / 2 + obj.WallThickness
         xtranslate = zeromm
@@ -182,7 +419,7 @@ def MakeLabelShelf(self, obj):
 
             funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
 
-    if obj.LabelShelfPlacement == "Center" and not fwoverride:
+    if obj.LabelShelfPlacement == "Center":
         xtranslate = zeromm
         ysp = (
             -obj.BinUnit / 2
@@ -227,7 +464,7 @@ def MakeLabelShelf(self, obj):
 
             funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
 
-    if obj.LabelShelfPlacement == "Left" and not fwoverride:
+    if obj.LabelShelfPlacement == "Left":
         xtranslate = zeromm
         ysp = -obj.BinUnit / 2 + obj.WallThickness
         ytranslate = ysp
@@ -280,7 +517,7 @@ def MakeLabelShelf(self, obj):
 
             funcfuse = funcfuse.makeFillet(obj.InsideFilletRadius, h_edges)
 
-    if obj.LabelShelfPlacement == "Right" and not fwoverride:
+    if obj.LabelShelfPlacement == "Right":
         xtranslate = zeromm
         ysp = -obj.BinUnit / 2 + obj.WallThickness + ycompwidth - obj.LabelShelfLength
         ytranslate = ysp
@@ -322,18 +559,20 @@ def MakeLabelShelf(self, obj):
 
         if obj.LabelShelfVerticalThickness > (obj.InsideFilletRadius / 2):
             h_edges = []
-            for idx_edge, edge in enumerate(funcfuse.Edges):
+            for edge in funcfuse.Edges:
                 z0 = edge.Vertexes[0].Point.z
                 z1 = edge.Vertexes[1].Point.z
 
-        if (
-            z0 == -obj.LabelShelfVerticalThickness
-            and z1 == -obj.LabelShelfVerticalThickness
-        ):
-            h_edges.append(edge)
+            if (
+                z0 == -obj.LabelShelfVerticalThickness
+                and z1 == -obj.LabelShelfVerticalThickness
+            ):
+                h_edges.append(edge)
+
+            funcfuse = funcfuse.makeFillet(obj.LabelShelfVerticalThickness.Value - 0.01, h_edges)
 
     return funcfuse
-
+    """
 
 def MakeScoop(self, obj):
     scooprad1 = obj.ScoopRadius + 1 * unitmm
@@ -433,14 +672,6 @@ def MakeScoop(self, obj):
         if x > 0:
             xtranslate += compwidth + obj.DividerThickness
         else:
-            xtranslate += (
-                +obj.WallThickness
-                - obj.StackingLipTopLedge
-                - obj.StackingLipTopChamfer
-                - obj.StackingLipBottomChamfer
-                + compwidth
-                + obj.DividerThickness
-            )
             xtranslate += (
                 +obj.WallThickness
                 - obj.StackingLipTopLedge
@@ -812,13 +1043,15 @@ def MakeBinBase(self, obj):
             assembly = Part.Solid.fuse(assembly, top_chamfer)
 
             assembly.translate(App.Vector(xtranslate, ytranslate, 0))
-            if y > 0:
-                totalassembly1 = Part.Solid.fuse(assembly, totalassembly1)
-            assembly.translate(App.Vector(xtranslate, ytranslate, 0))
+
+            #if y > 0:
+                #totalassembly1 = Part.Solid.fuse(assembly, totalassembly1)
+            #assembly.translate(App.Vector(xtranslate, ytranslate, 0))
             if y > 0:
                 totalassembly1 = Part.Solid.fuse(assembly, totalassembly1)
             else:
                 totalassembly1 = assembly
+            ytranslate += obj.GridSize
         if x > 0:
             totalassembly2 = Part.Solid.fuse(totalassembly2, totalassembly1)
         else:
