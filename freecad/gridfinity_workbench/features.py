@@ -1,5 +1,7 @@
 from __future__ import division
 import os
+import numpy as np
+import math
 import FreeCAD as App
 import Part
 from FreeCAD import Units
@@ -20,7 +22,6 @@ from .baseplate_feature_construction import (
     MakeBPScrewBottomCham,
     MakeBPConnectionHoles,
 )
-
 from .const import (
     BIN_BASE_TOP_CHAMFER,
     BIN_BASE_BOTTOM_CHAMFER,
@@ -64,6 +65,7 @@ from .const import (
 
 unitmm = Units.Quantity("1 mm")
 
+
 __all__ = [
     "BinBlank",
     "SimpleStorageBin",
@@ -73,6 +75,8 @@ __all__ = [
     "ScrewTogetherBaseplate",
     "EcoBin",
 ]
+
+HOLE_SHAPES = ["Round", "Hex"]
 
 
 def fcvec(x):
@@ -183,13 +187,13 @@ class BinBlank(FoundationGridfinity):
             "App::PropertyInteger",
             "yGridUnits",
             "Gridfinity",
-            "Height of the extrusion",
+            "Length of the edges of the outline",
         ).yGridUnits = 2
         obj.addProperty(
             "App::PropertyInteger",
             "HeightUnits",
             "Gridfinity",
-            "height of the bin in units, each is 7 mm",
+            "Height of the bin in units, each is 7 mm",
         ).HeightUnits = 6
         obj.addProperty(
             "App::PropertyBool",
@@ -208,14 +212,14 @@ class BinBlank(FoundationGridfinity):
             "ScrewHoles",
             "Gridfinity",
             "Toggle the screw holes on or off",
-        ).ScrewHoles = True
+        ).ScrewHoles = False
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty(
             "App::PropertyLength",
             "CustomHeight",
             "GridfinityNonStandard",
-            "total height of the bin using the custom heignt instead of incraments of 7 mm",
+            "total height of the bin using the custom height instead of increments of 7 mm",
         ).CustomHeight = 42
         obj.addProperty(
             "App::PropertyLength",
@@ -229,6 +233,13 @@ class BinBlank(FoundationGridfinity):
             "GridfinityNonStandard",
             "use a custom height if selected",
         ).NonStandardHeight = False
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "GridfinityNonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = HOLE_SHAPES
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -296,7 +307,7 @@ class BinBlank(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty(
@@ -414,6 +425,7 @@ class BinBlank(FoundationGridfinity):
             obj.TotalHeight = obj.CustomHeight
         else:
             obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
+            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
 
         fuse_total = MakeBinBase(self, obj)
         solid_center = RoundedRectangleExtrude(
@@ -431,6 +443,7 @@ class BinBlank(FoundationGridfinity):
             )
         )
 
+        fuse_total = Part.Shape.fuse(fuse_total, solid_center)
         fuse_total = Part.Shape.fuse(fuse_total, solid_center)
 
         if obj.StackingLip:
@@ -501,14 +514,14 @@ class BinBase(FoundationGridfinity):
             "ScrewHoles",
             "Gridfinity",
             "Toggle the screw holes on or off",
-        ).ScrewHoles = True
+        ).ScrewHoles = False
 
     def add_custom_bin_properties(self, obj):
         obj.addProperty(
             "App::PropertyLength",
             "CustomHeight",
             "GridfinityNonStandard",
-            "total height of the bin using the custom heignt instead of incraments of 7 mm",
+            "total height of the bin using the custom heignt instead of increments of 7 mm",
         ).CustomHeight = 42
         obj.addProperty(
             "App::PropertyLength",
@@ -522,6 +535,13 @@ class BinBase(FoundationGridfinity):
             "GridfinityNonStandard",
             "use a custom height if selected",
         ).NonStandardHeight = False
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "GridfinityNonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = HOLE_SHAPES
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -589,7 +609,7 @@ class BinBase(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty(
@@ -770,13 +790,13 @@ class SimpleStorageBin(FoundationGridfinity):
             "App::PropertyInteger",
             "yGridUnits",
             "Gridfinity",
-            "Height of the extrusion",
+            "Length of the edges of the outline",
         ).yGridUnits = 2
         obj.addProperty(
             "App::PropertyInteger",
             "HeightUnits",
             "Gridfinity",
-            "height of the bin in units, each unit is 7 mm",
+            "Height of the bin in units, each unit is 7 mm",
         ).HeightUnits = 6
         obj.addProperty(
             "App::PropertyBool",
@@ -795,7 +815,7 @@ class SimpleStorageBin(FoundationGridfinity):
             "ScrewHoles",
             "Gridfinity",
             "Toggle the screw holes on or off",
-        ).ScrewHoles = True
+        ).ScrewHoles = False
         obj.addProperty(
             "App::PropertyBool",
             "Scoop",
@@ -834,7 +854,7 @@ class SimpleStorageBin(FoundationGridfinity):
             "App::PropertyLength",
             "CustomHeight",
             "GridfinityNonStandard",
-            "total height of the bin using the custom heignt instead of incraments of 7 mm",
+            "total height of the bin using the custom height instead of increments of 7 mm",
         ).CustomHeight = 42
         obj.addProperty(
             "App::PropertyLength",
@@ -848,6 +868,13 @@ class SimpleStorageBin(FoundationGridfinity):
             "GridfinityNonStandard",
             "use a custom height if selected",
         ).NonStandardHeight = False
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "GridfinityNonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = HOLE_SHAPES
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -906,7 +933,7 @@ class SimpleStorageBin(FoundationGridfinity):
             "App::PropertyAngle",
             "LabelShelfAngle",
             "GridfinityNonStandard",
-            "Angle of the bottom part of the Label <br> <br> default = 42º",
+            "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
         ).LabelShelfAngle = LABEL_SHELF_ANGLE
         obj.addProperty(
             "App::PropertyLength",
@@ -1237,7 +1264,7 @@ class EcoBin(FoundationGridfinity):
             "App::PropertyLength",
             "CustomHeight",
             "GridfinityNonStandard",
-            "total height of the bin using the custom heignt instead of incraments of 7 mm",
+            "total height of the bin using the custom heignt instead of increments of 7 mm",
         ).CustomHeight = 42
         obj.addProperty(
             "App::PropertyLength",
@@ -1251,6 +1278,13 @@ class EcoBin(FoundationGridfinity):
             "GridfinityNonStandard",
             "use a custom height if selected",
         ).NonStandardHeight = False
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "GridfinityNonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = HOLE_SHAPES
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -1336,7 +1370,7 @@ class EcoBin(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty(
@@ -1436,6 +1470,20 @@ class EcoBin(FoundationGridfinity):
         ).ScrewHoles = False
         obj.setEditorMode("ScrewHoles", 2)
 
+        obj.addProperty(
+            "App::PropertyLength",
+            "ScrewHoleDiameter",
+            "GridfinityNonStandard",
+            "Diameter of Screw Holes <br> <br> default = 3.0 mm",
+        ).ScrewHoleDiameter = SCREW_HOLE_DIAMETER
+        obj.setEditorMode("ScrewHoleDiameter", 2)
+        obj.addProperty(
+            "App::PropertyLength",
+            "ScrewHoleDepth",
+            "GridfinityNonStandard",
+            "Depth of Screw Holes <br> <br> default = 6.0 mm",
+        ).ScrewHoleDepth = SCREW_HOLE_DEPTH
+        obj.setEditorMode("ScrewHoleDepth", 2)
         obj.addProperty(
             "App::PropertyLength",
             "ScrewHoleDiameter",
@@ -1591,7 +1639,7 @@ class PartsBin(FoundationGridfinity):
             "ScrewHoles",
             "Gridfinity",
             "Toggle the screw holes on or off",
-        ).ScrewHoles = True
+        ).ScrewHoles = False
         obj.addProperty(
             "App::PropertyBool",
             "Scoop",
@@ -1630,7 +1678,7 @@ class PartsBin(FoundationGridfinity):
             "App::PropertyLength",
             "CustomHeight",
             "GridfinityNonStandard",
-            "total height of the bin using the custom heignt instead of incraments of 7 mm",
+            "total height of the bin using the custom heignt instead of increments of 7 mm",
         ).CustomHeight = 42
         obj.addProperty(
             "App::PropertyLength",
@@ -1644,6 +1692,13 @@ class PartsBin(FoundationGridfinity):
             "GridfinityNonStandard",
             "use a custom height if selected",
         ).NonStandardHeight = False
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "GridfinityNonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = HOLE_SHAPES
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
@@ -1702,7 +1757,7 @@ class PartsBin(FoundationGridfinity):
             "App::PropertyAngle",
             "LabelShelfAngle",
             "GridfinityNonStandard",
-            "Angle of the bottom part of the Label <br> <br> default = 42º",
+            "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
         ).LabelShelfAngle = LABEL_SHELF_ANGLE
         obj.addProperty(
             "App::PropertyLength",
@@ -1772,7 +1827,7 @@ class PartsBin(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty(
@@ -2036,7 +2091,7 @@ class Baseplate(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BASEPLATE_BOTTOM_CHAMFER
         obj.addProperty(
@@ -2269,7 +2324,7 @@ class MagnetBaseplate(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BASEPLATE_BOTTOM_CHAMFER
         obj.addProperty(
@@ -2538,7 +2593,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BASEPLATE_BOTTOM_CHAMFER
         obj.addProperty(
