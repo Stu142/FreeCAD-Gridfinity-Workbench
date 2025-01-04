@@ -244,7 +244,7 @@ class BinBlank(FoundationGridfinity):
             "App::PropertyLength",
             "MagnetHoleDiameter",
             "GridfinityNonStandard",
-            "Diameter of Magnet Holes <br> <br> default = 6.5 mm",
+            "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br> default = 6.5 mm",
         ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
         obj.addProperty(
             "App::PropertyLength",
@@ -425,7 +425,6 @@ class BinBlank(FoundationGridfinity):
             obj.TotalHeight = obj.CustomHeight
         else:
             obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
-            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
 
         fuse_total = MakeBinBase(self, obj)
         solid_center = RoundedRectangleExtrude(
@@ -443,7 +442,6 @@ class BinBlank(FoundationGridfinity):
             )
         )
 
-        fuse_total = Part.Shape.fuse(fuse_total, solid_center)
         fuse_total = Part.Shape.fuse(fuse_total, solid_center)
 
         if obj.StackingLip:
@@ -546,7 +544,7 @@ class BinBase(FoundationGridfinity):
             "App::PropertyLength",
             "MagnetHoleDiameter",
             "GridfinityNonStandard",
-            "Diameter of Magnet Holes <br> <br> default = 6.5 mm",
+            "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br> default = 6.5 mm",
         ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
         obj.addProperty(
             "App::PropertyLength",
@@ -879,7 +877,7 @@ class SimpleStorageBin(FoundationGridfinity):
             "App::PropertyLength",
             "MagnetHoleDiameter",
             "GridfinityNonStandard",
-            "Diameter of Magnet Holes <br> <br> default = 6.5 mm",
+            "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br> default = 6.5 mm",
         ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
         obj.addProperty(
             "App::PropertyLength",
@@ -1300,7 +1298,7 @@ class EcoBin(FoundationGridfinity):
             "App::PropertyLength",
             "MagnetHoleDiameter",
             "GridfinityNonStandard",
-            "Diameter of Magnet Holes <br> <br> default = 6.5 mm",
+            "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br> default = 6.5 mm",
         ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
         obj.addProperty(
             "App::PropertyLength",
@@ -1700,7 +1698,7 @@ class PartsBin(FoundationGridfinity):
             "App::PropertyLength",
             "MagnetHoleDiameter",
             "GridfinityNonStandard",
-            "Diameter of Magnet Holes <br> <br> default = 6.5 mm",
+            "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br> default = 6.5 mm",
         ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
         obj.addProperty(
             "App::PropertyLength",
@@ -2280,10 +2278,17 @@ class MagnetBaseplate(FoundationGridfinity):
             "Small fillet on iside of baseplate <br> <br> default = 1 mm",
         ).SmallFillet = BASEPLATE_SMALL_FILLET
         obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "NonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = HOLE_SHAPES
+        obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
             "NonStandard",
-            "Diameter of Magnet Holes <br> <br> default = 6.5 mm",
+            "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br> default = 6.5 mm",
         ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
         obj.addProperty(
             "App::PropertyLength",
@@ -2534,7 +2539,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             "App::PropertyLength",
             "MagnetHoleDiameter",
             "NonStandard",
-            "Diameter of Magnet Holes <br> <br> default = 6.5 mm",
+            "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br> default = 6.5 mm",
         ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
         obj.addProperty(
             "App::PropertyLength",
