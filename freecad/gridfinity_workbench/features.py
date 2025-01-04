@@ -1141,6 +1141,17 @@ class SimpleStorageBin(FoundationGridfinity):
             App.Console.PrintWarning(divmin)
             App.Console.PrintWarning("\n")
 
+        if (
+            obj.xDividerHeight < obj.TotalHeight
+            and obj.LabelShelfStyle != "Off"
+            and obj.xDividerHeight != 0
+            and obj.xDividers != 0
+        ):
+            obj.LabelShelfStyle = "Off"
+            App.Console.PrintWarning(
+                "Label Shelf turned off for less than full height x dividers"
+            )
+
         ## Bin Construction
         fuse_total = MakeBinBase(self, obj)
 
@@ -1470,20 +1481,6 @@ class EcoBin(FoundationGridfinity):
         ).ScrewHoles = False
         obj.setEditorMode("ScrewHoles", 2)
 
-        obj.addProperty(
-            "App::PropertyLength",
-            "ScrewHoleDiameter",
-            "GridfinityNonStandard",
-            "Diameter of Screw Holes <br> <br> default = 3.0 mm",
-        ).ScrewHoleDiameter = SCREW_HOLE_DIAMETER
-        obj.setEditorMode("ScrewHoleDiameter", 2)
-        obj.addProperty(
-            "App::PropertyLength",
-            "ScrewHoleDepth",
-            "GridfinityNonStandard",
-            "Depth of Screw Holes <br> <br> default = 6.0 mm",
-        ).ScrewHoleDepth = SCREW_HOLE_DEPTH
-        obj.setEditorMode("ScrewHoleDepth", 2)
         obj.addProperty(
             "App::PropertyLength",
             "ScrewHoleDiameter",
