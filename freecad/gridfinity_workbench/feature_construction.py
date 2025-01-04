@@ -14,7 +14,14 @@ def createRoundedRectangle(xwidth, ywidth, zsketchplane, radius):
     yclosev = ywidth / 2 - radius
     xarcv = xwidth / 2 - radius + radius * math.sin(math.pi / 4)
     yarcv = ywidth / 2 - radius + radius * math.sin(math.pi / 4)
+    xfarv = xwidth / 2
+    yfarv = ywidth / 2
+    xclosev = xwidth / 2 - radius
+    yclosev = ywidth / 2 - radius
+    xarcv = xwidth / 2 - radius + radius * math.sin(math.pi / 4)
+    yarcv = ywidth / 2 - radius + radius * math.sin(math.pi / 4)
 
+    V1 = App.Vector(-xclosev, yfarv, zsketchplane)
     V1 = App.Vector(-xclosev, yfarv, zsketchplane)
     V2 = App.Vector(xclosev, yfarv, zsketchplane)
     V3 = App.Vector(xfarv, yclosev, zsketchplane)
@@ -532,6 +539,11 @@ def MakeCompartements(self, obj):
         for idx_edge, edge in enumerate(func_fuse.Edges):
             z0 = edge.Vertexes[0].Point.z
             z1 = edge.Vertexes[1].Point.z
+        # Fillet Bottom edges
+        b_edges = []
+        for idx_edge, edge in enumerate(func_fuse.Edges):
+            z0 = edge.Vertexes[0].Point.z
+            z1 = edge.Vertexes[1].Point.z
 
             if z0 < 0 and z1 < 0:
                 b_edges.append(edge)
@@ -641,6 +653,35 @@ def MakeBinWall(self, obj):
         -obj.TotalHeight + obj.BaseProfileHeight,
     )
 
+    bin_wall_path = createRoundedRectangle(
+        obj.xTotalWidth, obj.yTotalWidth, 0, obj.BinOuterRadius
+    )
+    bin_wall_path.translate(
+        App.Vector(
+            obj.xTotalWidth / 2 - obj.BinUnit / 2,
+            obj.yTotalWidth / 2 - obj.BinUnit / 2,
+            0,
+        )
+    )
+    ST1 = App.Vector(-obj.BinUnit / 2, 0, -obj.TotalHeight + obj.BaseProfileHeight)
+    ST2 = App.Vector(-obj.BinUnit / 2, 0, 0)
+    ST3 = App.Vector(-obj.BinUnit / 2 + obj.WallThickness, 0, 0)
+    ST4 = App.Vector(
+        -obj.BinUnit / 2 + obj.WallThickness,
+        0,
+        -obj.TotalHeight + obj.HeightUnitValue + obj.InsideFilletRadius,
+    )
+    ST5 = App.Vector(
+        -obj.BinUnit / 2 + obj.WallThickness + obj.InsideFilletRadius,
+        0,
+        -obj.TotalHeight + obj.HeightUnitValue,
+    )
+    ST6 = App.Vector(
+        -obj.BinUnit / 2 + obj.WallThickness + obj.InsideFilletRadius,
+        0,
+        -obj.TotalHeight + obj.BaseProfileHeight,
+    )
+
     VC1 = App.Vector(
         -obj.BinUnit / 2
         + obj.WallThickness
@@ -698,6 +739,14 @@ def MakeBinBase(self, obj):
                 obj.BinVerticalRadius,
             )
             assembly = Part.Shape.fuse(bottom_chamfer, vertical_section)
+            vertical_section = RoundedRectangleExtrude(
+                vert_width,
+                vert_width,
+                -obj.TotalHeight + obj.BaseProfileBottomChamfer,
+                obj.BaseProfileVerticalSection,
+                obj.BinVerticalRadius,
+            )
+            assembly = Part.Shape.fuse(bottom_chamfer, vertical_section)
 
             top_chamfer = RoundedRectangleChamfer(
                 vert_width,
@@ -711,6 +760,7 @@ def MakeBinBase(self, obj):
             assembly = Part.Solid.fuse(assembly, top_chamfer)
 
             assembly.translate(App.Vector(xtranslate, ytranslate, 0))
+
             if y > 0:
                 totalassembly1 = Part.Solid.fuse(assembly, totalassembly1)
             else:
@@ -894,30 +944,154 @@ def MakeBottomHoles(self, obj):
         for x in range(obj.xGridUnits):
             ytranslate = zeromm
             for y in range(obj.yGridUnits):
-                C1 = Part.makeCylinder(
-                    obj.MagnetHoleDiameter / 2,
-                    obj.MagnetHoleDepth,
-                    App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
-                    App.Vector(0, 0, 1),
-                )
-                C2 = Part.makeCylinder(
-                    obj.MagnetHoleDiameter / 2,
-                    obj.MagnetHoleDepth,
-                    App.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
-                    App.Vector(0, 0, 1),
-                )
-                C3 = Part.makeCylinder(
-                    obj.MagnetHoleDiameter / 2,
-                    obj.MagnetHoleDepth,
-                    App.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
-                    App.Vector(0, 0, 1),
-                )
-                C4 = Part.makeCylinder(
-                    obj.MagnetHoleDiameter / 2,
-                    obj.MagnetHoleDepth,
-                    App.Vector(hole_pos, hole_pos, -obj.TotalHeight),
-                    App.Vector(0, 0, 1),
-                )
+                if obj.MagnetHolesShape == "Hex":
+                    nSides = 6
+
+                    rot = App.Rotation(App.Vector(0, 0, 1), 0)
+
+                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = nSides
+                    p.Circumradius = obj.MagnetHoleDiameter / 2
+                    p.Placement = App.Placement(
+                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight), rot
+                    )
+                    p.recompute()
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C1 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
+
+                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = nSides
+                    p.Circumradius = obj.MagnetHoleDiameter / 2
+                    p.Placement = App.Placement(
+                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight), rot
+                    )
+                    p.recompute()
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C2 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
+
+                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = nSides
+                    p.Circumradius = obj.MagnetHoleDiameter / 2
+                    p.Placement = App.Placement(
+                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight), rot
+                    )
+                    p.recompute()
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C3 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
+
+                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = nSides
+                    p.Circumradius = obj.MagnetHoleDiameter / 2
+                    p.Placement = App.Placement(
+                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight), rot
+                    )
+                    p.recompute()
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C4 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
+
+                else:
+                    C1 = Part.makeCylinder(
+                        obj.MagnetHoleDiameter / 2,
+                        obj.MagnetHoleDepth,
+                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
+                        App.Vector(0, 0, 1),
+                    )
+                    C2 = Part.makeCylinder(
+                        obj.MagnetHoleDiameter / 2,
+                        obj.MagnetHoleDepth,
+                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
+                        App.Vector(0, 0, 1),
+                    )
+                    C3 = Part.makeCylinder(
+                        obj.MagnetHoleDiameter / 2,
+                        obj.MagnetHoleDepth,
+                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
+                        App.Vector(0, 0, 1),
+                    )
+                    C4 = Part.makeCylinder(
+                        obj.MagnetHoleDiameter / 2,
+                        obj.MagnetHoleDepth,
+                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight),
+                        App.Vector(0, 0, 1),
+                    )
+                if obj.MagnetHolesShape == "Hex":
+                    nSides = 6
+
+                    rot = App.Rotation(App.Vector(0, 0, 1), 0)
+
+                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = nSides
+                    p.Circumradius = obj.MagnetHoleDiameter / 2
+                    p.Placement = App.Placement(
+                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight), rot
+                    )
+                    p.recompute()
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C1 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
+
+                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = nSides
+                    p.Circumradius = obj.MagnetHoleDiameter / 2
+                    p.Placement = App.Placement(
+                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight), rot
+                    )
+                    p.recompute()
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C2 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
+
+                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = nSides
+                    p.Circumradius = obj.MagnetHoleDiameter / 2
+                    p.Placement = App.Placement(
+                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight), rot
+                    )
+                    p.recompute()
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C3 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
+
+                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = nSides
+                    p.Circumradius = obj.MagnetHoleDiameter / 2
+                    p.Placement = App.Placement(
+                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight), rot
+                    )
+                    p.recompute()
+                    f = Part.Face(Part.Wire(p.Shape.Edges))
+                    C4 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
+                    App.ActiveDocument.removeObject(p.Name)
+
+                else:
+                    C1 = Part.makeCylinder(
+                        obj.MagnetHoleDiameter / 2,
+                        obj.MagnetHoleDepth,
+                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
+                        App.Vector(0, 0, 1),
+                    )
+                    C2 = Part.makeCylinder(
+                        obj.MagnetHoleDiameter / 2,
+                        obj.MagnetHoleDepth,
+                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
+                        App.Vector(0, 0, 1),
+                    )
+                    C3 = Part.makeCylinder(
+                        obj.MagnetHoleDiameter / 2,
+                        obj.MagnetHoleDepth,
+                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
+                        App.Vector(0, 0, 1),
+                    )
+                    C4 = Part.makeCylinder(
+                        obj.MagnetHoleDiameter / 2,
+                        obj.MagnetHoleDepth,
+                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight),
+                        App.Vector(0, 0, 1),
+                    )
 
                 HM1 = Part.Solid.multiFuse(C1, [C2, C3, C4])
 
@@ -1198,6 +1372,21 @@ def MakeEcoBinCut(self, obj):
         )
     )
 
+    func_fuse = RoundedRectangleExtrude(
+        obj.xTotalWidth - obj.WallThickness * 2,
+        obj.yTotalWidth - obj.WallThickness * 2,
+        -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness,
+        obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness,
+        obj.BinOuterRadius - obj.WallThickness,
+    )
+    func_fuse.translate(
+        App.Vector(
+            obj.xTotalWidth / 2 - obj.BinUnit / 2,
+            obj.yTotalWidth / 2 - obj.BinUnit / 2,
+            0,
+        )
+    )
+
     base_offset = obj.BaseWallThickness * math.tan(math.pi / 8)
     bt_cmf_width = (
         obj.BinUnit
@@ -1237,6 +1426,14 @@ def MakeEcoBinCut(self, obj):
     for x in range(obj.xGridUnits):
         ytranslate = zeromm
         for y in range(obj.yGridUnits):
+            bottom_chamfer = RoundedRectangleChamfer(
+                bt_cmf_width,
+                bt_cmf_width,
+                -obj.TotalHeight + obj.BaseWallThickness + magoffset,
+                0.4 * unitmm,
+                bt_chf_rad,
+            )
+
             bottom_chamfer = RoundedRectangleChamfer(
                 bt_cmf_width,
                 bt_cmf_width,
