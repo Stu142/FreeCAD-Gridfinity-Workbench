@@ -919,13 +919,13 @@ class SimpleStorageBin(FoundationGridfinity):
             "App::PropertyLength",
             "LabelShelfWidth",
             "GridfinityNonStandard",
-            "Thickness of the Label Shelf <br> <br> default = 1.2 mm",
+            "Thickness of the Label Shelf <br> <br> default = 12 mm",
         ).LabelShelfWidth = LABEL_SHELF_WIDTH
         obj.addProperty(
             "App::PropertyLength",
             "LabelShelfLength",
             "GridfinityNonStandard",
-            "Length of the Label Shelf <br> <br> default = 1.2 mm",
+            "Length of the Label Shelf <br> <br> default = 42 mm",
         ).LabelShelfLength = LABEL_SHELF_LENGTH
         obj.addProperty(
             "App::PropertyAngle",
@@ -1740,13 +1740,13 @@ class PartsBin(FoundationGridfinity):
             "App::PropertyLength",
             "LabelShelfWidth",
             "GridfinityNonStandard",
-            "Thickness of the Label Shelf <br> <br> default = 1.2 mm",
+            "Thickness of the Label Shelf <br> <br> default = 12 mm",
         ).LabelShelfWidth = LABEL_SHELF_WIDTH
         obj.addProperty(
             "App::PropertyLength",
             "LabelShelfLength",
             "GridfinityNonStandard",
-            "Length of the Label Shelf <br> <br> default = 1.2 mm",
+            "Length of the Label Shelf <br> <br> default = 42 mm",
         ).LabelShelfLength = LABEL_SHELF_LENGTH
         obj.addProperty(
             "App::PropertyAngle",

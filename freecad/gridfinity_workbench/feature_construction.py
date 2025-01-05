@@ -289,6 +289,31 @@ def MakeLabelShelf(self, obj):
         obj.LabelShelfVerticalThickness.Value - 0.01, h_edges
     )
 
+    labelshelfheight = obj.LabelShelfVerticalThickness + side_b * unitmm
+    if (labelshelfheight) > obj.UsableHeight:
+        fw = obj.yTotalWidth - obj.WallThickness * 2
+        ytranslate = -obj.BinUnit / 2 + obj.WallThickness
+        xtranslate = zeromm
+        parts = []
+        bottomcutbox = Part.makeBox(labelshelfheight, obj.StackingLipTopChamfer + obj.StackingLipTopLedge + obj.StackingLipBottomChamfer + obj.LabelShelfWidth - obj.WallThickness, obj.yTotalWidth, App.Vector(towall, 0, -obj.UsableHeight - labelshelfheight), App.Vector(0, 1, 0))
+
+        for x in range(xdiv):
+            bottomcut = bottomcutbox.copy()
+            bottomcut.translate(App.Vector(xtranslate, ytranslate, 0))
+
+            if x == 0:
+                firstbottomcut = bottomcut
+            else:
+                parts.append(bottomcut)
+
+            xtranslate += xcompwidth + obj.DividerThickness
+
+        if xdiv == 1:
+            bottomcuttotal = bottomcut
+        else:
+            bottomcuttotal = Part.Solid.multiFuse(firstbottomcut, parts)
+
+        funcfuse = Part.Shape.cut(funcfuse, bottomcuttotal)
     return funcfuse
 
 
