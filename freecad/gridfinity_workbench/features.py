@@ -59,6 +59,7 @@ from .const import (
     LABEL_SHELF_WIDTH,
     LABEL_SHELF_VERTICAL_THICKNESS,
     LABEL_SHELF_LENGTH,
+    LABEL_SHELF_STACKING_OFFSET,
     LABEL_SHELF_ANGLE,
     SCOOP_RADIUS,
 )
@@ -1098,6 +1099,12 @@ class SimpleStorageBin(FoundationGridfinity):
             "zzExpertOnly",
             "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
         ).LabelShelfVerticalThickness = LABEL_SHELF_VERTICAL_THICKNESS
+        obj.addProperty(
+            "App::PropertyLength",
+            "LabelShelfStackingOffset",
+            "zzExpertOnly",
+            "Vertical Thickness of the Label Shelf <br> <br> default = 0.4 mm",
+        ).LabelShelfStackingOffset = LABEL_SHELF_STACKING_OFFSET
 
     def generate_gridfinity_shape(self, obj):
         ## Parameter Calculations
@@ -1919,6 +1926,12 @@ class PartsBin(FoundationGridfinity):
             "zzExpertOnly",
             "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
         ).LabelShelfVerticalThickness = LABEL_SHELF_VERTICAL_THICKNESS
+        obj.addProperty(
+            "App::PropertyLength",
+            "LabelShelfStackingOffset",
+            "zzExpertOnly",
+            "Vertical Thickness of the Label Shelf <br> <br> default = 0.4 mm",
+        ).LabelShelfStackingOffset = LABEL_SHELF_STACKING_OFFSET
 
     def generate_gridfinity_shape(self, obj):
         ## Calculated Properties
