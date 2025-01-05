@@ -299,7 +299,19 @@ def MakeLabelShelf(self, obj):
         ytranslate = -obj.BinUnit / 2 + obj.WallThickness
         xtranslate = zeromm
         parts = []
-        bottomcutbox = Part.makeBox(labelshelfheight, obj.StackingLipTopChamfer + obj.StackingLipTopLedge + obj.StackingLipBottomChamfer + obj.LabelShelfWidth - obj.WallThickness, obj.yTotalWidth, App.Vector(towall, 0, -obj.UsableHeight - labelshelfheight + stackingoffset), App.Vector(0, 1, 0))
+        bottomcutbox = Part.makeBox(
+            labelshelfheight,
+            obj.StackingLipTopChamfer
+            + obj.StackingLipTopLedge
+            + obj.StackingLipBottomChamfer
+            + obj.LabelShelfWidth
+            - obj.WallThickness,
+            obj.yTotalWidth,
+            App.Vector(
+                towall, 0, -obj.UsableHeight - labelshelfheight + stackingoffset
+            ),
+            App.Vector(0, 1, 0),
+        )
 
         for x in range(xdiv):
             bottomcut = bottomcutbox.copy()
