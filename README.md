@@ -60,6 +60,10 @@ Select the Property view tab on the bottom right and change the values. Hit ente
     - formatting: ruff formatting is used in this repository. Configure ruff as auto formatter in your IDE or run `ruff format`
 
 # Changlog
+**2025/01/05 Version 0.7.0**
+- Added Hex holes for magnets
+- Added Angle Control for stacking Lip
+
 **2024/09/10 Version 0.6.0**
 - Added Bin Base generation
 - Added custom independent x and y divider height parameter

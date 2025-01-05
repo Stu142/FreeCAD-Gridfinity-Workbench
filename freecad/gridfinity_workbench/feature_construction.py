@@ -84,6 +84,10 @@ def MakeLabelShelf(self, obj):
         - obj.LabelShelfWidth
         + obj.WallThickness
     )
+    if obj.StackingLip:
+        stackingoffset = -obj.LabelShelfStackingOffset
+    else:
+        stackingoffset = 0 * unitmm
     shelf_angle = obj.LabelShelfAngle.Value
     shelf_placement = obj.LabelShelfPlacement
 
@@ -108,10 +112,10 @@ def MakeLabelShelf(self, obj):
     side_b = math.sqrt(-pow(side_a, 2) + pow(side_c, 2))
     V4_Z = -obj.LabelShelfVerticalThickness - side_b * unitmm
 
-    V1 = App.Vector(towall, 0, 0)
-    V2 = App.Vector(tolabelend, 0, 0)
-    V3 = App.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness)
-    V4 = App.Vector(towall, 0, V4_Z)
+    V1 = App.Vector(towall, 0, stackingoffset)
+    V2 = App.Vector(tolabelend, 0, stackingoffset)
+    V3 = App.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness + stackingoffset)
+    V4 = App.Vector(towall, 0, V4_Z + stackingoffset)
 
     L1 = Part.LineSegment(V1, V2)
     L2 = Part.LineSegment(V2, V3)
@@ -280,8 +284,8 @@ def MakeLabelShelf(self, obj):
         z1 = edge.Vertexes[1].Point.z
 
         if (
-            z0 == -obj.LabelShelfVerticalThickness
-            and z1 == -obj.LabelShelfVerticalThickness
+            z0 == -obj.LabelShelfVerticalThickness + stackingoffset
+            and z1 == -obj.LabelShelfVerticalThickness + stackingoffset
         ):
             h_edges.append(edge)
 
@@ -289,6 +293,43 @@ def MakeLabelShelf(self, obj):
         obj.LabelShelfVerticalThickness.Value - 0.01, h_edges
     )
 
+    labelshelfheight = obj.LabelShelfVerticalThickness + side_b * unitmm
+    if (labelshelfheight) > obj.UsableHeight:
+        fw = obj.yTotalWidth - obj.WallThickness * 2
+        ytranslate = -obj.BinUnit / 2 + obj.WallThickness
+        xtranslate = zeromm
+        parts = []
+        bottomcutbox = Part.makeBox(
+            labelshelfheight,
+            obj.StackingLipTopChamfer
+            + obj.StackingLipTopLedge
+            + obj.StackingLipBottomChamfer
+            + obj.LabelShelfWidth
+            - obj.WallThickness,
+            obj.yTotalWidth,
+            App.Vector(
+                towall, 0, -obj.UsableHeight - labelshelfheight + stackingoffset
+            ),
+            App.Vector(0, 1, 0),
+        )
+
+        for x in range(xdiv):
+            bottomcut = bottomcutbox.copy()
+            bottomcut.translate(App.Vector(xtranslate, ytranslate, 0))
+
+            if x == 0:
+                firstbottomcut = bottomcut
+            else:
+                parts.append(bottomcut)
+
+            xtranslate += xcompwidth + obj.DividerThickness
+
+        if xdiv == 1:
+            bottomcuttotal = bottomcut
+        else:
+            bottomcuttotal = Part.Solid.multiFuse(firstbottomcut, parts)
+
+        funcfuse = Part.Shape.cut(funcfuse, bottomcuttotal)
     return funcfuse
 
 
@@ -519,6 +560,11 @@ def MakeCompartements(self, obj):
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
     ydivheight = obj.yDividerHeight if obj.yDividerHeight != 0 else obj.TotalHeight
 
+    if obj.StackingLip:
+        stackingoffset = -obj.LabelShelfStackingOffset
+    else:
+        stackingoffset = 0 * unitmm
+
     func_fuse = RoundedRectangleExtrude(
         obj.xTotalWidth - obj.WallThickness * 2,
         obj.yTotalWidth - obj.WallThickness * 2,
@@ -571,7 +617,7 @@ def MakeCompartements(self, obj):
             comp = Part.makeBox(
                 obj.DividerThickness,
                 obj.yTotalWidth,
-                xdivheight,
+                xdivheight + stackingoffset,
                 App.Vector(
                     -obj.BinUnit / 2 + obj.DividerThickness,
                     -obj.BinUnit / 2,
@@ -592,7 +638,7 @@ def MakeCompartements(self, obj):
             comp = Part.makeBox(
                 obj.xTotalWidth,
                 obj.DividerThickness,
-                ydivheight,
+                ydivheight + stackingoffset,
                 App.Vector(-obj.BinUnit / 2, -obj.BinUnit / 2, -obj.TotalHeight),
                 App.Vector(0, 0, 1),
             )
