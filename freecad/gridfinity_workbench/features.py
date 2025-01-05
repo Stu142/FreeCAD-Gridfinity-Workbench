@@ -2536,6 +2536,13 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             "Small fillet on iside of baseplate <br> <br> default = 1 mm",
         ).SmallFillet = BASEPLATE_SMALL_FILLET
         obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "NonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = HOLE_SHAPES
+        obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDiameter",
             "NonStandard",
