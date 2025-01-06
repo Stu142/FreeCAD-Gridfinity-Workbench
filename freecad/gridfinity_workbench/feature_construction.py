@@ -77,7 +77,7 @@ def MakeLabelShelf(self, obj):
         + obj.StackingLipBottomChamfer
         + obj.LabelShelfWidth
     )
-    meetswallbottom = (
+    (
         -obj.StackingLipTopChamfer
         - obj.StackingLipTopLedge
         - obj.StackingLipBottomChamfer
@@ -759,8 +759,6 @@ def MakeBinWall(self, obj):
 
 
 def MakeBinBase(self, obj):
-    components = []
-    basecomp = []
     bt_cmf_width = (
         obj.BinUnit - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer
     )
