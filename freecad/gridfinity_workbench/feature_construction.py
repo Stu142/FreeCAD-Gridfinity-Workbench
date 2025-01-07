@@ -77,7 +77,7 @@ def MakeLabelShelf(self, obj):
         + obj.StackingLipBottomChamfer
         + obj.LabelShelfWidth
     )
-    meetswallbottom = (
+    (
         -obj.StackingLipTopChamfer
         - obj.StackingLipTopLedge
         - obj.StackingLipBottomChamfer
@@ -613,6 +613,7 @@ def MakeCompartements(self, obj):
         ytranslate = zeromm + ycomp_w + obj.WallThickness
 
         # dividers in x direction
+        xdiv: Part.Shape | None = None
         for x in range(obj.xDividers):
             comp = Part.makeBox(
                 obj.DividerThickness,
@@ -626,14 +627,11 @@ def MakeCompartements(self, obj):
                 App.Vector(0, 0, 1),
             )
             comp.translate(App.Vector(xtranslate, 0, 0))
-            if x > 0:
-                xdiv = xdiv.fuse(comp)
-
-            else:
-                xdiv = comp
+            xdiv = comp if xdiv is None else xdiv.fuse(comp)
             xtranslate += xcomp_w + obj.DividerThickness
 
         # dividers in y direction
+        ydiv: Part.Shape | None = None
         for y in range(obj.yDividers):
             comp = Part.makeBox(
                 obj.xTotalWidth,
@@ -644,15 +642,12 @@ def MakeCompartements(self, obj):
             )
 
             comp.translate(App.Vector(0, ytranslate, 0))
-            if y > 0:
-                ydiv = ydiv.fuse(comp)
-            else:
-                ydiv = comp
+            ydiv = comp if ydiv is None else ydiv.fuse(comp)
             ytranslate += ycomp_w + obj.DividerThickness
 
-        if obj.xDividers > 0:
+        if xdiv:
             func_fuse = func_fuse.cut(xdiv)
-        if obj.yDividers > 0:
+        if ydiv:
             func_fuse = func_fuse.cut(ydiv)
         b_edges = []
         for idx_edge, edge in enumerate(func_fuse.Edges):
@@ -759,14 +754,15 @@ def MakeBinWall(self, obj):
 
 
 def MakeBinBase(self, obj):
-    components = []
-    basecomp = []
     bt_cmf_width = (
         obj.BinUnit - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer
     )
     vert_width = obj.BinUnit - 2 * obj.BaseProfileTopChamfer
     xtranslate = zeromm
     ytranslate = zeromm
+    assembly1: Part.Shape | None = None
+    assembly2: Part.Shape | None = None
+
     for x in range(obj.xGridUnits):
         ytranslate = zeromm
         for y in range(obj.yGridUnits):
@@ -808,18 +804,13 @@ def MakeBinBase(self, obj):
 
             assembly.translate(App.Vector(xtranslate, ytranslate, 0))
 
-            if y > 0:
-                totalassembly1 = Part.Solid.fuse(assembly, totalassembly1)
-            else:
-                totalassembly1 = assembly
+            assembly1 = assembly if assembly1 is None else assembly1.fuse(assembly)
             ytranslate += obj.GridSize
-        if x > 0:
-            totalassembly2 = Part.Solid.fuse(totalassembly2, totalassembly1)
-        else:
-            totalassembly2 = totalassembly1
+
+        assembly2 = assembly1 if assembly2 is None else assembly2.fuse(assembly1)
         xtranslate += obj.GridSize
 
-    return totalassembly2
+    return assembly2
 
 
 def MakeBaseplateCenterCut(self, obj):
@@ -953,8 +944,9 @@ def MakeBaseplateCenterCut(self, obj):
     )
 
     wire = Part.Wire(S1.Edges)
-
     face = Part.Face(wire)
+    HM2: Part.Shape | None = None
+    HM3: Part.Shape | None = None
 
     for x in range(obj.xGridUnits):
         ytranslate = zeromm
@@ -962,15 +954,11 @@ def MakeBaseplateCenterCut(self, obj):
             HM1 = face.extrude(App.Vector(0, 0, -obj.TotalHeight))
 
             HM1.translate(App.Vector(xtranslate, ytranslate, 0))
-            if y > 0:
-                HM2 = Part.Solid.fuse(HM1, HM2)
-            else:
-                HM2 = HM1
+
+            HM2 = HM1 if HM2 is None else HM2.fuse(HM1)
             ytranslate += obj.GridSize
-        if x > 0:
-            HM3 = Part.Solid.fuse(HM3, HM2)
-        else:
-            HM3 = HM2
+
+        HM3 = HM2 if HM3 is None else HM3.fuse(HM2)
         xtranslate += obj.GridSize
 
     return HM3
@@ -987,6 +975,9 @@ def MakeBottomHoles(self, obj):
 
     xtranslate = zeromm
     ytranslate = zeromm
+    HM2: Part.Shape | None = None
+    HM3: Part.Shape | None = None
+
     if obj.MagnetHoles:
         for x in range(obj.xGridUnits):
             ytranslate = zeromm
@@ -1147,19 +1138,17 @@ def MakeBottomHoles(self, obj):
                 HM1 = Part.Solid.multiFuse(C1, [C2, C3, C4])
 
                 HM1.translate(App.Vector(xtranslate, ytranslate, 0))
-                if y > 0:
-                    HM2 = Part.Solid.fuse(HM1, HM2)
-                else:
-                    HM2 = HM1
+
+                HM2 = HM1 if HM2 is None else HM2.fuse(HM1)
                 ytranslate += obj.GridSize
-            if x > 0:
-                HM3 = Part.Solid.fuse(HM3, HM2)
-            else:
-                HM3 = HM2
+
+            HM3 = HM2 if HM3 is None else HM3.fuse(HM2)
             xtranslate += obj.GridSize
 
     xtranslate = zeromm
     ytranslate = zeromm
+    HS2: Part.Shape | None = None
+    HS3: Part.Shape | None = None
 
     if obj.ScrewHoles:
         for x in range(obj.xGridUnits):
@@ -1193,19 +1182,17 @@ def MakeBottomHoles(self, obj):
                 HM1 = Part.Solid.multiFuse(CS1, [CS2, CS3, CS4])
 
                 HM1.translate(App.Vector(xtranslate, ytranslate, 0))
-                if y > 0:
-                    HS2 = Part.Solid.fuse(HM1, HS2)
-                else:
-                    HS2 = HM1
+                HS2 = HM1 if HS2 is None else HS2.fuse(HM1)
                 ytranslate += obj.GridSize
-            if x > 0:
-                HS3 = Part.Solid.fuse(HS3, HS2)
-            else:
-                HS3 = HS2
+
+            HS3 = HS2 if HS3 is None else HS3.fuse(HS2)
             xtranslate += obj.GridSize
 
     xtranslate = zeromm
     ytranslate = zeromm
+    HSQ2: Part.Shape | None = None
+    HSQ3: Part.Shape | None = None
+
     if obj.ScrewHoles and obj.MagnetHoles:
         for x in range(obj.xGridUnits):
             ytranslate = zeromm
@@ -1386,15 +1373,10 @@ def MakeBottomHoles(self, obj):
                 HM1 = Part.Solid.multiFuse(sq1_1, [B1, B2, B3, B4, sq1_2, sq1_3, sq1_4])
 
                 HM1.translate(App.Vector(xtranslate, ytranslate, 0))
-                if y > 0:
-                    HSQ2 = Part.Solid.fuse(HM1, HSQ2)
-                else:
-                    HSQ2 = HM1
+                HSQ2 = HM1 if HSQ2 is None else HSQ2.fuse(HM1)
                 ytranslate += obj.GridSize
-            if x > 0:
-                HSQ3 = Part.Solid.fuse(HSQ3, HSQ2)
-            else:
-                HSQ3 = HSQ2
+
+            HSQ3 = HSQ2 if HSQ3 is None else HSQ3.fuse(HSQ2)
             xtranslate += obj.GridSize
 
     if obj.ScrewHoles and not obj.MagnetHoles:
@@ -1473,6 +1455,8 @@ def MakeEcoBinCut(self, obj):
 
     xtranslate = zeromm
     ytranslate = zeromm
+    assembly1: Part.Shape | None = None
+    assembly2: Part.Shape | None = None
 
     for x in range(obj.xGridUnits):
         ytranslate = zeromm
@@ -1520,18 +1504,14 @@ def MakeEcoBinCut(self, obj):
             assembly = Part.Solid.fuse(assembly, top_chamfer)
 
             assembly.translate(App.Vector(xtranslate, ytranslate, 0))
-            if y > 0:
-                totalassembly1 = Part.Solid.fuse(assembly, totalassembly1)
-            else:
-                totalassembly1 = assembly
+
+            assembly1 = assembly if assembly1 is None else assembly1.fuse(assembly)
             ytranslate += obj.GridSize
-        if x > 0:
-            totalassembly2 = Part.Solid.fuse(totalassembly2, totalassembly1)
-        else:
-            totalassembly2 = totalassembly1
+
+        assembly2 = assembly1 if assembly2 is None else assembly2.fuse(assembly1)
         xtranslate += obj.GridSize
 
-    func_fuse = func_fuse.fuse(totalassembly2)
+    func_fuse = func_fuse.fuse(assembly2)
 
     outer_trim1 = RoundedRectangleExtrude(
         obj.xTotalWidth - obj.WallThickness * 2,
@@ -1582,6 +1562,7 @@ def MakeEcoBinCut(self, obj):
     ytranslate = zeromm + ycomp_w + obj.WallThickness
 
     # dividers in x direction
+    xdiv: Part.Shape | None = None
     for x in range(obj.xDividers):
         comp = Part.makeBox(
             obj.DividerThickness,
@@ -1595,14 +1576,12 @@ def MakeEcoBinCut(self, obj):
             App.Vector(0, 0, 1),
         )
         comp.translate(App.Vector(xtranslate, 0, 0))
-        if x > 0:
-            xdiv = xdiv.fuse(comp)
 
-        else:
-            xdiv = comp
+        xdiv = comp if xdiv is None else xdiv.fuse(comp)
         xtranslate += xcomp_w + obj.DividerThickness
 
     # dividers in y direction
+    ydiv: Part.Shape | None = None
     for y in range(obj.yDividers):
         comp = Part.makeBox(
             obj.xTotalWidth,
@@ -1612,15 +1591,12 @@ def MakeEcoBinCut(self, obj):
             App.Vector(0, 0, 1),
         )
         comp.translate(App.Vector(0, ytranslate, 0))
-        if y > 0:
-            ydiv = ydiv.fuse(comp)
-        else:
-            ydiv = comp
+        ydiv = comp if ydiv is None else ydiv.fuse(comp)
         ytranslate += ycomp_w + obj.DividerThickness
 
-    if obj.xDividers > 0:
+    if xdiv:
         func_fuse = func_fuse.cut(xdiv)
-    if obj.yDividers > 0:
+    if ydiv:
         func_fuse = func_fuse.cut(ydiv)
     b_edges = []
 
