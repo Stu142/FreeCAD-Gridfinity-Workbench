@@ -1,78 +1,79 @@
-from __future__ import division
 import os
+
 import FreeCAD as App
 import Part
 from FreeCAD import Units
-from .version import __version__
-from .feature_construction import (
-    MakeStackingLip,
-    MakeBinBase,
-    RoundedRectangleExtrude,
-    MakeBottomHoles,
-    MakeBaseplateCenterCut,
-    MakeCompartements,
-    MakeEcoBinCut,
-    MakeScoop,
-    MakeLabelShelf,
-)
+
 from .baseplate_feature_construction import (
     MakeBaseplateMagnetHoles,
-    MakeBPScrewBottomCham,
     MakeBPConnectionHoles,
+    MakeBPScrewBottomCham,
 )
 from .const import (
-    BIN_BASE_TOP_CHAMFER,
-    BIN_BASE_BOTTOM_CHAMFER,
-    BIN_BASE_VERTICAL_SECTION,
-    GRID_SIZE,
-    BIN_OUTER_RADIUS,
-    BIN_UNIT,
-    BIN_BASE_VERTICAL_RADIUS,
-    BIN_BASE_BOTTOM_RADIUS,
-    TOLERANCE,
-    MAGNET_HOLE_DIAMETER,
-    MAGNET_HOLE_DEPTH,
-    MAGNET_HOLE_DISTANCE_FROM_EDGE,
-    SCREW_HOLE_DIAMETER,
-    SCREW_HOLE_DEPTH,
+    BASE_THICKNESS,
     BASEPLATE_BOTTOM_CHAMFER,
-    BASEPLATE_VERTICAL_SECTION,
+    BASEPLATE_BOTTOM_RADIUS,
+    BASEPLATE_OUTER_RADIUS,
+    BASEPLATE_SMALL_FILLET,
     BASEPLATE_TOP_CHAMFER,
     BASEPLATE_TOP_LEDGE_WIDTH,
-    BASEPLATE_OUTER_RADIUS,
     BASEPLATE_VERTICAL_RADIUS,
-    BASEPLATE_BOTTOM_RADIUS,
-    STACKING_LIP_TOP_LEDGE,
-    STACKING_LIP_BOTTOM_CHAMFER,
-    STACKING_LIP_VERTICAL_SECTION,
-    HEIGHT_UNIT,
-    BASEPLATE_SMALL_FILLET,
-    MAGNET_BASE,
-    MAGNET_EDGE_THICKNESS,
-    MAGNET_BASE_HOLE,
-    MAGNET_CHAMFER,
-    BASE_THICKNESS,
-    MAGNET_BOTTOM_CHAMFER,
+    BASEPLATE_VERTICAL_SECTION,
+    BIN_BASE_BOTTOM_CHAMFER,
+    BIN_BASE_BOTTOM_RADIUS,
+    BIN_BASE_TOP_CHAMFER,
+    BIN_BASE_VERTICAL_RADIUS,
+    BIN_BASE_VERTICAL_SECTION,
+    BIN_OUTER_RADIUS,
+    BIN_UNIT,
     CONNECTION_HOLE_DIAMETER,
-    LABEL_SHELF_WIDTH,
-    LABEL_SHELF_VERTICAL_THICKNESS,
+    GRID_SIZE,
+    HEIGHT_UNIT,
+    LABEL_SHELF_ANGLE,
     LABEL_SHELF_LENGTH,
     LABEL_SHELF_STACKING_OFFSET,
-    LABEL_SHELF_ANGLE,
+    LABEL_SHELF_VERTICAL_THICKNESS,
+    LABEL_SHELF_WIDTH,
+    MAGNET_BASE,
+    MAGNET_BASE_HOLE,
+    MAGNET_BOTTOM_CHAMFER,
+    MAGNET_CHAMFER,
+    MAGNET_EDGE_THICKNESS,
+    MAGNET_HOLE_DEPTH,
+    MAGNET_HOLE_DIAMETER,
+    MAGNET_HOLE_DISTANCE_FROM_EDGE,
     SCOOP_RADIUS,
+    SCREW_HOLE_DEPTH,
+    SCREW_HOLE_DIAMETER,
+    STACKING_LIP_BOTTOM_CHAMFER,
+    STACKING_LIP_TOP_LEDGE,
+    STACKING_LIP_VERTICAL_SECTION,
+    TOLERANCE,
 )
+from .feature_construction import (
+    MakeBaseplateCenterCut,
+    MakeBinBase,
+    MakeBottomHoles,
+    MakeCompartements,
+    MakeEcoBinCut,
+    MakeLabelShelf,
+    MakeScoop,
+    MakeStackingLip,
+    RoundedRectangleExtrude,
+)
+from .version import __version__
 
 unitmm = Units.Quantity("1 mm")
 
 
 __all__ = [
-    "BinBlank",
-    "SimpleStorageBin",
-    "PartsBin",
     "Baseplate",
-    "MagnetBaseplate",
-    "ScrewTogetherBaseplate",
+    "BinBlank",
     "EcoBin",
+    "MagnetBaseplate",
+    "PartsBin",
+    "ScrewTogetherBaseplate",
+    "SimpleStorageBin",
 ]
 
 HOLE_SHAPES = ["Round", "Hex"]
@@ -81,31 +82,24 @@ HOLE_SHAPES = ["Round", "Hex"]
 def fcvec(x):
     if len(x) == 2:
         return App.Vector(x[0], x[1], 0)
-    else:
-        return App.Vector(x[0], x[1], x[2])
+    return App.Vector(x[0], x[1], x[2])
 
 
-class ViewProviderGridfinity(object):
+class ViewProviderGridfinity:
     def __init__(self, obj, icon_fn=None):
         # Set this object to the proxy object of the actual view provider
         obj.Proxy = self
         self._check_attr()
         dirname = os.path.dirname(__file__)
         self.icon_fn = icon_fn or os.path.join(
-            dirname, "icons", "gridfinity_workbench_icon.svg"
+            dirname, "icons", "gridfinity_workbench_icon.svg",
         )
         App.Console.PrintMessage("works until here\n")
 
     def _check_attr(self):
         """Check for missing attributes."""
         if not hasattr(self, "icon_fn"):
-            setattr(
-                self,
-                "icon_fn",
-                os.path.join(
-                    os.path.dirname(__file__), "icons", "gridfinity_workbench_icon.svg"
-                ),
-            )
+            self.icon_fn = os.path.join(os.path.dirname(__file__), "icons", "gridfinity_workbench_icon.svg")
 
     def attach(self, vobj):
         self.vobj = vobj
@@ -123,7 +117,7 @@ class ViewProviderGridfinity(object):
             self.icon_fn = state["icon_fn"]
 
 
-class FoundationGridfinity(object):
+class FoundationGridfinity:
     def __init__(self, obj):
         obj.addProperty(
             "App::PropertyString",
@@ -153,8 +147,7 @@ class FoundationGridfinity(object):
             fp.Shape = gridfinity_shape
 
     def generate_gridfinity_shape(self, fp):
-        """
-        This method has to return the TopoShape of the object.
+        """This method has to return the TopoShape of the object.
         """
         raise NotImplementedError("generate_gridfinity_shape not implemented")
 
@@ -164,7 +157,7 @@ class BinBlank(FoundationGridfinity):
         super(BinBlank, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object"
+            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -324,7 +317,7 @@ class BinBlank(FoundationGridfinity):
             1,
         ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid"
+            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -438,7 +431,7 @@ class BinBlank(FoundationGridfinity):
                 obj.xTotalWidth / 2 - obj.BinUnit / 2,
                 obj.yTotalWidth / 2 - obj.BinUnit / 2,
                 0,
-            )
+            ),
         )
 
         fuse_total = Part.Shape.fuse(fuse_total, solid_center)
@@ -464,7 +457,7 @@ class BinBase(FoundationGridfinity):
         super(BinBase, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object"
+            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -624,7 +617,7 @@ class BinBase(FoundationGridfinity):
             1,
         ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid"
+            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -738,7 +731,7 @@ class BinBase(FoundationGridfinity):
                 obj.xTotalWidth / 2 - obj.BinUnit / 2,
                 obj.yTotalWidth / 2 - obj.BinUnit / 2,
                 0,
-            )
+            ),
         )
 
         fuse_total = Part.Shape.fuse(fuse_total, solid_center)
@@ -766,7 +759,7 @@ class SimpleStorageBin(FoundationGridfinity):
         super(SimpleStorageBin, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object"
+            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -1018,7 +1011,7 @@ class SimpleStorageBin(FoundationGridfinity):
             1,
         ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid"
+            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -1131,7 +1124,7 @@ class SimpleStorageBin(FoundationGridfinity):
         if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
             obj.xDividerHeight = divmin
             App.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  "
+                "Divider Height must be equal to or greater than:  ",
             )
             App.Console.PrintWarning(divmin)
             App.Console.PrintWarning("\n")
@@ -1139,7 +1132,7 @@ class SimpleStorageBin(FoundationGridfinity):
         if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
             obj.yDividerHeight = divmin
             App.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  "
+                "Divider Height must be equal to or greater than:  ",
             )
             App.Console.PrintWarning(divmin)
             App.Console.PrintWarning("\n")
@@ -1152,7 +1145,7 @@ class SimpleStorageBin(FoundationGridfinity):
         ):
             obj.LabelShelfStyle = "Off"
             App.Console.PrintWarning(
-                "Label Shelf turned off for less than full height x dividers"
+                "Label Shelf turned off for less than full height x dividers",
             )
 
         ## Bin Construction
@@ -1170,7 +1163,7 @@ class SimpleStorageBin(FoundationGridfinity):
                 obj.xTotalWidth / 2 - obj.BinUnit / 2,
                 obj.yTotalWidth / 2 - obj.BinUnit / 2,
                 0,
-            )
+            ),
         )
         fuse_total = fuse_total.fuse(solid_center)
 
@@ -1212,7 +1205,7 @@ class EcoBin(FoundationGridfinity):
         super(EcoBin, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object"
+            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -1402,7 +1395,7 @@ class EcoBin(FoundationGridfinity):
             1,
         ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid"
+            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -1526,7 +1519,7 @@ class EcoBin(FoundationGridfinity):
         if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
             obj.xDividerHeight = divmin
             App.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  "
+                "Divider Height must be equal to or greater than:  ",
             )
             App.Console.PrintWarning(divmin)
             App.Console.PrintWarning("\n")
@@ -1534,7 +1527,7 @@ class EcoBin(FoundationGridfinity):
         if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
             obj.yDividerHeight = divmin
             App.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  "
+                "Divider Height must be equal to or greater than:  ",
             )
             App.Console.PrintWarning(divmin)
             App.Console.PrintWarning("\n")
@@ -1542,7 +1535,7 @@ class EcoBin(FoundationGridfinity):
         if obj.InsideFilletRadius > (1.6 * unitmm):
             obj.InsideFilletRadius = 1.6 * unitmm
             App.Console.PrintWarning(
-                "Inside Fillet Radius must be equal to or less than:  1.6 mm\n"
+                "Inside Fillet Radius must be equal to or less than:  1.6 mm\n",
             )
 
         ## Bin Construction
@@ -1561,7 +1554,7 @@ class EcoBin(FoundationGridfinity):
                 obj.xTotalWidth / 2 - obj.BinUnit / 2,
                 obj.yTotalWidth / 2 - obj.BinUnit / 2,
                 0,
-            )
+            ),
         )
         fuse_total = fuse_total.fuse(solid_center)
 
@@ -1593,7 +1586,7 @@ class PartsBin(FoundationGridfinity):
         super(PartsBin, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object"
+            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -1845,7 +1838,7 @@ class PartsBin(FoundationGridfinity):
             1,
         ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid"
+            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -1959,7 +1952,7 @@ class PartsBin(FoundationGridfinity):
         if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
             obj.xDividerHeight = divmin
             App.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  "
+                "Divider Height must be equal to or greater than:  ",
             )
             App.Console.PrintWarning(divmin)
             App.Console.PrintWarning("\n")
@@ -1967,7 +1960,7 @@ class PartsBin(FoundationGridfinity):
         if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
             obj.yDividerHeight = divmin
             App.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  "
+                "Divider Height must be equal to or greater than:  ",
             )
             App.Console.PrintWarning(divmin)
             App.Console.PrintWarning("\n")
@@ -1980,7 +1973,7 @@ class PartsBin(FoundationGridfinity):
         ):
             obj.LabelShelfStyle = "Off"
             App.Console.PrintWarning(
-                "Label Shelf turned off for less than full height x dividers"
+                "Label Shelf turned off for less than full height x dividers",
             )
 
         ## Bin Construction
@@ -1999,7 +1992,7 @@ class PartsBin(FoundationGridfinity):
                 obj.xTotalWidth / 2 - obj.BinUnit / 2,
                 obj.yTotalWidth / 2 - obj.BinUnit / 2,
                 0,
-            )
+            ),
         )
         fuse_total = fuse_total.fuse(solid_center)
 
@@ -2039,7 +2032,7 @@ class Baseplate(FoundationGridfinity):
         super(Baseplate, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object"
+            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -2122,7 +2115,7 @@ class Baseplate(FoundationGridfinity):
             1,
         )
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid"
+            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -2205,7 +2198,7 @@ class Baseplate(FoundationGridfinity):
                 obj.xTotalWidth / 2 - obj.GridSize / 2,
                 obj.yTotalWidth / 2 - obj.GridSize / 2,
                 0,
-            )
+            ),
         )
         fuse_total = Part.Shape.cut(solid_center, fuse_total)
 
@@ -2223,7 +2216,7 @@ class MagnetBaseplate(FoundationGridfinity):
         super(MagnetBaseplate, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object"
+            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -2248,7 +2241,7 @@ class MagnetBaseplate(FoundationGridfinity):
             "Height of the extrusion",
         ).yGridUnits = 2
         obj.addProperty(
-            "App::PropertyBool", "MagnetHoles", "Gridfinity", "MagnetHoles"
+            "App::PropertyBool", "MagnetHoles", "Gridfinity", "MagnetHoles",
         ).MagnetHoles = True
 
     def add_reference_properties(self, obj):
@@ -2362,7 +2355,7 @@ class MagnetBaseplate(FoundationGridfinity):
             1,
         )
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid"
+            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -2461,7 +2454,7 @@ class MagnetBaseplate(FoundationGridfinity):
                 obj.xTotalWidth / 2 - obj.GridSize / 2,
                 obj.yTotalWidth / 2 - obj.GridSize / 2,
                 0,
-            )
+            ),
         )
         fuse_total = Part.Shape.cut(solid_center, fuse_total)
 
@@ -2485,7 +2478,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         super(ScrewTogetherBaseplate, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object"
+            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -2638,7 +2631,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             1,
         )
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid"
+            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -2726,7 +2719,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
                 obj.xTotalWidth / 2 - obj.GridSize / 2,
                 obj.yTotalWidth / 2 - obj.GridSize / 2,
                 0,
-            )
+            ),
         )
         fuse_total = Part.Shape.cut(solid_center, fuse_total)
 

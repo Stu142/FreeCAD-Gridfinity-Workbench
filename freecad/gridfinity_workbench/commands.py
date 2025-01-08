@@ -1,38 +1,34 @@
 import os
+
 import FreeCAD
 import FreeCADGui as Gui
+
 from .features import (
-    BinBlank,
-    BinBase,
     Baseplate,
-    SimpleStorageBin,
-    MagnetBaseplate,
-    ScrewTogetherBaseplate,
+    BinBase,
+    BinBlank,
     EcoBin,
+    MagnetBaseplate,
     PartsBin,
+    ScrewTogetherBaseplate,
+    SimpleStorageBin,
 )
 
 
-class ViewProviderGridfinity(object):
+class ViewProviderGridfinity:
     def __init__(self, obj, icon_fn=None):
         # Set this object to the proxy object of the actual view provider
         obj.Proxy = self
         self._check_attr()
         dirname = os.path.dirname(__file__)
         self.icon_fn = icon_fn or os.path.join(
-            dirname, "icons", "gridfinity_workbench_icon.svg"
+            dirname, "icons", "gridfinity_workbench_icon.svg",
         )
 
     def _check_attr(self):
         """Check for missing attributes."""
         if not hasattr(self, "icon_fn"):
-            setattr(
-                self,
-                "icon_fn",
-                os.path.join(
-                    os.path.dirname(__file__), "icons", "gridfinity_workbench_icon.svg"
-                ),
-            )
+            self.icon_fn = os.path.join(os.path.dirname(__file__), "icons", "gridfinity_workbench_icon.svg")
 
     def attach(self, vobj):
         self.vobj = vobj
@@ -50,7 +46,7 @@ class ViewProviderGridfinity(object):
             self.icon_fn = state["icon_fn"]
 
 
-class BaseCommand(object):
+class BaseCommand:
     NAME = ""
     GRIDFINITY_FUNCTION = None
     ICONDIR = os.path.join(os.path.dirname(__file__), "icons")
@@ -61,15 +57,12 @@ class BaseCommand(object):
     def IsActive(self):
         if FreeCAD.ActiveDocument is None:
             return False
-        else:
-            return True
+        return True
 
     def Activated(self):
         Gui.doCommand("import freecad.gridfinity_workbench.commands")
         Gui.doCommandGui(
-            "freecad.gridfinity_workbench.commands.{}.create()".format(
-                self.__class__.__name__
-            )
+            f"freecad.gridfinity_workbench.commands.{self.__class__.__name__}.create()",
         )
         FreeCAD.ActiveDocument.recompute()
         Gui.SendMsgToActiveView("ViewFit")
@@ -83,7 +76,7 @@ class BaseCommand(object):
 
             if body:
                 obj = FreeCAD.ActiveDocument.addObject(
-                    "PartDesign::FeaturePython", cls.NAME
+                    "PartDesign::FeaturePython", cls.NAME,
                 )
             else:
                 obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", cls.NAME)

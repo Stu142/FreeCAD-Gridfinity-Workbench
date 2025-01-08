@@ -1,22 +1,23 @@
 import os
-import FreeCADGui as Gui
+
 import FreeCAD as App
+import FreeCADGui as Gui
+
 from freecad.gridfinity_workbench import ICONPATH
 
 try:
     from FreeCADGui import Workbench
 except ImportError:
     App.Console.PrintWarning(
-        "you are using the GridfinityWorkbench with an old version of FreeCAD (<0.16)"
+        "you are using the GridfinityWorkbench with an old version of FreeCAD (<0.16)",
     )
     App.Console.PrintWarning(
-        "the class Workbench is loaded, although not imported: magic"
+        "the class Workbench is loaded, although not imported: magic",
     )
 
 
 class GridfinityWorkbench(Workbench):
-    """
-    class which gets initiated at starup of the gui
+    """class which gets initiated at starup of the gui
     """
 
     MenuText = "Gridfinity"
@@ -37,18 +38,19 @@ class GridfinityWorkbench(Workbench):
         return "Gui::PythonWorkbench"
 
     def Initialize(self):
-        """
-        This function is called at the first activation of the workbench.
+        """This function is called at the first activation of the workbench.
         here is the place to import all the commands
         """
-        from .commands import CreateBinBlank
-        from .commands import CreateBinBase
-        from .commands import CreateSimpleStorageBin
-        from .commands import CreateEcoBin
-        from .commands import CreatePartsBin
-        from .commands import CreateBaseplate
-        from .commands import CreateMagnetBaseplate
-        from .commands import CreateScrewTogetherBaseplate
+        from .commands import (
+            CreateBaseplate,
+            CreateBinBase,
+            CreateBinBlank,
+            CreateEcoBin,
+            CreateMagnetBaseplate,
+            CreatePartsBin,
+            CreateScrewTogetherBaseplate,
+            CreateSimpleStorageBin,
+        )
 
         App.Console.PrintMessage("switching to Gridfinity Workbench\n")
 

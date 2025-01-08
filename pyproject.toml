@@ -1,0 +1,3 @@
+[tool.ruff]
+select = ["ALL"]
+line-length = 100

@@ -1,7 +1,7 @@
-from FreeCAD import Units
-import Part
 import FreeCAD as App
 import numpy as np
+import Part
+from FreeCAD import Units
 
 unitmm = Units.Quantity("1 mm")
 
@@ -50,7 +50,7 @@ def MakeBaseplateMagnetHoles(self, obj):
         p.Polygon = nSides
         p.Circumradius = radius
         p.Placement = App.Placement(
-            App.Vector(-hole_pos, -hole_pos, -obj.BaseProfileHeight), rot
+            App.Vector(-hole_pos, -hole_pos, -obj.BaseProfileHeight), rot,
         )
         p.recompute()
         f = Part.Face(Part.Wire(p.Shape.Edges))
@@ -61,7 +61,7 @@ def MakeBaseplateMagnetHoles(self, obj):
         p.Polygon = nSides
         p.Circumradius = radius
         p.Placement = App.Placement(
-            App.Vector(hole_pos, -hole_pos, -obj.BaseProfileHeight), rot
+            App.Vector(hole_pos, -hole_pos, -obj.BaseProfileHeight), rot,
         )
         p.recompute()
         f = Part.Face(Part.Wire(p.Shape.Edges))
@@ -72,7 +72,7 @@ def MakeBaseplateMagnetHoles(self, obj):
         p.Polygon = nSides
         p.Circumradius = radius
         p.Placement = App.Placement(
-            App.Vector(-hole_pos, hole_pos, -obj.BaseProfileHeight), rot
+            App.Vector(-hole_pos, hole_pos, -obj.BaseProfileHeight), rot,
         )
         p.recompute()
         f = Part.Face(Part.Wire(p.Shape.Edges))
@@ -83,7 +83,7 @@ def MakeBaseplateMagnetHoles(self, obj):
         p.Polygon = nSides
         p.Circumradius = radius
         p.Placement = App.Placement(
-            App.Vector(hole_pos, hole_pos, -obj.BaseProfileHeight), rot
+            App.Vector(hole_pos, hole_pos, -obj.BaseProfileHeight), rot,
         )
         p.recompute()
         f = Part.Face(Part.Wire(p.Shape.Edges))
@@ -143,7 +143,7 @@ def MakeBaseplateMagnetHoles(self, obj):
         CB1 = Part.makeCircle(
             obj.MagnetHoleDiameter / 2,
             App.Vector(
-                -hole_pos, -hole_pos, -obj.BaseProfileHeight - obj.MagnetChamfer
+                -hole_pos, -hole_pos, -obj.BaseProfileHeight - obj.MagnetChamfer,
             ),
             App.Vector(0, 0, 1),
         )
@@ -173,7 +173,7 @@ def MakeBaseplateMagnetHoles(self, obj):
         CH4 = Part.makeLoft(CH4, True)
 
         HM1 = Part.Solid.multiFuse(
-            C1, [C2, C3, C4, CA1, CA2, CA3, CA4, CH1, CH2, CH3, CH4]
+            C1, [C2, C3, C4, CA1, CA2, CA3, CA4, CH1, CH2, CH3, CH4],
         )
 
     xtranslate = zeromm
