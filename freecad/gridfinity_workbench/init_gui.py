@@ -17,8 +17,7 @@ except ImportError:
 
 
 class GridfinityWorkbench(Workbench):
-    """class which gets initiated at starup of the gui
-    """
+    """class which gets initiated at starup of the gui"""
 
     MenuText = "Gridfinity"
     ToolTip = "FreeCAD Gridfinity Workbench"

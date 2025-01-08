@@ -57,7 +57,10 @@ def createRoundedRectangle(xwidth, ywidth, zsketchplane, radius):
 def RoundedRectangleChamfer(xwidth, ywidth, zsketchplane, height, radius):
     w1 = createRoundedRectangle(xwidth, ywidth, zsketchplane, radius)
     w2 = createRoundedRectangle(
-        xwidth + 2 * height, ywidth + 2 * height, zsketchplane + height, radius + height,
+        xwidth + 2 * height,
+        ywidth + 2 * height,
+        zsketchplane + height,
+        radius + height,
     )
     wires = [w1, w2]
     return Part.makeLoft(wires, True)
@@ -170,12 +173,7 @@ def MakeLabelShelf(self, obj):
 
     if shelf_placement == "Center":
         xtranslate = zeromm
-        ysp = (
-            -obj.BinUnit / 2
-            + obj.WallThickness
-            + ycompwidth / 2
-            - obj.LabelShelfLength / 2
-        )
+        ysp = -obj.BinUnit / 2 + obj.WallThickness + ycompwidth / 2 - obj.LabelShelfLength / 2
         ytranslate = ysp
         parts = []
         for x in range(xdiv):
@@ -291,7 +289,8 @@ def MakeLabelShelf(self, obj):
             h_edges.append(edge)
 
     funcfuse = funcfuse.makeFillet(
-        obj.LabelShelfVerticalThickness.Value - 0.01, h_edges,
+        obj.LabelShelfVerticalThickness.Value - 0.01,
+        h_edges,
     )
 
     labelshelfheight = obj.LabelShelfVerticalThickness + side_b * unitmm
@@ -309,7 +308,9 @@ def MakeLabelShelf(self, obj):
             - obj.WallThickness,
             obj.yTotalWidth,
             App.Vector(
-                towall, 0, -obj.UsableHeight - labelshelfheight + stackingoffset,
+                towall,
+                0,
+                -obj.UsableHeight - labelshelfheight + stackingoffset,
             ),
             App.Vector(0, 1, 0),
         )
@@ -339,9 +340,9 @@ def MakeScoop(self, obj):
     scooprad2 = obj.ScoopRadius + 1 * unitmm
     scooprad3 = obj.ScoopRadius + 1 * unitmm
 
-    xcomp_w = (
-        obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness
-    ) / (obj.xDividers + 1)
+    xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
+        obj.xDividers + 1
+    )
 
     xdivscoop = obj.xDividerHeight - obj.HeightUnitValue
 
@@ -366,7 +367,9 @@ def MakeScoop(self, obj):
         -obj.UsableHeight + scooprad,
     )
     V2 = App.Vector(
-        obj.xTotalWidth - obj.BinUnit / 2 - obj.WallThickness, 0, -obj.UsableHeight,
+        obj.xTotalWidth - obj.BinUnit / 2 - obj.WallThickness,
+        0,
+        -obj.UsableHeight,
     )
     V3 = App.Vector(
         obj.xTotalWidth - obj.BinUnit / 2 - obj.WallThickness - scooprad,
@@ -403,9 +406,9 @@ def MakeScoop(self, obj):
         + obj.StackingLipTopChamfer
         + obj.StackingLipBottomChamfer
     )
-    compwidth = (
-        obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers
-    ) / (xdiv)
+    compwidth = (obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers) / (
+        xdiv
+    )
 
     scoopbox = Part.makeBox(
         obj.StackingLipBottomChamfer
@@ -474,7 +477,10 @@ def MakeScoop(self, obj):
 
 def MakeStackingLip(self, obj):
     stacking_lip_path = createRoundedRectangle(
-        obj.xTotalWidth, obj.yTotalWidth, 0, obj.BinOuterRadius,
+        obj.xTotalWidth,
+        obj.yTotalWidth,
+        0,
+        obj.BinOuterRadius,
     )
     stacking_lip_path.translate(
         App.Vector(
@@ -487,16 +493,12 @@ def MakeStackingLip(self, obj):
     ST2 = App.Vector(
         -obj.BinUnit / 2,
         0,
-        obj.StackingLipBottomChamfer
-        + obj.StackingLipVerticalSection
-        + obj.StackingLipTopChamfer,
+        obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer,
     )
     ST3 = App.Vector(
         -obj.BinUnit / 2 + obj.StackingLipTopLedge,
         0,
-        obj.StackingLipBottomChamfer
-        + obj.StackingLipVerticalSection
-        + obj.StackingLipTopChamfer,
+        obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer,
     )
     ST4 = App.Vector(
         -obj.BinUnit / 2 + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
@@ -600,14 +602,10 @@ def MakeCompartements(self, obj):
 
     else:
         xcomp_w = (
-            obj.xTotalWidth
-            - obj.WallThickness * 2
-            - obj.xDividers * obj.DividerThickness
+            obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness
         ) / (obj.xDividers + 1)
         ycomp_w = (
-            obj.yTotalWidth
-            - obj.WallThickness * 2
-            - obj.yDividers * obj.DividerThickness
+            obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness
         ) / (obj.yDividers + 1)
 
         xtranslate = zeromm + xcomp_w + obj.WallThickness - obj.DividerThickness
@@ -668,7 +666,10 @@ def MakeCompartements(self, obj):
 
 def MakeBinWall(self, obj):
     bin_wall_path = createRoundedRectangle(
-        obj.xTotalWidth, obj.yTotalWidth, 0, obj.BinOuterRadius,
+        obj.xTotalWidth,
+        obj.yTotalWidth,
+        0,
+        obj.BinOuterRadius,
     )
     bin_wall_path.translate(
         App.Vector(
@@ -697,7 +698,10 @@ def MakeBinWall(self, obj):
     )
 
     bin_wall_path = createRoundedRectangle(
-        obj.xTotalWidth, obj.yTotalWidth, 0, obj.BinOuterRadius,
+        obj.xTotalWidth,
+        obj.yTotalWidth,
+        0,
+        obj.BinOuterRadius,
     )
     bin_wall_path.translate(
         App.Vector(
@@ -755,9 +759,7 @@ def MakeBinWall(self, obj):
 
 
 def MakeBinBase(self, obj):
-    bt_cmf_width = (
-        obj.BinUnit - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer
-    )
+    bt_cmf_width = obj.BinUnit - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer
     vert_width = obj.BinUnit - 2 * obj.BaseProfileTopChamfer
     xtranslate = zeromm
     ytranslate = zeromm
@@ -795,9 +797,7 @@ def MakeBinBase(self, obj):
             top_chamfer = RoundedRectangleChamfer(
                 vert_width,
                 vert_width,
-                -obj.TotalHeight
-                + obj.BaseProfileBottomChamfer
-                + obj.BaseProfileVerticalSection,
+                -obj.TotalHeight + obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection,
                 obj.BaseProfileTopChamfer,
                 obj.BinVerticalRadius,
             )
@@ -967,9 +967,7 @@ def MakeBaseplateCenterCut(self, obj):
 
 def MakeBottomHoles(self, obj):
     hole_pos = obj.GridSize / 2 - obj.MagnetHoleDistanceFromEdge
-    sq_bridge2_pos = (
-        -obj.GridSize / 2 + obj.MagnetHoleDistanceFromEdge + obj.ScrewHoleDiameter / 2
-    )
+    sq_bridge2_pos = -obj.GridSize / 2 + obj.MagnetHoleDistanceFromEdge + obj.ScrewHoleDiameter / 2
 
     sqbr1_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight
     sqbr2_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight * 2
@@ -996,7 +994,8 @@ def MakeBottomHoles(self, obj):
                     p.Polygon = nSides
                     p.Circumradius = radius
                     p.Placement = App.Placement(
-                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight), rot,
+                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
+                        rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
@@ -1007,7 +1006,8 @@ def MakeBottomHoles(self, obj):
                     p.Polygon = nSides
                     p.Circumradius = radius
                     p.Placement = App.Placement(
-                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight), rot,
+                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
+                        rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
@@ -1018,7 +1018,8 @@ def MakeBottomHoles(self, obj):
                     p.Polygon = nSides
                     p.Circumradius = radius
                     p.Placement = App.Placement(
-                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight), rot,
+                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
+                        rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
@@ -1029,7 +1030,8 @@ def MakeBottomHoles(self, obj):
                     p.Polygon = nSides
                     p.Circumradius = radius
                     p.Placement = App.Placement(
-                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight), rot,
+                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight),
+                        rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
@@ -1070,7 +1072,8 @@ def MakeBottomHoles(self, obj):
                     p.Polygon = nSides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
                     p.Placement = App.Placement(
-                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight), rot,
+                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
+                        rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
@@ -1081,7 +1084,8 @@ def MakeBottomHoles(self, obj):
                     p.Polygon = nSides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
                     p.Placement = App.Placement(
-                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight), rot,
+                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
+                        rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
@@ -1092,7 +1096,8 @@ def MakeBottomHoles(self, obj):
                     p.Polygon = nSides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
                     p.Placement = App.Placement(
-                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight), rot,
+                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
+                        rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
@@ -1103,7 +1108,8 @@ def MakeBottomHoles(self, obj):
                     p.Polygon = nSides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
                     p.Placement = App.Placement(
-                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight), rot,
+                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight),
+                        rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
@@ -1249,86 +1255,133 @@ def MakeBottomHoles(self, obj):
 
                 arc_pt_off_x = (
                     math.sqrt(
-                        ((obj.MagnetHoleDiameter / 2) ** 2)
-                        - ((obj.ScrewHoleDiameter / 2) ** 2),
+                        ((obj.MagnetHoleDiameter / 2) ** 2) - ((obj.ScrewHoleDiameter / 2) ** 2),
                     )
                 ) * unitmm
                 arc_pt_off_y = obj.ScrewHoleDiameter / 2
 
                 VA1 = App.Vector(
-                    hole_pos + arc_pt_off_x, hole_pos + arc_pt_off_y, -obj.TotalHeight,
+                    hole_pos + arc_pt_off_x,
+                    hole_pos + arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VA2 = App.Vector(
-                    hole_pos - arc_pt_off_x, hole_pos + arc_pt_off_y, -obj.TotalHeight,
+                    hole_pos - arc_pt_off_x,
+                    hole_pos + arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VA3 = App.Vector(
-                    hole_pos - arc_pt_off_x, hole_pos - arc_pt_off_y, -obj.TotalHeight,
+                    hole_pos - arc_pt_off_x,
+                    hole_pos - arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VA4 = App.Vector(
-                    hole_pos + arc_pt_off_x, hole_pos - arc_pt_off_y, -obj.TotalHeight,
+                    hole_pos + arc_pt_off_x,
+                    hole_pos - arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VAR1 = App.Vector(
-                    hole_pos + obj.MagnetHoleDiameter / 2, hole_pos, -obj.TotalHeight,
+                    hole_pos + obj.MagnetHoleDiameter / 2,
+                    hole_pos,
+                    -obj.TotalHeight,
                 )
                 VAR2 = App.Vector(
-                    hole_pos - obj.MagnetHoleDiameter / 2, hole_pos, -obj.TotalHeight,
+                    hole_pos - obj.MagnetHoleDiameter / 2,
+                    hole_pos,
+                    -obj.TotalHeight,
                 )
 
                 VA5 = App.Vector(
-                    -hole_pos + arc_pt_off_x, hole_pos + arc_pt_off_y, -obj.TotalHeight,
+                    -hole_pos + arc_pt_off_x,
+                    hole_pos + arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VA6 = App.Vector(
-                    -hole_pos - arc_pt_off_x, hole_pos + arc_pt_off_y, -obj.TotalHeight,
+                    -hole_pos - arc_pt_off_x,
+                    hole_pos + arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VA7 = App.Vector(
-                    -hole_pos - arc_pt_off_x, hole_pos - arc_pt_off_y, -obj.TotalHeight,
+                    -hole_pos - arc_pt_off_x,
+                    hole_pos - arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VA8 = App.Vector(
-                    -hole_pos + arc_pt_off_x, hole_pos - arc_pt_off_y, -obj.TotalHeight,
+                    -hole_pos + arc_pt_off_x,
+                    hole_pos - arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VAR3 = App.Vector(
-                    -hole_pos + obj.MagnetHoleDiameter / 2, hole_pos, -obj.TotalHeight,
+                    -hole_pos + obj.MagnetHoleDiameter / 2,
+                    hole_pos,
+                    -obj.TotalHeight,
                 )
                 VAR4 = App.Vector(
-                    -hole_pos - obj.MagnetHoleDiameter / 2, hole_pos, -obj.TotalHeight,
+                    -hole_pos - obj.MagnetHoleDiameter / 2,
+                    hole_pos,
+                    -obj.TotalHeight,
                 )
 
                 VA9 = App.Vector(
-                    hole_pos + arc_pt_off_x, -hole_pos + arc_pt_off_y, -obj.TotalHeight,
+                    hole_pos + arc_pt_off_x,
+                    -hole_pos + arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VA10 = App.Vector(
-                    hole_pos - arc_pt_off_x, -hole_pos + arc_pt_off_y, -obj.TotalHeight,
+                    hole_pos - arc_pt_off_x,
+                    -hole_pos + arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VA11 = App.Vector(
-                    hole_pos - arc_pt_off_x, -hole_pos - arc_pt_off_y, -obj.TotalHeight,
+                    hole_pos - arc_pt_off_x,
+                    -hole_pos - arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VA12 = App.Vector(
-                    hole_pos + arc_pt_off_x, -hole_pos - arc_pt_off_y, -obj.TotalHeight,
+                    hole_pos + arc_pt_off_x,
+                    -hole_pos - arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VAR5 = App.Vector(
-                    hole_pos + obj.MagnetHoleDiameter / 2, -hole_pos, -obj.TotalHeight,
+                    hole_pos + obj.MagnetHoleDiameter / 2,
+                    -hole_pos,
+                    -obj.TotalHeight,
                 )
                 VAR6 = App.Vector(
-                    hole_pos - obj.MagnetHoleDiameter / 2, -hole_pos, -obj.TotalHeight,
+                    hole_pos - obj.MagnetHoleDiameter / 2,
+                    -hole_pos,
+                    -obj.TotalHeight,
                 )
 
                 VA13 = App.Vector(
-                    -hole_pos + arc_pt_off_x, -hole_pos + arc_pt_off_y, -obj.TotalHeight,
+                    -hole_pos + arc_pt_off_x,
+                    -hole_pos + arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VA14 = App.Vector(
-                    -hole_pos - arc_pt_off_x, -hole_pos + arc_pt_off_y, -obj.TotalHeight,
+                    -hole_pos - arc_pt_off_x,
+                    -hole_pos + arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VA15 = App.Vector(
-                    -hole_pos - arc_pt_off_x, -hole_pos - arc_pt_off_y, -obj.TotalHeight,
+                    -hole_pos - arc_pt_off_x,
+                    -hole_pos - arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VA16 = App.Vector(
-                    -hole_pos + arc_pt_off_x, -hole_pos - arc_pt_off_y, -obj.TotalHeight,
+                    -hole_pos + arc_pt_off_x,
+                    -hole_pos - arc_pt_off_y,
+                    -obj.TotalHeight,
                 )
                 VAR7 = App.Vector(
-                    -hole_pos + obj.MagnetHoleDiameter / 2, -hole_pos, -obj.TotalHeight,
+                    -hole_pos + obj.MagnetHoleDiameter / 2,
+                    -hole_pos,
+                    -obj.TotalHeight,
                 )
                 VAR8 = App.Vector(
-                    -hole_pos - obj.MagnetHoleDiameter / 2, -hole_pos, -obj.TotalHeight,
+                    -hole_pos - obj.MagnetHoleDiameter / 2,
+                    -hole_pos,
+                    -obj.TotalHeight,
                 )
 
                 L1 = Part.LineSegment(VA1, VA2)
@@ -1423,10 +1476,7 @@ def MakeEcoBinCut(self, obj):
 
     base_offset = obj.BaseWallThickness * math.tan(math.pi / 8)
     bt_cmf_width = (
-        obj.BinUnit
-        - 2 * obj.BaseProfileTopChamfer
-        - obj.BaseWallThickness * 2
-        - 0.4 * unitmm * 2
+        obj.BinUnit - 2 * obj.BaseProfileTopChamfer - obj.BaseWallThickness * 2 - 0.4 * unitmm * 2
     )
     vert_width = obj.BinUnit - 2 * obj.BaseProfileTopChamfer - obj.BaseWallThickness * 2
     bt_chf_rad = obj.BinVerticalRadius - 0.4 * unitmm - obj.BaseWallThickness
@@ -1438,9 +1488,7 @@ def MakeEcoBinCut(self, obj):
             obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection + base_offset
         ):
             tp_chf_offset = (obj.MagnetHoleDepth + obj.BaseWallThickness) - (
-                obj.BaseProfileBottomChamfer
-                + obj.BaseProfileVerticalSection
-                + base_offset
+                obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection + base_offset
             )
         else:
             tp_chf_offset = 0 * unitmm
@@ -1549,12 +1597,12 @@ def MakeEcoBinCut(self, obj):
     func_fuse = func_fuse.cut(outer_trim2)
     # Dividers
 
-    xcomp_w = (
-        obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness
-    ) / (obj.xDividers + 1)
-    ycomp_w = (
-        obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness
-    ) / (obj.yDividers + 1)
+    xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
+        obj.xDividers + 1
+    )
+    ycomp_w = (obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness) / (
+        obj.yDividers + 1
+    )
 
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
     ydivheight = obj.yDividerHeight if obj.yDividerHeight != 0 else obj.TotalHeight
@@ -1601,9 +1649,7 @@ def MakeEcoBinCut(self, obj):
         func_fuse = func_fuse.cut(ydiv)
     b_edges = []
 
-    divfil = (
-        -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1 * unitmm
-    )
+    divfil = -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1 * unitmm
     for idx_edge, edge in enumerate(func_fuse.Edges):
         z0 = edge.Vertexes[0].Point.z
         z1 = edge.Vertexes[1].Point.z

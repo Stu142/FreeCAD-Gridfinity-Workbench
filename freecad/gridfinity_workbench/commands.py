@@ -22,13 +22,17 @@ class ViewProviderGridfinity:
         self._check_attr()
         dirname = os.path.dirname(__file__)
         self.icon_fn = icon_fn or os.path.join(
-            dirname, "icons", "gridfinity_workbench_icon.svg",
+            dirname,
+            "icons",
+            "gridfinity_workbench_icon.svg",
         )
 
     def _check_attr(self):
         """Check for missing attributes."""
         if not hasattr(self, "icon_fn"):
-            self.icon_fn = os.path.join(os.path.dirname(__file__), "icons", "gridfinity_workbench_icon.svg")
+            self.icon_fn = os.path.join(
+                os.path.dirname(__file__), "icons", "gridfinity_workbench_icon.svg"
+            )
 
     def attach(self, vobj):
         self.vobj = vobj
@@ -76,7 +80,8 @@ class BaseCommand:
 
             if body:
                 obj = FreeCAD.ActiveDocument.addObject(
-                    "PartDesign::FeaturePython", cls.NAME,
+                    "PartDesign::FeaturePython",
+                    cls.NAME,
                 )
             else:
                 obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", cls.NAME)

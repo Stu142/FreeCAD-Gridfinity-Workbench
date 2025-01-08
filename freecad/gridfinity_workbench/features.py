@@ -92,14 +92,18 @@ class ViewProviderGridfinity:
         self._check_attr()
         dirname = os.path.dirname(__file__)
         self.icon_fn = icon_fn or os.path.join(
-            dirname, "icons", "gridfinity_workbench_icon.svg",
+            dirname,
+            "icons",
+            "gridfinity_workbench_icon.svg",
         )
         App.Console.PrintMessage("works until here\n")
 
     def _check_attr(self):
         """Check for missing attributes."""
         if not hasattr(self, "icon_fn"):
-            self.icon_fn = os.path.join(os.path.dirname(__file__), "icons", "gridfinity_workbench_icon.svg")
+            self.icon_fn = os.path.join(
+                os.path.dirname(__file__), "icons", "gridfinity_workbench_icon.svg"
+            )
 
     def attach(self, vobj):
         self.vobj = vobj
@@ -147,8 +151,7 @@ class FoundationGridfinity:
             fp.Shape = gridfinity_shape
 
     def generate_gridfinity_shape(self, fp):
-        """This method has to return the TopoShape of the object.
-        """
+        """This method has to return the TopoShape of the object."""
         raise NotImplementedError("generate_gridfinity_shape not implemented")
 
 
@@ -157,7 +160,10 @@ class BinBlank(FoundationGridfinity):
         super(BinBlank, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -317,7 +323,10 @@ class BinBlank(FoundationGridfinity):
             1,
         ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
+            "App::PropertyLength",
+            "GridSize",
+            "zzExpertOnly",
+            "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -457,7 +466,10 @@ class BinBase(FoundationGridfinity):
         super(BinBase, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -617,7 +629,10 @@ class BinBase(FoundationGridfinity):
             1,
         ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
+            "App::PropertyLength",
+            "GridSize",
+            "zzExpertOnly",
+            "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -759,7 +774,10 @@ class SimpleStorageBin(FoundationGridfinity):
         super(SimpleStorageBin, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -1011,7 +1029,10 @@ class SimpleStorageBin(FoundationGridfinity):
             1,
         ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
+            "App::PropertyLength",
+            "GridSize",
+            "zzExpertOnly",
+            "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -1205,7 +1226,10 @@ class EcoBin(FoundationGridfinity):
         super(EcoBin, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -1395,7 +1419,10 @@ class EcoBin(FoundationGridfinity):
             1,
         ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
+            "App::PropertyLength",
+            "GridSize",
+            "zzExpertOnly",
+            "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -1586,7 +1613,10 @@ class PartsBin(FoundationGridfinity):
         super(PartsBin, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -1838,7 +1868,10 @@ class PartsBin(FoundationGridfinity):
             1,
         ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
+            "App::PropertyLength",
+            "GridSize",
+            "zzExpertOnly",
+            "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -2032,7 +2065,10 @@ class Baseplate(FoundationGridfinity):
         super(Baseplate, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -2115,7 +2151,10 @@ class Baseplate(FoundationGridfinity):
             1,
         )
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
+            "App::PropertyLength",
+            "GridSize",
+            "zzExpertOnly",
+            "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -2216,7 +2255,10 @@ class MagnetBaseplate(FoundationGridfinity):
         super(MagnetBaseplate, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -2241,7 +2283,10 @@ class MagnetBaseplate(FoundationGridfinity):
             "Height of the extrusion",
         ).yGridUnits = 2
         obj.addProperty(
-            "App::PropertyBool", "MagnetHoles", "Gridfinity", "MagnetHoles",
+            "App::PropertyBool",
+            "MagnetHoles",
+            "Gridfinity",
+            "MagnetHoles",
         ).MagnetHoles = True
 
     def add_reference_properties(self, obj):
@@ -2355,7 +2400,10 @@ class MagnetBaseplate(FoundationGridfinity):
             1,
         )
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
+            "App::PropertyLength",
+            "GridSize",
+            "zzExpertOnly",
+            "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
@@ -2478,7 +2526,10 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         super(ScrewTogetherBaseplate, self).__init__(obj)
 
         obj.addProperty(
-            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object",
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
         )
 
         self.add_bin_properties(obj)
@@ -2631,7 +2682,10 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             1,
         )
         obj.addProperty(
-            "App::PropertyLength", "GridSize", "zzExpertOnly", "Size of the Grid",
+            "App::PropertyLength",
+            "GridSize",
+            "zzExpertOnly",
+            "Size of the Grid",
         ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
