@@ -17,7 +17,7 @@ except ImportError:
 
 
 class GridfinityWorkbench(Workbench):
-    """class which gets initiated at starup of the gui"""
+    """class which gets initiated at starup of the gui."""
 
     MenuText = "Gridfinity"
     ToolTip = "FreeCAD Gridfinity Workbench"
@@ -33,12 +33,12 @@ class GridfinityWorkbench(Workbench):
         "CreateScrewTogetherBaseplate",
     ]
 
-    def GetClassName(self):
+    def GetClassName(self) -> str:
         return "Gui::PythonWorkbench"
 
-    def Initialize(self):
+    def Initialize(self) -> None:
         """This function is called at the first activation of the workbench.
-        here is the place to import all the commands
+        here is the place to import all the commands.
         """
         from .commands import (
             CreateBaseplate,
@@ -65,10 +65,10 @@ class GridfinityWorkbench(Workbench):
         Gui.addCommand("CreateMagnetBaseplate", CreateMagnetBaseplate())
         Gui.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
 
-    def Activated(self):
+    def Activated(self) -> None:
         pass
 
-    def Deactivated(self):
+    def Deactivated(self) -> None:
         pass
 
 

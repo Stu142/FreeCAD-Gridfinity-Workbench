@@ -16,7 +16,7 @@ from .features import (
 
 
 class ViewProviderGridfinity:
-    def __init__(self, obj, icon_fn=None):
+    def __init__(self, obj, icon_fn=None) -> None:
         # Set this object to the proxy object of the actual view provider
         obj.Proxy = self
         self._check_attr()
@@ -27,14 +27,16 @@ class ViewProviderGridfinity:
             "gridfinity_workbench_icon.svg",
         )
 
-    def _check_attr(self):
+    def _check_attr(self) -> None:
         """Check for missing attributes."""
         if not hasattr(self, "icon_fn"):
             self.icon_fn = os.path.join(
-                os.path.dirname(__file__), "icons", "gridfinity_workbench_icon.svg"
+                os.path.dirname(__file__),
+                "icons",
+                "gridfinity_workbench_icon.svg",
             )
 
-    def attach(self, vobj):
+    def attach(self, vobj) -> None:
         self.vobj = vobj
 
     def getIcon(self):
@@ -55,15 +57,13 @@ class BaseCommand:
     GRIDFINITY_FUNCTION = None
     ICONDIR = os.path.join(os.path.dirname(__file__), "icons")
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def IsActive(self):
-        if FreeCAD.ActiveDocument is None:
-            return False
-        return True
+    def IsActive(self) -> bool:
+        return FreeCAD.ActiveDocument is not None
 
-    def Activated(self):
+    def Activated(self) -> None:
         Gui.doCommand("import freecad.gridfinity_workbench.commands")
         Gui.doCommandGui(
             f"freecad.gridfinity_workbench.commands.{self.__class__.__name__}.create()",

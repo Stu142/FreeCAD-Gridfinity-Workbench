@@ -188,10 +188,10 @@ def MakeBaseplateMagnetHoles(self, obj):
     HM2: Part.Shape | None = None
     HM3: Part.Shape | None = None
 
-    for x in range(obj.xGridUnits):
+    for _ in range(obj.xGridUnits):
         ytranslate = zeromm
 
-        for y in range(obj.yGridUnits):
+        for _ in range(obj.yGridUnits):
             hm1 = HM1.copy()
 
             # Translate for next hole
@@ -266,9 +266,9 @@ def MakeBPScrewBottomCham(self, obj):
     HM2: Part.Shape | None = None
     HM3: Part.Shape | None = None
 
-    for x in range(obj.xGridUnits):
+    for _ in range(obj.xGridUnits):
         ytranslate = zeromm
-        for y in range(obj.yGridUnits):
+        for _ in range(obj.yGridUnits):
             hm1 = HM1.copy()
 
             hm1.translate(App.Vector(xtranslate, ytranslate, 0))
@@ -320,7 +320,7 @@ def MakeBPConnectionHoles(self, obj):
     HX1 = Part.Solid.fuse(C1, C2)
     HX2: Part.Shape | None = None
 
-    for x in range(obj.xGridUnits):
+    for _ in range(obj.xGridUnits):
         ytranslate = zeromm
 
         hx1 = HX1.copy()
@@ -334,7 +334,7 @@ def MakeBPConnectionHoles(self, obj):
     HY1 = Part.Solid.fuse(C3, C4)
     HY2: Part.Shape | None = None
 
-    for x in range(obj.yGridUnits):
+    for _ in range(obj.yGridUnits):
         xtranslate = zeromm
 
         hy1 = HY1.copy()
@@ -342,5 +342,4 @@ def MakeBPConnectionHoles(self, obj):
         HY2 = hy1 if HY2 is None else HY2.fuse(hy1)
         ytranslate += obj.GridSize
 
-    con_holes = Part.Solid.fuse(HX2, HY2)
-    return con_holes
+    return Part.Solid.fuse(HX2, HY2)

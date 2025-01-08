@@ -1,4 +1,5 @@
 import os
+from typing import NoReturn
 
 import FreeCAD as App
 import Part
@@ -86,7 +87,7 @@ def fcvec(x):
 
 
 class ViewProviderGridfinity:
-    def __init__(self, obj, icon_fn=None):
+    def __init__(self, obj, icon_fn=None) -> None:
         # Set this object to the proxy object of the actual view provider
         obj.Proxy = self
         self._check_attr()
@@ -98,14 +99,16 @@ class ViewProviderGridfinity:
         )
         App.Console.PrintMessage("works until here\n")
 
-    def _check_attr(self):
+    def _check_attr(self) -> None:
         """Check for missing attributes."""
         if not hasattr(self, "icon_fn"):
             self.icon_fn = os.path.join(
-                os.path.dirname(__file__), "icons", "gridfinity_workbench_icon.svg"
+                os.path.dirname(__file__),
+                "icons",
+                "gridfinity_workbench_icon.svg",
             )
 
-    def attach(self, vobj):
+    def attach(self, vobj) -> None:
         self.vobj = vobj
 
     def getIcon(self):
@@ -122,7 +125,7 @@ class ViewProviderGridfinity:
 
 
 class FoundationGridfinity:
-    def __init__(self, obj):
+    def __init__(self, obj) -> None:
         obj.addProperty(
             "App::PropertyString",
             "version",
@@ -133,11 +136,11 @@ class FoundationGridfinity:
         obj.version = __version__
         self.make_attachable(obj)
 
-    def make_attachable(self, obj):
+    def make_attachable(self, obj) -> None:
         # Needed to make this object attachable
         pass
 
-    def execute(self, fp):
+    def execute(self, fp) -> None:
         gridfinity_shape = self.generate_gridfinity_shape(fp)
         if hasattr(fp, "BaseFeature") and fp.BaseFeature is not None:
             # we're inside a PartDesign Body, thus need to fuse with the base feature
@@ -150,14 +153,15 @@ class FoundationGridfinity:
         else:
             fp.Shape = gridfinity_shape
 
-    def generate_gridfinity_shape(self, fp):
+    def generate_gridfinity_shape(self, fp) -> NoReturn:
         """This method has to return the TopoShape of the object."""
-        raise NotImplementedError("generate_gridfinity_shape not implemented")
+        msg = "generate_gridfinity_shape not implemented"
+        raise NotImplementedError(msg)
 
 
 class BinBlank(FoundationGridfinity):
-    def __init__(self, obj):
-        super(BinBlank, self).__init__(obj)
+    def __init__(self, obj) -> None:
+        super().__init__(obj)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -174,7 +178,7 @@ class BinBlank(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def add_bin_properties(self, obj):
+    def add_bin_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyInteger",
             "xGridUnits",
@@ -212,7 +216,7 @@ class BinBlank(FoundationGridfinity):
             "Toggle the screw holes on or off",
         ).ScrewHoles = False
 
-    def add_custom_bin_properties(self, obj):
+    def add_custom_bin_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "CustomHeight",
@@ -263,7 +267,7 @@ class BinBlank(FoundationGridfinity):
             "Depth of Screw Holes <br> <br> default = 6.0 mm",
         ).ScrewHoleDepth = SCREW_HOLE_DEPTH
 
-    def add_reference_properties(self, obj):
+    def add_reference_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "xTotalWidth",
@@ -300,7 +304,7 @@ class BinBlank(FoundationGridfinity):
             1,
         ).BinUnit = BIN_UNIT
 
-    def add_expert_properties(self, obj):
+    def add_expert_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
@@ -400,7 +404,7 @@ class BinBlank(FoundationGridfinity):
             1,
         ).StackingLipVerticalSection = STACKING_LIP_VERTICAL_SECTION
 
-    def add_hidden_properties(self, obj):
+    def add_hidden_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "WallThickness",
@@ -462,8 +466,8 @@ class BinBlank(FoundationGridfinity):
 
 
 class BinBase(FoundationGridfinity):
-    def __init__(self, obj):
-        super(BinBase, self).__init__(obj)
+    def __init__(self, obj) -> None:
+        super().__init__(obj)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -480,7 +484,7 @@ class BinBase(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def add_bin_properties(self, obj):
+    def add_bin_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyInteger",
             "xGridUnits",
@@ -518,7 +522,7 @@ class BinBase(FoundationGridfinity):
             "Toggle the screw holes on or off",
         ).ScrewHoles = False
 
-    def add_custom_bin_properties(self, obj):
+    def add_custom_bin_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "CustomHeight",
@@ -569,7 +573,7 @@ class BinBase(FoundationGridfinity):
             "Depth of Screw Holes <br> <br> default = 6.0 mm",
         ).ScrewHoleDepth = SCREW_HOLE_DEPTH
 
-    def add_reference_properties(self, obj):
+    def add_reference_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "xTotalWidth",
@@ -606,7 +610,7 @@ class BinBase(FoundationGridfinity):
             1,
         ).BinUnit = BIN_UNIT
 
-    def add_expert_properties(self, obj):
+    def add_expert_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
@@ -706,7 +710,7 @@ class BinBase(FoundationGridfinity):
             1,
         ).StackingLipVerticalSection = STACKING_LIP_VERTICAL_SECTION
 
-    def add_hidden_properties(self, obj):
+    def add_hidden_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "WallThickness",
@@ -770,8 +774,8 @@ class BinBase(FoundationGridfinity):
 
 
 class SimpleStorageBin(FoundationGridfinity):
-    def __init__(self, obj):
-        super(SimpleStorageBin, self).__init__(obj)
+    def __init__(self, obj) -> None:
+        super().__init__(obj)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -787,7 +791,7 @@ class SimpleStorageBin(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def add_bin_properties(self, obj):
+    def add_bin_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyInteger",
             "xGridUnits",
@@ -857,7 +861,7 @@ class SimpleStorageBin(FoundationGridfinity):
         )
         obj.LabelShelfStyle = ["Off", "Standard", "Overhang"]
 
-    def add_custom_bin_properties(self, obj):
+    def add_custom_bin_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "CustomHeight",
@@ -962,7 +966,7 @@ class SimpleStorageBin(FoundationGridfinity):
             "Custom Height of y dividers <br> <br> default = 0 mm = full height",
         ).yDividerHeight = 0
 
-    def add_reference_properties(self, obj):
+    def add_reference_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "xTotalWidth",
@@ -1006,7 +1010,7 @@ class SimpleStorageBin(FoundationGridfinity):
             1,
         ).BinUnit = BIN_UNIT
 
-    def add_expert_properties(self, obj):
+    def add_expert_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
@@ -1208,11 +1212,9 @@ class SimpleStorageBin(FoundationGridfinity):
             scoop = MakeScoop(self, obj)
             fuse_total = fuse_total.fuse(scoop)
 
-        fuse_total = Part.Solid.removeSplitter(fuse_total)
+        return Part.Solid.removeSplitter(fuse_total)
 
         # fuse_total.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
-
-        return fuse_total
 
     def __getstate__(self):
         return None
@@ -1222,8 +1224,8 @@ class SimpleStorageBin(FoundationGridfinity):
 
 
 class EcoBin(FoundationGridfinity):
-    def __init__(self, obj):
-        super(EcoBin, self).__init__(obj)
+    def __init__(self, obj) -> None:
+        super().__init__(obj)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -1239,7 +1241,7 @@ class EcoBin(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def add_bin_properties(self, obj):
+    def add_bin_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyInteger",
             "xGridUnits",
@@ -1290,7 +1292,7 @@ class EcoBin(FoundationGridfinity):
             "The thickness of the bin at the base",
         ).BaseWallThickness = 0.8
 
-    def add_custom_bin_properties(self, obj):
+    def add_custom_bin_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "CustomHeight",
@@ -1359,7 +1361,7 @@ class EcoBin(FoundationGridfinity):
             "Custom Height of y dividers <br> <br> default = 0 mm = full height",
         ).yDividerHeight = 0
 
-    def add_reference_properties(self, obj):
+    def add_reference_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "xTotalWidth",
@@ -1396,7 +1398,7 @@ class EcoBin(FoundationGridfinity):
             1,
         ).BinUnit = BIN_UNIT
 
-    def add_expert_properties(self, obj):
+    def add_expert_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
@@ -1597,9 +1599,7 @@ class EcoBin(FoundationGridfinity):
             holes = MakeBottomHoles(self, obj)
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
-        fuse_total = Part.Solid.removeSplitter(fuse_total)
-
-        return fuse_total
+        return Part.Solid.removeSplitter(fuse_total)
 
     def __getstate__(self):
         return None
@@ -1609,8 +1609,8 @@ class EcoBin(FoundationGridfinity):
 
 
 class PartsBin(FoundationGridfinity):
-    def __init__(self, obj):
-        super(PartsBin, self).__init__(obj)
+    def __init__(self, obj) -> None:
+        super().__init__(obj)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -1626,7 +1626,7 @@ class PartsBin(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def add_bin_properties(self, obj):
+    def add_bin_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyInteger",
             "xGridUnits",
@@ -1696,7 +1696,7 @@ class PartsBin(FoundationGridfinity):
         )
         obj.LabelShelfStyle = ["Standard", "Off", "Overhang"]
 
-    def add_custom_bin_properties(self, obj):
+    def add_custom_bin_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "CustomHeight",
@@ -1801,7 +1801,7 @@ class PartsBin(FoundationGridfinity):
             "Custom Height of y dividers <br> <br> default = 0 mm = full height",
         ).yDividerHeight = 0
 
-    def add_reference_properties(self, obj):
+    def add_reference_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "xTotalWidth",
@@ -1845,7 +1845,7 @@ class PartsBin(FoundationGridfinity):
             1,
         ).BinUnit = BIN_UNIT
 
-    def add_expert_properties(self, obj):
+    def add_expert_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
@@ -2049,9 +2049,7 @@ class PartsBin(FoundationGridfinity):
             scoop = MakeScoop(self, obj)
             fuse_total = fuse_total.fuse(scoop)
 
-        fuse_total = Part.Solid.removeSplitter(fuse_total)
-
-        return fuse_total
+        return Part.Solid.removeSplitter(fuse_total)
 
     def __getstate__(self):
         return None
@@ -2061,8 +2059,8 @@ class PartsBin(FoundationGridfinity):
 
 
 class Baseplate(FoundationGridfinity):
-    def __init__(self, obj):
-        super(Baseplate, self).__init__(obj)
+    def __init__(self, obj) -> None:
+        super().__init__(obj)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -2077,7 +2075,7 @@ class Baseplate(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def add_bin_properties(self, obj):
+    def add_bin_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyInteger",
             "xGridUnits",
@@ -2091,7 +2089,7 @@ class Baseplate(FoundationGridfinity):
             "Height of the extrusion",
         ).yGridUnits = 2
 
-    def add_reference_properties(self, obj):
+    def add_reference_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "xTotalWidth",
@@ -2121,7 +2119,7 @@ class Baseplate(FoundationGridfinity):
             1,
         )
 
-    def add_expert_properties(self, obj):
+    def add_expert_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
@@ -2239,9 +2237,7 @@ class Baseplate(FoundationGridfinity):
                 0,
             ),
         )
-        fuse_total = Part.Shape.cut(solid_center, fuse_total)
-
-        return fuse_total
+        return Part.Shape.cut(solid_center, fuse_total)
 
     def __getstate__(self):
         return None
@@ -2251,8 +2247,8 @@ class Baseplate(FoundationGridfinity):
 
 
 class MagnetBaseplate(FoundationGridfinity):
-    def __init__(self, obj):
-        super(MagnetBaseplate, self).__init__(obj)
+    def __init__(self, obj) -> None:
+        super().__init__(obj)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -2269,7 +2265,7 @@ class MagnetBaseplate(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def add_bin_properties(self, obj):
+    def add_bin_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyInteger",
             "xGridUnits",
@@ -2289,7 +2285,7 @@ class MagnetBaseplate(FoundationGridfinity):
             "MagnetHoles",
         ).MagnetHoles = True
 
-    def add_reference_properties(self, obj):
+    def add_reference_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "xTotalWidth",
@@ -2319,7 +2315,7 @@ class MagnetBaseplate(FoundationGridfinity):
             1,
         )
 
-    def add_custom_baseplate_properties(self, obj):
+    def add_custom_baseplate_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "SmallFillet",
@@ -2370,7 +2366,7 @@ class MagnetBaseplate(FoundationGridfinity):
             "Chamfer at top of magnet hole <br> <br> default = 0.4 mm",
         ).MagnetChamfer = MAGNET_CHAMFER
 
-    def add_expert_properties(self, obj):
+    def add_expert_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
@@ -2462,7 +2458,7 @@ class MagnetBaseplate(FoundationGridfinity):
             1,
         ).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
 
-    def add_hidded_properties(self, obj):
+    def add_hidded_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "BaseThickness",
@@ -2510,9 +2506,7 @@ class MagnetBaseplate(FoundationGridfinity):
         fuse_total = Part.Shape.cut(fuse_total, cutout)
 
         magholes = MakeBaseplateMagnetHoles(self, obj)
-        fuse_total = Part.Shape.cut(fuse_total, magholes)
-
-        return fuse_total
+        return Part.Shape.cut(fuse_total, magholes)
 
     def __getstate__(self):
         return None
@@ -2522,8 +2516,8 @@ class MagnetBaseplate(FoundationGridfinity):
 
 
 class ScrewTogetherBaseplate(FoundationGridfinity):
-    def __init__(self, obj):
-        super(ScrewTogetherBaseplate, self).__init__(obj)
+    def __init__(self, obj) -> None:
+        super().__init__(obj)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -2539,7 +2533,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def add_bin_properties(self, obj):
+    def add_bin_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyInteger",
             "xGridUnits",
@@ -2553,7 +2547,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             "Height of the extrusion",
         ).yGridUnits = 2
 
-    def add_reference_properties(self, obj):
+    def add_reference_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "xTotalWidth",
@@ -2583,7 +2577,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             1,
         )
 
-    def add_custom_baseplate_properties(self, obj):
+    def add_custom_baseplate_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "SmallFillet",
@@ -2652,7 +2646,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             "Holes on the sides to connect multiple baseplates together <br> <br> default = 3.2 mm",
         ).ConnectionHoleDiameter = CONNECTION_HOLE_DIAMETER
 
-    def add_expert_properties(self, obj):
+    def add_expert_properties(self, obj) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
@@ -2787,9 +2781,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         fuse_total = Part.Shape.cut(fuse_total, magchamfer)
 
         conholes = MakeBPConnectionHoles(self, obj)
-        fuse_total = Part.Shape.cut(fuse_total, conholes)
-
-        return fuse_total
+        return Part.Shape.cut(fuse_total, conholes)
 
     def __getstate__(self):
         return None
