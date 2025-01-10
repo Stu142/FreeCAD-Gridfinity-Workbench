@@ -1,7 +1,7 @@
 from FreeCAD import Units
 import Part
 import FreeCAD as App
-import numpy as np
+import math
 
 unitmm = Units.Quantity("1 mm")
 
@@ -40,8 +40,7 @@ def MakeBaseplateMagnetHoles(self, obj):
     # Magnet holes
     if obj.MagnetHolesShape == "Hex":
         # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed circle radius
-        # radius = (obj.MagnetHoleDiameter / 2 ) * 2 / np.sqrt(3)
-        radius = obj.MagnetHoleDiameter / np.sqrt(3)
+        radius = obj.MagnetHoleDiameter / math.sqrt(3)
 
         nSides = 6
         rot = App.Rotation(App.Vector(0, 0, 1), 0)

@@ -26,4 +26,4 @@ jobs:
       - name: Ruff format
         if: success() || failure()
         run: |
-          python -m ruff format --diff --show-files
+          python -m ruff format --diff
