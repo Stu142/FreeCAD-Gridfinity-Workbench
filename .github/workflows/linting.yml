@@ -22,8 +22,8 @@ jobs:
           python -m pip install .[dev]
       - name: Ruff lint
         run: |
-          python -m ruff check
+          python -m ruff check --show-files
       - name: Ruff format
         if: success() || failure()
         run: |
-          python -m ruff format --diff
+          python -m ruff format --diff --show-files
