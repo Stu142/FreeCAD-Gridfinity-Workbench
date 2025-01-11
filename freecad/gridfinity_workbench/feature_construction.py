@@ -2,7 +2,6 @@ from FreeCAD import Units
 import Part
 import math
 import FreeCAD as App
-import numpy as np
 
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
@@ -984,8 +983,7 @@ def MakeBottomHoles(self, obj):
             for y in range(obj.yGridUnits):
                 if obj.MagnetHolesShape == "Hex":
                     # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed circle radius
-                    # radius = (obj.MagnetHoleDiameter / 2 ) * 2 / np.sqrt(3)
-                    radius = obj.MagnetHoleDiameter / np.sqrt(3)
+                    radius = obj.MagnetHoleDiameter / math.sqrt(3)
 
                     nSides = 6
 
