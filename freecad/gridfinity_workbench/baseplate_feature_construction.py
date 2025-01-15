@@ -1,7 +1,7 @@
 from FreeCAD import Units
 import Part
 import FreeCAD as App
-import numpy as np
+import math
 
 unitmm = Units.Quantity("1 mm")
 
@@ -40,8 +40,7 @@ def MakeBaseplateMagnetHoles(self, obj):
     # Magnet holes
     if obj.MagnetHolesShape == "Hex":
         # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed circle radius
-        # radius = (obj.MagnetHoleDiameter / 2 ) * 2 / np.sqrt(3)
-        radius = obj.MagnetHoleDiameter / np.sqrt(3)
+        radius = obj.MagnetHoleDiameter / math.sqrt(3)
 
         nSides = 6
         rot = App.Rotation(App.Vector(0, 0, 1), 0)
@@ -178,6 +177,8 @@ def MakeBaseplateMagnetHoles(self, obj):
 
     xtranslate = zeromm
     ytranslate = zeromm
+    HM2: Part.Shape | None = None
+    HM3: Part.Shape | None = None
 
     for x in range(obj.xGridUnits):
         ytranslate = zeromm
@@ -187,19 +188,10 @@ def MakeBaseplateMagnetHoles(self, obj):
 
             # Translate for next hole
             hm1.translate(App.Vector(xtranslate, ytranslate, 0))
-
-            if y > 0:
-                HM2 = Part.Solid.fuse(hm1, HM2)
-            else:
-                HM2 = hm1
-
+            HM2 = hm1 if HM2 is None else HM2.fuse(hm1)
             ytranslate += obj.GridSize  # Track position
 
-        if x > 0:
-            HM3 = Part.Solid.fuse(HM3, HM2)
-        else:
-            HM3 = HM2
-
+        HM3 = HM2 if HM3 is None else HM3.fuse(HM2)
         xtranslate += obj.GridSize
 
     return HM3
@@ -263,6 +255,8 @@ def MakeBPScrewBottomCham(self, obj):
     ytranslate = zeromm
 
     HM1 = Part.Solid.multiFuse(CH1, [CH2, CH3, CH4])
+    HM2: Part.Shape | None = None
+    HM3: Part.Shape | None = None
 
     for x in range(obj.xGridUnits):
         ytranslate = zeromm
@@ -270,15 +264,9 @@ def MakeBPScrewBottomCham(self, obj):
             hm1 = HM1.copy()
 
             hm1.translate(App.Vector(xtranslate, ytranslate, 0))
-            if y > 0:
-                HM2 = Part.Solid.fuse(hm1, HM2)
-            else:
-                HM2 = hm1
+            HM2 = hm1 if HM2 is None else HM2.fuse(hm1)
             ytranslate += obj.GridSize
-        if x > 0:
-            HM3 = Part.Solid.fuse(HM3, HM2)
-        else:
-            HM3 = HM2
+        HM3 = HM2 if HM3 is None else HM3.fuse(HM2)
         xtranslate += obj.GridSize
 
     return HM3
@@ -322,33 +310,28 @@ def MakeBPConnectionHoles(self, obj):
     xtranslate = zeromm
     ytranslate = zeromm
     HX1 = Part.Solid.fuse(C1, C2)
+    HX2: Part.Shape | None = None
 
     for x in range(obj.xGridUnits):
         ytranslate = zeromm
 
         hx1 = HX1.copy()
         hx1.translate(App.Vector(xtranslate, ytranslate, 0))
-        if x > 0:
-            HX2 = Part.Solid.fuse(hx1, HX2)
-        else:
-            HX2 = hx1
+        HX2 = hx1 if HX2 is None else HX2.fuse(hx1)
 
         xtranslate += obj.GridSize
 
     xtranslate = zeromm
     ytranslate = zeromm
     HY1 = Part.Solid.fuse(C3, C4)
+    HY2: Part.Shape | None = None
 
     for x in range(obj.yGridUnits):
         xtranslate = zeromm
 
         hy1 = HY1.copy()
         hy1.translate(App.Vector(xtranslate, ytranslate, 0))
-        if x > 0:
-            HY2 = Part.Solid.fuse(hy1, HY2)
-        else:
-            HY2 = hy1
-
+        HY2 = hy1 if HY2 is None else HY2.fuse(hy1)
         ytranslate += obj.GridSize
 
     con_holes = Part.Solid.fuse(HX2, HY2)

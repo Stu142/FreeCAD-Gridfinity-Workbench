@@ -1,7 +1,5 @@
 from __future__ import division
 import os
-import numpy as np
-import math
 import FreeCAD as App
 import Part
 from FreeCAD import Units
