@@ -3,8 +3,9 @@
 Contains implementation to conscruct baseplate features.
 """
 
+import math
+
 import FreeCAD
-import numpy as np
 import Part
 from FreeCAD import Units
 
@@ -54,7 +55,7 @@ def make_baseplate_magnet_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:
     # Magnet holes
     if obj.MagnetHolesShape == "Hex":
         # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed circle radius
-        radius = obj.MagnetHoleDiameter / np.sqrt(3)
+        radius = obj.MagnetHoleDiameter / math.sqrt(3)
 
         n_sides = 6
         rot = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), 0)

@@ -3,7 +3,6 @@
 import math
 
 import FreeCAD
-import numpy as np
 import Part
 from FreeCAD import Units
 
@@ -986,7 +985,7 @@ def make_bottom_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:
                 if obj.MagnetHolesShape == "Hex":
                     # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed
                     # circle radius
-                    radius = obj.MagnetHoleDiameter / np.sqrt(3)
+                    radius = obj.MagnetHoleDiameter / math.sqrt(3)
 
                     n_sides = 6
 
