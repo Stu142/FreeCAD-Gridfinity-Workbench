@@ -1,3 +1,4 @@
-import os
+"""Initialize Gridfinity workbenc.
 
-ICONPATH = os.path.join(os.path.dirname(__file__), "icons")
+This file is needed by FreeCAD to initialize the workbench module.
+"""

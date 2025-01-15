@@ -1,6 +1,8 @@
+"""Module containing gridfinity feature constructions."""
+
 import math
 
-import FreeCAD as App
+import FreeCAD
 import numpy as np
 import Part
 from FreeCAD import Units
@@ -8,8 +10,27 @@ from FreeCAD import Units
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
 
+SMALL_NUMBER = 0.01
 
-def createRoundedRectangle(xwidth, ywidth, zsketchplane, radius):
+
+def create_rounded_rectangle(
+    xwidth: float,
+    ywidth: float,
+    zsketchplane: float,
+    radius: float,
+) -> Part.Wire:
+    """Create rounded rectangle.
+
+    Args:
+        xwidth (float): Width of the rectangle in X direction.
+        ywidth (float): Width of the rectangle in Y direction.
+        zsketchplane (float): Z heigt where the wire should be.
+        radius (float): Radius of the corners.
+
+    Returns:
+        Part.Wire: Wire representing a rounded rectangle.
+
+    """
     xfarv = xwidth / 2
     yfarv = ywidth / 2
     xclosev = xwidth / 2 - radius
@@ -23,54 +44,101 @@ def createRoundedRectangle(xwidth, ywidth, zsketchplane, radius):
     xarcv = xwidth / 2 - radius + radius * math.sin(math.pi / 4)
     yarcv = ywidth / 2 - radius + radius * math.sin(math.pi / 4)
 
-    V1 = App.Vector(-xclosev, yfarv, zsketchplane)
-    V1 = App.Vector(-xclosev, yfarv, zsketchplane)
-    V2 = App.Vector(xclosev, yfarv, zsketchplane)
-    V3 = App.Vector(xfarv, yclosev, zsketchplane)
-    V4 = App.Vector(xfarv, -yclosev, zsketchplane)
-    V5 = App.Vector(xclosev, -yfarv, zsketchplane)
-    V6 = App.Vector(-xclosev, -yfarv, zsketchplane)
-    V7 = App.Vector(-xfarv, -yclosev, zsketchplane)
-    V8 = App.Vector(-xfarv, yclosev, zsketchplane)
+    v1 = FreeCAD.Vector(-xclosev, yfarv, zsketchplane)
+    v1 = FreeCAD.Vector(-xclosev, yfarv, zsketchplane)
+    v2 = FreeCAD.Vector(xclosev, yfarv, zsketchplane)
+    v3 = FreeCAD.Vector(xfarv, yclosev, zsketchplane)
+    v4 = FreeCAD.Vector(xfarv, -yclosev, zsketchplane)
+    v5 = FreeCAD.Vector(xclosev, -yfarv, zsketchplane)
+    v6 = FreeCAD.Vector(-xclosev, -yfarv, zsketchplane)
+    v7 = FreeCAD.Vector(-xfarv, -yclosev, zsketchplane)
+    v8 = FreeCAD.Vector(-xfarv, yclosev, zsketchplane)
 
-    VC1 = App.Vector(-xarcv, yarcv, zsketchplane)
-    C1 = Part.Arc(V1, VC1, V8)
-    VC2 = App.Vector(xarcv, yarcv, zsketchplane)
-    C2 = Part.Arc(V2, VC2, V3)
-    VC3 = App.Vector(xarcv, -yarcv, zsketchplane)
-    C3 = Part.Arc(V4, VC3, V5)
-    VC4 = App.Vector(-xarcv, -yarcv, zsketchplane)
-    C4 = Part.Arc(V6, VC4, V7)
+    vc1 = FreeCAD.Vector(-xarcv, yarcv, zsketchplane)
+    c1 = Part.Arc(v1, vc1, v8)
+    vc2 = FreeCAD.Vector(xarcv, yarcv, zsketchplane)
+    c2 = Part.Arc(v2, vc2, v3)
+    vc3 = FreeCAD.Vector(xarcv, -yarcv, zsketchplane)
+    c3 = Part.Arc(v4, vc3, v5)
+    vc4 = FreeCAD.Vector(-xarcv, -yarcv, zsketchplane)
+    c4 = Part.Arc(v6, vc4, v7)
 
-    L1 = Part.LineSegment(V1, V2)
-    L2 = Part.LineSegment(V3, V4)
-    L3 = Part.LineSegment(V5, V6)
-    L4 = Part.LineSegment(V7, V8)
+    l1 = Part.LineSegment(v1, v2)
+    l2 = Part.LineSegment(v3, v4)
+    l3 = Part.LineSegment(v5, v6)
+    l4 = Part.LineSegment(v7, v8)
 
-    S1 = Part.Shape([C1, L1, C2, L2, C3, L3, C4, L4])
+    s1 = Part.Shape([c1, l1, c2, l2, c3, l3, c4, l4])
 
-    return Part.Wire(S1.Edges)
+    return Part.Wire(s1.Edges)
 
 
-def RoundedRectangleChamfer(xwidth, ywidth, zsketchplane, height, radius):
-    w1 = createRoundedRectangle(xwidth, ywidth, zsketchplane, radius)
-    w2 = createRoundedRectangle(
+def rounded_rectangle_chamfer(
+    xwidth: float,
+    ywidth: float,
+    zsketchplane: float,
+    height: float,
+    radius: float,
+) -> Part.Shape:
+    """Create rounded rectangle shpae with a chamfer.
+
+    Args:
+        xwidth (float): Width of the rectangle in X direction.
+        ywidth (float): Width of the rectangle in Y direction.
+        zsketchplane (float): Z heigt where the part should be.
+        height (float): Height of the part
+        radius (float): Radius of the corners.
+
+    Returns:
+        Part.Shape: Rounded rectangle chanfer shape.
+
+    """
+    w1 = create_rounded_rectangle(xwidth, ywidth, zsketchplane, radius)
+    w2 = create_rounded_rectangle(
         xwidth + 2 * height,
         ywidth + 2 * height,
         zsketchplane + height,
         radius + height,
     )
     wires = [w1, w2]
-    return Part.makeLoft(wires, True)
+    return Part.makeLoft(wires, solid=True)
 
 
-def RoundedRectangleExtrude(xwidth, ywidth, zsketchplane, height, radius):
-    w1 = createRoundedRectangle(xwidth, ywidth, zsketchplane, radius)
+def rounded_rectangle_extrude(
+    xwidth: float,
+    ywidth: float,
+    zsketchplane: float,
+    height: float,
+    radius: float,
+) -> Part.Shape:
+    """Create an extruded rounded rectangle.
+
+    Args:
+        xwidth (float): Width of the rectangle in X direction.
+        ywidth (float): Width of the rectangle in Y direction.
+        zsketchplane (float): Z heigt where the part should be.
+        height (float): Height of the part
+        radius (float): Radius of the corners.
+
+    Returns:
+        Part.Shape: Rounded rectangle shape.
+
+    """
+    w1 = create_rounded_rectangle(xwidth, ywidth, zsketchplane, radius)
     face = Part.Face(w1)
-    return face.extrude(App.Vector(0, 0, height))
+    return face.extrude(FreeCAD.Vector(0, 0, height))
 
 
-def MakeLabelShelf(self, obj):
+def make_label_shelf(obj: FreeCAD.DocumentObject) -> Part.Shape:
+    """Create label shelf.
+
+    Args:
+        obj (FreeCAD.DocumentObject): Document object.
+
+    Returns:
+        Part.Shape: Labelshelf 3D shape.
+
+    """
     towall = -obj.BinUnit / 2 + obj.WallThickness
     tolabelend = (
         -obj.BinUnit / 2
@@ -109,21 +177,21 @@ def MakeLabelShelf(self, obj):
     alpha = 90 - beta
     side_c = side_a / math.sin(math.radians(alpha))
     side_b = math.sqrt(-pow(side_a, 2) + pow(side_c, 2))
-    V4_Z = -obj.LabelShelfVerticalThickness - side_b * unitmm
+    v4_z = -obj.LabelShelfVerticalThickness - side_b * unitmm
 
-    V1 = App.Vector(towall, 0, stackingoffset)
-    V2 = App.Vector(tolabelend, 0, stackingoffset)
-    V3 = App.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness + stackingoffset)
-    V4 = App.Vector(towall, 0, V4_Z + stackingoffset)
+    v1 = FreeCAD.Vector(towall, 0, stackingoffset)
+    v2 = FreeCAD.Vector(tolabelend, 0, stackingoffset)
+    v3 = FreeCAD.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness + stackingoffset)
+    v4 = FreeCAD.Vector(towall, 0, v4_z + stackingoffset)
 
-    L1 = Part.LineSegment(V1, V2)
-    L2 = Part.LineSegment(V2, V3)
-    L3 = Part.LineSegment(V3, V4)
-    L4 = Part.LineSegment(V4, V1)
+    l1 = Part.LineSegment(v1, v2)
+    l2 = Part.LineSegment(v2, v3)
+    l3 = Part.LineSegment(v3, v4)
+    l4 = Part.LineSegment(v4, v1)
 
-    S1 = Part.Shape([L1, L2, L3, L4])
+    s1 = Part.Shape([l1, l2, l3, l4])
 
-    wire = Part.Wire(S1.Edges)
+    wire = Part.Wire(s1.Edges)
 
     face = Part.Face(wire)
 
@@ -137,9 +205,9 @@ def MakeLabelShelf(self, obj):
         xtranslate = zeromm
         parts = []
         for x in range(xdiv):
-            ls = face.extrude(App.Vector(0, fw, 0))
+            ls = face.extrude(FreeCAD.Vector(0, fw, 0))
 
-            ls.translate(App.Vector(xtranslate, ytranslate, 0))
+            ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
 
             if x == 0:
                 firstls = ls
@@ -171,9 +239,9 @@ def MakeLabelShelf(self, obj):
         for x in range(xdiv):
             ytranslate = ysp
             for y in range(ydiv):
-                ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
+                ls = face.extrude(FreeCAD.Vector(0, obj.LabelShelfLength, 0))
 
-                ls.translate(App.Vector(xtranslate, ytranslate, 0))
+                ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
 
                 if x == 0 and y == 0:
                     firstls = ls
@@ -194,9 +262,9 @@ def MakeLabelShelf(self, obj):
         for x in range(xdiv):
             ytranslate = ysp
             for y in range(ydiv):
-                ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
+                ls = face.extrude(FreeCAD.Vector(0, obj.LabelShelfLength, 0))
 
-                ls.translate(App.Vector(xtranslate, ytranslate, 0))
+                ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
 
                 if x == 0 and y == 0:
                     firstls = ls
@@ -230,9 +298,9 @@ def MakeLabelShelf(self, obj):
         for x in range(xdiv):
             ytranslate = ysp
             for y in range(ydiv):
-                ls = face.extrude(App.Vector(0, obj.LabelShelfLength, 0))
+                ls = face.extrude(FreeCAD.Vector(0, obj.LabelShelfLength, 0))
 
-                ls.translate(App.Vector(xtranslate, ytranslate, 0))
+                ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
 
                 if x == 0 and y == 0:
                     firstls = ls
@@ -290,17 +358,17 @@ def MakeLabelShelf(self, obj):
             + obj.LabelShelfWidth
             - obj.WallThickness,
             obj.yTotalWidth,
-            App.Vector(
+            FreeCAD.Vector(
                 towall,
                 0,
                 -obj.UsableHeight - labelshelfheight + stackingoffset,
             ),
-            App.Vector(0, 1, 0),
+            FreeCAD.Vector(0, 1, 0),
         )
 
         for x in range(xdiv):
             bottomcut = bottomcutbox.copy()
-            bottomcut.translate(App.Vector(xtranslate, ytranslate, 0))
+            bottomcut.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
 
             if x == 0:
                 firstbottomcut = bottomcut
@@ -315,7 +383,16 @@ def MakeLabelShelf(self, obj):
     return funcfuse
 
 
-def MakeScoop(self, obj):
+def make_scoop(obj: FreeCAD.DocumentObject) -> Part.Shape:
+    """Create scoop feature.
+
+    Args:
+        obj (FreeCAD.DocumentObject): Document object.
+
+    Returns:
+        Part.Shape: 3d scoop object.
+
+    """
     scooprad1 = obj.ScoopRadius + 1 * unitmm
     scooprad2 = obj.ScoopRadius + 1 * unitmm
     scooprad3 = obj.ScoopRadius + 1 * unitmm
@@ -336,31 +413,31 @@ def MakeScoop(self, obj):
     scooprad = min(obj.ScoopRadius, scooprad1, scooprad2, scooprad3)
 
     if scooprad <= 0:
-        App.Console.PrintMessage(
+        FreeCAD.Console.PrintMessage(
             "scooop could not be made due to bin selected parameters\n",
         )
         return None
 
-    V1 = App.Vector(
+    v1 = FreeCAD.Vector(
         obj.xTotalWidth - obj.BinUnit / 2 - obj.WallThickness,
         0,
         -obj.UsableHeight + scooprad,
     )
-    V2 = App.Vector(
+    v2 = FreeCAD.Vector(
         obj.xTotalWidth - obj.BinUnit / 2 - obj.WallThickness,
         0,
         -obj.UsableHeight,
     )
-    V3 = App.Vector(
+    v3 = FreeCAD.Vector(
         obj.xTotalWidth - obj.BinUnit / 2 - obj.WallThickness - scooprad,
         0,
         -obj.UsableHeight,
     )
 
-    L1 = Part.LineSegment(V1, V2)
-    L2 = Part.LineSegment(V2, V3)
+    l1 = Part.LineSegment(v1, v2)
+    l2 = Part.LineSegment(v2, v3)
 
-    VC1 = App.Vector(
+    vc1 = FreeCAD.Vector(
         obj.xTotalWidth
         - obj.BinUnit / 2
         - obj.WallThickness
@@ -370,11 +447,11 @@ def MakeScoop(self, obj):
         -obj.UsableHeight + scooprad - scooprad * math.sin(math.pi / 4),
     )
 
-    C1 = Part.Arc(V1, VC1, V3)
+    c1 = Part.Arc(v1, vc1, v3)
 
-    S1 = Part.Shape([L1, L2, C1])
+    s1 = Part.Shape([l1, l2, c1])
 
-    wire = Part.Wire(S1.Edges)
+    wire = Part.Wire(s1.Edges)
 
     face = Part.Face(wire)
 
@@ -397,19 +474,19 @@ def MakeScoop(self, obj):
         - obj.WallThickness,
         obj.yTotalWidth - obj.WallThickness * 2,
         obj.UsableHeight,
-        App.Vector(
+        FreeCAD.Vector(
             obj.xTotalWidth - obj.BinUnit / 2 - obj.WallThickness,
             -obj.BinUnit / 2 + obj.WallThickness,
             0,
         ),
-        App.Vector(0, 0, -1),
+        FreeCAD.Vector(0, 0, -1),
     )
 
     parts = []
     for x in range(xdiv):
-        scoop = face.extrude(App.Vector(0, obj.yTotalWidth - obj.WallThickness * 2, 0))
+        scoop = face.extrude(FreeCAD.Vector(0, obj.yTotalWidth - obj.WallThickness * 2, 0))
         scoop.translate(
-            App.Vector(-xtranslate, -obj.BinUnit / 2 + obj.WallThickness, 0),
+            FreeCAD.Vector(-xtranslate, -obj.BinUnit / 2 + obj.WallThickness, 0),
         )
 
         if x > 0:
@@ -453,42 +530,51 @@ def MakeScoop(self, obj):
     )
 
 
-def MakeStackingLip(self, obj):
-    stacking_lip_path = createRoundedRectangle(
+def make_stacking_lip(obj: FreeCAD.DocumentObject) -> Part.Shape:
+    """Create stacking lip.
+
+    Args:
+        obj (FreeCAD.DocumentObject): Document object.
+
+    Returns:
+        Part.Shape: Stackinglip 3D object.
+
+    """
+    stacking_lip_path = create_rounded_rectangle(
         obj.xTotalWidth,
         obj.yTotalWidth,
         0,
         obj.BinOuterRadius,
     )
     stacking_lip_path.translate(
-        App.Vector(
+        FreeCAD.Vector(
             obj.xTotalWidth / 2 - obj.BinUnit / 2,
             obj.yTotalWidth / 2 - obj.BinUnit / 2,
             0,
         ),
     )
-    ST1 = App.Vector(-obj.BinUnit / 2, 0, 0)
-    ST2 = App.Vector(
+    st1 = FreeCAD.Vector(-obj.BinUnit / 2, 0, 0)
+    st2 = FreeCAD.Vector(
         -obj.BinUnit / 2,
         0,
         obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer,
     )
-    ST3 = App.Vector(
+    st3 = FreeCAD.Vector(
         -obj.BinUnit / 2 + obj.StackingLipTopLedge,
         0,
         obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer,
     )
-    ST4 = App.Vector(
+    st4 = FreeCAD.Vector(
         -obj.BinUnit / 2 + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
         0,
         obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
     )
-    ST5 = App.Vector(
+    st5 = FreeCAD.Vector(
         -obj.BinUnit / 2 + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
         0,
         obj.StackingLipBottomChamfer,
     )
-    ST6 = App.Vector(
+    st6 = FreeCAD.Vector(
         -obj.BinUnit / 2
         + obj.StackingLipTopLedge
         + obj.StackingLipTopChamfer
@@ -496,7 +582,7 @@ def MakeStackingLip(self, obj):
         0,
         0,
     )
-    ST7 = App.Vector(
+    st7 = FreeCAD.Vector(
         -obj.BinUnit / 2
         + obj.StackingLipTopLedge
         + obj.StackingLipTopChamfer
@@ -504,7 +590,7 @@ def MakeStackingLip(self, obj):
         0,
         -obj.StackingLipVerticalSection,
     )
-    ST8 = App.Vector(
+    st8 = FreeCAD.Vector(
         -obj.BinUnit / 2 + obj.WallThickness,
         0,
         -obj.StackingLipVerticalSection
@@ -515,34 +601,43 @@ def MakeStackingLip(self, obj):
             - obj.WallThickness
         ),
     )
-    ST9 = App.Vector(-obj.BinUnit / 2 + obj.WallThickness, 0, 0)
+    st9 = FreeCAD.Vector(-obj.BinUnit / 2 + obj.WallThickness, 0, 0)
 
-    STL1 = Part.LineSegment(ST1, ST2)
-    STL2 = Part.LineSegment(ST2, ST3)
-    STL3 = Part.LineSegment(ST3, ST4)
-    STL4 = Part.LineSegment(ST4, ST5)
-    STL5 = Part.LineSegment(ST5, ST6)
-    STL6 = Part.LineSegment(ST6, ST7)
-    STL7 = Part.LineSegment(ST7, ST8)
-    STL8 = Part.LineSegment(ST8, ST9)
-    STL9 = Part.LineSegment(ST9, ST1)
+    stl1 = Part.LineSegment(st1, st2)
+    stl2 = Part.LineSegment(st2, st3)
+    stl3 = Part.LineSegment(st3, st4)
+    stl4 = Part.LineSegment(st4, st5)
+    stl5 = Part.LineSegment(st5, st6)
+    stl6 = Part.LineSegment(st6, st7)
+    stl7 = Part.LineSegment(st7, st8)
+    stl8 = Part.LineSegment(st8, st9)
+    stl9 = Part.LineSegment(st9, st1)
 
-    STS1 = Part.Shape([STL1, STL2, STL3, STL4, STL5, STL6, STL7, STL8, STL9])
+    sts1 = Part.Shape([stl1, stl2, stl3, stl4, stl5, stl6, stl7, stl8, stl9])
 
-    wire = Part.Wire(STS1.Edges)
+    wire = Part.Wire(sts1.Edges)
 
     stacking_lip = Part.Wire(stacking_lip_path).makePipe(wire)
 
     return Part.makeSolid(stacking_lip)
 
 
-def MakeCompartements(self, obj):
+def make_compartments(obj: FreeCAD.DocumentObject) -> Part.Shape:
+    """Create compartment cutout objects.
+
+    Args:
+        obj (FreeCAD.DocumentObject): Document object.
+
+    Returns:
+        Part.Shape: Compartments cutout shape.
+
+    """
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
     ydivheight = obj.yDividerHeight if obj.yDividerHeight != 0 else obj.TotalHeight
 
     stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
 
-    func_fuse = RoundedRectangleExtrude(
+    func_fuse = rounded_rectangle_extrude(
         obj.xTotalWidth - obj.WallThickness * 2,
         obj.yTotalWidth - obj.WallThickness * 2,
         -obj.UsableHeight,
@@ -550,7 +645,7 @@ def MakeCompartements(self, obj):
         obj.BinOuterRadius - obj.WallThickness,
     )
     func_fuse.translate(
-        App.Vector(
+        FreeCAD.Vector(
             obj.xTotalWidth / 2 - obj.BinUnit / 2,
             obj.yTotalWidth / 2 - obj.BinUnit / 2,
             0,
@@ -592,14 +687,14 @@ def MakeCompartements(self, obj):
                 obj.DividerThickness,
                 obj.yTotalWidth,
                 xdivheight + stackingoffset,
-                App.Vector(
+                FreeCAD.Vector(
                     -obj.BinUnit / 2 + obj.DividerThickness,
                     -obj.BinUnit / 2,
                     -obj.TotalHeight,
                 ),
-                App.Vector(0, 0, 1),
+                FreeCAD.Vector(0, 0, 1),
             )
-            comp.translate(App.Vector(xtranslate, 0, 0))
+            comp.translate(FreeCAD.Vector(xtranslate, 0, 0))
             xdiv = comp if xdiv is None else xdiv.fuse(comp)
             xtranslate += xcomp_w + obj.DividerThickness
 
@@ -610,11 +705,11 @@ def MakeCompartements(self, obj):
                 obj.xTotalWidth,
                 obj.DividerThickness,
                 ydivheight + stackingoffset,
-                App.Vector(-obj.BinUnit / 2, -obj.BinUnit / 2, -obj.TotalHeight),
-                App.Vector(0, 0, 1),
+                FreeCAD.Vector(-obj.BinUnit / 2, -obj.BinUnit / 2, -obj.TotalHeight),
+                FreeCAD.Vector(0, 0, 1),
             )
 
-            comp.translate(App.Vector(0, ytranslate, 0))
+            comp.translate(FreeCAD.Vector(0, ytranslate, 0))
             ydiv = comp if ydiv is None else ydiv.fuse(comp)
             ytranslate += ycomp_w + obj.DividerThickness
 
@@ -638,100 +733,16 @@ def MakeCompartements(self, obj):
     return func_fuse
 
 
-def MakeBinWall(self, obj):
-    bin_wall_path = createRoundedRectangle(
-        obj.xTotalWidth,
-        obj.yTotalWidth,
-        0,
-        obj.BinOuterRadius,
-    )
-    bin_wall_path.translate(
-        App.Vector(
-            obj.xTotalWidth / 2 - obj.BinUnit / 2,
-            obj.yTotalWidth / 2 - obj.BinUnit / 2,
-            0,
-        ),
-    )
-    ST1 = App.Vector(-obj.BinUnit / 2, 0, -obj.TotalHeight + obj.BaseProfileHeight)
-    ST2 = App.Vector(-obj.BinUnit / 2, 0, 0)
-    ST3 = App.Vector(-obj.BinUnit / 2 + obj.WallThickness, 0, 0)
-    ST4 = App.Vector(
-        -obj.BinUnit / 2 + obj.WallThickness,
-        0,
-        -obj.TotalHeight + obj.HeightUnitValue + obj.InsideFilletRadius,
-    )
-    ST5 = App.Vector(
-        -obj.BinUnit / 2 + obj.WallThickness + obj.InsideFilletRadius,
-        0,
-        -obj.TotalHeight + obj.HeightUnitValue,
-    )
-    ST6 = App.Vector(
-        -obj.BinUnit / 2 + obj.WallThickness + obj.InsideFilletRadius,
-        0,
-        -obj.TotalHeight + obj.BaseProfileHeight,
-    )
+def make_bin_base(obj: FreeCAD.DocumentObject) -> Part.Shape:
+    """Create bin base.
 
-    bin_wall_path = createRoundedRectangle(
-        obj.xTotalWidth,
-        obj.yTotalWidth,
-        0,
-        obj.BinOuterRadius,
-    )
-    bin_wall_path.translate(
-        App.Vector(
-            obj.xTotalWidth / 2 - obj.BinUnit / 2,
-            obj.yTotalWidth / 2 - obj.BinUnit / 2,
-            0,
-        ),
-    )
-    ST1 = App.Vector(-obj.BinUnit / 2, 0, -obj.TotalHeight + obj.BaseProfileHeight)
-    ST2 = App.Vector(-obj.BinUnit / 2, 0, 0)
-    ST3 = App.Vector(-obj.BinUnit / 2 + obj.WallThickness, 0, 0)
-    ST4 = App.Vector(
-        -obj.BinUnit / 2 + obj.WallThickness,
-        0,
-        -obj.TotalHeight + obj.HeightUnitValue + obj.InsideFilletRadius,
-    )
-    ST5 = App.Vector(
-        -obj.BinUnit / 2 + obj.WallThickness + obj.InsideFilletRadius,
-        0,
-        -obj.TotalHeight + obj.HeightUnitValue,
-    )
-    ST6 = App.Vector(
-        -obj.BinUnit / 2 + obj.WallThickness + obj.InsideFilletRadius,
-        0,
-        -obj.TotalHeight + obj.BaseProfileHeight,
-    )
+    Args:
+        obj (FreeCAD.DocumentObject): Document object.
 
-    VC1 = App.Vector(
-        -obj.BinUnit / 2
-        + obj.WallThickness
-        + obj.InsideFilletRadius
-        - obj.InsideFilletRadius * math.sin(math.pi / 4),
-        0,
-        -obj.TotalHeight
-        + obj.HeightUnitValue
-        + obj.InsideFilletRadius
-        - +obj.InsideFilletRadius * math.sin(math.pi / 4),
-    )
+    Returns:
+        Part.Shape: Binbase 3D shape.
 
-    STL1 = Part.LineSegment(ST1, ST2)
-    STL2 = Part.LineSegment(ST2, ST3)
-    STL3 = Part.LineSegment(ST3, ST4)
-    STL4 = Part.Arc(ST4, VC1, ST5)
-    STL5 = Part.LineSegment(ST5, ST6)
-    STL6 = Part.LineSegment(ST6, ST1)
-
-    STS1 = Part.Shape([STL1, STL2, STL3, STL4, STL5, STL6])
-
-    wire = Part.Wire(STS1.Edges)
-
-    bin_wall = Part.Wire(bin_wall_path).makePipe(wire)
-
-    return Part.makeSolid(bin_wall)
-
-
-def MakeBinBase(self, obj):
+    """
     bt_cmf_width = obj.BinUnit - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer
     vert_width = obj.BinUnit - 2 * obj.BaseProfileTopChamfer
     xtranslate = zeromm
@@ -742,7 +753,7 @@ def MakeBinBase(self, obj):
     for _ in range(obj.xGridUnits):
         ytranslate = zeromm
         for _ in range(obj.yGridUnits):
-            bottom_chamfer = RoundedRectangleChamfer(
+            bottom_chamfer = rounded_rectangle_chamfer(
                 bt_cmf_width,
                 bt_cmf_width,
                 -obj.TotalHeight,
@@ -750,7 +761,7 @@ def MakeBinBase(self, obj):
                 obj.BinBottomRadius,
             )
 
-            vertical_section = RoundedRectangleExtrude(
+            vertical_section = rounded_rectangle_extrude(
                 vert_width,
                 vert_width,
                 -obj.TotalHeight + obj.BaseProfileBottomChamfer,
@@ -758,7 +769,7 @@ def MakeBinBase(self, obj):
                 obj.BinVerticalRadius,
             )
             assembly = Part.Shape.fuse(bottom_chamfer, vertical_section)
-            vertical_section = RoundedRectangleExtrude(
+            vertical_section = rounded_rectangle_extrude(
                 vert_width,
                 vert_width,
                 -obj.TotalHeight + obj.BaseProfileBottomChamfer,
@@ -767,7 +778,7 @@ def MakeBinBase(self, obj):
             )
             assembly = Part.Shape.fuse(bottom_chamfer, vertical_section)
 
-            top_chamfer = RoundedRectangleChamfer(
+            top_chamfer = rounded_rectangle_chamfer(
                 vert_width,
                 vert_width,
                 -obj.TotalHeight + obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection,
@@ -776,7 +787,7 @@ def MakeBinBase(self, obj):
             )
             assembly = Part.Solid.fuse(assembly, top_chamfer)
 
-            assembly.translate(App.Vector(xtranslate, ytranslate, 0))
+            assembly.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
 
             assembly1 = assembly if assembly1 is None else assembly1.fuse(assembly)
             ytranslate += obj.GridSize
@@ -787,7 +798,16 @@ def MakeBinBase(self, obj):
     return assembly2
 
 
-def MakeBaseplateCenterCut(self, obj):
+def make_baseplate_center_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
+    """Create baseplate center cutout.
+
+    Args:
+        obj (FreeCAD.DocumentObject): Document object.
+
+    Returns:
+        Part.Shape: Baseplate center cutout shape.
+
+    """
     inframedis = (
         obj.GridSize / 2
         - obj.BaseProfileTopChamfer
@@ -817,128 +837,137 @@ def MakeBaseplateCenterCut(self, obj):
         - (obj.MagnetHoleDiameter / 2 + obj.MagnetEdgeThickness) * math.sin(math.pi / 4)
     )
 
-    V1 = App.Vector(-smfilloffcen, -inframedis, 0)
-    V2 = App.Vector(-magedge, -smfillins, 0)
-    V3 = App.Vector(-magedge, -magcenter, 0)
-    V4 = App.Vector(-magcenter, -magedge, 0)
-    V5 = App.Vector(-smfillins, -magedge, 0)
-    V6 = App.Vector(-inframedis, -smfilloffcen, 0)
+    v1 = FreeCAD.Vector(-smfilloffcen, -inframedis, 0)
+    v2 = FreeCAD.Vector(-magedge, -smfillins, 0)
+    v3 = FreeCAD.Vector(-magedge, -magcenter, 0)
+    v4 = FreeCAD.Vector(-magcenter, -magedge, 0)
+    v5 = FreeCAD.Vector(-smfillins, -magedge, 0)
+    v6 = FreeCAD.Vector(-inframedis, -smfilloffcen, 0)
 
-    VA1 = App.Vector(-smfillposmag, -smfillpos, 0)
-    VA2 = App.Vector(-bigfillpos, -bigfillpos, 0)
-    VA3 = App.Vector(-smfillpos, -smfillposmag, 0)
+    va1 = FreeCAD.Vector(-smfillposmag, -smfillpos, 0)
+    va2 = FreeCAD.Vector(-bigfillpos, -bigfillpos, 0)
+    va3 = FreeCAD.Vector(-smfillpos, -smfillposmag, 0)
 
-    V7 = App.Vector(-inframedis, smfilloffcen, 0)
-    V8 = App.Vector(-smfillins, magedge, 0)
-    V9 = App.Vector(-magcenter, magedge, 0)
-    V10 = App.Vector(-magedge, magcenter, 0)
-    V11 = App.Vector(-magedge, smfillins, 0)
-    V12 = App.Vector(-smfilloffcen, inframedis, 0)
+    v7 = FreeCAD.Vector(-inframedis, smfilloffcen, 0)
+    v8 = FreeCAD.Vector(-smfillins, magedge, 0)
+    v9 = FreeCAD.Vector(-magcenter, magedge, 0)
+    v10 = FreeCAD.Vector(-magedge, magcenter, 0)
+    v11 = FreeCAD.Vector(-magedge, smfillins, 0)
+    v12 = FreeCAD.Vector(-smfilloffcen, inframedis, 0)
 
-    VA4 = App.Vector(-smfillpos, smfillposmag, 0)
-    VA5 = App.Vector(-bigfillpos, bigfillpos, 0)
-    VA6 = App.Vector(-smfillposmag, smfillpos, 0)
+    va4 = FreeCAD.Vector(-smfillpos, smfillposmag, 0)
+    va5 = FreeCAD.Vector(-bigfillpos, bigfillpos, 0)
+    va6 = FreeCAD.Vector(-smfillposmag, smfillpos, 0)
 
-    V13 = App.Vector(smfilloffcen, inframedis, 0)
-    V14 = App.Vector(magedge, smfillins, 0)
-    V15 = App.Vector(magedge, magcenter, 0)
-    V16 = App.Vector(magcenter, magedge, 0)
-    V17 = App.Vector(smfillins, magedge, 0)
-    V18 = App.Vector(inframedis, smfilloffcen, 0)
+    v13 = FreeCAD.Vector(smfilloffcen, inframedis, 0)
+    v14 = FreeCAD.Vector(magedge, smfillins, 0)
+    v15 = FreeCAD.Vector(magedge, magcenter, 0)
+    v16 = FreeCAD.Vector(magcenter, magedge, 0)
+    v17 = FreeCAD.Vector(smfillins, magedge, 0)
+    v18 = FreeCAD.Vector(inframedis, smfilloffcen, 0)
 
-    VA7 = App.Vector(smfillposmag, smfillpos, 0)
-    VA8 = App.Vector(bigfillpos, bigfillpos, 0)
-    VA9 = App.Vector(smfillpos, smfillposmag, 0)
+    va7 = FreeCAD.Vector(smfillposmag, smfillpos, 0)
+    va8 = FreeCAD.Vector(bigfillpos, bigfillpos, 0)
+    va9 = FreeCAD.Vector(smfillpos, smfillposmag, 0)
 
-    V19 = App.Vector(inframedis, -smfilloffcen, 0)
-    V20 = App.Vector(smfillins, -magedge, 0)
-    V21 = App.Vector(magcenter, -magedge, 0)
-    V22 = App.Vector(magedge, -magcenter, 0)
-    V23 = App.Vector(magedge, -smfillins, 0)
-    V24 = App.Vector(smfilloffcen, -inframedis, 0)
+    v19 = FreeCAD.Vector(inframedis, -smfilloffcen, 0)
+    v20 = FreeCAD.Vector(smfillins, -magedge, 0)
+    v21 = FreeCAD.Vector(magcenter, -magedge, 0)
+    v22 = FreeCAD.Vector(magedge, -magcenter, 0)
+    v23 = FreeCAD.Vector(magedge, -smfillins, 0)
+    v24 = FreeCAD.Vector(smfilloffcen, -inframedis, 0)
 
-    VA10 = App.Vector(smfillpos, -smfillposmag, 0)
-    VA11 = App.Vector(bigfillpos, -bigfillpos, 0)
-    VA12 = App.Vector(smfillposmag, -smfillpos, 0)
+    va10 = FreeCAD.Vector(smfillpos, -smfillposmag, 0)
+    va11 = FreeCAD.Vector(bigfillpos, -bigfillpos, 0)
+    va12 = FreeCAD.Vector(smfillposmag, -smfillpos, 0)
 
-    L1 = Part.LineSegment(V24, V1)
-    AR1 = Part.Arc(V1, VA1, V2)
-    L2 = Part.LineSegment(V2, V3)
-    AR2 = Part.Arc(V3, VA2, V4)
-    L3 = Part.LineSegment(V4, V5)
-    AR3 = Part.Arc(V5, VA3, V6)
-    L4 = Part.LineSegment(V6, V7)
-    AR4 = Part.Arc(V7, VA4, V8)
-    L5 = Part.LineSegment(V8, V9)
-    AR5 = Part.Arc(V9, VA5, V10)
-    L6 = Part.LineSegment(V10, V11)
-    AR6 = Part.Arc(V11, VA6, V12)
-    L7 = Part.LineSegment(V12, V13)
-    AR7 = Part.Arc(V13, VA7, V14)
-    L8 = Part.LineSegment(V14, V15)
-    AR8 = Part.Arc(V15, VA8, V16)
-    L9 = Part.LineSegment(V16, V17)
-    AR9 = Part.Arc(V17, VA9, V18)
-    L10 = Part.LineSegment(V18, V19)
-    AR10 = Part.Arc(V19, VA10, V20)
-    L11 = Part.LineSegment(V20, V21)
-    AR11 = Part.Arc(V21, VA11, V22)
-    L12 = Part.LineSegment(V22, V23)
-    AR12 = Part.Arc(V23, VA12, V24)
+    l1 = Part.LineSegment(v24, v1)
+    ar1 = Part.Arc(v1, va1, v2)
+    l2 = Part.LineSegment(v2, v3)
+    ar2 = Part.Arc(v3, va2, v4)
+    l3 = Part.LineSegment(v4, v5)
+    ar3 = Part.Arc(v5, va3, v6)
+    l4 = Part.LineSegment(v6, v7)
+    ar4 = Part.Arc(v7, va4, v8)
+    l5 = Part.LineSegment(v8, v9)
+    ar5 = Part.Arc(v9, va5, v10)
+    l6 = Part.LineSegment(v10, v11)
+    ar6 = Part.Arc(v11, va6, v12)
+    l7 = Part.LineSegment(v12, v13)
+    ar7 = Part.Arc(v13, va7, v14)
+    l8 = Part.LineSegment(v14, v15)
+    ar8 = Part.Arc(v15, va8, v16)
+    l9 = Part.LineSegment(v16, v17)
+    ar9 = Part.Arc(v17, va9, v18)
+    l10 = Part.LineSegment(v18, v19)
+    ar10 = Part.Arc(v19, va10, v20)
+    l11 = Part.LineSegment(v20, v21)
+    ar11 = Part.Arc(v21, va11, v22)
+    l12 = Part.LineSegment(v22, v23)
+    ar12 = Part.Arc(v23, va12, v24)
     xtranslate = zeromm
     ytranslate = zeromm
 
-    S1 = Part.Shape(
+    s1 = Part.Shape(
         [
-            L1,
-            AR1,
-            L2,
-            AR2,
-            L3,
-            AR3,
-            L4,
-            AR4,
-            L5,
-            AR5,
-            L6,
-            AR6,
-            L7,
-            AR7,
-            L8,
-            AR8,
-            L9,
-            AR9,
-            L10,
-            AR10,
-            L11,
-            AR11,
-            L12,
-            AR12,
+            l1,
+            ar1,
+            l2,
+            ar2,
+            l3,
+            ar3,
+            l4,
+            ar4,
+            l5,
+            ar5,
+            l6,
+            ar6,
+            l7,
+            ar7,
+            l8,
+            ar8,
+            l9,
+            ar9,
+            l10,
+            ar10,
+            l11,
+            ar11,
+            l12,
+            ar12,
         ],
     )
 
-    wire = Part.Wire(S1.Edges)
+    wire = Part.Wire(s1.Edges)
     face = Part.Face(wire)
-    HM2: Part.Shape | None = None
-    HM3: Part.Shape | None = None
+    hm2: Part.Shape | None = None
+    hm3: Part.Shape | None = None
 
     for _ in range(obj.xGridUnits):
         ytranslate = zeromm
         for _ in range(obj.yGridUnits):
-            HM1 = face.extrude(App.Vector(0, 0, -obj.TotalHeight))
+            hm1 = face.extrude(FreeCAD.Vector(0, 0, -obj.TotalHeight))
 
-            HM1.translate(App.Vector(xtranslate, ytranslate, 0))
+            hm1.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
 
-            HM2 = HM1 if HM2 is None else HM2.fuse(HM1)
+            hm2 = hm1 if hm2 is None else hm2.fuse(hm1)
             ytranslate += obj.GridSize
 
-        HM3 = HM2 if HM3 is None else HM3.fuse(HM2)
+        hm3 = hm2 if hm3 is None else hm3.fuse(hm2)
         xtranslate += obj.GridSize
 
-    return HM3
+    return hm3
 
 
-def MakeBottomHoles(self, obj):
+def make_bottom_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:
+    """Create bottom holes.
+
+    Args:
+        obj (FreeCAD.DocumentObject): Documentobject
+
+    Returns:
+        Part.Shape: bottom holes shape
+
+    """
     hole_pos = obj.GridSize / 2 - obj.MagnetHoleDistanceFromEdge
     sq_bridge2_pos = -obj.GridSize / 2 + obj.MagnetHoleDistanceFromEdge + obj.ScrewHoleDiameter / 2
 
@@ -947,274 +976,274 @@ def MakeBottomHoles(self, obj):
 
     xtranslate = zeromm
     ytranslate = zeromm
-    HM2: Part.Shape | None = None
-    HM3: Part.Shape | None = None
+    hm2: Part.Shape | None = None
+    hm3: Part.Shape | None = None
 
     if obj.MagnetHoles:
         for _ in range(obj.xGridUnits):
             ytranslate = zeromm
             for _ in range(obj.yGridUnits):
                 if obj.MagnetHolesShape == "Hex":
-                    # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed circle radius
-                    # radius = (obj.MagnetHoleDiameter / 2 ) * 2 / np.sqrt(3)
+                    # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed
+                    # circle radius
                     radius = obj.MagnetHoleDiameter / np.sqrt(3)
 
-                    nSides = 6
+                    n_sides = 6
 
-                    rot = App.Rotation(App.Vector(0, 0, 1), 0)
+                    rot = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), 0)
 
-                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = nSides
+                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = n_sides
                     p.Circumradius = radius
-                    p.Placement = App.Placement(
-                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
+                    p.Placement = FreeCAD.Placement(
+                        FreeCAD.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
                         rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
-                    C1 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
-                    App.ActiveDocument.removeObject(p.Name)
+                    c1 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
+                    FreeCAD.ActiveDocument.removeObject(p.Name)
 
-                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = nSides
+                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = n_sides
                     p.Circumradius = radius
-                    p.Placement = App.Placement(
-                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
+                    p.Placement = FreeCAD.Placement(
+                        FreeCAD.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
                         rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
-                    C2 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
-                    App.ActiveDocument.removeObject(p.Name)
+                    c2 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
+                    FreeCAD.ActiveDocument.removeObject(p.Name)
 
-                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = nSides
+                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = n_sides
                     p.Circumradius = radius
-                    p.Placement = App.Placement(
-                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
+                    p.Placement = FreeCAD.Placement(
+                        FreeCAD.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
                         rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
-                    C3 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
-                    App.ActiveDocument.removeObject(p.Name)
+                    c3 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
+                    FreeCAD.ActiveDocument.removeObject(p.Name)
 
-                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = nSides
+                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = n_sides
                     p.Circumradius = radius
-                    p.Placement = App.Placement(
-                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight),
+                    p.Placement = FreeCAD.Placement(
+                        FreeCAD.Vector(hole_pos, hole_pos, -obj.TotalHeight),
                         rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
-                    C4 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
-                    App.ActiveDocument.removeObject(p.Name)
+                    c4 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
+                    FreeCAD.ActiveDocument.removeObject(p.Name)
 
                 else:
-                    C1 = Part.makeCylinder(
+                    c1 = Part.makeCylinder(
                         obj.MagnetHoleDiameter / 2,
                         obj.MagnetHoleDepth,
-                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
-                        App.Vector(0, 0, 1),
+                        FreeCAD.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
+                        FreeCAD.Vector(0, 0, 1),
                     )
-                    C2 = Part.makeCylinder(
+                    c2 = Part.makeCylinder(
                         obj.MagnetHoleDiameter / 2,
                         obj.MagnetHoleDepth,
-                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
-                        App.Vector(0, 0, 1),
+                        FreeCAD.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
+                        FreeCAD.Vector(0, 0, 1),
                     )
-                    C3 = Part.makeCylinder(
+                    c3 = Part.makeCylinder(
                         obj.MagnetHoleDiameter / 2,
                         obj.MagnetHoleDepth,
-                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
-                        App.Vector(0, 0, 1),
+                        FreeCAD.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
+                        FreeCAD.Vector(0, 0, 1),
                     )
-                    C4 = Part.makeCylinder(
+                    c4 = Part.makeCylinder(
                         obj.MagnetHoleDiameter / 2,
                         obj.MagnetHoleDepth,
-                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight),
-                        App.Vector(0, 0, 1),
+                        FreeCAD.Vector(hole_pos, hole_pos, -obj.TotalHeight),
+                        FreeCAD.Vector(0, 0, 1),
                     )
                 if obj.MagnetHolesShape == "Hex":
-                    nSides = 6
+                    n_sides = 6
 
-                    rot = App.Rotation(App.Vector(0, 0, 1), 0)
+                    rot = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), 0)
 
-                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = nSides
+                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = n_sides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
-                    p.Placement = App.Placement(
-                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
+                    p.Placement = FreeCAD.Placement(
+                        FreeCAD.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
                         rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
-                    C1 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
-                    App.ActiveDocument.removeObject(p.Name)
+                    c1 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
+                    FreeCAD.ActiveDocument.removeObject(p.Name)
 
-                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = nSides
+                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = n_sides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
-                    p.Placement = App.Placement(
-                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
+                    p.Placement = FreeCAD.Placement(
+                        FreeCAD.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
                         rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
-                    C2 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
-                    App.ActiveDocument.removeObject(p.Name)
+                    c2 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
+                    FreeCAD.ActiveDocument.removeObject(p.Name)
 
-                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = nSides
+                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = n_sides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
-                    p.Placement = App.Placement(
-                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
+                    p.Placement = FreeCAD.Placement(
+                        FreeCAD.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
                         rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
-                    C3 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
-                    App.ActiveDocument.removeObject(p.Name)
+                    c3 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
+                    FreeCAD.ActiveDocument.removeObject(p.Name)
 
-                    p = App.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = nSides
+                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+                    p.Polygon = n_sides
                     p.Circumradius = obj.MagnetHoleDiameter / 2
-                    p.Placement = App.Placement(
-                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight),
+                    p.Placement = FreeCAD.Placement(
+                        FreeCAD.Vector(hole_pos, hole_pos, -obj.TotalHeight),
                         rot,
                     )
                     p.recompute()
                     f = Part.Face(Part.Wire(p.Shape.Edges))
-                    C4 = f.extrude(App.Vector(0, 0, obj.MagnetHoleDepth))
-                    App.ActiveDocument.removeObject(p.Name)
+                    c4 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
+                    FreeCAD.ActiveDocument.removeObject(p.Name)
 
                 else:
-                    C1 = Part.makeCylinder(
+                    c1 = Part.makeCylinder(
                         obj.MagnetHoleDiameter / 2,
                         obj.MagnetHoleDepth,
-                        App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
-                        App.Vector(0, 0, 1),
+                        FreeCAD.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
+                        FreeCAD.Vector(0, 0, 1),
                     )
-                    C2 = Part.makeCylinder(
+                    c2 = Part.makeCylinder(
                         obj.MagnetHoleDiameter / 2,
                         obj.MagnetHoleDepth,
-                        App.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
-                        App.Vector(0, 0, 1),
+                        FreeCAD.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
+                        FreeCAD.Vector(0, 0, 1),
                     )
-                    C3 = Part.makeCylinder(
+                    c3 = Part.makeCylinder(
                         obj.MagnetHoleDiameter / 2,
                         obj.MagnetHoleDepth,
-                        App.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
-                        App.Vector(0, 0, 1),
+                        FreeCAD.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
+                        FreeCAD.Vector(0, 0, 1),
                     )
-                    C4 = Part.makeCylinder(
+                    c4 = Part.makeCylinder(
                         obj.MagnetHoleDiameter / 2,
                         obj.MagnetHoleDepth,
-                        App.Vector(hole_pos, hole_pos, -obj.TotalHeight),
-                        App.Vector(0, 0, 1),
+                        FreeCAD.Vector(hole_pos, hole_pos, -obj.TotalHeight),
+                        FreeCAD.Vector(0, 0, 1),
                     )
 
-                HM1 = Part.Solid.multiFuse(C1, [C2, C3, C4])
+                hm1 = Part.Solid.multiFuse(c1, [c2, c3, c4])
 
-                HM1.translate(App.Vector(xtranslate, ytranslate, 0))
+                hm1.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
 
-                HM2 = HM1 if HM2 is None else HM2.fuse(HM1)
+                hm2 = hm1 if hm2 is None else hm2.fuse(hm1)
                 ytranslate += obj.GridSize
 
-            HM3 = HM2 if HM3 is None else HM3.fuse(HM2)
+            hm3 = hm2 if hm3 is None else hm3.fuse(hm2)
             xtranslate += obj.GridSize
 
     xtranslate = zeromm
     ytranslate = zeromm
-    HS2: Part.Shape | None = None
-    HS3: Part.Shape | None = None
+    hs2: Part.Shape | None = None
+    hs3: Part.Shape | None = None
 
     if obj.ScrewHoles:
         for _ in range(obj.xGridUnits):
             ytranslate = zeromm
             for _ in range(obj.yGridUnits):
-                CS1 = Part.makeCylinder(
+                cs1 = Part.makeCylinder(
                     obj.ScrewHoleDiameter / 2,
                     obj.ScrewHoleDepth,
-                    App.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
-                    App.Vector(0, 0, 1),
+                    FreeCAD.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
+                    FreeCAD.Vector(0, 0, 1),
                 )
-                CS2 = Part.makeCylinder(
+                cs2 = Part.makeCylinder(
                     obj.ScrewHoleDiameter / 2,
                     obj.ScrewHoleDepth,
-                    App.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
-                    App.Vector(0, 0, 1),
+                    FreeCAD.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
+                    FreeCAD.Vector(0, 0, 1),
                 )
-                CS3 = Part.makeCylinder(
+                cs3 = Part.makeCylinder(
                     obj.ScrewHoleDiameter / 2,
                     obj.ScrewHoleDepth,
-                    App.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
-                    App.Vector(0, 0, 1),
+                    FreeCAD.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
+                    FreeCAD.Vector(0, 0, 1),
                 )
-                CS4 = Part.makeCylinder(
+                cs4 = Part.makeCylinder(
                     obj.ScrewHoleDiameter / 2,
                     obj.ScrewHoleDepth,
-                    App.Vector(hole_pos, hole_pos, -obj.TotalHeight),
-                    App.Vector(0, 0, 1),
+                    FreeCAD.Vector(hole_pos, hole_pos, -obj.TotalHeight),
+                    FreeCAD.Vector(0, 0, 1),
                 )
 
-                HM1 = Part.Solid.multiFuse(CS1, [CS2, CS3, CS4])
+                hm1 = Part.Solid.multiFuse(cs1, [cs2, cs3, cs4])
 
-                HM1.translate(App.Vector(xtranslate, ytranslate, 0))
-                HS2 = HM1 if HS2 is None else HS2.fuse(HM1)
+                hm1.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
+                hs2 = hm1 if hs2 is None else hs2.fuse(hm1)
                 ytranslate += obj.GridSize
 
-            HS3 = HS2 if HS3 is None else HS3.fuse(HS2)
+            hs3 = hs2 if hs3 is None else hs3.fuse(hs2)
             xtranslate += obj.GridSize
 
     xtranslate = zeromm
     ytranslate = zeromm
-    HSQ2: Part.Shape | None = None
-    HSQ3: Part.Shape | None = None
+    hsq2: Part.Shape | None = None
+    hsq3: Part.Shape | None = None
 
     if obj.ScrewHoles and obj.MagnetHoles:
         for _ in range(obj.xGridUnits):
             ytranslate = zeromm
             for _ in range(obj.yGridUnits):
-                B1 = Part.makeBox(
+                b1 = Part.makeBox(
                     obj.ScrewHoleDiameter,
                     obj.ScrewHoleDiameter,
                     sqbr2_depth,
-                    App.Vector(-sq_bridge2_pos, -sq_bridge2_pos, -obj.TotalHeight),
-                    App.Vector(0, 0, 1),
+                    FreeCAD.Vector(-sq_bridge2_pos, -sq_bridge2_pos, -obj.TotalHeight),
+                    FreeCAD.Vector(0, 0, 1),
                 )
-                B2 = Part.makeBox(
+                b2 = Part.makeBox(
                     obj.ScrewHoleDiameter,
                     obj.ScrewHoleDiameter,
                     sqbr2_depth,
-                    App.Vector(
+                    FreeCAD.Vector(
                         -obj.GridSize / 2
                         + obj.MagnetHoleDistanceFromEdge
                         - obj.ScrewHoleDiameter / 2,
                         -sq_bridge2_pos,
                         -obj.TotalHeight,
                     ),
-                    App.Vector(0, 0, 1),
+                    FreeCAD.Vector(0, 0, 1),
                 )
-                B3 = Part.makeBox(
+                b3 = Part.makeBox(
                     obj.ScrewHoleDiameter,
                     obj.ScrewHoleDiameter,
                     sqbr2_depth,
-                    App.Vector(
+                    FreeCAD.Vector(
                         -sq_bridge2_pos,
                         -obj.GridSize / 2
                         + obj.MagnetHoleDistanceFromEdge
                         - obj.ScrewHoleDiameter / 2,
                         -obj.TotalHeight,
                     ),
-                    App.Vector(0, 0, 1),
+                    FreeCAD.Vector(0, 0, 1),
                 )
-                B4 = Part.makeBox(
+                b4 = Part.makeBox(
                     obj.ScrewHoleDiameter,
                     obj.ScrewHoleDiameter,
                     sqbr2_depth,
-                    App.Vector(
+                    FreeCAD.Vector(
                         -obj.GridSize / 2
                         + obj.MagnetHoleDistanceFromEdge
                         - obj.ScrewHoleDiameter / 2,
@@ -1223,7 +1252,7 @@ def MakeBottomHoles(self, obj):
                         - obj.ScrewHoleDiameter / 2,
                         -obj.TotalHeight,
                     ),
-                    App.Vector(0, 0, 1),
+                    FreeCAD.Vector(0, 0, 1),
                 )
 
                 arc_pt_off_x = (
@@ -1233,191 +1262,200 @@ def MakeBottomHoles(self, obj):
                 ) * unitmm
                 arc_pt_off_y = obj.ScrewHoleDiameter / 2
 
-                VA1 = App.Vector(
+                va1 = FreeCAD.Vector(
                     hole_pos + arc_pt_off_x,
                     hole_pos + arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VA2 = App.Vector(
+                va2 = FreeCAD.Vector(
                     hole_pos - arc_pt_off_x,
                     hole_pos + arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VA3 = App.Vector(
+                va3 = FreeCAD.Vector(
                     hole_pos - arc_pt_off_x,
                     hole_pos - arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VA4 = App.Vector(
+                va4 = FreeCAD.Vector(
                     hole_pos + arc_pt_off_x,
                     hole_pos - arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VAR1 = App.Vector(
+                var1 = FreeCAD.Vector(
                     hole_pos + obj.MagnetHoleDiameter / 2,
                     hole_pos,
                     -obj.TotalHeight,
                 )
-                VAR2 = App.Vector(
+                var2 = FreeCAD.Vector(
                     hole_pos - obj.MagnetHoleDiameter / 2,
                     hole_pos,
                     -obj.TotalHeight,
                 )
 
-                VA5 = App.Vector(
+                va5 = FreeCAD.Vector(
                     -hole_pos + arc_pt_off_x,
                     hole_pos + arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VA6 = App.Vector(
+                va6 = FreeCAD.Vector(
                     -hole_pos - arc_pt_off_x,
                     hole_pos + arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VA7 = App.Vector(
+                va7 = FreeCAD.Vector(
                     -hole_pos - arc_pt_off_x,
                     hole_pos - arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VA8 = App.Vector(
+                va8 = FreeCAD.Vector(
                     -hole_pos + arc_pt_off_x,
                     hole_pos - arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VAR3 = App.Vector(
+                var3 = FreeCAD.Vector(
                     -hole_pos + obj.MagnetHoleDiameter / 2,
                     hole_pos,
                     -obj.TotalHeight,
                 )
-                VAR4 = App.Vector(
+                var4 = FreeCAD.Vector(
                     -hole_pos - obj.MagnetHoleDiameter / 2,
                     hole_pos,
                     -obj.TotalHeight,
                 )
 
-                VA9 = App.Vector(
+                va9 = FreeCAD.Vector(
                     hole_pos + arc_pt_off_x,
                     -hole_pos + arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VA10 = App.Vector(
+                va10 = FreeCAD.Vector(
                     hole_pos - arc_pt_off_x,
                     -hole_pos + arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VA11 = App.Vector(
+                va11 = FreeCAD.Vector(
                     hole_pos - arc_pt_off_x,
                     -hole_pos - arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VA12 = App.Vector(
+                va12 = FreeCAD.Vector(
                     hole_pos + arc_pt_off_x,
                     -hole_pos - arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VAR5 = App.Vector(
+                var5 = FreeCAD.Vector(
                     hole_pos + obj.MagnetHoleDiameter / 2,
                     -hole_pos,
                     -obj.TotalHeight,
                 )
-                VAR6 = App.Vector(
+                var6 = FreeCAD.Vector(
                     hole_pos - obj.MagnetHoleDiameter / 2,
                     -hole_pos,
                     -obj.TotalHeight,
                 )
 
-                VA13 = App.Vector(
+                va13 = FreeCAD.Vector(
                     -hole_pos + arc_pt_off_x,
                     -hole_pos + arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VA14 = App.Vector(
+                va14 = FreeCAD.Vector(
                     -hole_pos - arc_pt_off_x,
                     -hole_pos + arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VA15 = App.Vector(
+                va15 = FreeCAD.Vector(
                     -hole_pos - arc_pt_off_x,
                     -hole_pos - arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VA16 = App.Vector(
+                va16 = FreeCAD.Vector(
                     -hole_pos + arc_pt_off_x,
                     -hole_pos - arc_pt_off_y,
                     -obj.TotalHeight,
                 )
-                VAR7 = App.Vector(
+                var7 = FreeCAD.Vector(
                     -hole_pos + obj.MagnetHoleDiameter / 2,
                     -hole_pos,
                     -obj.TotalHeight,
                 )
-                VAR8 = App.Vector(
+                var8 = FreeCAD.Vector(
                     -hole_pos - obj.MagnetHoleDiameter / 2,
                     -hole_pos,
                     -obj.TotalHeight,
                 )
 
-                L1 = Part.LineSegment(VA1, VA2)
-                L2 = Part.LineSegment(VA3, VA4)
-                L3 = Part.LineSegment(VA5, VA6)
-                L4 = Part.LineSegment(VA7, VA8)
-                L5 = Part.LineSegment(VA9, VA10)
-                L6 = Part.LineSegment(VA11, VA12)
-                L7 = Part.LineSegment(VA13, VA14)
-                L8 = Part.LineSegment(VA15, VA16)
+                line_1 = Part.LineSegment(va1, va2)
+                line_2 = Part.LineSegment(va3, va4)
+                line_3 = Part.LineSegment(va5, va6)
+                line_4 = Part.LineSegment(va7, va8)
+                line_5 = Part.LineSegment(va9, va10)
+                line_6 = Part.LineSegment(va11, va12)
+                line_7 = Part.LineSegment(va13, va14)
+                line_8 = Part.LineSegment(va15, va16)
 
-                AR1 = Part.Arc(VA1, VAR1, VA4)
-                AR2 = Part.Arc(VA2, VAR2, VA3)
-                AR3 = Part.Arc(VA5, VAR3, VA8)
-                AR4 = Part.Arc(VA6, VAR4, VA7)
-                AR5 = Part.Arc(VA9, VAR5, VA12)
-                AR6 = Part.Arc(VA10, VAR6, VA11)
-                AR7 = Part.Arc(VA13, VAR7, VA16)
-                AR8 = Part.Arc(VA14, VAR8, VA15)
+                ar1 = Part.Arc(va1, var1, va4)
+                ar2 = Part.Arc(va2, var2, va3)
+                ar3 = Part.Arc(va5, var3, va8)
+                ar4 = Part.Arc(va6, var4, va7)
+                ar5 = Part.Arc(va9, var5, va12)
+                ar6 = Part.Arc(va10, var6, va11)
+                ar7 = Part.Arc(va13, var7, va16)
+                ar8 = Part.Arc(va14, var8, va15)
 
-                S1 = Part.Shape([L1, AR1, AR2, L2])
-                S2 = Part.Shape([L3, AR3, AR4, L4])
-                S3 = Part.Shape([L5, AR5, AR6, L6])
-                S4 = Part.Shape([L7, AR7, AR8, L8])
+                s1 = Part.Shape([line_1, ar1, ar2, line_2])
+                s2 = Part.Shape([line_3, ar3, ar4, line_4])
+                s3 = Part.Shape([line_5, ar5, ar6, line_6])
+                s4 = Part.Shape([line_7, ar7, ar8, line_8])
 
-                w1 = Part.Wire(S1.Edges)
-                w2 = Part.Wire(S2.Edges)
-                w3 = Part.Wire(S3.Edges)
-                w4 = Part.Wire(S4.Edges)
+                w1 = Part.Wire(s1.Edges)
+                w2 = Part.Wire(s2.Edges)
+                w3 = Part.Wire(s3.Edges)
+                w4 = Part.Wire(s4.Edges)
 
                 sq1_1 = Part.Face(w1)
-                sq1_1 = sq1_1.extrude(App.Vector(0, 0, sqbr1_depth))
+                sq1_1 = sq1_1.extrude(FreeCAD.Vector(0, 0, sqbr1_depth))
 
                 sq1_2 = Part.Face(w2)
-                sq1_2 = sq1_2.extrude(App.Vector(0, 0, sqbr1_depth))
+                sq1_2 = sq1_2.extrude(FreeCAD.Vector(0, 0, sqbr1_depth))
 
                 sq1_3 = Part.Face(w3)
-                sq1_3 = sq1_3.extrude(App.Vector(0, 0, sqbr1_depth))
+                sq1_3 = sq1_3.extrude(FreeCAD.Vector(0, 0, sqbr1_depth))
 
                 sq1_4 = Part.Face(w4)
-                sq1_4 = sq1_4.extrude(App.Vector(0, 0, sqbr1_depth))
+                sq1_4 = sq1_4.extrude(FreeCAD.Vector(0, 0, sqbr1_depth))
 
-                HM1 = Part.Solid.multiFuse(sq1_1, [B1, B2, B3, B4, sq1_2, sq1_3, sq1_4])
+                hm1 = Part.Solid.multiFuse(sq1_1, [b1, b2, b3, b4, sq1_2, sq1_3, sq1_4])
 
-                HM1.translate(App.Vector(xtranslate, ytranslate, 0))
-                HSQ2 = HM1 if HSQ2 is None else HSQ2.fuse(HM1)
+                hm1.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
+                hsq2 = hm1 if hsq2 is None else hsq2.fuse(hm1)
                 ytranslate += obj.GridSize
 
-            HSQ3 = HSQ2 if HSQ3 is None else HSQ3.fuse(HSQ2)
+            hsq3 = hsq2 if hsq3 is None else hsq3.fuse(hsq2)
             xtranslate += obj.GridSize
 
     if obj.ScrewHoles and not obj.MagnetHoles:
-        fusetotal = HS3
+        fusetotal = hs3
     if obj.MagnetHoles and not obj.ScrewHoles:
-        fusetotal = HM3
+        fusetotal = hm3
     if obj.ScrewHoles and obj.MagnetHoles:
-        fusetotal = Part.Solid.multiFuse(HM3, [HS3, HSQ3])
+        fusetotal = Part.Solid.multiFuse(hm3, [hs3, hsq3])
 
     return fusetotal
 
 
-def MakeEcoBinCut(self, obj):
-    func_fuse = RoundedRectangleExtrude(
+def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
+    """Create eco bin cutouts.
+
+    Args:
+        obj (FreeCAD.DocumentObject): Document object.
+
+    Returns:
+        Part.Shape: Eco bin cutout shape.
+
+    """
+    func_fuse = rounded_rectangle_extrude(
         obj.xTotalWidth - obj.WallThickness * 2,
         obj.yTotalWidth - obj.WallThickness * 2,
         -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness,
@@ -1425,14 +1463,14 @@ def MakeEcoBinCut(self, obj):
         obj.BinOuterRadius - obj.WallThickness,
     )
     func_fuse.translate(
-        App.Vector(
+        FreeCAD.Vector(
             obj.xTotalWidth / 2 - obj.BinUnit / 2,
             obj.yTotalWidth / 2 - obj.BinUnit / 2,
             0,
         ),
     )
 
-    func_fuse = RoundedRectangleExtrude(
+    func_fuse = rounded_rectangle_extrude(
         obj.xTotalWidth - obj.WallThickness * 2,
         obj.yTotalWidth - obj.WallThickness * 2,
         -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness,
@@ -1440,7 +1478,7 @@ def MakeEcoBinCut(self, obj):
         obj.BinOuterRadius - obj.WallThickness,
     )
     func_fuse.translate(
-        App.Vector(
+        FreeCAD.Vector(
             obj.xTotalWidth / 2 - obj.BinUnit / 2,
             obj.yTotalWidth / 2 - obj.BinUnit / 2,
             0,
@@ -1469,10 +1507,10 @@ def MakeEcoBinCut(self, obj):
         magoffset = 0 * unitmm
         tp_chf_offset = 0 * unitmm
 
-    if bt_chf_rad <= 0.01:
+    if bt_chf_rad <= SMALL_NUMBER:
         bt_chf_rad = 0.01 * unitmm
 
-    if v_chf_rad <= 0.01:
+    if v_chf_rad <= SMALL_NUMBER:
         v_chf_rad = 0.01 * unitmm
 
     xtranslate = zeromm
@@ -1483,7 +1521,7 @@ def MakeEcoBinCut(self, obj):
     for _ in range(obj.xGridUnits):
         ytranslate = zeromm
         for _ in range(obj.yGridUnits):
-            bottom_chamfer = RoundedRectangleChamfer(
+            bottom_chamfer = rounded_rectangle_chamfer(
                 bt_cmf_width,
                 bt_cmf_width,
                 -obj.TotalHeight + obj.BaseWallThickness + magoffset,
@@ -1491,7 +1529,7 @@ def MakeEcoBinCut(self, obj):
                 bt_chf_rad,
             )
 
-            bottom_chamfer = RoundedRectangleChamfer(
+            bottom_chamfer = rounded_rectangle_chamfer(
                 bt_cmf_width,
                 bt_cmf_width,
                 -obj.TotalHeight + obj.BaseWallThickness + magoffset,
@@ -1499,7 +1537,7 @@ def MakeEcoBinCut(self, obj):
                 bt_chf_rad,
             )
 
-            vertical_section = RoundedRectangleExtrude(
+            vertical_section = rounded_rectangle_extrude(
                 vert_width,
                 vert_width,
                 -obj.TotalHeight + obj.BaseWallThickness + 0.4 * unitmm + magoffset,
@@ -1512,7 +1550,7 @@ def MakeEcoBinCut(self, obj):
             )
             assembly = Part.Shape.fuse(bottom_chamfer, vertical_section)
 
-            top_chamfer = RoundedRectangleChamfer(
+            top_chamfer = rounded_rectangle_chamfer(
                 vert_width + tp_chf_offset,
                 vert_width + tp_chf_offset,
                 -obj.TotalHeight
@@ -1525,7 +1563,7 @@ def MakeEcoBinCut(self, obj):
             )
             assembly = Part.Solid.fuse(assembly, top_chamfer)
 
-            assembly.translate(App.Vector(xtranslate, ytranslate, 0))
+            assembly.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
 
             assembly1 = assembly if assembly1 is None else assembly1.fuse(assembly)
             ytranslate += obj.GridSize
@@ -1535,7 +1573,7 @@ def MakeEcoBinCut(self, obj):
 
     func_fuse = func_fuse.fuse(assembly2)
 
-    outer_trim1 = RoundedRectangleExtrude(
+    outer_trim1 = rounded_rectangle_extrude(
         obj.xTotalWidth - obj.WallThickness * 2,
         obj.yTotalWidth - obj.WallThickness * 2,
         -obj.TotalHeight,
@@ -1543,14 +1581,14 @@ def MakeEcoBinCut(self, obj):
         obj.BinOuterRadius - obj.WallThickness,
     )
     outer_trim1.translate(
-        App.Vector(
+        FreeCAD.Vector(
             obj.xTotalWidth / 2 - obj.BinUnit / 2,
             obj.yTotalWidth / 2 - obj.BinUnit / 2,
             0,
         ),
     )
 
-    outer_trim2 = RoundedRectangleExtrude(
+    outer_trim2 = rounded_rectangle_extrude(
         obj.xTotalWidth + 20 * unitmm,
         obj.yTotalWidth + 20 * unitmm,
         -obj.TotalHeight,
@@ -1558,7 +1596,7 @@ def MakeEcoBinCut(self, obj):
         obj.BinOuterRadius,
     )
     outer_trim2.translate(
-        App.Vector(
+        FreeCAD.Vector(
             obj.xTotalWidth / 2 - obj.BinUnit / 2,
             obj.yTotalWidth / 2 - obj.BinUnit / 2,
             0,
@@ -1590,14 +1628,14 @@ def MakeEcoBinCut(self, obj):
             obj.DividerThickness,
             obj.yTotalWidth,
             xdivheight,
-            App.Vector(
+            FreeCAD.Vector(
                 -obj.BinUnit / 2 + obj.DividerThickness,
                 -obj.BinUnit / 2,
                 -obj.TotalHeight,
             ),
-            App.Vector(0, 0, 1),
+            FreeCAD.Vector(0, 0, 1),
         )
-        comp.translate(App.Vector(xtranslate, 0, 0))
+        comp.translate(FreeCAD.Vector(xtranslate, 0, 0))
 
         xdiv = comp if xdiv is None else xdiv.fuse(comp)
         xtranslate += xcomp_w + obj.DividerThickness
@@ -1609,10 +1647,10 @@ def MakeEcoBinCut(self, obj):
             obj.xTotalWidth,
             obj.DividerThickness,
             ydivheight,
-            App.Vector(-obj.BinUnit / 2, -obj.BinUnit / 2, -obj.TotalHeight),
-            App.Vector(0, 0, 1),
+            FreeCAD.Vector(-obj.BinUnit / 2, -obj.BinUnit / 2, -obj.TotalHeight),
+            FreeCAD.Vector(0, 0, 1),
         )
-        comp.translate(App.Vector(0, ytranslate, 0))
+        comp.translate(FreeCAD.Vector(0, ytranslate, 0))
         ydiv = comp if ydiv is None else ydiv.fuse(comp)
         ytranslate += ycomp_w + obj.DividerThickness
 
