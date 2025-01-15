@@ -1,6 +1,8 @@
 # Gridfinity Standard Dimensions are placed here, changing theses values will alter the dimensions of the bins and baseplates generated which may result in non compatable bins. Alternativly you can make a custom grid size to your liking.
 
-GRID_SIZE = 42
+GRID_SIZE = 42 # to remove once all bins have independant x and y grid size
+X_GRID_SIZE = 42
+Y_GRID_SIZE = 42
 HEIGHT_UNIT = 7
 
 BIN_BASE_BOTTOM_CHAMFER = 0.8
@@ -20,9 +22,9 @@ BASEPLATE_OUTER_RADIUS = 4.0
 BASEPLATE_VERTICAL_RADIUS = 1.85
 BASEPLATE_BOTTOM_RADIUS = 1.15
 
-TOLERANCE = 0.25
+CLEARANCE = 0.25
 
-BIN_UNIT = GRID_SIZE - TOLERANCE * 2
+BIN_UNIT = GRID_SIZE - CLEARANCE * 2
 
 MAGNET_HOLE_DIAMETER = 6.5
 MAGNET_HOLE_DEPTH = 2.4
