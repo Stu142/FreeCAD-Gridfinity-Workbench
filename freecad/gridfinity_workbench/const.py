@@ -1,6 +1,6 @@
 # Gridfinity Standard Dimensions are placed here, changing theses values will alter the dimensions of the bins and baseplates generated which may result in non compatable bins. Alternativly you can make a custom grid size to your liking.
 
-GRID_SIZE = 42 # to remove once all bins have independant x and y grid size
+GRID_SIZE = 42  # to remove once all bins have independant x and y grid size
 X_GRID_SIZE = 42
 Y_GRID_SIZE = 42
 HEIGHT_UNIT = 7

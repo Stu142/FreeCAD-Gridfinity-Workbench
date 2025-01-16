@@ -85,6 +85,7 @@ def createRoundedL(A, B, C, D, xoffset, yoffset, zsketchplane, radius):
 
     return wire
 
+
 def RoundedLExtrude(A, B, C, D, xoffset, yoffset, zsketchplane, radius, height):
     w1 = createRoundedL(A, B, C, D, xoffset, yoffset, zsketchplane, radius)
     face = Part.Face(w1)
@@ -92,7 +93,6 @@ def RoundedLExtrude(A, B, C, D, xoffset, yoffset, zsketchplane, radius, height):
 
 
 def MakeComplexBinBase(self, obj, binlayout):
-
     xmaxgrids = obj.aGridUnits
     ymaxgrids = obj.bGridUnits + obj.dGridUnits
 
@@ -144,7 +144,6 @@ def MakeComplexBinBase(self, obj, binlayout):
         ytranslate = zeromm
         for y in range(ymaxgrids):
             if binlayout[x][y]:
-
                 b = assembly.copy()
                 b.translate(App.Vector(xtranslate, ytranslate, 0))
 
@@ -172,7 +171,6 @@ def MakeComplexBinBase(self, obj, binlayout):
 
 
 def MakeLMidSection(self, obj, binlayout):
-
     lsolid = RoundedLExtrude(
         obj.aTotalDimension,
         obj.bTotalDimension,
@@ -187,8 +185,8 @@ def MakeLMidSection(self, obj, binlayout):
 
     return lsolid
 
-def MakeComplexBottomHoles(self, obj, binlayout):
 
+def MakeComplexBottomHoles(self, obj, binlayout):
     gridsize = obj.xGridSize
     xmaxgrids = obj.aGridUnits
     ymaxgrids = obj.bGridUnits + obj.dGridUnits
@@ -289,9 +287,7 @@ def MakeComplexBottomHoles(self, obj, binlayout):
         for x in range(xmaxgrids):
             ytranslate = zeromm
             for y in range(ymaxgrids):
-
                 if binlayout[x][y]:
-
                     hm1 = HM1.copy()
                     hm1.translate(App.Vector(xtranslate, ytranslate, 0))
 
@@ -311,7 +307,6 @@ def MakeComplexBottomHoles(self, obj, binlayout):
 
     xtranslate = zeromm
     ytranslate = zeromm
-
 
     if obj.ScrewHoles:
         CS1 = Part.makeCylinder(
@@ -346,7 +341,6 @@ def MakeComplexBottomHoles(self, obj, binlayout):
             ytranslate = zeromm
             for y in range(ymaxgrids):
                 if binlayout[x][y]:
-
                     hs1 = HS1.copy()
                     hs1.translate(App.Vector(xtranslate, ytranslate, 0))
 
@@ -418,8 +412,7 @@ def MakeComplexBottomHoles(self, obj, binlayout):
 
         arc_pt_off_x = (
             math.sqrt(
-                ((obj.MagnetHoleDiameter / 2) ** 2)
-                - ((obj.ScrewHoleDiameter / 2) ** 2)
+                ((obj.MagnetHoleDiameter / 2) ** 2) - ((obj.ScrewHoleDiameter / 2) ** 2)
             )
         ) * unitmm
         arc_pt_off_y = obj.ScrewHoleDiameter / 2
@@ -548,7 +541,6 @@ def MakeComplexBottomHoles(self, obj, binlayout):
             ytranslate = zeromm
             for y in range(ymaxgrids):
                 if binlayout[x][y]:
-
                     hsq1 = HSQ1.copy()
                     hsq1.translate(App.Vector(xtranslate, ytranslate, 0))
 
@@ -566,7 +558,6 @@ def MakeComplexBottomHoles(self, obj, binlayout):
         else:
             HSQ3 = Part.Solid.multiFuse(hsqfirst, parts)
 
-
     if obj.ScrewHoles and not obj.MagnetHoles:
         fusetotal = HS3
     if obj.MagnetHoles and not obj.ScrewHoles:
@@ -581,7 +572,6 @@ def MakeComplexBottomHoles(self, obj, binlayout):
     )
 
     return fusetotal
-
 
 
 def createRoundedRectangle(xwidth, ywidth, zsketchplane, radius):

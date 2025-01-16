@@ -2761,6 +2761,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
     def __setstate__(self, state):
         return None
 
+
 class LBinBlank(FoundationGridfinity):
     def __init__(self, obj):
         super(LBinBlank, self).__init__(obj)
@@ -3122,7 +3123,6 @@ class LBinBlank(FoundationGridfinity):
         if obj.ScrewHoles or obj.MagnetHoles:
             holes = MakeComplexBottomHoles(self, obj, binlayout)
             fusetotal = Part.Shape.cut(fusetotal, holes)
-
 
         return fusetotal
 
