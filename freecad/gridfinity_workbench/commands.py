@@ -108,7 +108,7 @@ class BaseCommand:
                 )
             else:
                 obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", cls.NAME)
-            ViewProviderGridfinity(obj.ViewObject, cls.Pixmap)
+            ViewProviderGridfinity(obj.ViewObject, str(cls.Pixmap))
             cls.GRIDFINITY_FUNCTION(obj)
 
             if body:

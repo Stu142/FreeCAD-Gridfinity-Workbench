@@ -32,7 +32,7 @@ class GridfinityWorkbench(Workbench):
 
     ToolTip = "FreeCAD Gridfinity Workbench"
 
-    Icon = ICONPATH / "gridfinity_workbench_icon.svg"
+    Icon = str(ICONPATH / "gridfinity_workbench_icon.svg")
 
     toolbox: ClassVar[list[str]] = [
         "CreateBinBlank",
