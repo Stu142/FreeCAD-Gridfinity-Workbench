@@ -933,480 +933,134 @@ def make_bottom_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:
 
     """
     hole_pos = obj.GridSize / 2 - obj.MagnetHoleDistanceFromEdge
-    sq_bridge2_pos = -obj.GridSize / 2 + obj.MagnetHoleDistanceFromEdge + obj.ScrewHoleDiameter / 2
 
     sqbr1_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight
     sqbr2_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight * 2
 
-    xtranslate = zeromm
-    ytranslate = zeromm
-    hm2: Part.Shape | None = None
-    hm3: Part.Shape | None = None
+    bottom_hole_shape: Part.Shape | None = None
+    hole_shape_sub_array: Part.Shape | None = None
 
     if obj.MagnetHoles:
-        for _ in range(obj.xGridUnits):
-            ytranslate = zeromm
-            for _ in range(obj.yGridUnits):
-                if obj.MagnetHolesShape == "Hex":
-                    # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed
-                    # circle radius
-                    radius = obj.MagnetHoleDiameter / math.sqrt(3)
+        if obj.MagnetHolesShape == "Hex":
+            # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed
+            # circle radius
+            radius = obj.MagnetHoleDiameter / math.sqrt(3)
+            p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+            p.Polygon = 6
+            p.Circumradius = radius
+            p.recompute()
 
-                    n_sides = 6
+            p_wire: Part.Wire = p.Shape
+            magnet_hole_shape = Part.Face(p_wire).extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
+            FreeCAD.ActiveDocument.removeObject(p.Name)
+        else:
+            magnet_hole_shape = Part.makeCylinder(
+                obj.MagnetHoleDiameter / 2,
+                obj.MagnetHoleDepth,
+                FreeCAD.Vector(0, 0, 0),
+                FreeCAD.Vector(0, 0, 1),
+            )
 
-                    rot = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), 0)
-
-                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = n_sides
-                    p.Circumradius = radius
-                    p.Placement = FreeCAD.Placement(
-                        FreeCAD.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
-                        rot,
-                    )
-                    p.recompute()
-                    f = Part.Face(Part.Wire(p.Shape.Edges))
-                    c1 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
-                    FreeCAD.ActiveDocument.removeObject(p.Name)
-
-                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = n_sides
-                    p.Circumradius = radius
-                    p.Placement = FreeCAD.Placement(
-                        FreeCAD.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
-                        rot,
-                    )
-                    p.recompute()
-                    f = Part.Face(Part.Wire(p.Shape.Edges))
-                    c2 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
-                    FreeCAD.ActiveDocument.removeObject(p.Name)
-
-                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = n_sides
-                    p.Circumradius = radius
-                    p.Placement = FreeCAD.Placement(
-                        FreeCAD.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
-                        rot,
-                    )
-                    p.recompute()
-                    f = Part.Face(Part.Wire(p.Shape.Edges))
-                    c3 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
-                    FreeCAD.ActiveDocument.removeObject(p.Name)
-
-                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = n_sides
-                    p.Circumradius = radius
-                    p.Placement = FreeCAD.Placement(
-                        FreeCAD.Vector(hole_pos, hole_pos, -obj.TotalHeight),
-                        rot,
-                    )
-                    p.recompute()
-                    f = Part.Face(Part.Wire(p.Shape.Edges))
-                    c4 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
-                    FreeCAD.ActiveDocument.removeObject(p.Name)
-
-                else:
-                    c1 = Part.makeCylinder(
-                        obj.MagnetHoleDiameter / 2,
-                        obj.MagnetHoleDepth,
-                        FreeCAD.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
-                        FreeCAD.Vector(0, 0, 1),
-                    )
-                    c2 = Part.makeCylinder(
-                        obj.MagnetHoleDiameter / 2,
-                        obj.MagnetHoleDepth,
-                        FreeCAD.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
-                        FreeCAD.Vector(0, 0, 1),
-                    )
-                    c3 = Part.makeCylinder(
-                        obj.MagnetHoleDiameter / 2,
-                        obj.MagnetHoleDepth,
-                        FreeCAD.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
-                        FreeCAD.Vector(0, 0, 1),
-                    )
-                    c4 = Part.makeCylinder(
-                        obj.MagnetHoleDiameter / 2,
-                        obj.MagnetHoleDepth,
-                        FreeCAD.Vector(hole_pos, hole_pos, -obj.TotalHeight),
-                        FreeCAD.Vector(0, 0, 1),
-                    )
-                if obj.MagnetHolesShape == "Hex":
-                    n_sides = 6
-
-                    rot = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), 0)
-
-                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = n_sides
-                    p.Circumradius = obj.MagnetHoleDiameter / 2
-                    p.Placement = FreeCAD.Placement(
-                        FreeCAD.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
-                        rot,
-                    )
-                    p.recompute()
-                    f = Part.Face(Part.Wire(p.Shape.Edges))
-                    c1 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
-                    FreeCAD.ActiveDocument.removeObject(p.Name)
-
-                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = n_sides
-                    p.Circumradius = obj.MagnetHoleDiameter / 2
-                    p.Placement = FreeCAD.Placement(
-                        FreeCAD.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
-                        rot,
-                    )
-                    p.recompute()
-                    f = Part.Face(Part.Wire(p.Shape.Edges))
-                    c2 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
-                    FreeCAD.ActiveDocument.removeObject(p.Name)
-
-                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = n_sides
-                    p.Circumradius = obj.MagnetHoleDiameter / 2
-                    p.Placement = FreeCAD.Placement(
-                        FreeCAD.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
-                        rot,
-                    )
-                    p.recompute()
-                    f = Part.Face(Part.Wire(p.Shape.Edges))
-                    c3 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
-                    FreeCAD.ActiveDocument.removeObject(p.Name)
-
-                    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
-                    p.Polygon = n_sides
-                    p.Circumradius = obj.MagnetHoleDiameter / 2
-                    p.Placement = FreeCAD.Placement(
-                        FreeCAD.Vector(hole_pos, hole_pos, -obj.TotalHeight),
-                        rot,
-                    )
-                    p.recompute()
-                    f = Part.Face(Part.Wire(p.Shape.Edges))
-                    c4 = f.extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
-                    FreeCAD.ActiveDocument.removeObject(p.Name)
-
-                else:
-                    c1 = Part.makeCylinder(
-                        obj.MagnetHoleDiameter / 2,
-                        obj.MagnetHoleDepth,
-                        FreeCAD.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
-                        FreeCAD.Vector(0, 0, 1),
-                    )
-                    c2 = Part.makeCylinder(
-                        obj.MagnetHoleDiameter / 2,
-                        obj.MagnetHoleDepth,
-                        FreeCAD.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
-                        FreeCAD.Vector(0, 0, 1),
-                    )
-                    c3 = Part.makeCylinder(
-                        obj.MagnetHoleDiameter / 2,
-                        obj.MagnetHoleDepth,
-                        FreeCAD.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
-                        FreeCAD.Vector(0, 0, 1),
-                    )
-                    c4 = Part.makeCylinder(
-                        obj.MagnetHoleDiameter / 2,
-                        obj.MagnetHoleDepth,
-                        FreeCAD.Vector(hole_pos, hole_pos, -obj.TotalHeight),
-                        FreeCAD.Vector(0, 0, 1),
-                    )
-
-                hm1 = Part.Solid.multiFuse(c1, [c2, c3, c4])
-
-                hm1.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
-
-                hm2 = hm1 if hm2 is None else hm2.fuse(hm1)
-                ytranslate += obj.GridSize
-
-            hm3 = hm2 if hm3 is None else hm3.fuse(hm2)
-            xtranslate += obj.GridSize
-
-    xtranslate = zeromm
-    ytranslate = zeromm
-    hs2: Part.Shape | None = None
-    hs3: Part.Shape | None = None
+        bottom_hole_shape = (
+            magnet_hole_shape
+            if bottom_hole_shape is None
+            else bottom_hole_shape.fuse(magnet_hole_shape)
+        )
 
     if obj.ScrewHoles:
-        for _ in range(obj.xGridUnits):
-            ytranslate = zeromm
-            for _ in range(obj.yGridUnits):
-                cs1 = Part.makeCylinder(
-                    obj.ScrewHoleDiameter / 2,
-                    obj.ScrewHoleDepth,
-                    FreeCAD.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
-                    FreeCAD.Vector(0, 0, 1),
-                )
-                cs2 = Part.makeCylinder(
-                    obj.ScrewHoleDiameter / 2,
-                    obj.ScrewHoleDepth,
-                    FreeCAD.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
-                    FreeCAD.Vector(0, 0, 1),
-                )
-                cs3 = Part.makeCylinder(
-                    obj.ScrewHoleDiameter / 2,
-                    obj.ScrewHoleDepth,
-                    FreeCAD.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
-                    FreeCAD.Vector(0, 0, 1),
-                )
-                cs4 = Part.makeCylinder(
-                    obj.ScrewHoleDiameter / 2,
-                    obj.ScrewHoleDepth,
-                    FreeCAD.Vector(hole_pos, hole_pos, -obj.TotalHeight),
-                    FreeCAD.Vector(0, 0, 1),
-                )
+        screw_hole_shape = Part.makeCylinder(
+            obj.ScrewHoleDiameter / 2,
+            obj.ScrewHoleDepth,
+            FreeCAD.Vector(0, 0, 0),
+            FreeCAD.Vector(0, 0, 1),
+        )
 
-                hm1 = Part.Solid.multiFuse(cs1, [cs2, cs3, cs4])
-
-                hm1.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
-                hs2 = hm1 if hs2 is None else hs2.fuse(hm1)
-                ytranslate += obj.GridSize
-
-            hs3 = hs2 if hs3 is None else hs3.fuse(hs2)
-            xtranslate += obj.GridSize
-
-    xtranslate = zeromm
-    ytranslate = zeromm
-    hsq2: Part.Shape | None = None
-    hsq3: Part.Shape | None = None
+        bottom_hole_shape = (
+            screw_hole_shape
+            if bottom_hole_shape is None
+            else bottom_hole_shape.fuse(screw_hole_shape)
+        )
 
     if obj.ScrewHoles and obj.MagnetHoles:
-        for _ in range(obj.xGridUnits):
-            ytranslate = zeromm
-            for _ in range(obj.yGridUnits):
-                b1 = Part.makeBox(
-                    obj.ScrewHoleDiameter,
-                    obj.ScrewHoleDiameter,
-                    sqbr2_depth,
-                    FreeCAD.Vector(-sq_bridge2_pos, -sq_bridge2_pos, -obj.TotalHeight),
-                    FreeCAD.Vector(0, 0, 1),
-                )
-                b2 = Part.makeBox(
-                    obj.ScrewHoleDiameter,
-                    obj.ScrewHoleDiameter,
-                    sqbr2_depth,
-                    FreeCAD.Vector(
-                        -obj.GridSize / 2
-                        + obj.MagnetHoleDistanceFromEdge
-                        - obj.ScrewHoleDiameter / 2,
-                        -sq_bridge2_pos,
-                        -obj.TotalHeight,
-                    ),
-                    FreeCAD.Vector(0, 0, 1),
-                )
-                b3 = Part.makeBox(
-                    obj.ScrewHoleDiameter,
-                    obj.ScrewHoleDiameter,
-                    sqbr2_depth,
-                    FreeCAD.Vector(
-                        -sq_bridge2_pos,
-                        -obj.GridSize / 2
-                        + obj.MagnetHoleDistanceFromEdge
-                        - obj.ScrewHoleDiameter / 2,
-                        -obj.TotalHeight,
-                    ),
-                    FreeCAD.Vector(0, 0, 1),
-                )
-                b4 = Part.makeBox(
-                    obj.ScrewHoleDiameter,
-                    obj.ScrewHoleDiameter,
-                    sqbr2_depth,
-                    FreeCAD.Vector(
-                        -obj.GridSize / 2
-                        + obj.MagnetHoleDistanceFromEdge
-                        - obj.ScrewHoleDiameter / 2,
-                        -obj.GridSize / 2
-                        + obj.MagnetHoleDistanceFromEdge
-                        - obj.ScrewHoleDiameter / 2,
-                        -obj.TotalHeight,
-                    ),
-                    FreeCAD.Vector(0, 0, 1),
-                )
+        b1 = Part.makeBox(
+            obj.ScrewHoleDiameter,
+            obj.ScrewHoleDiameter,
+            sqbr2_depth,
+            FreeCAD.Vector(-obj.ScrewHoleDiameter / 2, -obj.ScrewHoleDiameter / 2, 0),
+            FreeCAD.Vector(0, 0, 1),
+        )
+        arc_pt_off_x = (
+            math.sqrt(
+                ((obj.MagnetHoleDiameter / 2) ** 2) - ((obj.ScrewHoleDiameter / 2) ** 2),
+            )
+        ) * unitmm
+        arc_pt_off_y = obj.ScrewHoleDiameter / 2
 
-                arc_pt_off_x = (
-                    math.sqrt(
-                        ((obj.MagnetHoleDiameter / 2) ** 2) - ((obj.ScrewHoleDiameter / 2) ** 2),
-                    )
-                ) * unitmm
-                arc_pt_off_y = obj.ScrewHoleDiameter / 2
+        va1 = FreeCAD.Vector(
+            arc_pt_off_x,
+            arc_pt_off_y,
+            0,
+        )
+        va2 = FreeCAD.Vector(
+            -arc_pt_off_x,
+            arc_pt_off_y,
+            0,
+        )
+        va3 = FreeCAD.Vector(
+            -arc_pt_off_x,
+            -arc_pt_off_y,
+            0,
+        )
+        va4 = FreeCAD.Vector(
+            arc_pt_off_x,
+            -arc_pt_off_y,
+            0,
+        )
+        var1 = FreeCAD.Vector(
+            obj.MagnetHoleDiameter / 2,
+            0,
+            0,
+        )
+        var2 = FreeCAD.Vector(
+            -obj.MagnetHoleDiameter / 2,
+            0,
+            0,
+        )
+        line_1 = Part.LineSegment(va1, va2)
+        line_2 = Part.LineSegment(va3, va4)
+        ar1 = Part.Arc(va1, var1, va4)
+        ar2 = Part.Arc(va2, var2, va3)
+        s1 = Part.Shape([line_1, ar1, ar2, line_2])
+        w1 = Part.Wire(s1.Edges)
+        sq1_1 = Part.Face(w1)
+        sq1_1 = sq1_1.extrude(FreeCAD.Vector(0, 0, sqbr1_depth))
+        holes_interface_shape = Part.Solid.fuse(sq1_1, b1)
 
-                va1 = FreeCAD.Vector(
-                    hole_pos + arc_pt_off_x,
-                    hole_pos + arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                va2 = FreeCAD.Vector(
-                    hole_pos - arc_pt_off_x,
-                    hole_pos + arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                va3 = FreeCAD.Vector(
-                    hole_pos - arc_pt_off_x,
-                    hole_pos - arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                va4 = FreeCAD.Vector(
-                    hole_pos + arc_pt_off_x,
-                    hole_pos - arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                var1 = FreeCAD.Vector(
-                    hole_pos + obj.MagnetHoleDiameter / 2,
-                    hole_pos,
-                    -obj.TotalHeight,
-                )
-                var2 = FreeCAD.Vector(
-                    hole_pos - obj.MagnetHoleDiameter / 2,
-                    hole_pos,
-                    -obj.TotalHeight,
-                )
+        bottom_hole_shape = (
+            holes_interface_shape
+            if bottom_hole_shape is None
+            else bottom_hole_shape.fuse(holes_interface_shape)
+        )
 
-                va5 = FreeCAD.Vector(
-                    -hole_pos + arc_pt_off_x,
-                    hole_pos + arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                va6 = FreeCAD.Vector(
-                    -hole_pos - arc_pt_off_x,
-                    hole_pos + arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                va7 = FreeCAD.Vector(
-                    -hole_pos - arc_pt_off_x,
-                    hole_pos - arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                va8 = FreeCAD.Vector(
-                    -hole_pos + arc_pt_off_x,
-                    hole_pos - arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                var3 = FreeCAD.Vector(
-                    -hole_pos + obj.MagnetHoleDiameter / 2,
-                    hole_pos,
-                    -obj.TotalHeight,
-                )
-                var4 = FreeCAD.Vector(
-                    -hole_pos - obj.MagnetHoleDiameter / 2,
-                    hole_pos,
-                    -obj.TotalHeight,
-                )
+    hole_shape_sub_array = Utils.copy_and_translate(
+        bottom_hole_shape,
+        [
+            FreeCAD.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
+            FreeCAD.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
+            FreeCAD.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
+            FreeCAD.Vector(hole_pos, hole_pos, -obj.TotalHeight),
+        ],
+    )
+    vec_list = []
+    xtranslate = 0
+    for _ in range(obj.xGridUnits):
+        ytranslate = 0
+        for _ in range(obj.yGridUnits):
+            vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
+            ytranslate += obj.GridSize.Value
+        xtranslate += obj.GridSize.Value
 
-                va9 = FreeCAD.Vector(
-                    hole_pos + arc_pt_off_x,
-                    -hole_pos + arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                va10 = FreeCAD.Vector(
-                    hole_pos - arc_pt_off_x,
-                    -hole_pos + arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                va11 = FreeCAD.Vector(
-                    hole_pos - arc_pt_off_x,
-                    -hole_pos - arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                va12 = FreeCAD.Vector(
-                    hole_pos + arc_pt_off_x,
-                    -hole_pos - arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                var5 = FreeCAD.Vector(
-                    hole_pos + obj.MagnetHoleDiameter / 2,
-                    -hole_pos,
-                    -obj.TotalHeight,
-                )
-                var6 = FreeCAD.Vector(
-                    hole_pos - obj.MagnetHoleDiameter / 2,
-                    -hole_pos,
-                    -obj.TotalHeight,
-                )
-
-                va13 = FreeCAD.Vector(
-                    -hole_pos + arc_pt_off_x,
-                    -hole_pos + arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                va14 = FreeCAD.Vector(
-                    -hole_pos - arc_pt_off_x,
-                    -hole_pos + arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                va15 = FreeCAD.Vector(
-                    -hole_pos - arc_pt_off_x,
-                    -hole_pos - arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                va16 = FreeCAD.Vector(
-                    -hole_pos + arc_pt_off_x,
-                    -hole_pos - arc_pt_off_y,
-                    -obj.TotalHeight,
-                )
-                var7 = FreeCAD.Vector(
-                    -hole_pos + obj.MagnetHoleDiameter / 2,
-                    -hole_pos,
-                    -obj.TotalHeight,
-                )
-                var8 = FreeCAD.Vector(
-                    -hole_pos - obj.MagnetHoleDiameter / 2,
-                    -hole_pos,
-                    -obj.TotalHeight,
-                )
-
-                line_1 = Part.LineSegment(va1, va2)
-                line_2 = Part.LineSegment(va3, va4)
-                line_3 = Part.LineSegment(va5, va6)
-                line_4 = Part.LineSegment(va7, va8)
-                line_5 = Part.LineSegment(va9, va10)
-                line_6 = Part.LineSegment(va11, va12)
-                line_7 = Part.LineSegment(va13, va14)
-                line_8 = Part.LineSegment(va15, va16)
-
-                ar1 = Part.Arc(va1, var1, va4)
-                ar2 = Part.Arc(va2, var2, va3)
-                ar3 = Part.Arc(va5, var3, va8)
-                ar4 = Part.Arc(va6, var4, va7)
-                ar5 = Part.Arc(va9, var5, va12)
-                ar6 = Part.Arc(va10, var6, va11)
-                ar7 = Part.Arc(va13, var7, va16)
-                ar8 = Part.Arc(va14, var8, va15)
-
-                s1 = Part.Shape([line_1, ar1, ar2, line_2])
-                s2 = Part.Shape([line_3, ar3, ar4, line_4])
-                s3 = Part.Shape([line_5, ar5, ar6, line_6])
-                s4 = Part.Shape([line_7, ar7, ar8, line_8])
-
-                w1 = Part.Wire(s1.Edges)
-                w2 = Part.Wire(s2.Edges)
-                w3 = Part.Wire(s3.Edges)
-                w4 = Part.Wire(s4.Edges)
-
-                sq1_1 = Part.Face(w1)
-                sq1_1 = sq1_1.extrude(FreeCAD.Vector(0, 0, sqbr1_depth))
-
-                sq1_2 = Part.Face(w2)
-                sq1_2 = sq1_2.extrude(FreeCAD.Vector(0, 0, sqbr1_depth))
-
-                sq1_3 = Part.Face(w3)
-                sq1_3 = sq1_3.extrude(FreeCAD.Vector(0, 0, sqbr1_depth))
-
-                sq1_4 = Part.Face(w4)
-                sq1_4 = sq1_4.extrude(FreeCAD.Vector(0, 0, sqbr1_depth))
-
-                hm1 = Part.Solid.multiFuse(sq1_1, [b1, b2, b3, b4, sq1_2, sq1_3, sq1_4])
-
-                hm1.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
-                hsq2 = hm1 if hsq2 is None else hsq2.fuse(hm1)
-                ytranslate += obj.GridSize
-
-            hsq3 = hsq2 if hsq3 is None else hsq3.fuse(hsq2)
-            xtranslate += obj.GridSize
-
-    if obj.ScrewHoles and not obj.MagnetHoles:
-        fusetotal = hs3
-    if obj.MagnetHoles and not obj.ScrewHoles:
-        fusetotal = hm3
-    if obj.ScrewHoles and obj.MagnetHoles:
-        fusetotal = Part.Solid.multiFuse(hm3, [hs3, hsq3])
-
-    return fusetotal
+    return Utils.copy_and_translate(hole_shape_sub_array, vec_list)
 
 
 def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
