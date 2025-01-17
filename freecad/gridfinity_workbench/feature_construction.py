@@ -407,7 +407,7 @@ def make_label_shelf(obj: FreeCAD.DocumentObject) -> Part.Shape:
 
         vec_list = []
         for _ in range(xdiv):
-            vec_list.append(FreeCAD.Vector(FreeCAD.Vector(xtranslate, ytranslate, 0)))
+            vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
             xtranslate += xcompwidth + obj.DividerThickness
 
         funcfuse = Part.Shape.cut(funcfuse, Utils.copy_and_translate(bottomcutbox, vec_list))
