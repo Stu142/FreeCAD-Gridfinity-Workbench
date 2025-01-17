@@ -6,6 +6,8 @@ import FreeCAD
 import Part
 from FreeCAD import Units
 
+from .utils import Utils
+
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
 
@@ -128,6 +130,186 @@ def rounded_rectangle_extrude(
     return face.extrude(FreeCAD.Vector(0, 0, height))
 
 
+def _label_shelf_full_width(
+    obj: FreeCAD.DocumentObject,
+    face: Part.Face,
+    xcompwidth: float,
+) -> Part.Shape:
+    xdiv = obj.xDividers + 1
+    fw = obj.yTotalWidth - obj.WallThickness * 2
+    ytranslate = -obj.BinUnit / 2 + obj.WallThickness
+    xtranslate = zeromm
+    parts = []
+    for x in range(xdiv):
+        ls = face.extrude(FreeCAD.Vector(0, fw, 0))
+
+        ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
+
+        if x == 0:
+            firstls = ls
+        else:
+            parts.append(ls)
+
+        xtranslate += xcompwidth + obj.DividerThickness
+
+    funcfuse = ls if xdiv == 1 else Part.Solid.multiFuse(firstls, parts)
+
+    x2 = -obj.BinUnit / 2 + obj.WallThickness
+    b_edges = []
+    for edge in funcfuse.Edges:
+        y0 = edge.Vertexes[0].Point.y
+        y1 = edge.Vertexes[1].Point.y
+        x0 = edge.Vertexes[0].Point.x
+        x1 = edge.Vertexes[1].Point.x
+
+        if (y0 - y1) == 0 and x1 == x2 and x0 == x2:
+            b_edges.append(edge)
+
+    return funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
+
+
+def _label_shelf_center(
+    obj: FreeCAD.DocumentObject,
+    xcompwidth: float,
+    ycompwidth: float,
+    face: Part.Face,
+) -> Part.Shape:
+    xdiv = obj.xDividers + 1
+    ydiv = obj.yDividers + 1
+    xtranslate = zeromm
+    ysp = -obj.BinUnit / 2 + obj.WallThickness + ycompwidth / 2 - obj.LabelShelfLength / 2
+    ytranslate = ysp
+    parts = []
+    for x in range(xdiv):
+        ytranslate = ysp
+        for y in range(ydiv):
+            ls = face.extrude(FreeCAD.Vector(0, obj.LabelShelfLength, 0))
+
+            ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
+
+            if x == 0 and y == 0:
+                firstls = ls
+            else:
+                parts.append(ls)
+
+            ytranslate += ycompwidth + obj.DividerThickness
+
+        xtranslate += xcompwidth + obj.DividerThickness
+
+    return ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
+
+
+def _label_shelf_left(
+    obj: FreeCAD.DocumentObject,
+    xcompwidth: float,
+    ycompwidth: float,
+    face: Part.Face,
+) -> Part.Shape:
+    xdiv = obj.xDividers + 1
+    ydiv = obj.yDividers + 1
+    xtranslate = zeromm
+    ysp = -obj.BinUnit / 2 + obj.WallThickness
+    ytranslate = ysp
+    parts = []
+    for x in range(xdiv):
+        ytranslate = ysp
+        for y in range(ydiv):
+            ls = face.extrude(FreeCAD.Vector(0, obj.LabelShelfLength, 0))
+
+            ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
+
+            if x == 0 and y == 0:
+                firstls = ls
+            else:
+                parts.append(ls)
+
+            ytranslate += ycompwidth + obj.DividerThickness
+
+        xtranslate += xcompwidth + obj.DividerThickness
+
+    funcfuse = ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
+
+    y2 = -obj.BinUnit / 2 + obj.WallThickness
+    b_edges = []
+    for edge in funcfuse.Edges:
+        y0 = edge.Vertexes[0].Point.y
+        y1 = edge.Vertexes[1].Point.y
+        x0 = edge.Vertexes[0].Point.x
+        x1 = edge.Vertexes[1].Point.x
+
+        if y0 == y2 and y1 == y2 and x1 == y2 and x0 == y2:
+            b_edges.append(edge)
+
+    return funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
+
+
+def _label_shelf_right(
+    obj: FreeCAD.DocumentObject,
+    xcompwidth: float,
+    ycompwidth: float,
+    face: Part.Face,
+) -> Part.Shape:
+    xdiv = obj.xDividers + 1
+    ydiv = obj.yDividers + 1
+    xtranslate = zeromm
+    ysp = -obj.BinUnit / 2 + obj.WallThickness + ycompwidth - obj.LabelShelfLength
+    ytranslate = ysp
+    parts = []
+    for x in range(xdiv):
+        ytranslate = ysp
+        for y in range(ydiv):
+            ls = face.extrude(FreeCAD.Vector(0, obj.LabelShelfLength, 0))
+
+            ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
+
+            if x == 0 and y == 0:
+                firstls = ls
+            else:
+                parts.append(ls)
+
+            ytranslate += ycompwidth + obj.DividerThickness
+
+        xtranslate += xcompwidth + obj.DividerThickness
+
+    funcfuse = ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
+
+    y2 = obj.yTotalWidth - obj.BinUnit / 2 - obj.WallThickness
+    x2 = -obj.BinUnit / 2 + obj.WallThickness
+    b_edges = []
+    for edge in funcfuse.Edges:
+        y0 = edge.Vertexes[0].Point.y
+        y1 = edge.Vertexes[1].Point.y
+        x0 = edge.Vertexes[0].Point.x
+        x1 = edge.Vertexes[1].Point.x
+
+        if y0 == y2 and y1 == y2 and x1 == x2 and x0 == x2:
+            b_edges.append(edge)
+
+    return funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
+
+
+def _label_shelf_fillet(
+    obj: FreeCAD.DocumentObject,
+    shape: Part.Shape,
+    stackingoffset: float,
+) -> Part.Shape:
+    h_edges = []
+    for edge in shape.Edges:
+        z0 = edge.Vertexes[0].Point.z
+        z1 = edge.Vertexes[1].Point.z
+
+        if (
+            z0 == -obj.LabelShelfVerticalThickness + stackingoffset
+            and z1 == -obj.LabelShelfVerticalThickness + stackingoffset
+        ):
+            h_edges.append(edge)
+
+    return shape.makeFillet(
+        obj.LabelShelfVerticalThickness.Value - 0.01,
+        h_edges,
+    )
+
+
 def make_label_shelf(obj: FreeCAD.DocumentObject) -> Part.Shape:
     """Create label shelf.
 
@@ -145,13 +327,6 @@ def make_label_shelf(obj: FreeCAD.DocumentObject) -> Part.Shape:
         + obj.StackingLipTopLedge
         + obj.StackingLipBottomChamfer
         + obj.LabelShelfWidth
-    )
-    (
-        -obj.StackingLipTopChamfer
-        - obj.StackingLipTopLedge
-        - obj.StackingLipBottomChamfer
-        - obj.LabelShelfWidth
-        + obj.WallThickness
     )
     stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
     shelf_angle = obj.LabelShelfAngle.Value
@@ -199,156 +374,21 @@ def make_label_shelf(obj: FreeCAD.DocumentObject) -> Part.Shape:
 
     # Label placement specific code
     if shelf_placement == "Full Width":
-        fw = obj.yTotalWidth - obj.WallThickness * 2
-        ytranslate = -obj.BinUnit / 2 + obj.WallThickness
-        xtranslate = zeromm
-        parts = []
-        for x in range(xdiv):
-            ls = face.extrude(FreeCAD.Vector(0, fw, 0))
-
-            ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
-
-            if x == 0:
-                firstls = ls
-            else:
-                parts.append(ls)
-
-            xtranslate += xcompwidth + obj.DividerThickness
-
-        funcfuse = ls if xdiv == 1 else Part.Solid.multiFuse(firstls, parts)
-
-        x2 = -obj.BinUnit / 2 + obj.WallThickness
-        b_edges = []
-        for edge in funcfuse.Edges:
-            y0 = edge.Vertexes[0].Point.y
-            y1 = edge.Vertexes[1].Point.y
-            x0 = edge.Vertexes[0].Point.x
-            x1 = edge.Vertexes[1].Point.x
-
-            if (y0 - y1) == 0 and x1 == x2 and x0 == x2:
-                b_edges.append(edge)
-
-        funcfuse = funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
-
+        funcfuse = _label_shelf_full_width(obj, face, xcompwidth)
     if shelf_placement == "Center":
-        xtranslate = zeromm
-        ysp = -obj.BinUnit / 2 + obj.WallThickness + ycompwidth / 2 - obj.LabelShelfLength / 2
-        ytranslate = ysp
-        parts = []
-        for x in range(xdiv):
-            ytranslate = ysp
-            for y in range(ydiv):
-                ls = face.extrude(FreeCAD.Vector(0, obj.LabelShelfLength, 0))
-
-                ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
-
-                if x == 0 and y == 0:
-                    firstls = ls
-                else:
-                    parts.append(ls)
-
-                ytranslate += ycompwidth + obj.DividerThickness
-
-            xtranslate += xcompwidth + obj.DividerThickness
-
-        funcfuse = ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
-
+        funcfuse = _label_shelf_center(obj, xcompwidth, ycompwidth, face)
     if shelf_placement == "Left":
-        xtranslate = zeromm
-        ysp = -obj.BinUnit / 2 + obj.WallThickness
-        ytranslate = ysp
-        parts = []
-        for x in range(xdiv):
-            ytranslate = ysp
-            for y in range(ydiv):
-                ls = face.extrude(FreeCAD.Vector(0, obj.LabelShelfLength, 0))
-
-                ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
-
-                if x == 0 and y == 0:
-                    firstls = ls
-                else:
-                    parts.append(ls)
-
-                ytranslate += ycompwidth + obj.DividerThickness
-
-            xtranslate += xcompwidth + obj.DividerThickness
-
-        funcfuse = ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
-
-        y2 = -obj.BinUnit / 2 + obj.WallThickness
-        b_edges = []
-        for edge in funcfuse.Edges:
-            y0 = edge.Vertexes[0].Point.y
-            y1 = edge.Vertexes[1].Point.y
-            x0 = edge.Vertexes[0].Point.x
-            x1 = edge.Vertexes[1].Point.x
-
-            if y0 == y2 and y1 == y2 and x1 == y2 and x0 == y2:
-                b_edges.append(edge)
-
-        funcfuse = funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
-
+        funcfuse = _label_shelf_left(obj, xcompwidth, ycompwidth, face)
     if shelf_placement == "Right":
-        xtranslate = zeromm
-        ysp = -obj.BinUnit / 2 + obj.WallThickness + ycompwidth - obj.LabelShelfLength
-        ytranslate = ysp
-        parts = []
-        for x in range(xdiv):
-            ytranslate = ysp
-            for y in range(ydiv):
-                ls = face.extrude(FreeCAD.Vector(0, obj.LabelShelfLength, 0))
-
-                ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
-
-                if x == 0 and y == 0:
-                    firstls = ls
-                else:
-                    parts.append(ls)
-
-                ytranslate += ycompwidth + obj.DividerThickness
-
-            xtranslate += xcompwidth + obj.DividerThickness
-
-        funcfuse = ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
-
-        y2 = obj.yTotalWidth - obj.BinUnit / 2 - obj.WallThickness
-        x2 = -obj.BinUnit / 2 + obj.WallThickness
-        b_edges = []
-        for edge in funcfuse.Edges:
-            y0 = edge.Vertexes[0].Point.y
-            y1 = edge.Vertexes[1].Point.y
-            x0 = edge.Vertexes[0].Point.x
-            x1 = edge.Vertexes[1].Point.x
-
-            if y0 == y2 and y1 == y2 and x1 == x2 and x0 == x2:
-                b_edges.append(edge)
-
-        funcfuse = funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
+        funcfuse = _label_shelf_right(obj, xcompwidth, ycompwidth, face)
 
     # For all label placements
-    h_edges = []
-    for edge in funcfuse.Edges:
-        z0 = edge.Vertexes[0].Point.z
-        z1 = edge.Vertexes[1].Point.z
-
-        if (
-            z0 == -obj.LabelShelfVerticalThickness + stackingoffset
-            and z1 == -obj.LabelShelfVerticalThickness + stackingoffset
-        ):
-            h_edges.append(edge)
-
-    funcfuse = funcfuse.makeFillet(
-        obj.LabelShelfVerticalThickness.Value - 0.01,
-        h_edges,
-    )
+    funcfuse = _label_shelf_fillet(obj, funcfuse, stackingoffset)
 
     labelshelfheight = obj.LabelShelfVerticalThickness + side_b * unitmm
     if (labelshelfheight) > obj.UsableHeight:
-        fw = obj.yTotalWidth - obj.WallThickness * 2
         ytranslate = -obj.BinUnit / 2 + obj.WallThickness
         xtranslate = zeromm
-        parts = []
         bottomcutbox = Part.makeBox(
             labelshelfheight,
             obj.StackingLipTopChamfer
@@ -365,20 +405,12 @@ def make_label_shelf(obj: FreeCAD.DocumentObject) -> Part.Shape:
             FreeCAD.Vector(0, 1, 0),
         )
 
-        for x in range(xdiv):
-            bottomcut = bottomcutbox.copy()
-            bottomcut.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
-
-            if x == 0:
-                firstbottomcut = bottomcut
-            else:
-                parts.append(bottomcut)
-
+        vec_list = []
+        for _ in range(xdiv):
+            vec_list.append(FreeCAD.Vector(FreeCAD.Vector(xtranslate, ytranslate, 0)))
             xtranslate += xcompwidth + obj.DividerThickness
 
-        bottomcuttotal = bottomcut if xdiv == 1 else Part.Solid.multiFuse(firstbottomcut, parts)
-
-        funcfuse = Part.Shape.cut(funcfuse, bottomcuttotal)
+        funcfuse = Part.Shape.cut(funcfuse, Utils.copy_and_translate(bottomcutbox, vec_list))
     return funcfuse
 
 
@@ -481,12 +513,11 @@ def make_scoop(obj: FreeCAD.DocumentObject) -> Part.Shape:
         FreeCAD.Vector(0, 0, -1),
     )
 
-    parts = []
+    scoop = face.extrude(FreeCAD.Vector(0, obj.yTotalWidth - obj.WallThickness * 2, 0))
+
+    vec_list = []
     for x in range(xdiv):
-        scoop = face.extrude(FreeCAD.Vector(0, obj.yTotalWidth - obj.WallThickness * 2, 0))
-        scoop.translate(
-            FreeCAD.Vector(-xtranslate, -obj.BinUnit / 2 + obj.WallThickness, 0),
-        )
+        vec_list.append(FreeCAD.Vector(-xtranslate, -obj.BinUnit / 2 + obj.WallThickness, 0))
 
         if x > 0:
             xtranslate += compwidth + obj.DividerThickness
@@ -500,12 +531,7 @@ def make_scoop(obj: FreeCAD.DocumentObject) -> Part.Shape:
                 + obj.DividerThickness
             )
 
-        if x > 0:
-            parts.append(scoop)
-        else:
-            funcfuse = scoop
-    if x > 0:
-        funcfuse = funcfuse.multiFuse(parts)
+    funcfuse = Utils.copy_and_translate(scoop, vec_list)
     funcfuse = funcfuse.fuse(scoopbox)
 
     b_edges = []
@@ -621,6 +647,97 @@ def make_stacking_lip(obj: FreeCAD.DocumentObject) -> Part.Shape:
     return Part.makeSolid(stacking_lip)
 
 
+def _make_compartments_no_deviders(
+    obj: FreeCAD.DocumentObject,
+    func_fuse: Part.Shape,
+) -> Part.Shape:
+    # Fillet Bottom edges
+    b_edges = []
+    for edge in func_fuse.Edges:
+        z0 = edge.Vertexes[0].Point.z
+        z1 = edge.Vertexes[1].Point.z
+    # Fillet Bottom edges
+    b_edges = []
+    for edge in func_fuse.Edges:
+        z0 = edge.Vertexes[0].Point.z
+        z1 = edge.Vertexes[1].Point.z
+
+        if z0 < 0 and z1 < 0:
+            b_edges.append(edge)
+
+    return func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
+
+
+def _make_compartments_with_deviders(
+    obj: FreeCAD.DocumentObject,
+    func_fuse: Part.Shape,
+) -> Part.Shape:
+    xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
+    ydivheight = obj.yDividerHeight if obj.yDividerHeight != 0 else obj.TotalHeight
+
+    stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
+
+    xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
+        obj.xDividers + 1
+    )
+    ycomp_w = (obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness) / (
+        obj.yDividers + 1
+    )
+
+    xtranslate = zeromm + xcomp_w + obj.WallThickness - obj.DividerThickness
+    ytranslate = zeromm + ycomp_w + obj.WallThickness
+
+    # dividers in x direction
+    xdiv: Part.Shape | None = None
+    for _ in range(obj.xDividers):
+        comp = Part.makeBox(
+            obj.DividerThickness,
+            obj.yTotalWidth,
+            xdivheight + stackingoffset,
+            FreeCAD.Vector(
+                -obj.BinUnit / 2 + obj.DividerThickness,
+                -obj.BinUnit / 2,
+                -obj.TotalHeight,
+            ),
+            FreeCAD.Vector(0, 0, 1),
+        )
+        comp.translate(FreeCAD.Vector(xtranslate, 0, 0))
+        xdiv = comp if xdiv is None else xdiv.fuse(comp)
+        xtranslate += xcomp_w + obj.DividerThickness
+
+    # dividers in y direction
+    ydiv: Part.Shape | None = None
+    for _ in range(obj.yDividers):
+        comp = Part.makeBox(
+            obj.xTotalWidth,
+            obj.DividerThickness,
+            ydivheight + stackingoffset,
+            FreeCAD.Vector(-obj.BinUnit / 2, -obj.BinUnit / 2, -obj.TotalHeight),
+            FreeCAD.Vector(0, 0, 1),
+        )
+
+        comp.translate(FreeCAD.Vector(0, ytranslate, 0))
+        ydiv = comp if ydiv is None else ydiv.fuse(comp)
+        ytranslate += ycomp_w + obj.DividerThickness
+
+    if xdiv:
+        func_fuse = func_fuse.cut(xdiv)
+    if ydiv:
+        func_fuse = func_fuse.cut(ydiv)
+    b_edges = []
+    for edge in func_fuse.Edges:
+        z0 = edge.Vertexes[0].Point.z
+        z1 = edge.Vertexes[1].Point.z
+
+        if z0 != z1:
+            b_edges.append(edge)
+
+        if z0 <= -obj.UsableHeight and z1 <= -obj.UsableHeight:
+            b_edges.append(edge)
+
+    return func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
+
+
 def make_compartments(obj: FreeCAD.DocumentObject) -> Part.Shape:
     """Create compartment cutout objects.
 
@@ -631,11 +748,6 @@ def make_compartments(obj: FreeCAD.DocumentObject) -> Part.Shape:
         Part.Shape: Compartments cutout shape.
 
     """
-    xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
-    ydivheight = obj.yDividerHeight if obj.yDividerHeight != 0 else obj.TotalHeight
-
-    stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
-
     func_fuse = rounded_rectangle_extrude(
         obj.xTotalWidth - obj.WallThickness * 2,
         obj.yTotalWidth - obj.WallThickness * 2,
@@ -652,82 +764,10 @@ def make_compartments(obj: FreeCAD.DocumentObject) -> Part.Shape:
     )
 
     if obj.xDividers == 0 and obj.yDividers == 0:
-        # Fillet Bottom edges
-        b_edges = []
-        for edge in func_fuse.Edges:
-            z0 = edge.Vertexes[0].Point.z
-            z1 = edge.Vertexes[1].Point.z
-        # Fillet Bottom edges
-        b_edges = []
-        for edge in func_fuse.Edges:
-            z0 = edge.Vertexes[0].Point.z
-            z1 = edge.Vertexes[1].Point.z
-
-            if z0 < 0 and z1 < 0:
-                b_edges.append(edge)
-
-        func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
+        func_fuse = _make_compartments_no_deviders(obj, func_fuse)
 
     else:
-        xcomp_w = (
-            obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness
-        ) / (obj.xDividers + 1)
-        ycomp_w = (
-            obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness
-        ) / (obj.yDividers + 1)
-
-        xtranslate = zeromm + xcomp_w + obj.WallThickness - obj.DividerThickness
-        ytranslate = zeromm + ycomp_w + obj.WallThickness
-
-        # dividers in x direction
-        xdiv: Part.Shape | None = None
-        for _ in range(obj.xDividers):
-            comp = Part.makeBox(
-                obj.DividerThickness,
-                obj.yTotalWidth,
-                xdivheight + stackingoffset,
-                FreeCAD.Vector(
-                    -obj.BinUnit / 2 + obj.DividerThickness,
-                    -obj.BinUnit / 2,
-                    -obj.TotalHeight,
-                ),
-                FreeCAD.Vector(0, 0, 1),
-            )
-            comp.translate(FreeCAD.Vector(xtranslate, 0, 0))
-            xdiv = comp if xdiv is None else xdiv.fuse(comp)
-            xtranslate += xcomp_w + obj.DividerThickness
-
-        # dividers in y direction
-        ydiv: Part.Shape | None = None
-        for _ in range(obj.yDividers):
-            comp = Part.makeBox(
-                obj.xTotalWidth,
-                obj.DividerThickness,
-                ydivheight + stackingoffset,
-                FreeCAD.Vector(-obj.BinUnit / 2, -obj.BinUnit / 2, -obj.TotalHeight),
-                FreeCAD.Vector(0, 0, 1),
-            )
-
-            comp.translate(FreeCAD.Vector(0, ytranslate, 0))
-            ydiv = comp if ydiv is None else ydiv.fuse(comp)
-            ytranslate += ycomp_w + obj.DividerThickness
-
-        if xdiv:
-            func_fuse = func_fuse.cut(xdiv)
-        if ydiv:
-            func_fuse = func_fuse.cut(ydiv)
-        b_edges = []
-        for edge in func_fuse.Edges:
-            z0 = edge.Vertexes[0].Point.z
-            z1 = edge.Vertexes[1].Point.z
-
-            if z0 != z1:
-                b_edges.append(edge)
-
-            if z0 <= -obj.UsableHeight and z1 <= -obj.UsableHeight:
-                b_edges.append(edge)
-
-        func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
+        func_fuse = _make_compartments_with_deviders(obj, func_fuse)
 
     return func_fuse
 
@@ -835,126 +875,51 @@ def make_baseplate_center_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
         - obj.MagnetHoleDistanceFromEdge
         - (obj.MagnetHoleDiameter / 2 + obj.MagnetEdgeThickness) * math.sin(math.pi / 4)
     )
+    mec_middle = FreeCAD.Vector(0, 0, 0)
 
-    v1 = FreeCAD.Vector(-smfilloffcen, -inframedis, 0)
-    v2 = FreeCAD.Vector(-magedge, -smfillins, 0)
-    v3 = FreeCAD.Vector(-magedge, -magcenter, 0)
-    v4 = FreeCAD.Vector(-magcenter, -magedge, 0)
-    v5 = FreeCAD.Vector(-smfillins, -magedge, 0)
-    v6 = FreeCAD.Vector(-inframedis, -smfilloffcen, 0)
+    v1 = FreeCAD.Vector(0, -inframedis, 0)
+    v2 = FreeCAD.Vector(-smfilloffcen, -inframedis, 0)
+    v3 = FreeCAD.Vector(-magedge, -smfillins, 0)
+    v4 = FreeCAD.Vector(-magedge, -magcenter, 0)
+    v5 = FreeCAD.Vector(-magcenter, -magedge, 0)
+    v6 = FreeCAD.Vector(-smfillins, -magedge, 0)
+    v7 = FreeCAD.Vector(-inframedis, -smfilloffcen, 0)
+    v8 = FreeCAD.Vector(-inframedis, 0, 0)
 
     va1 = FreeCAD.Vector(-smfillposmag, -smfillpos, 0)
     va2 = FreeCAD.Vector(-bigfillpos, -bigfillpos, 0)
     va3 = FreeCAD.Vector(-smfillpos, -smfillposmag, 0)
 
-    v7 = FreeCAD.Vector(-inframedis, smfilloffcen, 0)
-    v8 = FreeCAD.Vector(-smfillins, magedge, 0)
-    v9 = FreeCAD.Vector(-magcenter, magedge, 0)
-    v10 = FreeCAD.Vector(-magedge, magcenter, 0)
-    v11 = FreeCAD.Vector(-magedge, smfillins, 0)
-    v12 = FreeCAD.Vector(-smfilloffcen, inframedis, 0)
+    l1 = Part.LineSegment(v1, v2)
+    ar1 = Part.Arc(l1.EndPoint, va1, v3)
+    l2 = Part.LineSegment(ar1.EndPoint, v4)
+    ar2 = Part.Arc(l2.EndPoint, va2, v5)
+    l3 = Part.LineSegment(ar2.EndPoint, v6)
+    ar3 = Part.Arc(l3.EndPoint, va3, v7)
+    l4 = Part.LineSegment(ar3.EndPoint, v8)
+    l5 = Part.LineSegment(l4.EndPoint, mec_middle)
+    l6 = Part.LineSegment(l5.EndPoint, l1.StartPoint)
 
-    va4 = FreeCAD.Vector(-smfillpos, smfillposmag, 0)
-    va5 = FreeCAD.Vector(-bigfillpos, bigfillpos, 0)
-    va6 = FreeCAD.Vector(-smfillposmag, smfillpos, 0)
+    wire = Utils.curve_to_wire([l1, ar1, l2, ar2, l3, ar3, l4, l5, l6])
+    partial_shape1 = Part.Face(wire).extrude(FreeCAD.Vector(0, 0, -obj.TotalHeight))
+    partial_shape2 = partial_shape1.mirror(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(0, 1, 0))
+    partial_shape3 = partial_shape1.mirror(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(1, 0, 0))
+    partial_shape4 = partial_shape2.mirror(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(1, 0, 0))
 
-    v13 = FreeCAD.Vector(smfilloffcen, inframedis, 0)
-    v14 = FreeCAD.Vector(magedge, smfillins, 0)
-    v15 = FreeCAD.Vector(magedge, magcenter, 0)
-    v16 = FreeCAD.Vector(magcenter, magedge, 0)
-    v17 = FreeCAD.Vector(smfillins, magedge, 0)
-    v18 = FreeCAD.Vector(inframedis, smfilloffcen, 0)
+    shape = partial_shape1.multiFuse([partial_shape2, partial_shape3, partial_shape4])
 
-    va7 = FreeCAD.Vector(smfillposmag, smfillpos, 0)
-    va8 = FreeCAD.Vector(bigfillpos, bigfillpos, 0)
-    va9 = FreeCAD.Vector(smfillpos, smfillposmag, 0)
-
-    v19 = FreeCAD.Vector(inframedis, -smfilloffcen, 0)
-    v20 = FreeCAD.Vector(smfillins, -magedge, 0)
-    v21 = FreeCAD.Vector(magcenter, -magedge, 0)
-    v22 = FreeCAD.Vector(magedge, -magcenter, 0)
-    v23 = FreeCAD.Vector(magedge, -smfillins, 0)
-    v24 = FreeCAD.Vector(smfilloffcen, -inframedis, 0)
-
-    va10 = FreeCAD.Vector(smfillpos, -smfillposmag, 0)
-    va11 = FreeCAD.Vector(bigfillpos, -bigfillpos, 0)
-    va12 = FreeCAD.Vector(smfillposmag, -smfillpos, 0)
-
-    l1 = Part.LineSegment(v24, v1)
-    ar1 = Part.Arc(v1, va1, v2)
-    l2 = Part.LineSegment(v2, v3)
-    ar2 = Part.Arc(v3, va2, v4)
-    l3 = Part.LineSegment(v4, v5)
-    ar3 = Part.Arc(v5, va3, v6)
-    l4 = Part.LineSegment(v6, v7)
-    ar4 = Part.Arc(v7, va4, v8)
-    l5 = Part.LineSegment(v8, v9)
-    ar5 = Part.Arc(v9, va5, v10)
-    l6 = Part.LineSegment(v10, v11)
-    ar6 = Part.Arc(v11, va6, v12)
-    l7 = Part.LineSegment(v12, v13)
-    ar7 = Part.Arc(v13, va7, v14)
-    l8 = Part.LineSegment(v14, v15)
-    ar8 = Part.Arc(v15, va8, v16)
-    l9 = Part.LineSegment(v16, v17)
-    ar9 = Part.Arc(v17, va9, v18)
-    l10 = Part.LineSegment(v18, v19)
-    ar10 = Part.Arc(v19, va10, v20)
-    l11 = Part.LineSegment(v20, v21)
-    ar11 = Part.Arc(v21, va11, v22)
-    l12 = Part.LineSegment(v22, v23)
-    ar12 = Part.Arc(v23, va12, v24)
-    xtranslate = zeromm
-    ytranslate = zeromm
-
-    s1 = Part.Shape(
-        [
-            l1,
-            ar1,
-            l2,
-            ar2,
-            l3,
-            ar3,
-            l4,
-            ar4,
-            l5,
-            ar5,
-            l6,
-            ar6,
-            l7,
-            ar7,
-            l8,
-            ar8,
-            l9,
-            ar9,
-            l10,
-            ar10,
-            l11,
-            ar11,
-            l12,
-            ar12,
-        ],
-    )
-
-    wire = Part.Wire(s1.Edges)
-    face = Part.Face(wire)
-    hm2: Part.Shape | None = None
-    hm3: Part.Shape | None = None
+    vec_list: list[FreeCAD.Vector] = []
+    xtranslate = 0
+    ytranslate = 0
 
     for _ in range(obj.xGridUnits):
-        ytranslate = zeromm
+        ytranslate = 0
         for _ in range(obj.yGridUnits):
-            hm1 = face.extrude(FreeCAD.Vector(0, 0, -obj.TotalHeight))
+            vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
+            ytranslate += obj.GridSize.Value
+        xtranslate += obj.GridSize.Value
 
-            hm1.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
-
-            hm2 = hm1 if hm2 is None else hm2.fuse(hm1)
-            ytranslate += obj.GridSize
-
-        hm3 = hm2 if hm3 is None else hm3.fuse(hm2)
-        xtranslate += obj.GridSize
-
-    return hm3
+    return Utils.copy_and_translate(shape, vec_list)
 
 
 def make_bottom_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:

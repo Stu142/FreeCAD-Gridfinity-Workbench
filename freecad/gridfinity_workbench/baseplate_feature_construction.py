@@ -14,6 +14,152 @@ unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
 
 
+def _baseplate_magnet_hole_hex(obj: FreeCAD.DocumentObject, hole_pos: float) -> Part.Shape:
+    # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed circle radius
+    radius = obj.MagnetHoleDiameter / math.sqrt(3)
+
+    n_sides = 6
+    rot = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), 0)
+
+    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+    p.Polygon = n_sides
+    p.Circumradius = radius
+    p.Placement = FreeCAD.Placement(
+        FreeCAD.Vector(-hole_pos, -hole_pos, -obj.BaseProfileHeight),
+        rot,
+    )
+    p.recompute()
+    f = Part.Face(Part.Wire(p.Shape.Edges))
+    c1 = f.extrude(FreeCAD.Vector(0, 0, -obj.MagnetHoleDepth))
+    FreeCAD.ActiveDocument.removeObject(p.Name)
+
+    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+    p.Polygon = n_sides
+    p.Circumradius = radius
+    p.Placement = FreeCAD.Placement(
+        FreeCAD.Vector(hole_pos, -hole_pos, -obj.BaseProfileHeight),
+        rot,
+    )
+    p.recompute()
+    f = Part.Face(Part.Wire(p.Shape.Edges))
+    c2 = f.extrude(FreeCAD.Vector(0, 0, -obj.MagnetHoleDepth))
+    FreeCAD.ActiveDocument.removeObject(p.Name)
+
+    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+    p.Polygon = n_sides
+    p.Circumradius = radius
+    p.Placement = FreeCAD.Placement(
+        FreeCAD.Vector(-hole_pos, hole_pos, -obj.BaseProfileHeight),
+        rot,
+    )
+    p.recompute()
+    f = Part.Face(Part.Wire(p.Shape.Edges))
+    c3 = f.extrude(FreeCAD.Vector(0, 0, -obj.MagnetHoleDepth))
+    FreeCAD.ActiveDocument.removeObject(p.Name)
+
+    p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+    p.Polygon = n_sides
+    p.Circumradius = radius
+    p.Placement = FreeCAD.Placement(
+        FreeCAD.Vector(hole_pos, hole_pos, -obj.BaseProfileHeight),
+        rot,
+    )
+    p.recompute()
+    f = Part.Face(Part.Wire(p.Shape.Edges))
+    c4 = f.extrude(FreeCAD.Vector(0, 0, -obj.MagnetHoleDepth))
+    FreeCAD.ActiveDocument.removeObject(p.Name)
+
+    return Part.Solid.multiFuse(c1, [c2, c3, c4])
+
+
+def _baseplate_magnet_hole_round(obj: FreeCAD.DocumentObject, hole_pos: float) -> Part.Shape:
+    c1 = Part.makeCylinder(
+        obj.MagnetHoleDiameter / 2,
+        obj.MagnetHoleDepth,
+        FreeCAD.Vector(-hole_pos, -hole_pos, -obj.BaseProfileHeight),
+        FreeCAD.Vector(0, 0, -1),
+    )
+    c2 = Part.makeCylinder(
+        obj.MagnetHoleDiameter / 2,
+        obj.MagnetHoleDepth,
+        FreeCAD.Vector(hole_pos, -hole_pos, -obj.BaseProfileHeight),
+        FreeCAD.Vector(0, 0, -1),
+    )
+    c3 = Part.makeCylinder(
+        obj.MagnetHoleDiameter / 2,
+        obj.MagnetHoleDepth,
+        FreeCAD.Vector(-hole_pos, hole_pos, -obj.BaseProfileHeight),
+        FreeCAD.Vector(0, 0, -1),
+    )
+    c4 = Part.makeCylinder(
+        obj.MagnetHoleDiameter / 2,
+        obj.MagnetHoleDepth,
+        FreeCAD.Vector(hole_pos, hole_pos, -obj.BaseProfileHeight),
+        FreeCAD.Vector(0, 0, -1),
+    )
+
+    # Chamfer
+    ct1 = Part.makeCircle(
+        obj.MagnetHoleDiameter / 2 + obj.MagnetChamfer,
+        FreeCAD.Vector(-hole_pos, -hole_pos, -obj.BaseProfileHeight),
+        FreeCAD.Vector(0, 0, 1),
+    )
+    ct2 = Part.makeCircle(
+        obj.MagnetHoleDiameter / 2 + obj.MagnetChamfer,
+        FreeCAD.Vector(hole_pos, -hole_pos, -obj.BaseProfileHeight),
+        FreeCAD.Vector(0, 0, 1),
+    )
+    ct3 = Part.makeCircle(
+        obj.MagnetHoleDiameter / 2 + obj.MagnetChamfer,
+        FreeCAD.Vector(-hole_pos, hole_pos, -obj.BaseProfileHeight),
+        FreeCAD.Vector(0, 0, 1),
+    )
+    ct4 = Part.makeCircle(
+        obj.MagnetHoleDiameter / 2 + obj.MagnetChamfer,
+        FreeCAD.Vector(hole_pos, hole_pos, -obj.BaseProfileHeight),
+        FreeCAD.Vector(0, 0, 1),
+    )
+
+    cb1 = Part.makeCircle(
+        obj.MagnetHoleDiameter / 2,
+        FreeCAD.Vector(
+            -hole_pos,
+            -hole_pos,
+            -obj.BaseProfileHeight - obj.MagnetChamfer,
+        ),
+        FreeCAD.Vector(0, 0, 1),
+    )
+    cb2 = Part.makeCircle(
+        obj.MagnetHoleDiameter / 2,
+        FreeCAD.Vector(hole_pos, -hole_pos, -obj.BaseProfileHeight - obj.MagnetChamfer),
+        FreeCAD.Vector(0, 0, 1),
+    )
+    cb3 = Part.makeCircle(
+        obj.MagnetHoleDiameter / 2,
+        FreeCAD.Vector(-hole_pos, hole_pos, -obj.BaseProfileHeight - obj.MagnetChamfer),
+        FreeCAD.Vector(0, 0, 1),
+    )
+    cb4 = Part.makeCircle(
+        obj.MagnetHoleDiameter / 2,
+        FreeCAD.Vector(hole_pos, hole_pos, -obj.BaseProfileHeight - obj.MagnetChamfer),
+        FreeCAD.Vector(0, 0, 1),
+    )
+
+    ch1 = [ct1, cb1]
+    ch1 = Part.makeLoft(ch1, solid=True)
+    ch2 = [ct2, cb2]
+    ch2 = Part.makeLoft(ch2, solid=True)
+    ch3 = [ct3, cb3]
+    ch3 = Part.makeLoft(ch3, solid=True)
+    ch4 = [ct4, cb4]
+    ch4 = Part.makeLoft(ch4, solid=True)
+
+    return Part.Solid.multiFuse(
+        c1,
+        [c2, c3, c4, ch1, ch2, ch3, ch4],
+    )
+
+
 def make_baseplate_magnet_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:
     """Create magentholes for a baseplate.
 
@@ -25,6 +171,15 @@ def make_baseplate_magnet_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:
 
     """
     hole_pos = obj.GridSize / 2 - obj.MagnetHoleDistanceFromEdge
+
+    # Magnet holes
+    if obj.MagnetHolesShape == "Hex":
+        hm1 = _baseplate_magnet_hole_hex(obj, hole_pos)
+    elif obj.MagnetHolesShape == "Round":
+        hm1 = _baseplate_magnet_hole_round(obj, hole_pos)
+    else:
+        msg = f"Unexpected hole shape: {obj.MagnetHolesShape}"
+        raise ValueError(msg)
 
     # Screw holes
     ca1 = Part.makeCylinder(
@@ -52,150 +207,7 @@ def make_baseplate_magnet_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:
         FreeCAD.Vector(0, 0, -1),
     )
 
-    # Magnet holes
-    if obj.MagnetHolesShape == "Hex":
-        # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed circle radius
-        radius = obj.MagnetHoleDiameter / math.sqrt(3)
-
-        n_sides = 6
-        rot = FreeCAD.Rotation(FreeCAD.Vector(0, 0, 1), 0)
-
-        p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
-        p.Polygon = n_sides
-        p.Circumradius = radius
-        p.Placement = FreeCAD.Placement(
-            FreeCAD.Vector(-hole_pos, -hole_pos, -obj.BaseProfileHeight),
-            rot,
-        )
-        p.recompute()
-        f = Part.Face(Part.Wire(p.Shape.Edges))
-        c1 = f.extrude(FreeCAD.Vector(0, 0, -obj.MagnetHoleDepth))
-        FreeCAD.ActiveDocument.removeObject(p.Name)
-
-        p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
-        p.Polygon = n_sides
-        p.Circumradius = radius
-        p.Placement = FreeCAD.Placement(
-            FreeCAD.Vector(hole_pos, -hole_pos, -obj.BaseProfileHeight),
-            rot,
-        )
-        p.recompute()
-        f = Part.Face(Part.Wire(p.Shape.Edges))
-        c2 = f.extrude(FreeCAD.Vector(0, 0, -obj.MagnetHoleDepth))
-        FreeCAD.ActiveDocument.removeObject(p.Name)
-
-        p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
-        p.Polygon = n_sides
-        p.Circumradius = radius
-        p.Placement = FreeCAD.Placement(
-            FreeCAD.Vector(-hole_pos, hole_pos, -obj.BaseProfileHeight),
-            rot,
-        )
-        p.recompute()
-        f = Part.Face(Part.Wire(p.Shape.Edges))
-        c3 = f.extrude(FreeCAD.Vector(0, 0, -obj.MagnetHoleDepth))
-        FreeCAD.ActiveDocument.removeObject(p.Name)
-
-        p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
-        p.Polygon = n_sides
-        p.Circumradius = radius
-        p.Placement = FreeCAD.Placement(
-            FreeCAD.Vector(hole_pos, hole_pos, -obj.BaseProfileHeight),
-            rot,
-        )
-        p.recompute()
-        f = Part.Face(Part.Wire(p.Shape.Edges))
-        c4 = f.extrude(FreeCAD.Vector(0, 0, -obj.MagnetHoleDepth))
-        FreeCAD.ActiveDocument.removeObject(p.Name)
-
-        hm1 = Part.Solid.multiFuse(c1, [c2, c3, c4, ca1, ca2, ca3, ca4])
-
-    else:  # round
-        c1 = Part.makeCylinder(
-            obj.MagnetHoleDiameter / 2,
-            obj.MagnetHoleDepth,
-            FreeCAD.Vector(-hole_pos, -hole_pos, -obj.BaseProfileHeight),
-            FreeCAD.Vector(0, 0, -1),
-        )
-        c2 = Part.makeCylinder(
-            obj.MagnetHoleDiameter / 2,
-            obj.MagnetHoleDepth,
-            FreeCAD.Vector(hole_pos, -hole_pos, -obj.BaseProfileHeight),
-            FreeCAD.Vector(0, 0, -1),
-        )
-        c3 = Part.makeCylinder(
-            obj.MagnetHoleDiameter / 2,
-            obj.MagnetHoleDepth,
-            FreeCAD.Vector(-hole_pos, hole_pos, -obj.BaseProfileHeight),
-            FreeCAD.Vector(0, 0, -1),
-        )
-        c4 = Part.makeCylinder(
-            obj.MagnetHoleDiameter / 2,
-            obj.MagnetHoleDepth,
-            FreeCAD.Vector(hole_pos, hole_pos, -obj.BaseProfileHeight),
-            FreeCAD.Vector(0, 0, -1),
-        )
-
-        # Chamfer
-        ct1 = Part.makeCircle(
-            obj.MagnetHoleDiameter / 2 + obj.MagnetChamfer,
-            FreeCAD.Vector(-hole_pos, -hole_pos, -obj.BaseProfileHeight),
-            FreeCAD.Vector(0, 0, 1),
-        )
-        ct2 = Part.makeCircle(
-            obj.MagnetHoleDiameter / 2 + obj.MagnetChamfer,
-            FreeCAD.Vector(hole_pos, -hole_pos, -obj.BaseProfileHeight),
-            FreeCAD.Vector(0, 0, 1),
-        )
-        ct3 = Part.makeCircle(
-            obj.MagnetHoleDiameter / 2 + obj.MagnetChamfer,
-            FreeCAD.Vector(-hole_pos, hole_pos, -obj.BaseProfileHeight),
-            FreeCAD.Vector(0, 0, 1),
-        )
-        ct4 = Part.makeCircle(
-            obj.MagnetHoleDiameter / 2 + obj.MagnetChamfer,
-            FreeCAD.Vector(hole_pos, hole_pos, -obj.BaseProfileHeight),
-            FreeCAD.Vector(0, 0, 1),
-        )
-
-        cb1 = Part.makeCircle(
-            obj.MagnetHoleDiameter / 2,
-            FreeCAD.Vector(
-                -hole_pos,
-                -hole_pos,
-                -obj.BaseProfileHeight - obj.MagnetChamfer,
-            ),
-            FreeCAD.Vector(0, 0, 1),
-        )
-        cb2 = Part.makeCircle(
-            obj.MagnetHoleDiameter / 2,
-            FreeCAD.Vector(hole_pos, -hole_pos, -obj.BaseProfileHeight - obj.MagnetChamfer),
-            FreeCAD.Vector(0, 0, 1),
-        )
-        cb3 = Part.makeCircle(
-            obj.MagnetHoleDiameter / 2,
-            FreeCAD.Vector(-hole_pos, hole_pos, -obj.BaseProfileHeight - obj.MagnetChamfer),
-            FreeCAD.Vector(0, 0, 1),
-        )
-        cb4 = Part.makeCircle(
-            obj.MagnetHoleDiameter / 2,
-            FreeCAD.Vector(hole_pos, hole_pos, -obj.BaseProfileHeight - obj.MagnetChamfer),
-            FreeCAD.Vector(0, 0, 1),
-        )
-
-        ch1 = [ct1, cb1]
-        ch1 = Part.makeLoft(ch1, solid=True)
-        ch2 = [ct2, cb2]
-        ch2 = Part.makeLoft(ch2, solid=True)
-        ch3 = [ct3, cb3]
-        ch3 = Part.makeLoft(ch3, solid=True)
-        ch4 = [ct4, cb4]
-        ch4 = Part.makeLoft(ch4, solid=True)
-
-        hm1 = Part.Solid.multiFuse(
-            c1,
-            [c2, c3, c4, ca1, ca2, ca3, ca4, ch1, ch2, ch3, ch4],
-        )
+    hm1 = hm1.multiFuse([ca1, ca2, ca3, ca4])
 
     xtranslate = zeromm
     ytranslate = zeromm
