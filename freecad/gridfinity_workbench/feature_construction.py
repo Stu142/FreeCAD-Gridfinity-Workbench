@@ -1063,6 +1063,63 @@ def make_bottom_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:
     return Utils.copy_and_translate(hole_shape_sub_array, vec_list)
 
 
+def _eco_bin_cut_fillet_edges_filter(obj: FreeCAD.DocumentObject, edge: Part.Edge) -> bool:
+    divfil = -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1 * unitmm
+    z0 = edge.Vertexes[0].Point.z
+    z1 = edge.Vertexes[1].Point.z
+    return z1 != z0 and (z1 >= divfil or z0 >= divfil)
+
+
+def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
+    xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
+        obj.xDividers + 1
+    )
+    ycomp_w = (obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness) / (
+        obj.yDividers + 1
+    )
+
+    xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
+    ydivheight = obj.yDividerHeight if obj.yDividerHeight != 0 else obj.TotalHeight
+
+    xtranslate = zeromm + xcomp_w + obj.WallThickness - obj.DividerThickness
+    ytranslate = zeromm + ycomp_w + obj.WallThickness
+
+    assembly: Part.Shape | None = None
+
+    # dividers in x direction
+    for _ in range(obj.xDividers):
+        comp = Part.makeBox(
+            obj.DividerThickness,
+            obj.yTotalWidth,
+            xdivheight,
+            FreeCAD.Vector(
+                -obj.BinUnit / 2 + obj.DividerThickness,
+                -obj.BinUnit / 2,
+                -obj.TotalHeight,
+            ),
+            FreeCAD.Vector(0, 0, 1),
+        )
+        comp.translate(FreeCAD.Vector(xtranslate, 0, 0))
+
+        assembly = comp if assembly is None else assembly.fuse(comp)
+        xtranslate += xcomp_w + obj.DividerThickness
+
+    # dividers in y direction
+    for _ in range(obj.yDividers):
+        comp = Part.makeBox(
+            obj.xTotalWidth,
+            obj.DividerThickness,
+            ydivheight,
+            FreeCAD.Vector(-obj.BinUnit / 2, -obj.BinUnit / 2, -obj.TotalHeight),
+            FreeCAD.Vector(0, 0, 1),
+        )
+        comp.translate(FreeCAD.Vector(0, ytranslate, 0))
+        assembly = comp if assembly is None else assembly.fuse(comp)
+        ytranslate += ycomp_w + obj.DividerThickness
+
+    return assembly
+
+
 def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
     """Create eco bin cutouts.
 
@@ -1088,29 +1145,18 @@ def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
         ),
     )
 
-    func_fuse = rounded_rectangle_extrude(
-        obj.xTotalWidth - obj.WallThickness * 2,
-        obj.yTotalWidth - obj.WallThickness * 2,
-        -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness,
-        obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness,
-        obj.BinOuterRadius - obj.WallThickness,
-    )
-    func_fuse.translate(
-        FreeCAD.Vector(
-            obj.xTotalWidth / 2 - obj.BinUnit / 2,
-            obj.yTotalWidth / 2 - obj.BinUnit / 2,
-            0,
-        ),
-    )
-
     base_offset = obj.BaseWallThickness * math.tan(math.pi / 8)
     bt_cmf_width = (
         obj.BinUnit - 2 * obj.BaseProfileTopChamfer - obj.BaseWallThickness * 2 - 0.4 * unitmm * 2
     )
     vert_width = obj.BinUnit - 2 * obj.BaseProfileTopChamfer - obj.BaseWallThickness * 2
     bt_chf_rad = obj.BinVerticalRadius - 0.4 * unitmm - obj.BaseWallThickness
-    v_chf_rad = obj.BinVerticalRadius - obj.BaseWallThickness
+    bt_chf_rad = 0.01 * unitmm if bt_chf_rad <= SMALL_NUMBER else bt_chf_rad
 
+    v_chf_rad = obj.BinVerticalRadius - obj.BaseWallThickness
+    v_chf_rad = 0.01 * unitmm if v_chf_rad <= SMALL_NUMBER else v_chf_rad
+
+    magoffset, tp_chf_offset = zeromm, zeromm
     if obj.MagnetHoles:
         magoffset = obj.MagnetHoleDepth
         if (obj.MagnetHoleDepth + obj.BaseWallThickness) > (
@@ -1119,77 +1165,50 @@ def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
             tp_chf_offset = (obj.MagnetHoleDepth + obj.BaseWallThickness) - (
                 obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection + base_offset
             )
-        else:
-            tp_chf_offset = 0 * unitmm
-    else:
-        magoffset = 0 * unitmm
-        tp_chf_offset = 0 * unitmm
 
-    if bt_chf_rad <= SMALL_NUMBER:
-        bt_chf_rad = 0.01 * unitmm
+    bottom_chamfer = rounded_rectangle_chamfer(
+        bt_cmf_width,
+        bt_cmf_width,
+        -obj.TotalHeight + obj.BaseWallThickness + magoffset,
+        0.4 * unitmm,
+        bt_chf_rad,
+    )
 
-    if v_chf_rad <= SMALL_NUMBER:
-        v_chf_rad = 0.01 * unitmm
+    vertical_section = rounded_rectangle_extrude(
+        vert_width,
+        vert_width,
+        -obj.TotalHeight + obj.BaseWallThickness + 0.4 * unitmm + magoffset,
+        obj.BaseProfileVerticalSection
+        + obj.BaseProfileBottomChamfer
+        + base_offset
+        - obj.BaseWallThickness
+        - 0.4 * unitmm,
+        v_chf_rad,
+    )
 
-    xtranslate = zeromm
-    ytranslate = zeromm
-    assembly1: Part.Shape | None = None
-    assembly2: Part.Shape | None = None
+    top_chamfer = rounded_rectangle_chamfer(
+        vert_width + tp_chf_offset,
+        vert_width + tp_chf_offset,
+        -obj.TotalHeight
+        + obj.BaseProfileBottomChamfer
+        + obj.BaseProfileVerticalSection
+        + base_offset
+        + tp_chf_offset,
+        obj.BaseProfileTopChamfer + obj.BaseWallThickness - tp_chf_offset,
+        v_chf_rad,
+    )
+    assembly = bottom_chamfer.multiFuse([vertical_section, top_chamfer])
 
+    xtranslate, ytranslate = zeromm, zeromm
+    vec_list = []
     for _ in range(obj.xGridUnits):
         ytranslate = zeromm
         for _ in range(obj.yGridUnits):
-            bottom_chamfer = rounded_rectangle_chamfer(
-                bt_cmf_width,
-                bt_cmf_width,
-                -obj.TotalHeight + obj.BaseWallThickness + magoffset,
-                0.4 * unitmm,
-                bt_chf_rad,
-            )
-
-            bottom_chamfer = rounded_rectangle_chamfer(
-                bt_cmf_width,
-                bt_cmf_width,
-                -obj.TotalHeight + obj.BaseWallThickness + magoffset,
-                0.4 * unitmm,
-                bt_chf_rad,
-            )
-
-            vertical_section = rounded_rectangle_extrude(
-                vert_width,
-                vert_width,
-                -obj.TotalHeight + obj.BaseWallThickness + 0.4 * unitmm + magoffset,
-                obj.BaseProfileVerticalSection
-                + obj.BaseProfileBottomChamfer
-                + base_offset
-                - obj.BaseWallThickness
-                - 0.4 * unitmm,
-                v_chf_rad,
-            )
-            assembly = Part.Shape.fuse(bottom_chamfer, vertical_section)
-
-            top_chamfer = rounded_rectangle_chamfer(
-                vert_width + tp_chf_offset,
-                vert_width + tp_chf_offset,
-                -obj.TotalHeight
-                + obj.BaseProfileBottomChamfer
-                + obj.BaseProfileVerticalSection
-                + base_offset
-                + tp_chf_offset,
-                obj.BaseProfileTopChamfer + obj.BaseWallThickness - tp_chf_offset,
-                v_chf_rad,
-            )
-            assembly = Part.Solid.fuse(assembly, top_chamfer)
-
-            assembly.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
-
-            assembly1 = assembly if assembly1 is None else assembly1.fuse(assembly)
+            vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
             ytranslate += obj.GridSize
-
-        assembly2 = assembly1 if assembly2 is None else assembly2.fuse(assembly1)
         xtranslate += obj.GridSize
 
-    func_fuse = func_fuse.fuse(assembly2)
+    func_fuse = func_fuse.fuse(Utils.copy_and_translate(assembly, vec_list))
 
     outer_trim1 = rounded_rectangle_extrude(
         obj.xTotalWidth - obj.WallThickness * 2,
@@ -1197,8 +1216,7 @@ def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
         -obj.TotalHeight,
         obj.TotalHeight,
         obj.BinOuterRadius - obj.WallThickness,
-    )
-    outer_trim1.translate(
+    ).translate(
         FreeCAD.Vector(
             obj.xTotalWidth / 2 - obj.BinUnit / 2,
             obj.yTotalWidth / 2 - obj.BinUnit / 2,
@@ -1212,8 +1230,7 @@ def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
         -obj.TotalHeight,
         obj.TotalHeight - obj.BaseProfileHeight,
         obj.BinOuterRadius,
-    )
-    outer_trim2.translate(
+    ).translate(
         FreeCAD.Vector(
             obj.xTotalWidth / 2 - obj.BinUnit / 2,
             obj.yTotalWidth / 2 - obj.BinUnit / 2,
@@ -1224,60 +1241,11 @@ def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
     outer_trim2 = outer_trim2.cut(outer_trim1)
 
     func_fuse = func_fuse.cut(outer_trim2)
-    # Dividers
 
-    xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
-        obj.xDividers + 1
-    )
-    ycomp_w = (obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness) / (
-        obj.yDividers + 1
-    )
+    deviders = _eco_bin_deviders(obj)
+    func_fuse = func_fuse.cut(deviders) if deviders else func_fuse
 
-    xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
-    ydivheight = obj.yDividerHeight if obj.yDividerHeight != 0 else obj.TotalHeight
-
-    xtranslate = zeromm + xcomp_w + obj.WallThickness - obj.DividerThickness
-    ytranslate = zeromm + ycomp_w + obj.WallThickness
-
-    # dividers in x direction
-    xdiv: Part.Shape | None = None
-    for _ in range(obj.xDividers):
-        comp = Part.makeBox(
-            obj.DividerThickness,
-            obj.yTotalWidth,
-            xdivheight,
-            FreeCAD.Vector(
-                -obj.BinUnit / 2 + obj.DividerThickness,
-                -obj.BinUnit / 2,
-                -obj.TotalHeight,
-            ),
-            FreeCAD.Vector(0, 0, 1),
-        )
-        comp.translate(FreeCAD.Vector(xtranslate, 0, 0))
-
-        xdiv = comp if xdiv is None else xdiv.fuse(comp)
-        xtranslate += xcomp_w + obj.DividerThickness
-
-    # dividers in y direction
-    ydiv: Part.Shape | None = None
-    for _ in range(obj.yDividers):
-        comp = Part.makeBox(
-            obj.xTotalWidth,
-            obj.DividerThickness,
-            ydivheight,
-            FreeCAD.Vector(-obj.BinUnit / 2, -obj.BinUnit / 2, -obj.TotalHeight),
-            FreeCAD.Vector(0, 0, 1),
-        )
-        comp.translate(FreeCAD.Vector(0, ytranslate, 0))
-        ydiv = comp if ydiv is None else ydiv.fuse(comp)
-        ytranslate += ycomp_w + obj.DividerThickness
-
-    if xdiv:
-        func_fuse = func_fuse.cut(xdiv)
-    if ydiv:
-        func_fuse = func_fuse.cut(ydiv)
     b_edges = []
-
     divfil = -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1 * unitmm
     for edge in func_fuse.Edges:
         z0 = edge.Vertexes[0].Point.z
@@ -1285,8 +1253,4 @@ def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
 
         if z1 != z0 and (z1 >= divfil or z0 >= divfil):
             b_edges.append(edge)
-
-    if obj.xDividers != 0 or obj.yDividers != 0:
-        func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
-
-    return func_fuse
+    return func_fuse.makeFillet(obj.InsideFilletRadius, b_edges) if deviders else func_fuse
