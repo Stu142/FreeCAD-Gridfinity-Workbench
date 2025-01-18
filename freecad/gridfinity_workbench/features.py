@@ -20,16 +20,26 @@ from .baseplate_feature_construction import (
     MakeBPScrewBottomCham,
     MakeBPConnectionHoles,
 )
+
+from .feature_construction_complex_bin import (
+    MakeComplexBinBase,
+    MakeComplexStackingLip,
+    MakeLMidSection,
+    MakeComplexBottomHoles,
+)
+
 from .const import (
     BIN_BASE_TOP_CHAMFER,
     BIN_BASE_BOTTOM_CHAMFER,
     BIN_BASE_VERTICAL_SECTION,
     GRID_SIZE,
+    X_GRID_SIZE,
+    Y_GRID_SIZE,
     BIN_OUTER_RADIUS,
     BIN_UNIT,
     BIN_BASE_VERTICAL_RADIUS,
     BIN_BASE_BOTTOM_RADIUS,
-    TOLERANCE,
+    CLEARANCE,
     MAGNET_HOLE_DIAMETER,
     MAGNET_HOLE_DEPTH,
     MAGNET_HOLE_DISTANCE_FROM_EDGE,
@@ -73,6 +83,7 @@ __all__ = [
     "MagnetBaseplate",
     "ScrewTogetherBaseplate",
     "EcoBin",
+    "LBinBlank",
 ]
 
 HOLE_SHAPES = ["Round", "Hex"]
@@ -357,11 +368,11 @@ class BinBlank(FoundationGridfinity):
 
         obj.addProperty(
             "App::PropertyLength",
-            "Tolerance",
+            "Clearance",
             "zzExpertOnly",
             "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",
             1,
-        ).Tolerance = TOLERANCE
+        ).Clearance = CLEARANCE
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDistanceFromEdge",
@@ -408,17 +419,17 @@ class BinBlank(FoundationGridfinity):
         obj.setEditorMode("WallThickness", 2)
 
     def generate_gridfinity_shape(self, obj):
-        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Tolerance * 2
-        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Tolerance * 2
+        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Clearance * 2
+        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Clearance * 2
         obj.BaseProfileHeight = (
             obj.BaseProfileBottomChamfer
             + obj.BaseProfileVerticalSection
             + obj.BaseProfileTopChamfer
         )
         obj.StackingLipTopChamfer = (
-            obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
+            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
-        obj.BinUnit = obj.GridSize - TOLERANCE * 2 * unitmm
+        obj.BinUnit = obj.GridSize - CLEARANCE * 2 * unitmm
 
         if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
@@ -657,11 +668,11 @@ class BinBase(FoundationGridfinity):
 
         obj.addProperty(
             "App::PropertyLength",
-            "Tolerance",
+            "Clearance",
             "zzExpertOnly",
             "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",
             1,
-        ).Tolerance = TOLERANCE
+        ).Clearance = CLEARANCE
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDistanceFromEdge",
@@ -708,17 +719,17 @@ class BinBase(FoundationGridfinity):
         obj.setEditorMode("WallThickness", 2)
 
     def generate_gridfinity_shape(self, obj):
-        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Tolerance * 2
-        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Tolerance * 2
+        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Clearance * 2
+        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Clearance * 2
         obj.BaseProfileHeight = (
             obj.BaseProfileBottomChamfer
             + obj.BaseProfileVerticalSection
             + obj.BaseProfileTopChamfer
         )
         obj.StackingLipTopChamfer = (
-            obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
+            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
-        obj.BinUnit = obj.GridSize - TOLERANCE * 2 * unitmm
+        obj.BinUnit = obj.GridSize - CLEARANCE * 2 * unitmm
 
         if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
@@ -1051,11 +1062,11 @@ class SimpleStorageBin(FoundationGridfinity):
 
         obj.addProperty(
             "App::PropertyLength",
-            "Tolerance",
+            "Clearance",
             "zzExpertOnly",
             "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",
             1,
-        ).Tolerance = TOLERANCE
+        ).Clearance = CLEARANCE
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDistanceFromEdge",
@@ -1107,17 +1118,17 @@ class SimpleStorageBin(FoundationGridfinity):
     def generate_gridfinity_shape(self, obj):
         ## Parameter Calculations
 
-        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Tolerance * 2
-        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Tolerance * 2
+        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Clearance * 2
+        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Clearance * 2
         obj.BaseProfileHeight = (
             obj.BaseProfileBottomChamfer
             + obj.BaseProfileVerticalSection
             + obj.BaseProfileTopChamfer
         )
         obj.StackingLipTopChamfer = (
-            obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
+            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
-        obj.BinUnit = obj.GridSize - TOLERANCE * 2 * unitmm
+        obj.BinUnit = obj.GridSize - CLEARANCE * 2 * unitmm
 
         if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
@@ -1435,11 +1446,11 @@ class EcoBin(FoundationGridfinity):
 
         obj.addProperty(
             "App::PropertyLength",
-            "Tolerance",
+            "Clearance",
             "zzExpertOnly",
             "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",
             1,
-        ).Tolerance = TOLERANCE
+        ).Clearance = CLEARANCE
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDistanceFromEdge",
@@ -1502,17 +1513,17 @@ class EcoBin(FoundationGridfinity):
     def generate_gridfinity_shape(self, obj):
         ## Parameter Calculation
 
-        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Tolerance * 2
-        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Tolerance * 2
+        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Clearance * 2
+        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Clearance * 2
         obj.BaseProfileHeight = (
             obj.BaseProfileBottomChamfer
             + obj.BaseProfileVerticalSection
             + obj.BaseProfileTopChamfer
         )
         obj.StackingLipTopChamfer = (
-            obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
+            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
-        obj.BinUnit = obj.GridSize - TOLERANCE * 2 * unitmm
+        obj.BinUnit = obj.GridSize - CLEARANCE * 2 * unitmm
 
         if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
@@ -1878,11 +1889,11 @@ class PartsBin(FoundationGridfinity):
 
         obj.addProperty(
             "App::PropertyLength",
-            "Tolerance",
+            "Clearance",
             "zzExpertOnly",
             "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",
             1,
-        ).Tolerance = TOLERANCE
+        ).Clearance = CLEARANCE
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDistanceFromEdge",
@@ -1934,17 +1945,17 @@ class PartsBin(FoundationGridfinity):
     def generate_gridfinity_shape(self, obj):
         ## Calculated Properties
 
-        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Tolerance * 2
-        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Tolerance * 2
+        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Clearance * 2
+        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Clearance * 2
         obj.BaseProfileHeight = (
             obj.BaseProfileBottomChamfer
             + obj.BaseProfileVerticalSection
             + obj.BaseProfileTopChamfer
         )
         obj.StackingLipTopChamfer = (
-            obj.BaseProfileTopChamfer - obj.Tolerance - obj.StackingLipTopLedge
+            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
-        obj.BinUnit = obj.GridSize - TOLERANCE * 2 * unitmm
+        obj.BinUnit = obj.GridSize - CLEARANCE * 2 * unitmm
 
         if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
@@ -2168,11 +2179,11 @@ class Baseplate(FoundationGridfinity):
         ).BinUnit = BIN_UNIT
         obj.addProperty(
             "App::PropertyLength",
-            "Tolerance",
+            "Clearance",
             "zzExpertOnly",
             "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",
             1,
-        ).Tolerance = TOLERANCE
+        ).Clearance = CLEARANCE
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDistanceFromEdge",
@@ -2408,11 +2419,11 @@ class MagnetBaseplate(FoundationGridfinity):
         ).BinUnit = BIN_UNIT
         obj.addProperty(
             "App::PropertyLength",
-            "Tolerance",
+            "Clearance",
             "zzExpertOnly",
             "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",
             1,
-        ).Tolerance = TOLERANCE
+        ).Clearance = CLEARANCE
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDistanceFromEdge",
@@ -2684,10 +2695,10 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         ).BinUnit = BIN_UNIT
         obj.addProperty(
             "App::PropertyLength",
-            "Tolerance",
+            "Clearance",
             "zzExpertOnly",
             "The tolerance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",
-        ).Tolerance = TOLERANCE
+        ).Clearance = CLEARANCE
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDistanceFromEdge",
@@ -2743,6 +2754,377 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         fuse_total = Part.Shape.cut(fuse_total, conholes)
 
         return fuse_total
+
+    def __getstate__(self):
+        return None
+
+    def __setstate__(self, state):
+        return None
+
+
+class LBinBlank(FoundationGridfinity):
+    def __init__(self, obj):
+        super(LBinBlank, self).__init__(obj)
+
+        obj.addProperty(
+            "App::PropertyPythonObject", "Bin", "base", "python gridfinity object"
+        )
+
+        self.add_bin_properties(obj)
+        self.add_custom_bin_properties(obj)
+        self.add_reference_properties(obj)
+        self.add_expert_properties(obj)
+        self.add_hidden_properties(obj)
+
+        obj.Proxy = self
+
+    def add_bin_properties(self, obj):
+        obj.addProperty(
+            "App::PropertyInteger",
+            "aGridUnits",
+            "Gridfinity",
+            "Height of the extrusion",
+        ).aGridUnits = 3
+        obj.addProperty(
+            "App::PropertyInteger",
+            "bGridUnits",
+            "Gridfinity",
+            "Height of the extrusion",
+        ).bGridUnits = 1
+        obj.addProperty(
+            "App::PropertyInteger",
+            "cGridUnits",
+            "Gridfinity",
+            "Height of the extrusion",
+        ).cGridUnits = 1
+        obj.addProperty(
+            "App::PropertyInteger",
+            "dGridUnits",
+            "Gridfinity",
+            "Height of the extrusion",
+        ).dGridUnits = 1
+        obj.addProperty(
+            "App::PropertyInteger",
+            "HeightUnits",
+            "Gridfinity",
+            "height of the bin in units, each is 7 mm",
+        ).HeightUnits = 6
+        obj.addProperty(
+            "App::PropertyBool",
+            "StackingLip",
+            "Gridfinity",
+            "Toggle the stacking lip on or off",
+        ).StackingLip = True
+        obj.addProperty(
+            "App::PropertyBool",
+            "MagnetHoles",
+            "Gridfinity",
+            "Toggle the magnet holes on or off",
+        ).MagnetHoles = True
+        obj.addProperty(
+            "App::PropertyBool",
+            "ScrewHoles",
+            "Gridfinity",
+            "Toggle the screw holes on or off",
+        ).ScrewHoles = True
+
+    def add_custom_bin_properties(self, obj):
+        obj.addProperty(
+            "App::PropertyLength",
+            "CustomHeight",
+            "GridfinityNonStandard",
+            "total height of the bin using the custom heignt instead of incraments of 7 mm",
+        ).CustomHeight = 42
+        obj.addProperty(
+            "App::PropertyLength",
+            "SequentialBridgingLayerHeight",
+            "GridfinityNonStandard",
+            "Layer Height that you print in for optimal print results",
+        ).SequentialBridgingLayerHeight = 0.2
+        obj.addProperty(
+            "App::PropertyBool",
+            "NonStandardHeight",
+            "GridfinityNonStandard",
+            "use a custom height if selected",
+        ).NonStandardHeight = False
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "GridfinityNonStandard",
+            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+        )
+        obj.MagnetHolesShape = HOLE_SHAPES
+        obj.addProperty(
+            "App::PropertyLength",
+            "MagnetHoleDiameter",
+            "GridfinityNonStandard",
+            "Diameter of Magnet Holes <br> <br> default = 6.5 mm",
+        ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
+        obj.addProperty(
+            "App::PropertyLength",
+            "MagnetHoleDepth",
+            "GridfinityNonStandard",
+            "Depth of Magnet Holes <br> <br> default = 2.4 mm",
+        ).MagnetHoleDepth = MAGNET_HOLE_DEPTH
+        obj.addProperty(
+            "App::PropertyLength",
+            "ScrewHoleDiameter",
+            "GridfinityNonStandard",
+            "Diameter of Screw Holes <br> <br> default = 3.0 mm",
+        ).ScrewHoleDiameter = SCREW_HOLE_DIAMETER
+        obj.addProperty(
+            "App::PropertyLength",
+            "ScrewHoleDepth",
+            "GridfinityNonStandard",
+            "Depth of Screw Holes <br> <br> default = 6.0 mm",
+        ).ScrewHoleDepth = SCREW_HOLE_DEPTH
+
+    def add_reference_properties(self, obj):
+        obj.addProperty(
+            "App::PropertyLength",
+            "xTotalWidth",
+            "ReferenceDimensions",
+            "total width of bin in x direction",
+            1,
+        )
+        obj.addProperty(
+            "App::PropertyLength",
+            "yTotalWidth",
+            "ReferenceDimensions",
+            "total width of bin in y direction",
+            1,
+        )
+        obj.addProperty(
+            "App::PropertyLength",
+            "TotalHeight",
+            "ReferenceDimensions",
+            "total height of the bin",
+            1,
+        )
+        obj.addProperty(
+            "App::PropertyLength",
+            "BaseProfileHeight",
+            "ReferenceDimensions",
+            "Height of the Gridfinity Base Profile",
+            1,
+        )
+        obj.addProperty(
+            "App::PropertyLength",
+            "xBinUnit",
+            "ReferenceDimensions",
+            "Width of a single bin unit",
+            1,
+        ).xBinUnit = BIN_UNIT
+        obj.addProperty(
+            "App::PropertyLength",
+            "yBinUnit",
+            "ReferenceDimensions",
+            "Width of a single bin unit",
+            1,
+        ).yBinUnit = BIN_UNIT
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "aTotalDimension",
+            "ReferenceDimensions",
+            "total width of a dimension",
+            1,
+        )
+        obj.addProperty(
+            "App::PropertyLength",
+            "bTotalDimension",
+            "ReferenceDimensions",
+            "total width of b dimension",
+            1,
+        )
+        obj.addProperty(
+            "App::PropertyLength",
+            "cTotalDimension",
+            "ReferenceDimensions",
+            "total width of c dimension",
+            1,
+        )
+        obj.addProperty(
+            "App::PropertyLength",
+            "dTotalDimension",
+            "ReferenceDimensions",
+            "total width of d dimension",
+            1,
+        )
+
+    def add_expert_properties(self, obj):
+        obj.addProperty(
+            "App::PropertyLength",
+            "BaseProfileBottomChamfer",
+            "zzExpertOnly",
+            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            1,
+        ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
+        obj.addProperty(
+            "App::PropertyLength",
+            "BaseProfileVerticalSection",
+            "zzExpertOnly",
+            "Height of the vertical section in bin base profile",
+            1,
+        ).BaseProfileVerticalSection = BIN_BASE_VERTICAL_SECTION
+        obj.addProperty(
+            "App::PropertyLength",
+            "BaseProfileTopChamfer",
+            "zzExpertOnly",
+            "Height of the top chamfer in the bin base profile",
+            1,
+        ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
+        obj.addProperty(
+            "App::PropertyLength", "xGridSize", "zzExpertOnly", "Size of the Grid"
+        ).xGridSize = X_GRID_SIZE
+        obj.addProperty(
+            "App::PropertyLength", "yGridSize", "zzExpertOnly", "Size of the Grid"
+        ).yGridSize = Y_GRID_SIZE
+        obj.addProperty(
+            "App::PropertyLength",
+            "HeightUnitValue",
+            "zzExpertOnly",
+            "height per unit, default is 7mm",
+            1,
+        ).HeightUnitValue = 7
+        obj.addProperty(
+            "App::PropertyLength",
+            "BinOuterRadius",
+            "zzExpertOnly",
+            "Outer radius of the bin",
+            1,
+        ).BinOuterRadius = BIN_OUTER_RADIUS
+        obj.addProperty(
+            "App::PropertyLength",
+            "BinVerticalRadius",
+            "zzExpertOnly",
+            "Radius of the base profile Vertical section",
+            1,
+        ).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
+        obj.addProperty(
+            "App::PropertyLength",
+            "BinBottomRadius",
+            "zzExpertOnly",
+            "bottom of bin corner radius",
+            1,
+        ).BinBottomRadius = BIN_BASE_BOTTOM_RADIUS
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "Clearance",
+            "zzExpertOnly",
+            "The Clearance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",
+            1,
+        ).Clearance = CLEARANCE
+        obj.addProperty(
+            "App::PropertyLength",
+            "MagnetHoleDistanceFromEdge",
+            "zzExpertOnly",
+            "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
+            1,
+        ).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
+        obj.addProperty(
+            "App::PropertyLength",
+            "StackingLipTopLedge",
+            "zzExpertOnly",
+            "Top Ledge of the stacking lip <br> <br> default = 0.4 mm",
+            1,
+        ).StackingLipTopLedge = STACKING_LIP_TOP_LEDGE
+        obj.addProperty(
+            "App::PropertyLength",
+            "StackingLipTopChamfer",
+            "zzExpertOnly",
+            "Top Chamfer of the Stacking lip",
+            1,
+        )
+        obj.addProperty(
+            "App::PropertyLength",
+            "StackingLipBottomChamfer",
+            "zzExpertOnly",
+            "Bottom Chamfer of the Stacking lip<br> <br> default = 0.7 mm",
+            1,
+        ).StackingLipBottomChamfer = STACKING_LIP_BOTTOM_CHAMFER
+        obj.addProperty(
+            "App::PropertyLength",
+            "StackingLipVerticalSection",
+            "zzExpertOnly",
+            "vertical section of the Stacking lip<br> <br> default = 1.8 mm",
+            1,
+        ).StackingLipVerticalSection = STACKING_LIP_VERTICAL_SECTION
+
+    def add_hidden_properties(self, obj):
+        obj.addProperty(
+            "App::PropertyLength",
+            "WallThickness",
+            "GridfinityNonStandard",
+            "for stacking lip",
+        ).WallThickness = 1
+        obj.setEditorMode("WallThickness", 2)
+
+    def generate_gridfinity_shape(self, obj):
+        if obj.NonStandardHeight:
+            obj.TotalHeight = obj.CustomHeight
+        else:
+            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
+
+        obj.BaseProfileHeight = (
+            obj.BaseProfileBottomChamfer
+            + obj.BaseProfileVerticalSection
+            + obj.BaseProfileTopChamfer
+        )
+        obj.StackingLipTopChamfer = (
+            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
+        )
+        obj.xBinUnit = obj.xGridSize - CLEARANCE * 2 * unitmm
+        obj.yBinUnit = obj.yGridSize - CLEARANCE * 2 * unitmm
+
+        obj.aTotalDimension = obj.aGridUnits * obj.xGridSize - obj.Clearance * 2
+        obj.bTotalDimension = obj.bGridUnits * obj.yGridSize - obj.Clearance * 2
+        obj.cTotalDimension = obj.cGridUnits * obj.xGridSize - obj.Clearance * 2
+        obj.dTotalDimension = obj.dGridUnits * obj.yGridSize
+
+        binlayout = [
+            [None for x in range(obj.bGridUnits + obj.dGridUnits)]
+            for y in range(obj.aGridUnits)
+        ]
+
+        for x in range(obj.aGridUnits):
+            for y in range(obj.bGridUnits + obj.dGridUnits):
+                if x < obj.cGridUnits:
+                    binlayout[x][y] = 1
+                if y < obj.bGridUnits:
+                    binlayout[x][y] = 1
+
+        """
+        fuse_total = MakeBinBase(self, obj)
+        solid_center= RoundedRectangleExtrude(obj.xTotalWidth, obj.yTotalWidth, -obj.TotalHeight+obj.BaseProfileHeight, obj.TotalHeight-obj.BaseProfileHeight, obj.BinOuterRadius)
+        solid_center.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
+
+        fuse_total = Part.Shape.fuse(fuse_total, solid_center )
+
+        if obj.StackingLip:
+            stacking_lip = MakeStackingLip(self, obj)
+            fuse_total = Part.Shape.fuse(stacking_lip,fuse_total)
+        if obj.ScrewHoles or obj.MagnetHoles:
+            holes = MakeBottomHoles(self, obj)
+            fuse_total = Part.Shape.cut(fuse_total, holes)
+        """
+
+        fusetotal = MakeComplexBinBase(self, obj, binlayout)
+
+        midsection = MakeLMidSection(self, obj, binlayout)
+
+        fusetotal = fusetotal.fuse(midsection)
+
+        if obj.StackingLip:
+            stacking_lip = MakeComplexStackingLip(self, obj)
+            fusetotal = Part.Shape.fuse(stacking_lip, fusetotal)
+
+        if obj.ScrewHoles or obj.MagnetHoles:
+            holes = MakeComplexBottomHoles(self, obj, binlayout)
+            fusetotal = Part.Shape.cut(fusetotal, holes)
+
+        return fusetotal
 
     def __getstate__(self):
         return None

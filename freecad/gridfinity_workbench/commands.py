@@ -10,6 +10,7 @@ from .features import (
     ScrewTogetherBaseplate,
     EcoBin,
     PartsBin,
+    LBinBlank,
 )
 
 
@@ -169,3 +170,11 @@ class CreateScrewTogetherBaseplate(BaseCommand):
     Pixmap = os.path.join(BaseCommand.ICONDIR, "screw_together_baseplate.svg")
     MenuText = "Gridfinity Screw together baseplate"
     ToolTip = "Create a Gridfinity Screw Together Baseplate"
+
+
+class CreateLBinBlank(BaseCommand):
+    NAME = "LBinBlank"
+    GRIDFINITY_FUNCTION = LBinBlank
+    Pixmap = os.path.join(BaseCommand.ICONDIR, "BetaLBinBlank.svg")
+    MenuText = "Gridfinity L Shaped Blank Bin"
+    ToolTip = "Create a Gridfinity L Shaped Blank Bin"
