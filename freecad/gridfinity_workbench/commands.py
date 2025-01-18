@@ -13,6 +13,7 @@ from .features import (
     BinBase,
     BinBlank,
     EcoBin,
+    LBinBlank,
     MagnetBaseplate,
     PartsBin,
     ScrewTogetherBaseplate,
@@ -212,3 +213,13 @@ class CreateScrewTogetherBaseplate(BaseCommand):
     Pixmap = ICONDIR / "screw_together_baseplate.svg"
     MenuText = "Gridfinity Screw together baseplate"
     ToolTip = "Create a Gridfinity Screw Together Baseplate"
+
+
+class CreateLBinBlank(BaseCommand):
+    """Create Blank L shaped bin command."""
+
+    NAME = "LBinBlank"
+    GRIDFINITY_FUNCTION = LBinBlank
+    Pixmap = ICONDIR / "BetaLBinBlank.svg"
+    MenuText = "Gridfinity L Shaped Blank Bin"
+    ToolTip = "Create a Gridfinity L Shaped Blank Bin"
