@@ -14,122 +14,6 @@ zeromm = Units.Quantity("0 mm")
 SMALL_NUMBER = 0.01
 
 
-def create_rounded_rectangle(
-    xwidth: float,
-    ywidth: float,
-    zsketchplane: float,
-    radius: float,
-) -> Part.Wire:
-    """Create rounded rectangle.
-
-    Args:
-        xwidth (float): Width of the rectangle in X direction.
-        ywidth (float): Width of the rectangle in Y direction.
-        zsketchplane (float): Z heigt where the wire should be.
-        radius (float): Radius of the corners.
-
-    Returns:
-        Part.Wire: Wire representing a rounded rectangle.
-
-    """
-    xfarv = xwidth / 2
-    yfarv = ywidth / 2
-    xclosev = xwidth / 2 - radius
-    yclosev = ywidth / 2 - radius
-    xarcv = xwidth / 2 - radius + radius * math.sin(math.pi / 4)
-    yarcv = ywidth / 2 - radius + radius * math.sin(math.pi / 4)
-    xfarv = xwidth / 2
-    yfarv = ywidth / 2
-    xclosev = xwidth / 2 - radius
-    yclosev = ywidth / 2 - radius
-    xarcv = xwidth / 2 - radius + radius * math.sin(math.pi / 4)
-    yarcv = ywidth / 2 - radius + radius * math.sin(math.pi / 4)
-
-    v1 = FreeCAD.Vector(-xclosev, yfarv, zsketchplane)
-    v1 = FreeCAD.Vector(-xclosev, yfarv, zsketchplane)
-    v2 = FreeCAD.Vector(xclosev, yfarv, zsketchplane)
-    v3 = FreeCAD.Vector(xfarv, yclosev, zsketchplane)
-    v4 = FreeCAD.Vector(xfarv, -yclosev, zsketchplane)
-    v5 = FreeCAD.Vector(xclosev, -yfarv, zsketchplane)
-    v6 = FreeCAD.Vector(-xclosev, -yfarv, zsketchplane)
-    v7 = FreeCAD.Vector(-xfarv, -yclosev, zsketchplane)
-    v8 = FreeCAD.Vector(-xfarv, yclosev, zsketchplane)
-
-    vc1 = FreeCAD.Vector(-xarcv, yarcv, zsketchplane)
-    c1 = Part.Arc(v1, vc1, v8)
-    vc2 = FreeCAD.Vector(xarcv, yarcv, zsketchplane)
-    c2 = Part.Arc(v2, vc2, v3)
-    vc3 = FreeCAD.Vector(xarcv, -yarcv, zsketchplane)
-    c3 = Part.Arc(v4, vc3, v5)
-    vc4 = FreeCAD.Vector(-xarcv, -yarcv, zsketchplane)
-    c4 = Part.Arc(v6, vc4, v7)
-
-    l1 = Part.LineSegment(v1, v2)
-    l2 = Part.LineSegment(v3, v4)
-    l3 = Part.LineSegment(v5, v6)
-    l4 = Part.LineSegment(v7, v8)
-
-    s1 = Part.Shape([c1, l1, c2, l2, c3, l3, c4, l4])
-
-    return Part.Wire(s1.Edges)
-
-
-def rounded_rectangle_chamfer(
-    xwidth: float,
-    ywidth: float,
-    zsketchplane: float,
-    height: float,
-    radius: float,
-) -> Part.Shape:
-    """Create rounded rectangle shpae with a chamfer.
-
-    Args:
-        xwidth (float): Width of the rectangle in X direction.
-        ywidth (float): Width of the rectangle in Y direction.
-        zsketchplane (float): Z heigt where the part should be.
-        height (float): Height of the part
-        radius (float): Radius of the corners.
-
-    Returns:
-        Part.Shape: Rounded rectangle chanfer shape.
-
-    """
-    w1 = create_rounded_rectangle(xwidth, ywidth, zsketchplane, radius)
-    w2 = create_rounded_rectangle(
-        xwidth + 2 * height,
-        ywidth + 2 * height,
-        zsketchplane + height,
-        radius + height,
-    )
-    wires = [w1, w2]
-    return Part.makeLoft(wires, solid=True)
-
-
-def rounded_rectangle_extrude(
-    xwidth: float,
-    ywidth: float,
-    zsketchplane: float,
-    height: float,
-    radius: float,
-) -> Part.Shape:
-    """Create an extruded rounded rectangle.
-
-    Args:
-        xwidth (float): Width of the rectangle in X direction.
-        ywidth (float): Width of the rectangle in Y direction.
-        zsketchplane (float): Z heigt where the part should be.
-        height (float): Height of the part
-        radius (float): Radius of the corners.
-
-    Returns:
-        Part.Shape: Rounded rectangle shape.
-
-    """
-    w1 = create_rounded_rectangle(xwidth, ywidth, zsketchplane, radius)
-    face = Part.Face(w1)
-    return face.extrude(FreeCAD.Vector(0, 0, height))
-
-
 def _label_shelf_full_width(
     obj: FreeCAD.DocumentObject,
     face: Part.Face,
@@ -565,7 +449,7 @@ def make_stacking_lip(obj: FreeCAD.DocumentObject) -> Part.Shape:
         Part.Shape: Stackinglip 3D object.
 
     """
-    stacking_lip_path = create_rounded_rectangle(
+    stacking_lip_path = Utils.create_rounded_rectangle(
         obj.xTotalWidth,
         obj.yTotalWidth,
         0,
@@ -748,7 +632,7 @@ def make_compartments(obj: FreeCAD.DocumentObject) -> Part.Shape:
         Part.Shape: Compartments cutout shape.
 
     """
-    func_fuse = rounded_rectangle_extrude(
+    func_fuse = Utils.rounded_rectangle_extrude(
         obj.xTotalWidth - obj.WallThickness * 2,
         obj.yTotalWidth - obj.WallThickness * 2,
         -obj.UsableHeight,
@@ -792,7 +676,7 @@ def make_bin_base(obj: FreeCAD.DocumentObject) -> Part.Shape:
     for _ in range(obj.xGridUnits):
         ytranslate = zeromm
         for _ in range(obj.yGridUnits):
-            bottom_chamfer = rounded_rectangle_chamfer(
+            bottom_chamfer = Utils.rounded_rectangle_chamfer(
                 bt_cmf_width,
                 bt_cmf_width,
                 -obj.TotalHeight,
@@ -800,7 +684,7 @@ def make_bin_base(obj: FreeCAD.DocumentObject) -> Part.Shape:
                 obj.BinBottomRadius,
             )
 
-            vertical_section = rounded_rectangle_extrude(
+            vertical_section = Utils.rounded_rectangle_extrude(
                 vert_width,
                 vert_width,
                 -obj.TotalHeight + obj.BaseProfileBottomChamfer,
@@ -808,7 +692,7 @@ def make_bin_base(obj: FreeCAD.DocumentObject) -> Part.Shape:
                 obj.BinVerticalRadius,
             )
             assembly = Part.Shape.fuse(bottom_chamfer, vertical_section)
-            vertical_section = rounded_rectangle_extrude(
+            vertical_section = Utils.rounded_rectangle_extrude(
                 vert_width,
                 vert_width,
                 -obj.TotalHeight + obj.BaseProfileBottomChamfer,
@@ -817,7 +701,7 @@ def make_bin_base(obj: FreeCAD.DocumentObject) -> Part.Shape:
             )
             assembly = Part.Shape.fuse(bottom_chamfer, vertical_section)
 
-            top_chamfer = rounded_rectangle_chamfer(
+            top_chamfer = Utils.rounded_rectangle_chamfer(
                 vert_width,
                 vert_width,
                 -obj.TotalHeight + obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection,
@@ -922,23 +806,22 @@ def make_baseplate_center_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
     return Utils.copy_and_translate(shape, vec_list)
 
 
-def make_bottom_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:
-    """Create bottom holes.
+def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
+    """Create bottom hole shape.
+
+    Return one combined shape containing of the different hole types.
 
     Args:
-        obj (FreeCAD.DocumentObject): Documentobject
+        obj (FreeCAD.DocumentObject): DocumentObject
 
     Returns:
-        Part.Shape: bottom holes shape
+        Part.Shape: Combined hole shape.
 
     """
-    hole_pos = obj.GridSize / 2 - obj.MagnetHoleDistanceFromEdge
-
     sqbr1_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight
     sqbr2_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight * 2
 
     bottom_hole_shape: Part.Shape | None = None
-    hole_shape_sub_array: Part.Shape | None = None
 
     if obj.MagnetHoles:
         if obj.MagnetHolesShape == "Hex":
@@ -1041,6 +924,22 @@ def make_bottom_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:
             if bottom_hole_shape is None
             else bottom_hole_shape.fuse(holes_interface_shape)
         )
+    return bottom_hole_shape
+
+
+def make_bottom_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:
+    """Create bottom holes.
+
+    Args:
+        obj (FreeCAD.DocumentObject): Documentobject
+
+    Returns:
+        Part.Shape: bottom holes shape
+
+    """
+    bottom_hole_shape = make_bottom_hole_shape(obj)
+
+    hole_pos = obj.GridSize / 2 - obj.MagnetHoleDistanceFromEdge
 
     hole_shape_sub_array = Utils.copy_and_translate(
         bottom_hole_shape,
@@ -1130,7 +1029,7 @@ def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
         Part.Shape: Eco bin cutout shape.
 
     """
-    func_fuse = rounded_rectangle_extrude(
+    func_fuse = Utils.rounded_rectangle_extrude(
         obj.xTotalWidth - obj.WallThickness * 2,
         obj.yTotalWidth - obj.WallThickness * 2,
         -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness,
@@ -1166,7 +1065,7 @@ def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
                 obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection + base_offset
             )
 
-    bottom_chamfer = rounded_rectangle_chamfer(
+    bottom_chamfer = Utils.rounded_rectangle_chamfer(
         bt_cmf_width,
         bt_cmf_width,
         -obj.TotalHeight + obj.BaseWallThickness + magoffset,
@@ -1174,7 +1073,7 @@ def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
         bt_chf_rad,
     )
 
-    vertical_section = rounded_rectangle_extrude(
+    vertical_section = Utils.rounded_rectangle_extrude(
         vert_width,
         vert_width,
         -obj.TotalHeight + obj.BaseWallThickness + 0.4 * unitmm + magoffset,
@@ -1186,7 +1085,7 @@ def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
         v_chf_rad,
     )
 
-    top_chamfer = rounded_rectangle_chamfer(
+    top_chamfer = Utils.rounded_rectangle_chamfer(
         vert_width + tp_chf_offset,
         vert_width + tp_chf_offset,
         -obj.TotalHeight
@@ -1210,7 +1109,7 @@ def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
 
     func_fuse = func_fuse.fuse(Utils.copy_and_translate(assembly, vec_list))
 
-    outer_trim1 = rounded_rectangle_extrude(
+    outer_trim1 = Utils.rounded_rectangle_extrude(
         obj.xTotalWidth - obj.WallThickness * 2,
         obj.yTotalWidth - obj.WallThickness * 2,
         -obj.TotalHeight,
@@ -1224,7 +1123,7 @@ def make_eco_bin_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
         ),
     )
 
-    outer_trim2 = rounded_rectangle_extrude(
+    outer_trim2 = Utils.rounded_rectangle_extrude(
         obj.xTotalWidth + 20 * unitmm,
         obj.yTotalWidth + 20 * unitmm,
         -obj.TotalHeight,

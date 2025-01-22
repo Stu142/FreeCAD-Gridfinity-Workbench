@@ -11,14 +11,6 @@ from .baseplate_feature_construction import (
     make_baseplate_magnet_holes,
     make_baseplate_screw_bottom_chamfer,
 )
-
-
-from .feature_construction_complex_bin import (
-    MakeComplexBinBase,
-    MakeComplexStackingLip,
-    MakeLMidSection,
-    MakeComplexBottomHoles,
-)
 from .const import (
     BASE_THICKNESS,
     BASEPLATE_BOTTOM_CHAMFER,
@@ -36,6 +28,7 @@ from .const import (
     BIN_BASE_VERTICAL_SECTION,
     BIN_OUTER_RADIUS,
     BIN_UNIT,
+    CLEARANCE,
     CONNECTION_HOLE_DIAMETER,
     GRID_SIZE,
     HEIGHT_UNIT,
@@ -58,9 +51,6 @@ from .const import (
     STACKING_LIP_BOTTOM_CHAMFER,
     STACKING_LIP_TOP_LEDGE,
     STACKING_LIP_VERTICAL_SECTION,
-    X_GRID_SIZE,
-    Y_GRID_SIZE,
-    CLEARANCE,
 )
 from .feature_construction import (
     make_baseplate_center_cut,
@@ -71,8 +61,14 @@ from .feature_construction import (
     make_label_shelf,
     make_scoop,
     make_stacking_lip,
-    rounded_rectangle_extrude,
 )
+from .feature_construction_complex_bin import (
+    make_complex_bin_base,
+    make_complex_bottom_holes,
+    make_complex_stacking_lip,
+    make_l_mid_section,
+)
+from .utils import Utils
 from .version import __version__
 
 unitmm = Units.Quantity("1 mm")
@@ -82,11 +78,11 @@ __all__ = [
     "Baseplate",
     "BinBlank",
     "EcoBin",
+    "EcoBin",
+    "LBinBlank",
     "MagnetBaseplate",
     "PartsBin",
     "ScrewTogetherBaseplate",
-    "EcoBin",
-    "LbinBlank",
 ]
 
 
@@ -468,7 +464,7 @@ class BinBlank(FoundationGridfinity):
 
         fuse_total = make_bin_base(obj)
 
-        solid_center = rounded_rectangle_extrude(
+        solid_center = Utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight + obj.BaseProfileHeight,
@@ -821,7 +817,7 @@ class BinBase(FoundationGridfinity):
 
         fuse_total = make_bin_base(obj)
 
-        solid_center = rounded_rectangle_extrude(
+        solid_center = Utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight + obj.BaseProfileHeight,
@@ -1353,7 +1349,7 @@ class SimpleStorageBin(FoundationGridfinity):
 
         fuse_total = make_bin_base(obj)
 
-        solid_center = rounded_rectangle_extrude(
+        solid_center = Utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight + obj.BaseProfileHeight,
@@ -1824,7 +1820,7 @@ class EcoBin(FoundationGridfinity):
 
         fuse_total = make_bin_base(obj)
 
-        solid_center = rounded_rectangle_extrude(
+        solid_center = Utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight + obj.BaseProfileHeight,
@@ -2362,7 +2358,7 @@ class PartsBin(FoundationGridfinity):
 
         fuse_total = make_bin_base(obj)
 
-        solid_center = rounded_rectangle_extrude(
+        solid_center = Utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight + obj.BaseProfileHeight,
@@ -2615,7 +2611,7 @@ class Baseplate(FoundationGridfinity):
 
         fuse_total = make_bin_base(obj)
 
-        solid_center = rounded_rectangle_extrude(
+        solid_center = Utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight,
@@ -2934,7 +2930,7 @@ class MagnetBaseplate(FoundationGridfinity):
 
         fuse_total.translate(FreeCAD.Vector(0, 0, obj.TotalHeight - obj.BaseProfileHeight))
 
-        solid_center = rounded_rectangle_extrude(
+        solid_center = Utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight,
@@ -3261,7 +3257,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
 
         fuse_total.translate(FreeCAD.Vector(0, 0, obj.TotalHeight - obj.BaseProfileHeight))
 
-        solid_center = rounded_rectangle_extrude(
+        solid_center = Utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight,
@@ -3297,20 +3293,28 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
 
 
 class LBinBlank(FoundationGridfinity):
-    def __init__(self, obj):
-        super(LBinBlank, self).__init__(obj)
+    """L shaped blank bin object."""
+
+    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+        """Initialize L shaped blank bin properties.
+
+        Args:
+            obj (FreeCAD.DocumentObject): DocumentObject
+
+        """
+        super().__init__(obj)
 
         obj.addProperty("App::PropertyPythonObject", "Bin", "base", "python gridfinity object")
 
-        self.add_bin_properties(obj)
-        self.add_custom_bin_properties(obj)
-        self.add_reference_properties(obj)
-        self.add_expert_properties(obj)
-        self.add_hidden_properties(obj)
+        self._add_bin_properties(obj)
+        self._add_custom_bin_properties(obj)
+        self._add_reference_properties(obj)
+        self._add_expert_properties(obj)
+        self._add_hidden_properties(obj)
 
         obj.Proxy = self
 
-    def add_bin_properties(self, obj):
+    def _add_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
         obj.addProperty(
             "App::PropertyInteger",
             "aGridUnits",
@@ -3360,7 +3364,7 @@ class LBinBlank(FoundationGridfinity):
             "Toggle the screw holes on or off",
         ).ScrewHoles = True
 
-    def add_custom_bin_properties(self, obj):
+    def _add_custom_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "CustomHeight",
@@ -3383,7 +3387,10 @@ class LBinBlank(FoundationGridfinity):
             "App::PropertyEnumeration",
             "MagnetHolesShape",
             "GridfinityNonStandard",
-            "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be glued",
+            (
+                "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> "
+                "Round meant to be glued"
+            ),
         )
         obj.MagnetHolesShape = HOLE_SHAPES
         obj.addProperty(
@@ -3411,7 +3418,7 @@ class LBinBlank(FoundationGridfinity):
             "Depth of Screw Holes <br> <br> default = 6.0 mm",
         ).ScrewHoleDepth = SCREW_HOLE_DEPTH
 
-    def add_reference_properties(self, obj):
+    def _add_reference_properties(self, obj: FreeCAD.DocumentObject) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "xTotalWidth",
@@ -3484,12 +3491,12 @@ class LBinBlank(FoundationGridfinity):
             1,
         )
 
-    def add_expert_properties(self, obj):
+    def _add_expert_properties(self, obj: FreeCAD.DocumentObject) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "BaseProfileBottomChamfer",
             "zzExpertOnly",
-            "height of chamfer in bottom of bin                                                                                                         base profile <br> <br> default = 0.8 mm",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
         ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
         obj.addProperty(
@@ -3507,11 +3514,11 @@ class LBinBlank(FoundationGridfinity):
             1,
         ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
         obj.addProperty(
-            "App::PropertyLength", "xGridSize", "zzExpertOnly", "Size of the Grid"
-        ).xGridSize = X_GRID_SIZE
-        obj.addProperty(
-            "App::PropertyLength", "yGridSize", "zzExpertOnly", "Size of the Grid"
-        ).yGridSize = Y_GRID_SIZE
+            "App::PropertyLength",
+            "GridSize",
+            "zzExpertOnly",
+            "Size of the Grid",
+        ).GridSize = GRID_SIZE
         obj.addProperty(
             "App::PropertyLength",
             "HeightUnitValue",
@@ -3545,7 +3552,10 @@ class LBinBlank(FoundationGridfinity):
             "App::PropertyLength",
             "Clearance",
             "zzExpertOnly",
-            "The Clearance on each side of a bin between before the edge of the grid <br> <br> default = 0.25 mm",
+            (
+                "The Clearance on each side of a bin between before the edge of the grid <br> <br> "
+                "default = 0.25 mm"
+            ),
             1,
         ).Clearance = CLEARANCE
         obj.addProperty(
@@ -3584,7 +3594,7 @@ class LBinBlank(FoundationGridfinity):
             1,
         ).StackingLipVerticalSection = STACKING_LIP_VERTICAL_SECTION
 
-    def add_hidden_properties(self, obj):
+    def _add_hidden_properties(self, obj: FreeCAD.DocumentObject) -> None:
         obj.addProperty(
             "App::PropertyLength",
             "WallThickness",
@@ -3593,7 +3603,16 @@ class LBinBlank(FoundationGridfinity):
         ).WallThickness = 1
         obj.setEditorMode("WallThickness", 2)
 
-    def generate_gridfinity_shape(self, obj):
+    def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
+        """Generate gridfinity L shaped bin.
+
+        Args:
+            obj (FreeCAD.DocumentObject): DocumentObject
+
+        Returns:
+            Part.Shape: L shaped bin shape.
+
+        """
         if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
         else:
@@ -3607,58 +3626,37 @@ class LBinBlank(FoundationGridfinity):
         obj.StackingLipTopChamfer = (
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
-        obj.xBinUnit = obj.xGridSize - CLEARANCE * 2 * unitmm
-        obj.yBinUnit = obj.yGridSize - CLEARANCE * 2 * unitmm
+        obj.xBinUnit = obj.GridSize - CLEARANCE * 2 * unitmm
+        obj.yBinUnit = obj.GridSize - CLEARANCE * 2 * unitmm
 
-        obj.aTotalDimension = obj.aGridUnits * obj.xGridSize - obj.Clearance * 2
-        obj.bTotalDimension = obj.bGridUnits * obj.yGridSize - obj.Clearance * 2
-        obj.cTotalDimension = obj.cGridUnits * obj.xGridSize - obj.Clearance * 2
-        obj.dTotalDimension = obj.dGridUnits * obj.yGridSize
+        obj.aTotalDimension = obj.aGridUnits * obj.GridSize - obj.Clearance * 2
+        obj.bTotalDimension = obj.bGridUnits * obj.GridSize - obj.Clearance * 2
+        obj.cTotalDimension = obj.cGridUnits * obj.GridSize - obj.Clearance * 2
+        obj.dTotalDimension = obj.dGridUnits * obj.GridSize
 
         binlayout = [
-            [None for x in range(obj.bGridUnits + obj.dGridUnits)] for y in range(obj.aGridUnits)
+            [False for x in range(obj.bGridUnits + obj.dGridUnits)] for y in range(obj.aGridUnits)
         ]
 
         for x in range(obj.aGridUnits):
             for y in range(obj.bGridUnits + obj.dGridUnits):
                 if x < obj.cGridUnits:
-                    binlayout[x][y] = 1
+                    binlayout[x][y] = True
                 if y < obj.bGridUnits:
-                    binlayout[x][y] = 1
+                    binlayout[x][y] = True
 
-        """
-        fuse_total = MakeBinBase(self, obj)
-        solid_center= RoundedRectangleExtrude(obj.xTotalWidth, obj.yTotalWidth, -obj.TotalHeight+obj.BaseProfileHeight, obj.TotalHeight-obj.BaseProfileHeight, obj.BinOuterRadius)
-        solid_center.translate(App.Vector(obj.xTotalWidth/2-obj.BinUnit/2,obj.yTotalWidth/2-obj.BinUnit/2,0))
+        fusetotal = make_complex_bin_base(obj, binlayout)
 
-        fuse_total = Part.Shape.fuse(fuse_total, solid_center )
-
-        if obj.StackingLip:
-            stacking_lip = MakeStackingLip(self, obj)
-            fuse_total = Part.Shape.fuse(stacking_lip,fuse_total)
-        if obj.ScrewHoles or obj.MagnetHoles:
-            holes = MakeBottomHoles(self, obj)
-            fuse_total = Part.Shape.cut(fuse_total, holes)
-        """
-
-        fusetotal = MakeComplexBinBase(self, obj, binlayout)
-
-        midsection = MakeLMidSection(self, obj, binlayout)
+        midsection = make_l_mid_section(obj)
 
         fusetotal = fusetotal.fuse(midsection)
 
         if obj.StackingLip:
-            stacking_lip = MakeComplexStackingLip(self, obj)
+            stacking_lip = make_complex_stacking_lip(obj)
             fusetotal = Part.Shape.fuse(stacking_lip, fusetotal)
 
         if obj.ScrewHoles or obj.MagnetHoles:
-            holes = MakeComplexBottomHoles(self, obj, binlayout)
+            holes = make_complex_bottom_holes(obj, binlayout)
             fusetotal = Part.Shape.cut(fusetotal, holes)
 
         return fusetotal
-
-    def __getstate__(self):
-        return None
-
-    def __setstate__(self, state):
-        return None
