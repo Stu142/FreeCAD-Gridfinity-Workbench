@@ -1,28 +1,40 @@
-import os
-import FreeCADGui as Gui
-import FreeCAD as App
-from freecad.gridfinity_workbench import ICONPATH
+"""Initialize workbench gui.
+
+The file name is given by FreeCAD. FreeCAD uses this file to initialize GUI components.
+"""
+
+from pathlib import Path
+from typing import ClassVar
+
+import FreeCAD
+import FreeCADGui
 
 try:
     from FreeCADGui import Workbench
+
 except ImportError:
-    App.Console.PrintWarning(
-        "you are using the GridfinityWorkbench with an old version of FreeCAD (<0.16)"
+    FreeCAD.Console.PrintWarning(
+        "you are using the GridfinityWorkbench with an old version of FreeCAD (<0.16)",
     )
-    App.Console.PrintWarning(
-        "the class Workbench is loaded, although not imported: magic"
+
+    FreeCAD.Console.PrintWarning(
+        "the class Workbench is loaded, although not imported: magic",
     )
+
+
+ICONPATH = Path(__file__).parent / "icons"
 
 
 class GridfinityWorkbench(Workbench):
-    """
-    class which gets initiated at starup of the gui
-    """
+    """class which gets initiated at startup of the FreeCAD GUI."""
 
     MenuText = "Gridfinity"
+
     ToolTip = "FreeCAD Gridfinity Workbench"
-    Icon = os.path.join(ICONPATH, "gridfinity_workbench_icon.svg")
-    toolbox = [
+
+    Icon = str(ICONPATH / "gridfinity_workbench_icon.svg")
+
+    toolbox: ClassVar[list[str]] = [
         "CreateBinBlank",
         "CreateBinBase",
         "CreateSimpleStorageBin",
@@ -34,44 +46,48 @@ class GridfinityWorkbench(Workbench):
         "CreateLBinBlank",
     ]
 
-    def GetClassName(self):
+    def GetClassName(self) -> str:  # noqa: N802
+        """Get freecad internal class name.
+
+        Returns:
+            str: c++ style class name
+
+        """
         return "Gui::PythonWorkbench"
 
-    def Initialize(self):
-        """
-        This function is called at the first activation of the workbench.
-        here is the place to import all the commands
-        """
-        from .commands import CreateBinBlank
-        from .commands import CreateBinBase
-        from .commands import CreateSimpleStorageBin
-        from .commands import CreateEcoBin
-        from .commands import CreatePartsBin
-        from .commands import CreateBaseplate
-        from .commands import CreateMagnetBaseplate
-        from .commands import CreateScrewTogetherBaseplate
-        from .commands import CreateLBinBlank
+    def Initialize(self) -> None:  # noqa: N802
+        """Initialize workbench.
 
-        App.Console.PrintMessage("switching to Gridfinity Workbench\n")
+        This function is called at the first activation of the workbench.
+        here is the place to import all the commands.
+        """
+        from .commands import (
+            CreateBaseplate,
+            CreateBinBase,
+            CreateBinBlank,
+            CreateEcoBin,
+            CreateLBinBlank,
+            CreateMagnetBaseplate,
+            CreatePartsBin,
+            CreateScrewTogetherBaseplate,
+            CreateSimpleStorageBin,
+        )
+
+        FreeCAD.Console.PrintMessage("switching to Gridfinity Workbench\n")
 
         self.appendToolbar("Gridfinity", self.toolbox)
+
         self.appendMenu("Gridfinity", self.toolbox)
 
-        Gui.addCommand("CreateBinBlank", CreateBinBlank())
-        Gui.addCommand("CreateBinBase", CreateBinBase())
-        Gui.addCommand("CreateSimpleStorageBin", CreateSimpleStorageBin())
-        Gui.addCommand("CreateEcoBin", CreateEcoBin())
-        Gui.addCommand("CreatePartsBin", CreatePartsBin())
-        Gui.addCommand("CreateBaseplate", CreateBaseplate())
-        Gui.addCommand("CreateMagnetBaseplate", CreateMagnetBaseplate())
-        Gui.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
-        Gui.addCommand("CreateLBinBlank", CreateLBinBlank())
-
-    def Activated(self):
-        pass
-
-    def Deactivated(self):
-        pass
+        FreeCADGui.addCommand("CreateBinBlank", CreateBinBlank())
+        FreeCADGui.addCommand("CreateBinBase", CreateBinBase())
+        FreeCADGui.addCommand("CreateSimpleStorageBin", CreateSimpleStorageBin())
+        FreeCADGui.addCommand("CreateEcoBin", CreateEcoBin())
+        FreeCADGui.addCommand("CreatePartsBin", CreatePartsBin())
+        FreeCADGui.addCommand("CreateBaseplate", CreateBaseplate())
+        FreeCADGui.addCommand("CreateMagnetBaseplate", CreateMagnetBaseplate())
+        FreeCADGui.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
+        FreeCADGui.addCommand("CreateLBinBlank", CreateLBinBlank())
 
 
-Gui.addWorkbench(GridfinityWorkbench())
+FreeCADGui.addWorkbench(GridfinityWorkbench())

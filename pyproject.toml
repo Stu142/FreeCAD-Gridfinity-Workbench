@@ -11,3 +11,7 @@ version = "0.7.1"
 
 [project.optional-dependencies]
 dev = ["ruff", "freecad-stubs"]
+
+[tool.ruff]
+select = ["ALL"]
+line-length = 100
