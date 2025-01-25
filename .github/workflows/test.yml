@@ -1,0 +1,16 @@
+name: Tests
+on:
+  pull_request:
+    branches: ["master"]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Build docker images
+        run: docker build -t local - < tools/Dockerfile
+      - name: Run tests
+        run: docker run -v $PWD:/srv -w/srv local python -m unittest discover tests -v
