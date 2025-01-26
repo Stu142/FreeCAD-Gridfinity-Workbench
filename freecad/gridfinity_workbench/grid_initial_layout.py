@@ -25,7 +25,6 @@ class RectangleLayout(Feature):
         Args:
             obj (FreeCAD.DocumentObject): Document object
 
-
         """
         ## Standard Gridfinity Parameters
         obj.addProperty(
@@ -76,12 +75,6 @@ class RectangleLayout(Feature):
         )
 
         ## Expert Parameters
-        obj.addProperty(
-            "App::PropertyLength",
-            "GridSize",
-            "zzExpertOnly",
-            "Size of the grid in x direction <br> <br> default = 42 mm",
-        ).GridSize = GRID_SIZE
 
         obj.addProperty(
             "App::PropertyLength",

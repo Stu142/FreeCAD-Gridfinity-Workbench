@@ -14,7 +14,30 @@ from .const import (
     RECESSED_TOP_DEPTH,
     HEIGHT_UNIT_VALUE,
     HEIGHT_UNITS,
+    MAGNET_HOLES,
+    MAGNET_HOLE_DIAMETER,
+    MAGNET_HOLE_DEPTH,
+    SCREW_HOLES,
+    SCREW_HOLE_DIAMETER,
+    SCREW_HOLE_DEPTH,
+    MAGNET_HOLE_DISTANCE_FROM_EDGE,
+    SEQUENTIAL_BRIDGING_LAYER_HEIGHT,
+    STACKING_LIP,
+    STACKING_LIP_TOP_LEDGE,
+    STACKING_LIP_BOTTOM_CHAMFER,
+    STACKING_LIP_VERTICAL_SECTION,
+    WALL_THICKNESS,
+    BIN_UNIT,
+    BIN_BASE_BOTTOM_CHAMFER,
+    BIN_BASE_VERTICAL_SECTION,
+    BIN_BASE_TOP_CHAMFER,
+    BIN_OUTER_RADIUS,
+    BIN_BASE_VERTICAL_RADIUS,
+    BIN_BASE_BOTTOM_RADIUS,
+    CLEARANCE,
 )
+
+HOLE_SHAPES = ["Round", "Hex"]
 
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
@@ -166,6 +189,120 @@ def rounded_l_extrude(
     face = Part.Face(w1)
     return face.extrude(FreeCAD.Vector(0, 0, height))
 
+class BinBaseValues(Feature):
+    """Add bin base properties and calculate values"""
+
+    def __init__(self, obj:FreeCAD.DocumentObject):
+        """Create BinBaseValues.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object
+
+        """
+        ## Reference Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "BaseProfileHeight",
+            "ReferenceParameters",
+            "Height of the Gridfinity Base Profile",
+            1,
+        )
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "xBinUnit",
+            "ReferenceParameters",
+            "Width of a single bin unit in x direction after subtracting clearance on both sides",
+            1,
+        ).xBinUnit = BIN_UNIT
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "yBinUnit",
+            "ReferenceParameters",
+            "Width of a single bin unit in y direction after subtracting clearance on both sides",
+            1,
+        ).yBinUnit = BIN_UNIT
+
+        ## Expert Only Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "BaseProfileBottomChamfer",
+            "zzExpertOnly",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
+            1,
+        ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "BaseProfileVerticalSection",
+            "zzExpertOnly",
+            "Height of the vertical section in bin base profile",
+            1,
+        ).BaseProfileVerticalSection = BIN_BASE_VERTICAL_SECTION
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "BaseProfileTopChamfer",
+            "zzExpertOnly",
+            "Height of the top chamfer in the bin base profile",
+            1,
+        ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "BinOuterRadius",
+            "zzExpertOnly",
+            "Outer radius of the bin",
+            1,
+        ).BinOuterRadius = BIN_OUTER_RADIUS
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "BinVerticalRadius",
+            "zzExpertOnly",
+            "Radius of the base profile Vertical section",
+            1,
+        ).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "BinBottomRadius",
+            "zzExpertOnly",
+            "bottom of bin corner radius",
+            1,
+        ).BinBottomRadius = BIN_BASE_BOTTOM_RADIUS
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "Clearance",
+            "zzExpertOnly",
+            (
+                "The tolerance on each side of a bin between before the edge of the grid <br> <br>"
+                "default = 0.25 mm"
+            ),
+        ).Clearance = CLEARANCE
+
+    def Make(self, obj:FreeCAD.DocumentObject) -> None:
+        """Generate Rectanble layout and calculate relevant parameters.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+
+        """
+
+        obj.xBinUnit = obj.xGridSize - CLEARANCE * 2 * unitmm
+
+        obj.yBinUnit = obj.yGridSize - CLEARANCE * 2 * unitmm
+
+        obj.BaseProfileHeight = (
+            obj.BaseProfileBottomChamfer
+            + obj.BaseProfileVerticalSection
+            + obj.BaseProfileTopChamfer
+        )
+
+        return
+
 
 def make_complex_bin_base(
     obj: FreeCAD.DocumentObject,
@@ -230,11 +367,11 @@ def make_complex_bin_base(
             else:
                 parts.append(b)
 
-            ytranslate += obj.GridSize
+            ytranslate += obj.yGridSize
 
-        xtranslate += obj.GridSize
+        xtranslate += obj.xGridSize
 
-    func_fuse = b1 if not obj.xMaxGrids and not obj.yMaxGrids else Part.Solid.multiFuse(b1, parts)
+    func_fuse = b1 if obj.xMaxGrids < 2 and obj.yMaxGrids < 2 else Part.Solid.multiFuse(b1, parts)
 
     func_fuse.translate(
         FreeCAD.Vector(obj.xBinUnit / 2 + obj.Clearance, obj.yBinUnit / 2 + obj.Clearance, 0),
@@ -276,11 +413,18 @@ class BinSolidMidSection(Feature):
             "use a custom height if selected",
         ).NonStandardHeight = False
 
+        obj.addProperty(
+            "App::PropertyLength",
+            "WallThickness",
+            "GridfinityNonStandard",
+            "for stacking lip",
+        ).WallThickness = WALL_THICKNESS
+
         ## Reference Parameters
         obj.addProperty(
             "App::PropertyLength",
             "TotalHeight",
-            "ReferenceDimensions",
+            "ReferenceParameters",
             "total height of the bin",
             1,
         )
@@ -304,6 +448,14 @@ class BinSolidMidSection(Feature):
             Part.Shape: Extruded bin mid section of the input shape
 
         """
+        ## Calculated Values
+        if obj.NonStandardHeight:
+            obj.TotalHeight = obj.CustomHeight
+
+        else:
+            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
+
+        ## Bin Solid Mid Section Generation
         face = Part.Face(bin_outside_shape)
 
         return face.extrude(FreeCAD.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight))
@@ -365,50 +517,132 @@ def make_l_mid_section(obj: FreeCAD.DocumentObject) -> Part.Shape:
         -obj.TotalHeight + obj.BaseProfileHeight,
     )
 
+class BinBottomHoles(Feature):
+    """Cut into blank bin to create recessed bin top"""
 
-def make_complex_bottom_holes(
-    obj: FreeCAD.DocumentObject,
-    binlayout: GridfinityLayout,
-) -> Part.Shape:
-    """Make comlex bottom holes.
+    def __init__(self, obj:FreeCAD.DocumentObject):
+        """Create bin solid mid section.
 
-    Args:
-        obj (FreeCAD.DocumentObject): DocumentObject
-        binlayout (GridfinityLayout): Layout of the gridfinity grid.
+        Args:
+            obj (FreeCAD.DocumentObject): Document object
 
-    Returns:
-        Part.Shape: Shape containing negatives of all holes.
+        """
+        ## Gridfinity Parameters
+        obj.addProperty(
+            "App::PropertyBool",
+            "MagnetHoles",
+            "Gridfinity",
+            "Toggle the magnet holes on or off",
+        ).MagnetHoles = MAGNET_HOLES
 
-    """
-    xmaxgrids = obj.aGridUnits
-    ymaxgrids = obj.bGridUnits + obj.dGridUnits
+        obj.addProperty(
+            "App::PropertyBool",
+            "ScrewHoles",
+            "Gridfinity",
+            "Toggle the screw holes on or off",
+        ).ScrewHoles = SCREW_HOLES
 
-    bottom_hole_shape = make_bottom_hole_shape(obj)
+        ## Gridfinity Non Standard Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "SequentialBridgingLayerHeight",
+            "GridfinityNonStandard",
+            "Layer Height that you print in for optimal print results",
+        ).SequentialBridgingLayerHeight = SEQUENTIAL_BRIDGING_LAYER_HEIGHT
 
-    hole_pos = obj.GridSize / 2 - obj.MagnetHoleDistanceFromEdge
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "MagnetHolesShape",
+            "GridfinityNonStandard",
+            (
+                "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> Round meant to be"
+                "glued"
+            ),
+        )
+        obj.MagnetHolesShape = HOLE_SHAPES
 
-    hole_shape_sub_array = Utils.copy_and_translate(
-        bottom_hole_shape,
-        [
-            FreeCAD.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
-            FreeCAD.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
-            FreeCAD.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
-            FreeCAD.Vector(hole_pos, hole_pos, -obj.TotalHeight),
-        ],
-    )
-    vec_list = []
-    xtranslate = 0
-    for x in range(xmaxgrids):
-        ytranslate = 0
-        for y in range(ymaxgrids):
-            if binlayout[x][y]:
-                vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
-            ytranslate += obj.GridSize.Value
-        xtranslate += obj.GridSize.Value
+        obj.addProperty(
+            "App::PropertyLength",
+            "MagnetHoleDiameter",
+            "GridfinityNonStandard",
+            (
+                "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br>"
+                "default = 6.5 mm"
+            ),
+        ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
 
-    return Utils.copy_and_translate(hole_shape_sub_array, vec_list).translate(
-        FreeCAD.Vector(obj.xBinUnit / 2 + obj.Clearance, obj.yBinUnit / 2 + obj.Clearance, 0),
-    )
+        obj.addProperty(
+            "App::PropertyLength",
+            "MagnetHoleDepth",
+            "GridfinityNonStandard",
+            "Depth of Magnet Holes <br> <br> default = 2.4 mm",
+        ).MagnetHoleDepth = MAGNET_HOLE_DEPTH
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "ScrewHoleDiameter",
+            "GridfinityNonStandard",
+            "Diameter of Screw Holes <br> <br> default = 3.0 mm",
+        ).ScrewHoleDiameter = SCREW_HOLE_DIAMETER
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "ScrewHoleDepth",
+            "GridfinityNonStandard",
+            "Depth of Screw Holes <br> <br> default = 6.0 mm",
+        ).ScrewHoleDepth = SCREW_HOLE_DEPTH
+
+        ## Expert Only Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "MagnetHoleDistanceFromEdge",
+            "zzExpertOnly",
+            "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
+            1,
+        ).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
+
+    def Make(
+        obj: FreeCAD.DocumentObject,
+        layout: GridfinityLayout,
+    ) -> Part.Shape:
+        """Make bin bottom holes.
+
+        Args:
+            obj (FreeCAD.DocumentObject): DocumentObject
+            layout (GridfinityLayout): Layout of the gridfinity grid.
+
+        Returns:
+            Part.Shape: Shape containing negatives of all holes.
+
+        """
+
+        bottom_hole_shape = make_bottom_hole_shape(obj)
+
+        x_hole_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
+        y_hole_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
+
+        hole_shape_sub_array = Utils.copy_and_translate(
+            bottom_hole_shape,
+            [
+                FreeCAD.Vector(-x_hole_pos, -y_hole_pos, -obj.TotalHeight),
+                FreeCAD.Vector(x_hole_pos, -y_hole_pos, -obj.TotalHeight),
+                FreeCAD.Vector(-x_hole_pos, y_hole_pos, -obj.TotalHeight),
+                FreeCAD.Vector(x_hole_pos, y_hole_pos, -obj.TotalHeight),
+            ],
+        )
+        vec_list = []
+        xtranslate = 0
+        for x in range(obj.xMaxGrids):
+            ytranslate = 0
+            for y in range(obj.yMaxGrids):
+                if layout[x][y]:
+                    vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
+                ytranslate += obj.yGridSize.Value
+            xtranslate += obj.xGridSize.Value
+
+        return Utils.copy_and_translate(hole_shape_sub_array, vec_list).translate(
+            FreeCAD.Vector(obj.xBinUnit / 2 + obj.Clearance, obj.yBinUnit / 2 + obj.Clearance, 0),
+        )
 
 class StackingLip(Feature):
     """Cut into blank bin to create recessed bin top"""
@@ -420,6 +654,47 @@ class StackingLip(Feature):
             obj (FreeCAD.DocumentObject): Document object
 
         """
+        ## Gridfinity Parameters
+        obj.addProperty(
+            "App::PropertyBool",
+            "StackingLip",
+            "Gridfinity",
+            "Toggle the stacking lip on or off",
+        ).StackingLip = STACKING_LIP
+
+        ## Expert Only Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "StackingLipTopLedge",
+            "zzExpertOnly",
+            "Top Ledge of the stacking lip <br> <br> default = 0.4 mm",
+            1,
+        ).StackingLipTopLedge = STACKING_LIP_TOP_LEDGE
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "StackingLipTopChamfer",
+            "zzExpertOnly",
+            "Top Chamfer of the Stacking lip",
+            1,
+        )
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "StackingLipBottomChamfer",
+            "zzExpertOnly",
+            "Bottom Chamfer of the Stacking lip<br> <br> default = 0.7 mm",
+            1,
+        ).StackingLipBottomChamfer = STACKING_LIP_BOTTOM_CHAMFER
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "StackingLipVerticalSection",
+            "zzExpertOnly",
+            "vertical section of the Stacking lip<br> <br> default = 1.8 mm",
+            1,
+        ).StackingLipVerticalSection = STACKING_LIP_VERTICAL_SECTION
+
 
     def Make(obj: FreeCAD.DocumentObject, bin_outside_shape) -> Part.Shape:
         """Create stacking lip based on input bin shape.
@@ -432,28 +707,31 @@ class StackingLip(Feature):
             Part.Shape: Stacking lip shape.
 
         """
+        ## Calculated Values
+        obj.StackingLipTopChamfer = (
+            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
+        )
 
-        #bin_outside_shape.translate(FreeCAD.Vector(0, 0, 20))
-
-        st1 = FreeCAD.Vector(obj.Clearance, obj.GridSize / 2, 0)
+        ## Stacking Lip Generation
+        st1 = FreeCAD.Vector(obj.Clearance, obj.yGridSize / 2, 0)
         st2 = FreeCAD.Vector(
             obj.Clearance,
-            obj.GridSize / 2,
+            obj.yGridSize / 2,
             obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer,
         )
         st3 = FreeCAD.Vector(
             obj.Clearance + obj.StackingLipTopLedge,
-            obj.GridSize / 2,
+            obj.yGridSize / 2,
             obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer,
         )
         st4 = FreeCAD.Vector(
             obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
-            obj.GridSize / 2,
+            obj.yGridSize / 2,
             obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
         )
         st5 = FreeCAD.Vector(
             obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
-            obj.GridSize / 2,
+            obj.yGridSize / 2,
             obj.StackingLipBottomChamfer,
         )
         st6 = FreeCAD.Vector(
@@ -461,7 +739,7 @@ class StackingLip(Feature):
             + obj.StackingLipTopLedge
             + obj.StackingLipTopChamfer
             + obj.StackingLipBottomChamfer,
-            obj.GridSize / 2,
+            obj.yGridSize / 2,
             0,
         )
         st7 = FreeCAD.Vector(
@@ -469,12 +747,12 @@ class StackingLip(Feature):
             + obj.StackingLipTopLedge
             + obj.StackingLipTopChamfer
             + obj.StackingLipBottomChamfer,
-            obj.GridSize / 2,
+            obj.yGridSize / 2,
             -obj.StackingLipVerticalSection,
         )
         st8 = FreeCAD.Vector(
             obj.Clearance + obj.WallThickness,
-            obj.GridSize / 2,
+            obj.yGridSize / 2,
             -obj.StackingLipVerticalSection
             - (
                 obj.StackingLipTopLedge
@@ -483,7 +761,7 @@ class StackingLip(Feature):
                 - obj.WallThickness
             ),
         )
-        st9 = FreeCAD.Vector(obj.Clearance + obj.WallThickness, obj.GridSize / 2, 0)
+        st9 = FreeCAD.Vector(obj.Clearance + obj.WallThickness, obj.yGridSize / 2, 0)
 
         stl1 = Part.LineSegment(st1, st2)
         stl2 = Part.LineSegment(st2, st3)
