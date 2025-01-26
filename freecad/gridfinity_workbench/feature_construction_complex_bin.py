@@ -10,11 +10,24 @@ from FreeCAD import Units
 from .feature_construction import make_bottom_hole_shape
 from .utils import Utils
 
+from .const import (
+    RECESSED_TOP_DEPTH,
+    HEIGHT_UNIT_VALUE,
+    HEIGHT_UNITS,
+)
+
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
 
 GridfinityLayout = list[list[bool]]
 
+from abc import abstractmethod
+from enum import Enum
+
+class Feature:
+    @abstractmethod
+    def Make(obj):
+        raise NotImplementedError()
 
 @dataclass
 class LShapeData:
@@ -156,20 +169,18 @@ def rounded_l_extrude(
 
 def make_complex_bin_base(
     obj: FreeCAD.DocumentObject,
-    binlayout: GridfinityLayout,
+    layout: GridfinityLayout,
 ) -> Part.Shape:
     """Creaet complex shaped bin base.
 
     Args:
         obj (FreeCAD.DocumentObject): Document object.mro
-        binlayout (GridfinityLayout): 2 dimentional list of bin locations.
+        layout (GridfinityLayout): 2 dimentional list of feature locations.
 
     Returns:
         Part.Shape: Complex bin base shape.
 
     """
-    xmaxgrids = obj.aGridUnits
-    ymaxgrids = obj.bGridUnits + obj.dGridUnits
 
     x_bt_cmf_width = obj.xBinUnit - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer
     y_bt_cmf_width = obj.yBinUnit - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer
@@ -207,10 +218,10 @@ def make_complex_bin_base(
 
     parts = []
 
-    for x in range(xmaxgrids):
+    for x in range(obj.xMaxGrids):
         ytranslate = zeromm
-        for y in range(ymaxgrids):
-            if binlayout[x][y]:
+        for y in range(obj.yMaxGrids):
+            if layout[x][y]:
                 b = assembly.copy()
                 b.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
 
@@ -223,13 +234,112 @@ def make_complex_bin_base(
 
         xtranslate += obj.GridSize
 
-    func_fuse = b1 if not xmaxgrids and not ymaxgrids else Part.Solid.multiFuse(b1, parts)
+    func_fuse = b1 if not obj.xMaxGrids and not obj.yMaxGrids else Part.Solid.multiFuse(b1, parts)
 
     func_fuse.translate(
         FreeCAD.Vector(obj.xBinUnit / 2 + obj.Clearance, obj.yBinUnit / 2 + obj.Clearance, 0),
     )
 
     return func_fuse
+
+class BinSolidMidSection(Feature):
+    """Generate bin mid section and add relevant properties"""
+
+    def __init__(self, obj:FreeCAD.DocumentObject):
+        """Create bin solid mid section.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object
+
+        """
+
+        ## Gridfinity Standard Parameters
+        obj.addProperty(
+            "App::PropertyInteger",
+            "HeightUnits",
+            "Gridfinity",
+            "Height of the bin in units, each is 7 mm",
+        ).HeightUnits = HEIGHT_UNITS
+
+        ## Gridfinity Non Standard Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "CustomHeight",
+            "GridfinityNonStandard",
+            "total height of the bin using the custom height instead of increments of 7 mm",
+        ).CustomHeight = 42
+
+        obj.addProperty(
+            "App::PropertyBool",
+            "NonStandardHeight",
+            "GridfinityNonStandard",
+            "use a custom height if selected",
+        ).NonStandardHeight = False
+
+        ## Reference Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "TotalHeight",
+            "ReferenceDimensions",
+            "total height of the bin",
+            1,
+        )
+        ## Expert Only Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "HeightUnitValue",
+            "zzExpertOnly",
+            "height per unit, default is 7mm",
+            1,
+        ).HeightUnitValue = HEIGHT_UNIT_VALUE
+
+    def Make(self, obj:FreeCAD.DocumentObject, bin_outside_shape) -> Part.Shape:
+        """Generate bin solid mid section.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+            Part.Wire (bin_shape): shape of the bin
+
+        Returns:
+            Part.Shape: Extruded bin mid section of the input shape
+
+        """
+        face = Part.Face(bin_outside_shape)
+
+        return face.extrude(FreeCAD.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight))
+
+class BlankBinRecessedTop(Feature):
+    """Cut into blank bin to create recessed bin top"""
+
+    def __init__(self, obj:FreeCAD.DocumentObject):
+        """Create blank bin recessed top section.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object
+
+        """
+        ## Gridfinity Non Standard Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "RecessedTopDepth",
+            "GridfinityNonStandard",
+            "height per unit <br> <br> default = 0 mm",
+        ).RecessedTopDepth = RECESSED_TOP_DEPTH
+
+    def Make(self, obj:FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
+        """Generate Rectanble layout and calculate relevant parameters.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+            Part.Wire (bin_inside_shape: shape of the bin inside the walls
+
+        Returns:
+            Part.Shape: Extruded part to cut out inside of bin.
+
+        """
+        face = Part.Face(bin_inside_shape)
+
+        return face.extrude(FreeCAD.Vector(0, 0, -obj.RecessedTopDepth))
 
 
 def make_l_mid_section(obj: FreeCAD.DocumentObject) -> Part.Shape:
@@ -300,95 +410,95 @@ def make_complex_bottom_holes(
         FreeCAD.Vector(obj.xBinUnit / 2 + obj.Clearance, obj.yBinUnit / 2 + obj.Clearance, 0),
     )
 
+class StackingLip(Feature):
+    """Cut into blank bin to create recessed bin top"""
 
-def make_complex_stacking_lip(obj: FreeCAD.DocumentObject) -> Part.Shape:
-    """Create complex shaped stacking lip.
+    def __init__(self, obj:FreeCAD.DocumentObject):
+        """Create bin solid mid section.
 
-    Args:
-        obj (FreeCAD.DocumentObject): DocumentObject
+        Args:
+            obj (FreeCAD.DocumentObject): Document object
 
-    Returns:
-        Part.Shape: Stacking lip shape.
+        """
 
-    """
-    stacking_lip_path = create_rounded_l(
-        LShapeData(
-            obj.aTotalDimension,
-            obj.bTotalDimension,
-            obj.cTotalDimension,
-            obj.dTotalDimension,
-        ),
-        obj.Clearance,
-        obj.Clearance,
-        obj.BinOuterRadius,
-    )
+    def Make(obj: FreeCAD.DocumentObject, bin_outside_shape) -> Part.Shape:
+        """Create stacking lip based on input bin shape.
 
-    stacking_lip_path.translate(FreeCAD.Vector(0, 0, 20))
+        Args:
+            obj (FreeCAD.DocumentObject): DocumentObject
+            bin_outside_shape (Part.Wire): exterior wall of the bin
 
-    st1 = FreeCAD.Vector(obj.Clearance, obj.GridSize / 2, 0)
-    st2 = FreeCAD.Vector(
-        obj.Clearance,
-        obj.GridSize / 2,
-        obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer,
-    )
-    st3 = FreeCAD.Vector(
-        obj.Clearance + obj.StackingLipTopLedge,
-        obj.GridSize / 2,
-        obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer,
-    )
-    st4 = FreeCAD.Vector(
-        obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
-        obj.GridSize / 2,
-        obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
-    )
-    st5 = FreeCAD.Vector(
-        obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
-        obj.GridSize / 2,
-        obj.StackingLipBottomChamfer,
-    )
-    st6 = FreeCAD.Vector(
-        obj.Clearance
-        + obj.StackingLipTopLedge
-        + obj.StackingLipTopChamfer
-        + obj.StackingLipBottomChamfer,
-        obj.GridSize / 2,
-        0,
-    )
-    st7 = FreeCAD.Vector(
-        obj.Clearance
-        + obj.StackingLipTopLedge
-        + obj.StackingLipTopChamfer
-        + obj.StackingLipBottomChamfer,
-        obj.GridSize / 2,
-        -obj.StackingLipVerticalSection,
-    )
-    st8 = FreeCAD.Vector(
-        obj.Clearance + obj.WallThickness,
-        obj.GridSize / 2,
-        -obj.StackingLipVerticalSection
-        - (
-            obj.StackingLipTopLedge
+        Returns:
+            Part.Shape: Stacking lip shape.
+
+        """
+
+        #bin_outside_shape.translate(FreeCAD.Vector(0, 0, 20))
+
+        st1 = FreeCAD.Vector(obj.Clearance, obj.GridSize / 2, 0)
+        st2 = FreeCAD.Vector(
+            obj.Clearance,
+            obj.GridSize / 2,
+            obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer,
+        )
+        st3 = FreeCAD.Vector(
+            obj.Clearance + obj.StackingLipTopLedge,
+            obj.GridSize / 2,
+            obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer,
+        )
+        st4 = FreeCAD.Vector(
+            obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
+            obj.GridSize / 2,
+            obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
+        )
+        st5 = FreeCAD.Vector(
+            obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
+            obj.GridSize / 2,
+            obj.StackingLipBottomChamfer,
+        )
+        st6 = FreeCAD.Vector(
+            obj.Clearance
+            + obj.StackingLipTopLedge
             + obj.StackingLipTopChamfer
-            + obj.StackingLipBottomChamfer
-            - obj.WallThickness
-        ),
-    )
-    st9 = FreeCAD.Vector(obj.Clearance + obj.WallThickness, obj.GridSize / 2, 0)
+            + obj.StackingLipBottomChamfer,
+            obj.GridSize / 2,
+            0,
+        )
+        st7 = FreeCAD.Vector(
+            obj.Clearance
+            + obj.StackingLipTopLedge
+            + obj.StackingLipTopChamfer
+            + obj.StackingLipBottomChamfer,
+            obj.GridSize / 2,
+            -obj.StackingLipVerticalSection,
+        )
+        st8 = FreeCAD.Vector(
+            obj.Clearance + obj.WallThickness,
+            obj.GridSize / 2,
+            -obj.StackingLipVerticalSection
+            - (
+                obj.StackingLipTopLedge
+                + obj.StackingLipTopChamfer
+                + obj.StackingLipBottomChamfer
+                - obj.WallThickness
+            ),
+        )
+        st9 = FreeCAD.Vector(obj.Clearance + obj.WallThickness, obj.GridSize / 2, 0)
 
-    stl1 = Part.LineSegment(st1, st2)
-    stl2 = Part.LineSegment(st2, st3)
-    stl3 = Part.LineSegment(st3, st4)
-    stl4 = Part.LineSegment(st4, st5)
-    stl5 = Part.LineSegment(st5, st6)
-    stl6 = Part.LineSegment(st6, st7)
-    stl7 = Part.LineSegment(st7, st8)
-    stl8 = Part.LineSegment(st8, st9)
-    stl9 = Part.LineSegment(st9, st1)
+        stl1 = Part.LineSegment(st1, st2)
+        stl2 = Part.LineSegment(st2, st3)
+        stl3 = Part.LineSegment(st3, st4)
+        stl4 = Part.LineSegment(st4, st5)
+        stl5 = Part.LineSegment(st5, st6)
+        stl6 = Part.LineSegment(st6, st7)
+        stl7 = Part.LineSegment(st7, st8)
+        stl8 = Part.LineSegment(st8, st9)
+        stl9 = Part.LineSegment(st9, st1)
 
-    sts1 = Part.Shape([stl1, stl2, stl3, stl4, stl5, stl6, stl7, stl8, stl9])
+        sts1 = Part.Shape([stl1, stl2, stl3, stl4, stl5, stl6, stl7, stl8, stl9])
 
-    wire = Part.Wire(sts1.Edges)
+        wire = Part.Wire(sts1.Edges)
 
-    stacking_lip = Part.Wire(stacking_lip_path).makePipe(wire)
+        stacking_lip = Part.Wire(bin_outside_shape).makePipe(wire)
 
-    return Part.makeSolid(stacking_lip)
+        return Part.makeSolid(stacking_lip)

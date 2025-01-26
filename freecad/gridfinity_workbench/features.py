@@ -52,6 +52,11 @@ from .const import (
     STACKING_LIP_TOP_LEDGE,
     STACKING_LIP_VERTICAL_SECTION,
 )
+
+from .grid_initial_layout import (
+    RectangleLayout,
+)
+
 from .feature_construction import (
     make_baseplate_center_cut,
     make_bin_base,
@@ -65,8 +70,10 @@ from .feature_construction import (
 from .feature_construction_complex_bin import (
     make_complex_bin_base,
     make_complex_bottom_holes,
-    make_complex_stacking_lip,
     make_l_mid_section,
+    BinSolidMidSection,
+    BlankBinRecessedTop,
+    StackingLip,
 )
 from .utils import Utils
 from .version import __version__
@@ -145,6 +152,13 @@ class BinBlank(FoundationGridfinity):
             "python gridfinity object",
         )
 
+
+        self.features = [RectangleLayout(obj),
+            BinSolidMidSection(obj),
+            BlankBinRecessedTop(obj),
+            StackingLip(obj),
+        ]
+
         self.__add_bin_properties(obj)
 
         self.__add_custom_bin_properties(obj)
@@ -155,29 +169,12 @@ class BinBlank(FoundationGridfinity):
 
         self._add_hidden_properties(obj)
 
+
+
         obj.Proxy = self
 
+
     def __add_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyInteger",
-            "xGridUnits",
-            "Gridfinity",
-            "Length of the edges of the outline",
-        ).xGridUnits = 2
-
-        obj.addProperty(
-            "App::PropertyInteger",
-            "yGridUnits",
-            "Gridfinity",
-            "Length of the edges of the outline",
-        ).yGridUnits = 2
-
-        obj.addProperty(
-            "App::PropertyInteger",
-            "HeightUnits",
-            "Gridfinity",
-            "Height of the bin in units, each is 7 mm",
-        ).HeightUnits = 6
 
         obj.addProperty(
             "App::PropertyBool",
@@ -201,12 +198,6 @@ class BinBlank(FoundationGridfinity):
         ).ScrewHoles = False
 
     def __add_custom_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "CustomHeight",
-            "GridfinityNonStandard",
-            "total height of the bin using the custom height instead of increments of 7 mm",
-        ).CustomHeight = 42
 
         obj.addProperty(
             "App::PropertyLength",
@@ -214,13 +205,6 @@ class BinBlank(FoundationGridfinity):
             "GridfinityNonStandard",
             "Layer Height that you print in for optimal print results",
         ).SequentialBridgingLayerHeight = 0.2
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "NonStandardHeight",
-            "GridfinityNonStandard",
-            "use a custom height if selected",
-        ).NonStandardHeight = False
 
         obj.addProperty(
             "App::PropertyEnumeration",
@@ -266,29 +250,6 @@ class BinBlank(FoundationGridfinity):
         ).ScrewHoleDepth = SCREW_HOLE_DEPTH
 
     def __add_reference_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "xTotalWidth",
-            "ReferenceDimensions",
-            "total width of bin in x direction",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "yTotalWidth",
-            "ReferenceDimensions",
-            "total width of bin in y direction",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "TotalHeight",
-            "ReferenceDimensions",
-            "total height of the bin",
-            1,
-        )
 
         obj.addProperty(
             "App::PropertyLength",
@@ -305,6 +266,22 @@ class BinBlank(FoundationGridfinity):
             "Width of a single bin unit",
             1,
         ).BinUnit = BIN_UNIT
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "xBinUnit",
+            "ReferenceDimensions",
+            "Width of a single bin unit",
+            1,
+        ).xBinUnit = BIN_UNIT
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "yBinUnit",
+            "ReferenceDimensions",
+            "Width of a single bin unit",
+            1,
+        ).yBinUnit = BIN_UNIT
 
     def __add_expert_properties(self, obj: FreeCAD.DocumentObject) -> None:
         obj.addProperty(
@@ -330,21 +307,6 @@ class BinBlank(FoundationGridfinity):
             "Height of the top chamfer in the bin base profile",
             1,
         ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "GridSize",
-            "zzExpertOnly",
-            "Size of the Grid",
-        ).GridSize = GRID_SIZE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "HeightUnitValue",
-            "zzExpertOnly",
-            "height per unit, default is 7mm",
-            1,
-        ).HeightUnitValue = 7
 
         obj.addProperty(
             "App::PropertyLength",
@@ -440,9 +402,40 @@ class BinBlank(FoundationGridfinity):
             Part.Shape: Bin Blank shape
 
         """
-        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Clearance * 2
+        obj.BinUnit = obj.GridSize - CLEARANCE * 2 * unitmm
+        obj.xBinUnit = obj.xGridSize - CLEARANCE * 2 * unitmm
+        obj.yBinUnit = obj.yGridSize - CLEARANCE * 2 * unitmm
 
-        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Clearance * 2
+
+        layout = RectangleLayout.Make(self, obj)
+
+        bin_outside_shape = Utils.create_rounded_rectangle(
+            obj.xTotalWidth,
+            obj.yTotalWidth,
+            0,
+            obj.BinOuterRadius,
+        )
+        bin_outside_shape.translate(
+            FreeCAD.Vector(
+                obj.xTotalWidth / 2 + obj.Clearance,
+                obj.yTotalWidth / 2 + obj.Clearance,
+                0,
+            ),
+        )
+
+        bin_inside_shape = Utils.create_rounded_rectangle(
+            obj.xTotalWidth - obj.WallThickness * 2,
+            obj.yTotalWidth - obj.WallThickness * 2,
+            0,
+            obj.BinOuterRadius - obj.WallThickness,
+        )
+        bin_inside_shape.translate(
+            FreeCAD.Vector(
+                obj.xTotalWidth / 2 + obj.Clearance,
+                obj.yTotalWidth / 2 + obj.Clearance,
+                0,
+            ),
+        )
 
         obj.BaseProfileHeight = (
             obj.BaseProfileBottomChamfer
@@ -454,38 +447,29 @@ class BinBlank(FoundationGridfinity):
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
 
-        obj.BinUnit = obj.GridSize - CLEARANCE * 2 * unitmm
-
         if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
 
         else:
             obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
 
-        fuse_total = make_bin_base(obj)
+        fuse_total = make_complex_bin_base(obj,layout)
 
-        solid_center = Utils.rounded_rectangle_extrude(
-            obj.xTotalWidth,
-            obj.yTotalWidth,
-            -obj.TotalHeight + obj.BaseProfileHeight,
-            obj.TotalHeight - obj.BaseProfileHeight,
-            obj.BinOuterRadius,
-        )
-
-        solid_center.translate(
-            FreeCAD.Vector(
-                obj.xTotalWidth / 2 - obj.BinUnit / 2,
-                obj.yTotalWidth / 2 - obj.BinUnit / 2,
-                0,
-            ),
-        )
+        solid_center = BinSolidMidSection.Make(self, obj, bin_outside_shape)
 
         fuse_total = Part.Shape.fuse(fuse_total, solid_center)
 
-        if obj.StackingLip:
-            stacking_lip = make_stacking_lip(obj)
+        if obj.RecessedTopDepth > 0:
+            recessed_cut = BlankBinRecessedTop.Make(self, obj, bin_inside_shape)
 
-            fuse_total = Part.Shape.fuse(stacking_lip, fuse_total)
+            fuse_total = fuse_total.cut(recessed_cut)
+
+
+
+        if obj.StackingLip:
+            stacking_lip = StackingLip.Make(obj, bin_outside_shape)
+
+            fuse_total = fuse_total.fuse(stacking_lip)
 
         if obj.ScrewHoles or obj.MagnetHoles:
             holes = make_bottom_holes(obj)
@@ -3650,6 +3634,18 @@ class LBinBlank(FoundationGridfinity):
         midsection = make_l_mid_section(obj)
 
         fusetotal = fusetotal.fuse(midsection)
+
+        """stacking_lip_path = create_rounded_l(
+            LShapeData(
+                obj.aTotalDimension,
+                obj.bTotalDimension,
+                obj.cTotalDimension,
+                obj.dTotalDimension,
+            ),
+            obj.Clearance,
+            obj.Clearance,
+            obj.BinOuterRadius,
+        )"""
 
         if obj.StackingLip:
             stacking_lip = make_complex_stacking_lip(obj)

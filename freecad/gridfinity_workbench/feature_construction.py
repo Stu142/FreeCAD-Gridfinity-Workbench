@@ -8,11 +8,11 @@ from FreeCAD import Units
 
 from .utils import Utils
 
+
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
 
 SMALL_NUMBER = 0.01
-
 
 def _label_shelf_full_width(
     obj: FreeCAD.DocumentObject,
@@ -656,7 +656,7 @@ def make_compartments(obj: FreeCAD.DocumentObject) -> Part.Shape:
     return func_fuse
 
 
-def make_bin_base(obj: FreeCAD.DocumentObject) -> Part.Shape:
+def make_bin_base(obj: FreeCAD.DocumentObject, layout) -> Part.Shape:
     """Create bin base.
 
     Args:
