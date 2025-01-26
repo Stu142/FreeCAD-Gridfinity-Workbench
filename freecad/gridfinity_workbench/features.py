@@ -243,9 +243,9 @@ class BinBase(FoundationGridfinity):
         )
 
         self.features = [RectangleLayout(obj),
-            BinSolidMidSection(obj),
+            BinSolidMidSection(obj, default_height_units = 1),
             BlankBinRecessedTop(obj),
-            StackingLip(obj),
+            StackingLip(obj, stacking_lip_default = False),
             BinBottomHoles(obj),
             BinBaseValues(obj),
         ]

@@ -382,7 +382,7 @@ def make_complex_bin_base(
 class BinSolidMidSection(Feature):
     """Generate bin mid section and add relevant properties"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject):
+    def __init__(self, obj:FreeCAD.DocumentObject, default_height_units = HEIGHT_UNITS):
         """Create bin solid mid section.
 
         Args:
@@ -396,7 +396,7 @@ class BinSolidMidSection(Feature):
             "HeightUnits",
             "Gridfinity",
             "Height of the bin in units, each is 7 mm",
-        ).HeightUnits = HEIGHT_UNITS
+        ).HeightUnits = default_height_units
 
         ## Gridfinity Non Standard Parameters
         obj.addProperty(
@@ -647,7 +647,7 @@ class BinBottomHoles(Feature):
 class StackingLip(Feature):
     """Cut into blank bin to create recessed bin top"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject):
+    def __init__(self, obj:FreeCAD.DocumentObject, stacking_lip_default = STACKING_LIP):
         """Create bin solid mid section.
 
         Args:
@@ -660,7 +660,7 @@ class StackingLip(Feature):
             "StackingLip",
             "Gridfinity",
             "Toggle the stacking lip on or off",
-        ).StackingLip = STACKING_LIP
+        ).StackingLip = stacking_lip_default
 
         ## Expert Only Parameters
         obj.addProperty(
