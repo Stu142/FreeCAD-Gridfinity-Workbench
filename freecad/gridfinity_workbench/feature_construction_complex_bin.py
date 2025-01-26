@@ -10,6 +10,9 @@ from FreeCAD import Units
 from .feature_construction import make_bottom_hole_shape
 from .utils import Utils
 
+from abc import abstractmethod
+from enum import Enum
+
 from .const import (
     RECESSED_TOP_DEPTH,
     HEIGHT_UNIT_VALUE,
@@ -44,8 +47,7 @@ zeromm = Units.Quantity("0 mm")
 
 GridfinityLayout = list[list[bool]]
 
-from abc import abstractmethod
-from enum import Enum
+
 
 class Feature:
     @abstractmethod

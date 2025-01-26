@@ -61,11 +61,11 @@ from .feature_construction import (
     make_baseplate_center_cut,
     make_bin_base,
     make_bottom_holes,
-    make_compartments,
     make_eco_bin_cut,
-    make_label_shelf,
-    make_scoop,
+    Scoop,
     make_stacking_lip,
+    Compartments,
+    LabelShelf,
 )
 from .feature_construction_complex_bin import (
     make_complex_bin_base,
@@ -252,291 +252,6 @@ class BinBase(FoundationGridfinity):
 
         obj.Proxy = self
 
-        """
-        self._add_bin_properties(obj)
-
-        self._add_custom_bin_properties(obj)
-
-        self._add_reference_properties(obj)
-
-        self._add_expert_properties(obj)
-
-        self.add_hidden_properties(obj)
-
-    def _add_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyInteger",
-            "xGridUnits",
-            "Gridfinity",
-            "Length of the edges of the outline",
-        ).xGridUnits = 2
-
-        obj.addProperty(
-            "App::PropertyInteger",
-            "yGridUnits",
-            "Gridfinity",
-            "Height of the extrusion",
-        ).yGridUnits = 2
-
-        obj.addProperty(
-            "App::PropertyInteger",
-            "HeightUnits",
-            "Gridfinity",
-            "height of the bin in units, each is 7 mm",
-        ).HeightUnits = 1
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "StackingLip",
-            "Gridfinity",
-            "Toggle the stacking lip on or off",
-        ).StackingLip = False
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "MagnetHoles",
-            "Gridfinity",
-            "Toggle the magnet holes on or off",
-        ).MagnetHoles = True
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "ScrewHoles",
-            "Gridfinity",
-            "Toggle the screw holes on or off",
-        ).ScrewHoles = False
-
-    def _add_custom_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "CustomHeight",
-            "GridfinityNonStandard",
-            "total height of the bin using the custom heignt instead of increments of 7 mm",
-        ).CustomHeight = 42
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "SequentialBridgingLayerHeight",
-            "GridfinityNonStandard",
-            "Layer Height that you print in for optimal print results",
-        ).SequentialBridgingLayerHeight = 0.2
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "NonStandardHeight",
-            "GridfinityNonStandard",
-            "use a custom height if selected",
-        ).NonStandardHeight = False
-
-        obj.addProperty(
-            "App::PropertyEnumeration",
-            "MagnetHolesShape",
-            "GridfinityNonStandard",
-            (
-                "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br>"
-                "Round meant to be glued"
-            ),
-        )
-
-        obj.MagnetHolesShape = HOLE_SHAPES
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetHoleDiameter",
-            "GridfinityNonStandard",
-            (
-                "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br>"
-                "default = 6.5 mm"
-            ),
-        ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetHoleDepth",
-            "GridfinityNonStandard",
-            "Depth of Magnet Holes <br> <br> default = 2.4 mm",
-        ).MagnetHoleDepth = MAGNET_HOLE_DEPTH
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "ScrewHoleDiameter",
-            "GridfinityNonStandard",
-            "Diameter of Screw Holes <br> <br> default = 3.0 mm",
-        ).ScrewHoleDiameter = SCREW_HOLE_DIAMETER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "ScrewHoleDepth",
-            "GridfinityNonStandard",
-            "Depth of Screw Holes <br> <br> default = 6.0 mm",
-        ).ScrewHoleDepth = SCREW_HOLE_DEPTH
-
-    def _add_reference_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "xTotalWidth",
-            "ReferenceDimensions",
-            "total width of bin in x direction",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "yTotalWidth",
-            "ReferenceDimensions",
-            "total width of bin in y direction",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "TotalHeight",
-            "ReferenceDimensions",
-            "total height of the bin",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileHeight",
-            "ReferenceDimensions",
-            "Height of the Gridfinity Base Profile",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinUnit",
-            "ReferenceDimensions",
-            "Width of a single bin unit",
-            1,
-        ).BinUnit = BIN_UNIT
-
-    def _add_expert_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileBottomChamfer",
-            "zzExpertOnly",
-            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
-            1,
-        ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileVerticalSection",
-            "zzExpertOnly",
-            "Height of the vertical section in bin base profile",
-            1,
-        ).BaseProfileVerticalSection = BIN_BASE_VERTICAL_SECTION
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileTopChamfer",
-            "zzExpertOnly",
-            "Height of the top chamfer in the bin base profile",
-            1,
-        ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "GridSize",
-            "zzExpertOnly",
-            "Size of the Grid",
-        ).GridSize = GRID_SIZE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "HeightUnitValue",
-            "zzExpertOnly",
-            "height per unit, default is 7mm",
-            1,
-        ).HeightUnitValue = 7
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinOuterRadius",
-            "zzExpertOnly",
-            "Outer radius of the bin",
-            1,
-        ).BinOuterRadius = BIN_OUTER_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinVerticalRadius",
-            "zzExpertOnly",
-            "Radius of the base profile Vertical section",
-            1,
-        ).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinBottomRadius",
-            "zzExpertOnly",
-            "bottom of bin corner radius",
-            1,
-        ).BinBottomRadius = BIN_BASE_BOTTOM_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "Clearance",
-            "zzExpertOnly",
-            (
-                "The tolerance on each side of a bin between before the edge of the grid <br> <br>"
-                " default = 0.25 mm"
-            ),
-            1,
-        ).Clearance = CLEARANCE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetHoleDistanceFromEdge",
-            "zzExpertOnly",
-            "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
-            1,
-        ).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "StackingLipTopLedge",
-            "zzExpertOnly",
-            "Top Ledge of the stacking lip <br> <br> default = 0.4 mm",
-            1,
-        ).StackingLipTopLedge = STACKING_LIP_TOP_LEDGE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "StackingLipTopChamfer",
-            "zzExpertOnly",
-            "Top Chamfer of the Stacking lip",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "StackingLipBottomChamfer",
-            "zzExpertOnly",
-            "Bottom Chamfer of the Stacking lip<br> <br> default = 0.7 mm",
-            1,
-        ).StackingLipBottomChamfer = STACKING_LIP_BOTTOM_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "StackingLipVerticalSection",
-            "zzExpertOnly",
-            "vertical section of the Stacking lip<br> <br> default = 1.8 mm",
-            1,
-        ).StackingLipVerticalSection = STACKING_LIP_VERTICAL_SECTION
-
-    def add_hidden_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "WallThickness",
-            "GridfinityNonStandard",
-            "for stacking lip",
-        ).WallThickness = 1
-
-        obj.setEditorMode("WallThickness", 2)
-        """
     def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
         BinBaseValues.Make(self, obj)
 
@@ -593,62 +308,6 @@ class BinBase(FoundationGridfinity):
 
         return fuse_total
 
-        """
-        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Clearance * 2
-
-        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Clearance * 2
-
-        obj.BaseProfileHeight = (
-            obj.BaseProfileBottomChamfer
-            + obj.BaseProfileVerticalSection
-            + obj.BaseProfileTopChamfer
-        )
-
-        obj.StackingLipTopChamfer = (
-            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
-        )
-
-        obj.BinUnit = obj.GridSize - CLEARANCE * 2 * unitmm
-
-        if obj.NonStandardHeight:
-            obj.TotalHeight = obj.CustomHeight
-
-        else:
-            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
-
-        fuse_total = make_bin_base(obj)
-
-        solid_center = Utils.rounded_rectangle_extrude(
-            obj.xTotalWidth,
-            obj.yTotalWidth,
-            -obj.TotalHeight + obj.BaseProfileHeight,
-            obj.TotalHeight - obj.BaseProfileHeight,
-            obj.BinOuterRadius,
-        )
-
-        solid_center.translate(
-            FreeCAD.Vector(
-                obj.xTotalWidth / 2 - obj.BinUnit / 2,
-                obj.yTotalWidth / 2 - obj.BinUnit / 2,
-                0,
-            ),
-        )
-
-        fuse_total = Part.Shape.fuse(fuse_total, solid_center)
-
-        if obj.StackingLip:
-            stacking_lip = make_stacking_lip(obj)
-
-            fuse_total = Part.Shape.fuse(stacking_lip, fuse_total)
-
-        if obj.ScrewHoles or obj.MagnetHoles:
-            holes = make_bottom_holes(obj)
-
-            fuse_total = Part.Shape.cut(fuse_total, holes)
-
-        return fuse_total
-        """
-
 class SimpleStorageBin(FoundationGridfinity):
     """Simple Storage Bin."""
 
@@ -668,409 +327,16 @@ class SimpleStorageBin(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self._add_bin_properties(obj)
-
-        self._add_custom_bin_properties(obj)
-
-        self._add_reference_properties(obj)
-
-        self._add_expert_properties(obj)
-
+        self.features = [RectangleLayout(obj),
+            BinSolidMidSection(obj),
+            StackingLip(obj),
+            BinBottomHoles(obj),
+            BinBaseValues(obj),
+            Compartments(obj, x_div_default = 0, y_div_default = 0),
+            LabelShelf(obj, label_style_default = "Off"),
+            Scoop(obj, scoop_default = False),
+        ]
         obj.Proxy = self
-
-    def _add_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyInteger",
-            "xGridUnits",
-            "Gridfinity",
-            "Length of the edges of the outline",
-        ).xGridUnits = 2
-
-        obj.addProperty(
-            "App::PropertyInteger",
-            "yGridUnits",
-            "Gridfinity",
-            "Length of the edges of the outline",
-        ).yGridUnits = 2
-
-        obj.addProperty(
-            "App::PropertyInteger",
-            "HeightUnits",
-            "Gridfinity",
-            "Height of the bin in units, each unit is 7 mm",
-        ).HeightUnits = 6
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "StackingLip",
-            "Gridfinity",
-            "Toggle the stacking lip on or off",
-        ).StackingLip = True
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "MagnetHoles",
-            "Gridfinity",
-            "Toggle the magnet holes on or off",
-        ).MagnetHoles = True
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "ScrewHoles",
-            "Gridfinity",
-            "Toggle the screw holes on or off",
-        ).ScrewHoles = False
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "Scoop",
-            "Gridfinity",
-            "Toggle the Scoop fillet on or off",
-        ).Scoop = False
-
-        obj.addProperty(
-            "App::PropertyInteger",
-            "xDividers",
-            "Gridfinity",
-            "Select the Number of Dividers in the x direction",
-        ).xDividers = 0
-
-        obj.addProperty(
-            "App::PropertyInteger",
-            "yDividers",
-            "Gridfinity",
-            "Select the number of Dividers in the y direction",
-        ).yDividers = 0
-
-        obj.addProperty(
-            "App::PropertyEnumeration",
-            "LabelShelfPlacement",
-            "Gridfinity",
-            "Choose the style of the label shelf",
-        )
-
-        obj.LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
-
-        obj.addProperty(
-            "App::PropertyEnumeration",
-            "LabelShelfStyle",
-            "Gridfinity",
-            "Choose to turn the label shelf on or off",
-        )
-
-        obj.LabelShelfStyle = ["Off", "Standard", "Overhang"]
-
-    def _add_custom_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "CustomHeight",
-            "GridfinityNonStandard",
-            "total height of the bin using the custom height instead of increments of 7 mm",
-        ).CustomHeight = 42
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "SequentialBridgingLayerHeight",
-            "GridfinityNonStandard",
-            "Layer Height that you print in for optimal print results",
-        ).SequentialBridgingLayerHeight = 0.2
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "NonStandardHeight",
-            "GridfinityNonStandard",
-            "use a custom height if selected",
-        ).NonStandardHeight = False
-
-        obj.addProperty(
-            "App::PropertyEnumeration",
-            "MagnetHolesShape",
-            "GridfinityNonStandard",
-            (
-                "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> "
-                "Round meant to be glued"
-            ),
-        )
-
-        obj.MagnetHolesShape = HOLE_SHAPES
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetHoleDiameter",
-            "GridfinityNonStandard",
-            (
-                "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br> "
-                "default = 6.5 mm"
-            ),
-        ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetHoleDepth",
-            "GridfinityNonStandard",
-            "Depth of Magnet Holes <br> <br> default = 2.4 mm",
-        ).MagnetHoleDepth = MAGNET_HOLE_DEPTH
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "ScrewHoleDiameter",
-            "GridfinityNonStandard",
-            "Diameter of Screw Holes <br> <br> default = 3.0 mm",
-        ).ScrewHoleDiameter = SCREW_HOLE_DIAMETER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "ScrewHoleDepth",
-            "GridfinityNonStandard",
-            "Depth of Screw Holes <br> <br> default = 6.0 mm",
-        ).ScrewHoleDepth = SCREW_HOLE_DEPTH
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "WallThickness",
-            "GridfinityNonStandard",
-            "Wall thickness of the bin <br> <br> default = 1.0 mm",
-        ).WallThickness = 1.0
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "InsideFilletRadius",
-            "GridfinityNonStandard",
-            "inside fillet at the bottom of the bin <br> <br> default = 1.85 mm",
-        ).InsideFilletRadius = 1.85
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "DividerThickness",
-            "GridfinityNonStandard",
-            (
-                "Thickness of the dividers, ideally an even multiple of layer width <br> <br> "
-                "default = 1.2 mm"
-            ),
-        ).DividerThickness = 1.2
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "LabelShelfWidth",
-            "GridfinityNonStandard",
-            "Thickness of the Label Shelf <br> <br> default = 12 mm",
-        ).LabelShelfWidth = LABEL_SHELF_WIDTH
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "LabelShelfLength",
-            "GridfinityNonStandard",
-            "Length of the Label Shelf <br> <br> default = 42 mm",
-        ).LabelShelfLength = LABEL_SHELF_LENGTH
-
-        obj.addProperty(
-            "App::PropertyAngle",
-            "LabelShelfAngle",
-            "GridfinityNonStandard",
-            "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
-        ).LabelShelfAngle = LABEL_SHELF_ANGLE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "ScoopRadius",
-            "GridfinityNonStandard",
-            "Radius of the Scoop <br> <br> default = 21 mm",
-        ).ScoopRadius = SCOOP_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "xDividerHeight",
-            "GridfinityNonStandard",
-            "Custom Height of x dividers <br> <br> default = 0 mm = full height",
-        ).xDividerHeight = 0
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "yDividerHeight",
-            "GridfinityNonStandard",
-            "Custom Height of y dividers <br> <br> default = 0 mm = full height",
-        ).yDividerHeight = 0
-
-    def _add_reference_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "xTotalWidth",
-            "ReferenceDimensions",
-            "total width of bin in x direction",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "yTotalWidth",
-            "ReferenceDimensions",
-            "total width of bin in y direction",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "TotalHeight",
-            "ReferenceDimensions",
-            "total height of the bin",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileHeight",
-            "ReferenceDimensions",
-            "Height of the Gridfinity Base Profile",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "UsableHeight",
-            "ReferenceDimensions",
-            (
-                "Height of the bin minus the bottom unit, "
-                "the amount of the bin that can be effectively used"
-            ),
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinUnit",
-            "ReferenceDimensions",
-            "Width of a single bin unit",
-            1,
-        ).BinUnit = BIN_UNIT
-
-    def _add_expert_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileBottomChamfer",
-            "zzExpertOnly",
-            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
-            1,
-        ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileVerticalSection",
-            "zzExpertOnly",
-            "Height of the vertical section in bin base profile",
-            1,
-        ).BaseProfileVerticalSection = BIN_BASE_VERTICAL_SECTION
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileTopChamfer",
-            "zzExpertOnly",
-            "Height of the top chamfer in the bin base profile",
-            1,
-        ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "GridSize",
-            "zzExpertOnly",
-            "Size of the Grid",
-        ).GridSize = GRID_SIZE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "HeightUnitValue",
-            "zzExpertOnly",
-            "height per unit, default is 7mm",
-            1,
-        ).HeightUnitValue = HEIGHT_UNIT
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinOuterRadius",
-            "zzExpertOnly",
-            "Outer radius of the bin",
-            1,
-        ).BinOuterRadius = BIN_OUTER_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinVerticalRadius",
-            "zzExpertOnly",
-            "Radius of the base profile Vertical section",
-            1,
-        ).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinBottomRadius",
-            "zzExpertOnly",
-            "bottom of bin corner radius",
-            1,
-        ).BinBottomRadius = BIN_BASE_BOTTOM_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "Clearance",
-            "zzExpertOnly",
-            (
-                "The tolerance on each side of a bin between before the edge of the grid <br> <br> "
-                "default = 0.25 mm"
-            ),
-            1,
-        ).Clearance = CLEARANCE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetHoleDistanceFromEdge",
-            "zzExpertOnly",
-            "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
-            1,
-        ).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "StackingLipTopLedge",
-            "zzExpertOnly",
-            "Top Ledge of the stacking lip <br> <br> default = 0.4 mm",
-            1,
-        ).StackingLipTopLedge = STACKING_LIP_TOP_LEDGE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "StackingLipTopChamfer",
-            "zzExpertOnly",
-            "Top Chamfer of the Stacking lip",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "StackingLipBottomChamfer",
-            "zzExpertOnly",
-            "Bottom Chamfer of the Stacking lip<br> <br> default = 0.7 mm",
-            1,
-        ).StackingLipBottomChamfer = STACKING_LIP_BOTTOM_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "StackingLipVerticalSection",
-            "zzExpertOnly",
-            "vertical section of the Stacking lip<br> <br> default = 1.8 mm",
-            1,
-        ).StackingLipVerticalSection = STACKING_LIP_VERTICAL_SECTION
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "LabelShelfVerticalThickness",
-            "zzExpertOnly",
-            "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
-        ).LabelShelfVerticalThickness = LABEL_SHELF_VERTICAL_THICKNESS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "LabelShelfStackingOffset",
-            "zzExpertOnly",
-            "Vertical Thickness of the Label Shelf <br> <br> default = 0.4 mm",
-        ).LabelShelfStackingOffset = LABEL_SHELF_STACKING_OFFSET
 
     def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
         """Generate simple storage bin.
@@ -1082,118 +348,70 @@ class SimpleStorageBin(FoundationGridfinity):
             Part.Shape: Storage bin shape.
 
         """
-        ## Parameter Calculations
 
-        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Clearance * 2
+        BinBaseValues.Make(self, obj)
 
-        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Clearance * 2
+        layout = RectangleLayout.Make(self, obj)
 
-        obj.BaseProfileHeight = (
-            obj.BaseProfileBottomChamfer
-            + obj.BaseProfileVerticalSection
-            + obj.BaseProfileTopChamfer
-        )
-
-        obj.StackingLipTopChamfer = (
-            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
-        )
-
-        obj.BinUnit = obj.GridSize - CLEARANCE * 2 * unitmm
-
-        if obj.NonStandardHeight:
-            obj.TotalHeight = obj.CustomHeight
-
-        else:
-            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
-
-        obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
-
-        ## Error Checking
-
-        divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
-
-        if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
-            obj.xDividerHeight = divmin
-
-            FreeCAD.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  ",
-            )
-
-            FreeCAD.Console.PrintWarning(divmin)
-
-            FreeCAD.Console.PrintWarning("\n")
-
-        if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
-            obj.yDividerHeight = divmin
-
-            FreeCAD.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  ",
-            )
-
-            FreeCAD.Console.PrintWarning(divmin)
-
-            FreeCAD.Console.PrintWarning("\n")
-
-        if (
-            obj.xDividerHeight < obj.TotalHeight
-            and obj.LabelShelfStyle != "Off"
-            and obj.xDividerHeight != 0
-            and obj.xDividers != 0
-        ):
-            obj.LabelShelfStyle = "Off"
-
-            FreeCAD.Console.PrintWarning(
-                "Label Shelf turned off for less than full height x dividers",
-            )
-
-        ## Bin Construction
-
-        fuse_total = make_bin_base(obj)
-
-        solid_center = Utils.rounded_rectangle_extrude(
+        bin_outside_shape = Utils.create_rounded_rectangle(
             obj.xTotalWidth,
             obj.yTotalWidth,
-            -obj.TotalHeight + obj.BaseProfileHeight,
-            obj.TotalHeight - obj.BaseProfileHeight,
+            0,
             obj.BinOuterRadius,
         )
-
-        solid_center.translate(
+        bin_outside_shape.translate(
             FreeCAD.Vector(
-                obj.xTotalWidth / 2 - obj.BinUnit / 2,
-                obj.yTotalWidth / 2 - obj.BinUnit / 2,
+                obj.xTotalWidth / 2 + obj.Clearance,
+                obj.yTotalWidth / 2 + obj.Clearance,
                 0,
             ),
         )
 
-        fuse_total = fuse_total.fuse(solid_center)
+        bin_inside_shape = Utils.create_rounded_rectangle(
+            obj.xTotalWidth - obj.WallThickness * 2,
+            obj.yTotalWidth - obj.WallThickness * 2,
+            0,
+            obj.BinOuterRadius - obj.WallThickness,
+        )
+        bin_inside_shape.translate(
+            FreeCAD.Vector(
+                obj.xTotalWidth / 2 + obj.Clearance,
+                obj.yTotalWidth / 2 + obj.Clearance,
+                0,
+            ),
+        )
 
-        compartements = make_compartments(obj)
+        fuse_total = BinSolidMidSection.Make(self, obj, bin_outside_shape)
+
+        bin_base = make_complex_bin_base(obj,layout)
+
+        fuse_total = fuse_total.fuse(bin_base)
+
+        compartements = Compartments.Make(obj, bin_inside_shape)
 
         fuse_total = fuse_total.cut(compartements)
 
         if obj.StackingLip:
-            stacking_lip = make_stacking_lip(obj)
+            stacking_lip = StackingLip.Make(obj, bin_outside_shape)
 
-            fuse_total = Part.Shape.fuse(stacking_lip, fuse_total)
+            fuse_total = fuse_total.fuse(stacking_lip)
 
         if obj.ScrewHoles or obj.MagnetHoles:
-            holes = make_bottom_holes(obj)
+            holes = BinBottomHoles.Make(obj, layout)
 
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
         if obj.LabelShelfStyle != "Off":
-            label_shelf = make_label_shelf(obj)
+            label_shelf = LabelShelf.Make(obj)
 
             fuse_total = fuse_total.fuse(label_shelf)
 
         if obj.Scoop:
-            scoop = make_scoop(obj)
+            scoop = Scoop.Make(obj)
 
             fuse_total = fuse_total.fuse(scoop)
 
         return Part.Solid.removeSplitter(fuse_total)
-
 
 class EcoBin(FoundationGridfinity):
     """Eco Bin."""
@@ -1675,529 +893,87 @@ class PartsBin(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self._add_bin_properties(obj)
-
-        self._add_custom_bin_properties(obj)
-
-        self._add_reference_properties(obj)
-
-        self._add_expert_properties(obj)
-
+        self.features = [RectangleLayout(obj),
+            BinSolidMidSection(obj),
+            StackingLip(obj),
+            BinBottomHoles(obj),
+            BinBaseValues(obj),
+            Compartments(obj),
+            LabelShelf(obj),
+            Scoop(obj),
+        ]
         obj.Proxy = self
 
-    def _add_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyInteger",
-            "xGridUnits",
-            "Gridfinity",
-            "Length of the edges of the outline",
-        ).xGridUnits = 2
-
-        obj.addProperty(
-            "App::PropertyInteger",
-            "yGridUnits",
-            "Gridfinity",
-            "Height of the extrusion",
-        ).yGridUnits = 2
-
-        obj.addProperty(
-            "App::PropertyInteger",
-            "HeightUnits",
-            "Gridfinity",
-            "height of the bin in units, each unit is 7 mm",
-        ).HeightUnits = 6
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "StackingLip",
-            "Gridfinity",
-            "Toggle the stacking lip on or off",
-        ).StackingLip = True
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "MagnetHoles",
-            "Gridfinity",
-            "Toggle the magnet holes on or off",
-        ).MagnetHoles = True
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "ScrewHoles",
-            "Gridfinity",
-            "Toggle the screw holes on or off",
-        ).ScrewHoles = False
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "Scoop",
-            "Gridfinity",
-            "Toggle the Scoop fillet on or off",
-        ).Scoop = True
-
-        obj.addProperty(
-            "App::PropertyInteger",
-            "xDividers",
-            "Gridfinity",
-            "Select the Number of Dividers in the x direction",
-        ).xDividers = 0
-
-        obj.addProperty(
-            "App::PropertyInteger",
-            "yDividers",
-            "Gridfinity",
-            "Select the number of Dividers in the y direction",
-        ).yDividers = 1
-
-        obj.addProperty(
-            "App::PropertyEnumeration",
-            "LabelShelfPlacement",
-            "Gridfinity",
-            "Choose the style of the label shelf",
-        )
-
-        obj.LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
-
-        obj.addProperty(
-            "App::PropertyEnumeration",
-            "LabelShelfStyle",
-            "Gridfinity",
-            "Choose to turn the label shelf on or off",
-        )
-
-        obj.LabelShelfStyle = ["Standard", "Off", "Overhang"]
-
-    def _add_custom_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "CustomHeight",
-            "GridfinityNonStandard",
-            "total height of the bin using the custom heignt instead of increments of 7 mm",
-        ).CustomHeight = 42
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "SequentialBridgingLayerHeight",
-            "GridfinityNonStandard",
-            "Layer Height that you print in for optimal print results",
-        ).SequentialBridgingLayerHeight = 0.2
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "NonStandardHeight",
-            "GridfinityNonStandard",
-            "use a custom height if selected",
-        ).NonStandardHeight = False
-
-        obj.addProperty(
-            "App::PropertyEnumeration",
-            "MagnetHolesShape",
-            "GridfinityNonStandard",
-            (
-                "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> "
-                "Round meant to be glued"
-            ),
-        )
-
-        obj.MagnetHolesShape = HOLE_SHAPES
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetHoleDiameter",
-            "GridfinityNonStandard",
-            (
-                "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br> "
-                "default = 6.5 mm"
-            ),
-        ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetHoleDepth",
-            "GridfinityNonStandard",
-            "Depth of Magnet Holes <br> <br> default = 2.4 mm",
-        ).MagnetHoleDepth = MAGNET_HOLE_DEPTH
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "ScrewHoleDiameter",
-            "GridfinityNonStandard",
-            "Diameter of Screw Holes <br> <br> default = 3.0 mm",
-        ).ScrewHoleDiameter = SCREW_HOLE_DIAMETER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "ScrewHoleDepth",
-            "GridfinityNonStandard",
-            "Depth of Screw Holes <br> <br> default = 6.0 mm",
-        ).ScrewHoleDepth = SCREW_HOLE_DEPTH
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "WallThickness",
-            "GridfinityNonStandard",
-            "Wall thickness of the bin <br> <br> default = 1.0 mm",
-        ).WallThickness = 1.0
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "InsideFilletRadius",
-            "GridfinityNonStandard",
-            "inside fillet at the bottom of the bin <br> <br> default = 1.85 mm",
-        ).InsideFilletRadius = 1.85
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "DividerThickness",
-            "GridfinityNonStandard",
-            (
-                "Thickness of the dividers, ideally an even multiple of layer width <br> <br> "
-                "default = 1.2 mm"
-            ),
-        ).DividerThickness = 1.2
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "LabelShelfWidth",
-            "GridfinityNonStandard",
-            "Thickness of the Label Shelf <br> <br> default = 12 mm",
-        ).LabelShelfWidth = LABEL_SHELF_WIDTH
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "LabelShelfLength",
-            "GridfinityNonStandard",
-            "Length of the Label Shelf <br> <br> default = 42 mm",
-        ).LabelShelfLength = LABEL_SHELF_LENGTH
-
-        obj.addProperty(
-            "App::PropertyAngle",
-            "LabelShelfAngle",
-            "GridfinityNonStandard",
-            "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
-        ).LabelShelfAngle = LABEL_SHELF_ANGLE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "ScoopRadius",
-            "GridfinityNonStandard",
-            "Radius of the Scoop <br> <br> default = 21 mm",
-        ).ScoopRadius = SCOOP_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "xDividerHeight",
-            "GridfinityNonStandard",
-            "Custom Height of x dividers <br> <br> default = 0 mm = full height",
-        ).xDividerHeight = 0
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "yDividerHeight",
-            "GridfinityNonStandard",
-            "Custom Height of y dividers <br> <br> default = 0 mm = full height",
-        ).yDividerHeight = 0
-
-    def _add_reference_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "xTotalWidth",
-            "ReferenceDimensions",
-            "total width of bin in x direction",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "yTotalWidth",
-            "ReferenceDimensions",
-            "total width of bin in y direction",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "TotalHeight",
-            "ReferenceDimensions",
-            "total height of the bin",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileHeight",
-            "ReferenceDimensions",
-            "Height of the Gridfinity Base Profile",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "UsableHeight",
-            "ReferenceDimensions",
-            (
-                "Height of the bin minus the bottom unit, "
-                "the amount of the bin that can be effectively used"
-            ),
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinUnit",
-            "ReferenceDimensions",
-            "Width of a single bin unit",
-            1,
-        ).BinUnit = BIN_UNIT
-
-    def _add_expert_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileBottomChamfer",
-            "zzExpertOnly",
-            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
-            1,
-        ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileVerticalSection",
-            "zzExpertOnly",
-            "Height of the vertical section in bin base profile",
-            1,
-        ).BaseProfileVerticalSection = BIN_BASE_VERTICAL_SECTION
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileTopChamfer",
-            "zzExpertOnly",
-            "Height of the top chamfer in the bin base profile",
-            1,
-        ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "GridSize",
-            "zzExpertOnly",
-            "Size of the Grid",
-        ).GridSize = GRID_SIZE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "HeightUnitValue",
-            "zzExpertOnly",
-            "height per unit, default is 7mm",
-            1,
-        ).HeightUnitValue = HEIGHT_UNIT
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinOuterRadius",
-            "zzExpertOnly",
-            "Outer radius of the bin",
-            1,
-        ).BinOuterRadius = BIN_OUTER_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinVerticalRadius",
-            "zzExpertOnly",
-            "Radius of the base profile Vertical section",
-            1,
-        ).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinBottomRadius",
-            "zzExpertOnly",
-            "bottom of bin corner radius",
-            1,
-        ).BinBottomRadius = BIN_BASE_BOTTOM_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "Clearance",
-            "zzExpertOnly",
-            (
-                "The tolerance on each side of a bin between before the edge of the grid <br> <br> "
-                "default = 0.25 mm"
-            ),
-            1,
-        ).Clearance = CLEARANCE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetHoleDistanceFromEdge",
-            "zzExpertOnly",
-            "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
-            1,
-        ).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "StackingLipTopLedge",
-            "zzExpertOnly",
-            "Top Ledge of the stacking lip <br> <br> default = 0.4 mm",
-            1,
-        ).StackingLipTopLedge = STACKING_LIP_TOP_LEDGE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "StackingLipTopChamfer",
-            "zzExpertOnly",
-            "Top Chamfer of the Stacking lip",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "StackingLipBottomChamfer",
-            "zzExpertOnly",
-            "Bottom Chamfer of the Stacking lip<br> <br> default = 0.7 mm",
-            1,
-        ).StackingLipBottomChamfer = STACKING_LIP_BOTTOM_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "StackingLipVerticalSection",
-            "zzExpertOnly",
-            "vertical section of the Stacking lip<br> <br> default = 1.8 mm",
-            1,
-        ).StackingLipVerticalSection = STACKING_LIP_VERTICAL_SECTION
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "LabelShelfVerticalThickness",
-            "zzExpertOnly",
-            "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
-        ).LabelShelfVerticalThickness = LABEL_SHELF_VERTICAL_THICKNESS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "LabelShelfStackingOffset",
-            "zzExpertOnly",
-            "Vertical Thickness of the Label Shelf <br> <br> default = 0.4 mm",
-        ).LabelShelfStackingOffset = LABEL_SHELF_STACKING_OFFSET
-
     def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
-        """Generate Eco bin shape.
+        """Generate Parts bin.
 
         Args:
-            obj (FreeCAD.DocumentObject): DocumentObject
+            obj (FreeCAD.DocumentObject): Document object.
 
         Returns:
-            Part.Shape: PartsBin Shape.
+            Part.Shape: Parts bin shape.
 
         """
-        ## Calculated Properties
 
-        obj.xTotalWidth = obj.xGridUnits * obj.GridSize - obj.Clearance * 2
+        BinBaseValues.Make(self, obj)
 
-        obj.yTotalWidth = obj.yGridUnits * obj.GridSize - obj.Clearance * 2
+        layout = RectangleLayout.Make(self, obj)
 
-        obj.BaseProfileHeight = (
-            obj.BaseProfileBottomChamfer
-            + obj.BaseProfileVerticalSection
-            + obj.BaseProfileTopChamfer
-        )
-
-        obj.StackingLipTopChamfer = (
-            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
-        )
-
-        obj.BinUnit = obj.GridSize - CLEARANCE * 2 * unitmm
-
-        if obj.NonStandardHeight:
-            obj.TotalHeight = obj.CustomHeight
-
-        else:
-            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
-
-        obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
-
-        ## Error Checking
-
-        # Divider Minimum Height
-
-        divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
-
-        if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
-            obj.xDividerHeight = divmin
-
-            FreeCAD.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  ",
-            )
-
-            FreeCAD.Console.PrintWarning(divmin)
-
-            FreeCAD.Console.PrintWarning("\n")
-
-        if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
-            obj.yDividerHeight = divmin
-
-            FreeCAD.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  ",
-            )
-
-            FreeCAD.Console.PrintWarning(divmin)
-
-            FreeCAD.Console.PrintWarning("\n")
-
-        if (
-            obj.xDividerHeight < obj.TotalHeight
-            and obj.LabelShelfStyle != "Off"
-            and obj.xDividerHeight != 0
-            and obj.xDividers != 0
-        ):
-            obj.LabelShelfStyle = "Off"
-
-            FreeCAD.Console.PrintWarning(
-                "Label Shelf turned off for less than full height x dividers",
-            )
-
-        ## Bin Construction
-
-        fuse_total = make_bin_base(obj)
-
-        solid_center = Utils.rounded_rectangle_extrude(
+        bin_outside_shape = Utils.create_rounded_rectangle(
             obj.xTotalWidth,
             obj.yTotalWidth,
-            -obj.TotalHeight + obj.BaseProfileHeight,
-            obj.TotalHeight - obj.BaseProfileHeight,
+            0,
             obj.BinOuterRadius,
         )
-
-        solid_center.translate(
+        bin_outside_shape.translate(
             FreeCAD.Vector(
-                obj.xTotalWidth / 2 - obj.BinUnit / 2,
-                obj.yTotalWidth / 2 - obj.BinUnit / 2,
+                obj.xTotalWidth / 2 + obj.Clearance,
+                obj.yTotalWidth / 2 + obj.Clearance,
                 0,
             ),
         )
 
-        fuse_total = fuse_total.fuse(solid_center)
+        bin_inside_shape = Utils.create_rounded_rectangle(
+            obj.xTotalWidth - obj.WallThickness * 2,
+            obj.yTotalWidth - obj.WallThickness * 2,
+            0,
+            obj.BinOuterRadius - obj.WallThickness,
+        )
+        bin_inside_shape.translate(
+            FreeCAD.Vector(
+                obj.xTotalWidth / 2 + obj.Clearance,
+                obj.yTotalWidth / 2 + obj.Clearance,
+                0,
+            ),
+        )
 
-        compartements = make_compartments(obj)
+        fuse_total = BinSolidMidSection.Make(self, obj, bin_outside_shape)
+
+        bin_base = make_complex_bin_base(obj,layout)
+
+        fuse_total = fuse_total.fuse(bin_base)
+
+        compartements = Compartments.Make(obj, bin_inside_shape)
 
         fuse_total = fuse_total.cut(compartements)
 
         if obj.StackingLip:
-            stacking_lip = make_stacking_lip(obj)
+            stacking_lip = StackingLip.Make(obj, bin_outside_shape)
 
-            fuse_total = Part.Shape.fuse(stacking_lip, fuse_total)
+            fuse_total = fuse_total.fuse(stacking_lip)
 
         if obj.ScrewHoles or obj.MagnetHoles:
-            holes = make_bottom_holes(obj)
+            holes = BinBottomHoles.Make(obj, layout)
 
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
         if obj.LabelShelfStyle != "Off":
-            label_shelf = make_label_shelf(obj)
+            label_shelf = LabelShelf.Make(obj)
 
             fuse_total = fuse_total.fuse(label_shelf)
 
         if obj.Scoop:
-            scoop = make_scoop(obj)
+            scoop = Scoop.Make(obj)
 
             fuse_total = fuse_total.fuse(scoop)
 

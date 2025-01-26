@@ -8,11 +8,33 @@ from FreeCAD import Units
 
 from .utils import Utils
 
+from abc import abstractmethod
+from enum import Enum
 
+from .const import (
+    X_DIVIDERS,
+    Y_DIVIDERS,
+    INSIDE_FILLET_RADIUS,
+    DIVIDER_THICKNESS,
+    CUSTOM_X_DIVIDER_HEIGHT,
+    CUSTOM_Y_DIVIDER_HEIGHT,
+    LABEL_SHELF_WIDTH,
+    LABEL_SHELF_LENGTH,
+    LABEL_SHELF_ANGLE,
+    LABEL_SHELF_STACKING_OFFSET,
+    LABEL_SHELF_VERTICAL_THICKNESS,
+    SCOOP,
+    SCOOP_RADIUS,
+)
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
 
 SMALL_NUMBER = 0.01
+
+class Feature:
+    @abstractmethod
+    def Make(obj):
+        raise NotImplementedError()
 
 def _label_shelf_full_width(
     obj: FreeCAD.DocumentObject,
@@ -21,7 +43,7 @@ def _label_shelf_full_width(
 ) -> Part.Shape:
     xdiv = obj.xDividers + 1
     fw = obj.yTotalWidth - obj.WallThickness * 2
-    ytranslate = -obj.BinUnit / 2 + obj.WallThickness
+    ytranslate = obj.Clearance + obj.WallThickness
     xtranslate = zeromm
     parts = []
     for x in range(xdiv):
@@ -38,7 +60,7 @@ def _label_shelf_full_width(
 
     funcfuse = ls if xdiv == 1 else Part.Solid.multiFuse(firstls, parts)
 
-    x2 = -obj.BinUnit / 2 + obj.WallThickness
+    x2 = obj.Clearance + obj.WallThickness
     b_edges = []
     for edge in funcfuse.Edges:
         y0 = edge.Vertexes[0].Point.y
@@ -61,7 +83,7 @@ def _label_shelf_center(
     xdiv = obj.xDividers + 1
     ydiv = obj.yDividers + 1
     xtranslate = zeromm
-    ysp = -obj.BinUnit / 2 + obj.WallThickness + ycompwidth / 2 - obj.LabelShelfLength / 2
+    ysp = obj.Clearance + obj.WallThickness + ycompwidth / 2 - obj.LabelShelfLength / 2
     ytranslate = ysp
     parts = []
     for x in range(xdiv):
@@ -92,7 +114,7 @@ def _label_shelf_left(
     xdiv = obj.xDividers + 1
     ydiv = obj.yDividers + 1
     xtranslate = zeromm
-    ysp = -obj.BinUnit / 2 + obj.WallThickness
+    ysp = obj.Clearance + obj.WallThickness
     ytranslate = ysp
     parts = []
     for x in range(xdiv):
@@ -113,7 +135,7 @@ def _label_shelf_left(
 
     funcfuse = ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
 
-    y2 = -obj.BinUnit / 2 + obj.WallThickness
+    y2 = obj.Clearance + obj.WallThickness
     b_edges = []
     for edge in funcfuse.Edges:
         y0 = edge.Vertexes[0].Point.y
@@ -136,7 +158,7 @@ def _label_shelf_right(
     xdiv = obj.xDividers + 1
     ydiv = obj.yDividers + 1
     xtranslate = zeromm
-    ysp = -obj.BinUnit / 2 + obj.WallThickness + ycompwidth - obj.LabelShelfLength
+    ysp = obj.Clearance + obj.WallThickness + ycompwidth - obj.LabelShelfLength
     ytranslate = ysp
     parts = []
     for x in range(xdiv):
@@ -157,8 +179,8 @@ def _label_shelf_right(
 
     funcfuse = ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
 
-    y2 = obj.yTotalWidth - obj.BinUnit / 2 - obj.WallThickness
-    x2 = -obj.BinUnit / 2 + obj.WallThickness
+    y2 = obj.yTotalWidth + obj.Clearance - obj.WallThickness
+    x2 = obj.Clearance + obj.WallThickness
     b_edges = []
     for edge in funcfuse.Edges:
         y0 = edge.Vertexes[0].Point.y
@@ -193,250 +215,341 @@ def _label_shelf_fillet(
         h_edges,
     )
 
+class LabelShelf(Feature):
+    """Create Label shelf for bins"""
 
-def make_label_shelf(obj: FreeCAD.DocumentObject) -> Part.Shape:
-    """Create label shelf.
+    def __init__(self, obj:FreeCAD.DocumentObject, label_style_default = "Standard"):
+        """create bin compartments with the option for dividers.
 
-    Args:
-        obj (FreeCAD.DocumentObject): Document object.
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+        """
+        ## Gridfinity Parameters
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "LabelShelfStyle",
+            "Gridfinity",
+            "Choose to turn the label shelf on or off",
+        )
 
-    Returns:
-        Part.Shape: Labelshelf 3D shape.
+        obj.LabelShelfStyle = ["Off", "Standard", "Overhang"]
+        obj.LabelShelfStyle = label_style_default
 
-    """
-    towall = -obj.BinUnit / 2 + obj.WallThickness
-    tolabelend = (
-        -obj.BinUnit / 2
-        + obj.StackingLipTopChamfer
-        + obj.StackingLipTopLedge
-        + obj.StackingLipBottomChamfer
-        + obj.LabelShelfWidth
-    )
-    stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
-    shelf_angle = obj.LabelShelfAngle.Value
-    shelf_placement = obj.LabelShelfPlacement
+        obj.addProperty(
+            "App::PropertyEnumeration",
+            "LabelShelfPlacement",
+            "Gridfinity",
+            "Choose the style of the label shelf",
+        )
 
-    xdiv = obj.xDividers + 1
-    ydiv = obj.yDividers + 1
-    xcompwidth = (
-        obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers
-    ) / (xdiv)
-    ycompwidth = (
-        obj.yTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.yDividers
-    ) / (ydiv)
+        obj.LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
 
-    if obj.LabelShelfStyle == "Overhang":
-        shelf_angle = 0
-        shelf_placement = "Full Width"
 
-    # Calculate V4 Z coordinate by using an angle
-    side_a = abs(towall - tolabelend)
-    beta = shelf_angle
-    alpha = 90 - beta
-    side_c = side_a / math.sin(math.radians(alpha))
-    side_b = math.sqrt(-pow(side_a, 2) + pow(side_c, 2))
-    v4_z = -obj.LabelShelfVerticalThickness - side_b * unitmm
+        ## Gridfinity Non Standard Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "LabelShelfWidth",
+            "GridfinityNonStandard",
+            "Thickness of the Label Shelf <br> <br> default = 12 mm",
+        ).LabelShelfWidth = LABEL_SHELF_WIDTH
 
-    v1 = FreeCAD.Vector(towall, 0, stackingoffset)
-    v2 = FreeCAD.Vector(tolabelend, 0, stackingoffset)
-    v3 = FreeCAD.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness + stackingoffset)
-    v4 = FreeCAD.Vector(towall, 0, v4_z + stackingoffset)
+        obj.addProperty(
+            "App::PropertyLength",
+            "LabelShelfLength",
+            "GridfinityNonStandard",
+            "Length of the Label Shelf <br> <br> default = 42 mm",
+        ).LabelShelfLength = LABEL_SHELF_LENGTH
 
-    l1 = Part.LineSegment(v1, v2)
-    l2 = Part.LineSegment(v2, v3)
-    l3 = Part.LineSegment(v3, v4)
-    l4 = Part.LineSegment(v4, v1)
+        obj.addProperty(
+            "App::PropertyAngle",
+            "LabelShelfAngle",
+            "GridfinityNonStandard",
+            "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
+        ).LabelShelfAngle = LABEL_SHELF_ANGLE
 
-    s1 = Part.Shape([l1, l2, l3, l4])
+        ## Expert Only Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "LabelShelfStackingOffset",
+            "zzExpertOnly",
+            "Vertical Thickness of the Label Shelf <br> <br> default = 0.4 mm",
+        ).LabelShelfStackingOffset = LABEL_SHELF_STACKING_OFFSET
 
-    wire = Part.Wire(s1.Edges)
+        obj.addProperty(
+            "App::PropertyLength",
+            "LabelShelfVerticalThickness",
+            "zzExpertOnly",
+            "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
+        ).LabelShelfVerticalThickness = LABEL_SHELF_VERTICAL_THICKNESS
 
-    face = Part.Face(wire)
+    def Make(obj: FreeCAD.DocumentObject) -> Part.Shape:
+        """Create label shelf.
 
-    if obj.LabelShelfLength > ycompwidth:
-        shelf_placement = "Full Width"
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
 
-    # Label placement specific code
-    if shelf_placement == "Full Width":
-        funcfuse = _label_shelf_full_width(obj, face, xcompwidth)
-    if shelf_placement == "Center":
-        funcfuse = _label_shelf_center(obj, xcompwidth, ycompwidth, face)
-    if shelf_placement == "Left":
-        funcfuse = _label_shelf_left(obj, xcompwidth, ycompwidth, face)
-    if shelf_placement == "Right":
-        funcfuse = _label_shelf_right(obj, xcompwidth, ycompwidth, face)
+        Returns:
+            Part.Shape: Labelshelf 3D shape.
 
-    # For all label placements
-    funcfuse = _label_shelf_fillet(obj, funcfuse, stackingoffset)
-
-    labelshelfheight = obj.LabelShelfVerticalThickness + side_b * unitmm
-    if (labelshelfheight) > obj.UsableHeight:
-        ytranslate = -obj.BinUnit / 2 + obj.WallThickness
-        xtranslate = zeromm
-        bottomcutbox = Part.makeBox(
-            labelshelfheight,
-            obj.StackingLipTopChamfer
+        """
+        towall = obj.Clearance + obj.WallThickness
+        tolabelend = (
+            obj.Clearance
+            + obj.StackingLipTopChamfer
             + obj.StackingLipTopLedge
             + obj.StackingLipBottomChamfer
             + obj.LabelShelfWidth
-            - obj.WallThickness,
-            obj.yTotalWidth,
-            FreeCAD.Vector(
-                towall,
-                0,
-                -obj.UsableHeight - labelshelfheight + stackingoffset,
-            ),
-            FreeCAD.Vector(0, 1, 0),
         )
+        stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
+        shelf_angle = obj.LabelShelfAngle.Value
+        shelf_placement = obj.LabelShelfPlacement
 
-        vec_list = []
-        for _ in range(xdiv):
-            vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
-            xtranslate += xcompwidth + obj.DividerThickness
+        xdiv = obj.xDividers + 1
+        ydiv = obj.yDividers + 1
+        xcompwidth = (
+            obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers
+        ) / (xdiv)
+        ycompwidth = (
+            obj.yTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.yDividers
+        ) / (ydiv)
 
-        funcfuse = Part.Shape.cut(funcfuse, Utils.copy_and_translate(bottomcutbox, vec_list))
-    return funcfuse
+        if obj.LabelShelfStyle == "Overhang":
+            shelf_angle = 0
+            shelf_placement = "Full Width"
 
+        # Calculate V4 Z coordinate by using an angle
+        side_a = abs(towall - tolabelend)
+        beta = shelf_angle
+        alpha = 90 - beta
+        side_c = side_a / math.sin(math.radians(alpha))
+        side_b = math.sqrt(-pow(side_a, 2) + pow(side_c, 2))
+        v4_z = -obj.LabelShelfVerticalThickness - side_b * unitmm
 
-def make_scoop(obj: FreeCAD.DocumentObject) -> Part.Shape:
-    """Create scoop feature.
+        v1 = FreeCAD.Vector(towall, 0, stackingoffset)
+        v2 = FreeCAD.Vector(tolabelend, 0, stackingoffset)
+        v3 = FreeCAD.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness + stackingoffset)
+        v4 = FreeCAD.Vector(towall, 0, v4_z + stackingoffset)
 
-    Args:
-        obj (FreeCAD.DocumentObject): Document object.
+        l1 = Part.LineSegment(v1, v2)
+        l2 = Part.LineSegment(v2, v3)
+        l3 = Part.LineSegment(v3, v4)
+        l4 = Part.LineSegment(v4, v1)
 
-    Returns:
-        Part.Shape: 3d scoop object.
+        s1 = Part.Shape([l1, l2, l3, l4])
 
-    """
-    scooprad1 = obj.ScoopRadius + 1 * unitmm
-    scooprad2 = obj.ScoopRadius + 1 * unitmm
-    scooprad3 = obj.ScoopRadius + 1 * unitmm
+        wire = Part.Wire(s1.Edges)
 
-    xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
-        obj.xDividers + 1
-    )
+        face = Part.Face(wire)
 
-    xdivscoop = obj.xDividerHeight - obj.HeightUnitValue
+        if obj.LabelShelfLength > ycompwidth:
+            shelf_placement = "Full Width"
 
-    if obj.ScoopRadius > xdivscoop and obj.xDividerHeight != 0:
-        scooprad1 = xdivscoop - unitmm
-    if obj.ScoopRadius > xcomp_w and obj.xDividers > 0:
-        scooprad2 = xcomp_w - 2 * unitmm
-    if obj.ScoopRadius > obj.UsableHeight > 0:
-        scooprad3 = obj.UsableHeight
+        # Label placement specific code
+        if shelf_placement == "Full Width":
+            funcfuse = _label_shelf_full_width(obj, face, xcompwidth)
+        if shelf_placement == "Center":
+            funcfuse = _label_shelf_center(obj, xcompwidth, ycompwidth, face)
+        if shelf_placement == "Left":
+            funcfuse = _label_shelf_left(obj, xcompwidth, ycompwidth, face)
+        if shelf_placement == "Right":
+            funcfuse = _label_shelf_right(obj, xcompwidth, ycompwidth, face)
 
-    scooprad = min(obj.ScoopRadius, scooprad1, scooprad2, scooprad3)
+        # For all label placements
+        funcfuse = _label_shelf_fillet(obj, funcfuse, stackingoffset)
 
-    if scooprad <= 0:
-        FreeCAD.Console.PrintMessage(
-            "scooop could not be made due to bin selected parameters\n",
-        )
-        return None
-
-    v1 = FreeCAD.Vector(
-        obj.xTotalWidth - obj.BinUnit / 2 - obj.WallThickness,
-        0,
-        -obj.UsableHeight + scooprad,
-    )
-    v2 = FreeCAD.Vector(
-        obj.xTotalWidth - obj.BinUnit / 2 - obj.WallThickness,
-        0,
-        -obj.UsableHeight,
-    )
-    v3 = FreeCAD.Vector(
-        obj.xTotalWidth - obj.BinUnit / 2 - obj.WallThickness - scooprad,
-        0,
-        -obj.UsableHeight,
-    )
-
-    l1 = Part.LineSegment(v1, v2)
-    l2 = Part.LineSegment(v2, v3)
-
-    vc1 = FreeCAD.Vector(
-        obj.xTotalWidth
-        - obj.BinUnit / 2
-        - obj.WallThickness
-        - scooprad
-        + scooprad * math.sin(math.pi / 4),
-        0,
-        -obj.UsableHeight + scooprad - scooprad * math.sin(math.pi / 4),
-    )
-
-    c1 = Part.Arc(v1, vc1, v3)
-
-    s1 = Part.Shape([l1, l2, c1])
-
-    wire = Part.Wire(s1.Edges)
-
-    face = Part.Face(wire)
-
-    xdiv = obj.xDividers + 1
-    xtranslate = (
-        0 * unitmm
-        - obj.WallThickness
-        + obj.StackingLipTopLedge
-        + obj.StackingLipTopChamfer
-        + obj.StackingLipBottomChamfer
-    )
-    compwidth = (obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers) / (
-        xdiv
-    )
-
-    scoopbox = Part.makeBox(
-        obj.StackingLipBottomChamfer
-        + obj.StackingLipTopChamfer
-        + obj.StackingLipTopLedge
-        - obj.WallThickness,
-        obj.yTotalWidth - obj.WallThickness * 2,
-        obj.UsableHeight,
-        FreeCAD.Vector(
-            obj.xTotalWidth - obj.BinUnit / 2 - obj.WallThickness,
-            -obj.BinUnit / 2 + obj.WallThickness,
-            0,
-        ),
-        FreeCAD.Vector(0, 0, -1),
-    )
-
-    scoop = face.extrude(FreeCAD.Vector(0, obj.yTotalWidth - obj.WallThickness * 2, 0))
-
-    vec_list = []
-    for x in range(xdiv):
-        vec_list.append(FreeCAD.Vector(-xtranslate, -obj.BinUnit / 2 + obj.WallThickness, 0))
-
-        if x > 0:
-            xtranslate += compwidth + obj.DividerThickness
-        else:
-            xtranslate += (
-                +obj.WallThickness
-                - obj.StackingLipTopLedge
-                - obj.StackingLipTopChamfer
-                - obj.StackingLipBottomChamfer
-                + compwidth
-                + obj.DividerThickness
+        labelshelfheight = obj.LabelShelfVerticalThickness + side_b * unitmm
+        if (labelshelfheight) > obj.UsableHeight:
+            ytranslate = obj.Clearance + obj.WallThickness
+            xtranslate = zeromm
+            bottomcutbox = Part.makeBox(
+                labelshelfheight,
+                obj.StackingLipTopChamfer
+                + obj.StackingLipTopLedge
+                + obj.StackingLipBottomChamfer
+                + obj.LabelShelfWidth
+                - obj.WallThickness,
+                obj.yTotalWidth,
+                FreeCAD.Vector(
+                    towall,
+                    0,
+                    -obj.UsableHeight - labelshelfheight + stackingoffset,
+                ),
+                FreeCAD.Vector(0, 1, 0),
             )
 
-    funcfuse = Utils.copy_and_translate(scoop, vec_list)
-    funcfuse = funcfuse.fuse(scoopbox)
+            vec_list = []
+            for _ in range(xdiv):
+                vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
+                xtranslate += xcompwidth + obj.DividerThickness
 
-    b_edges = []
-    for edge in funcfuse.Edges:
-        z0 = edge.Vertexes[0].Point.z
-        z1 = edge.Vertexes[1].Point.z
-        x0 = edge.Vertexes[0].Point.x
-        x1 = edge.Vertexes[1].Point.x
+            funcfuse = Part.Shape.cut(funcfuse, Utils.copy_and_translate(bottomcutbox, vec_list))
+        return funcfuse
 
-        hdif = abs(z0 - z1)
-        if hdif == obj.UsableHeight and x0 == x1:
-            b_edges.append(edge)
+class Scoop(Feature):
+    """Create Negative for Bin Compartments"""
 
-    return funcfuse.makeFillet(
-        obj.StackingLipBottomChamfer
-        + obj.StackingLipTopChamfer
-        + obj.StackingLipTopLedge
-        - obj.WallThickness
-        - 0.01 * unitmm,
-        b_edges,
-    )
+    def __init__(self, obj:FreeCAD.DocumentObject, scoop_default = SCOOP):
+        """create bin compartments with the option for dividers.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object
+            scoop_default: default state of the scoop feature
+
+        """
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "ScoopRadius",
+            "GridfinityNonStandard",
+            "Radius of the Scoop <br> <br> default = 21 mm",
+        ).ScoopRadius = SCOOP_RADIUS
+
+        obj.addProperty(
+            "App::PropertyBool",
+            "Scoop",
+            "Gridfinity",
+            "Toggle the Scoop fillet on or off",
+        ).Scoop = scoop_default
+
+    def Make(obj: FreeCAD.DocumentObject) -> Part.Shape:
+        """Create scoop feature.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+
+        Returns:
+            Part.Shape: 3d scoop object.
+
+        """
+        scooprad1 = obj.ScoopRadius + 1 * unitmm
+        scooprad2 = obj.ScoopRadius + 1 * unitmm
+        scooprad3 = obj.ScoopRadius + 1 * unitmm
+
+        xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
+            obj.xDividers + 1
+        )
+
+        xdivscoop = obj.xDividerHeight - obj.HeightUnitValue - obj.LabelShelfStackingOffset
+
+        if obj.ScoopRadius > xdivscoop and obj.xDividerHeight != 0:
+            scooprad1 = xdivscoop - unitmm
+        if obj.ScoopRadius > xcomp_w and obj.xDividers > 0:
+            scooprad2 = xcomp_w - 2 * unitmm
+        if obj.ScoopRadius > obj.UsableHeight > 0:
+            scooprad3 = obj.UsableHeight - obj.LabelShelfStackingOffset
+
+        scooprad = min(obj.ScoopRadius, scooprad1, scooprad2, scooprad3)
+
+        if scooprad <= 0:
+            FreeCAD.Console.PrintMessage(
+                "scooop could not be made due to bin selected parameters\n",
+            )
+            return None
+
+        v1 = FreeCAD.Vector(
+            obj.xTotalWidth + obj.Clearance - obj.WallThickness,
+            0,
+            -obj.UsableHeight + scooprad,
+        )
+        v2 = FreeCAD.Vector(
+            obj.xTotalWidth + obj.Clearance - obj.WallThickness,
+            0,
+            -obj.UsableHeight,
+        )
+        v3 = FreeCAD.Vector(
+            obj.xTotalWidth + obj.Clearance - obj.WallThickness - scooprad,
+            0,
+            -obj.UsableHeight,
+        )
+
+        l1 = Part.LineSegment(v1, v2)
+        l2 = Part.LineSegment(v2, v3)
+
+        vc1 = FreeCAD.Vector(
+            obj.xTotalWidth
+            + obj.Clearance
+            - obj.WallThickness
+            - scooprad
+            + scooprad * math.sin(math.pi / 4),
+            0,
+            -obj.UsableHeight + scooprad - scooprad * math.sin(math.pi / 4),
+        )
+
+        c1 = Part.Arc(v1, vc1, v3)
+
+        s1 = Part.Shape([l1, l2, c1])
+
+        wire = Part.Wire(s1.Edges)
+
+        face = Part.Face(wire)
+
+        xdiv = obj.xDividers + 1
+        xtranslate = (
+            0 * unitmm
+            - obj.WallThickness
+            + obj.StackingLipTopLedge
+            + obj.StackingLipTopChamfer
+            + obj.StackingLipBottomChamfer
+        )
+        compwidth = (obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers) / (
+            xdiv
+        )
+
+        scoopbox = Part.makeBox(
+            obj.StackingLipBottomChamfer
+            + obj.StackingLipTopChamfer
+            + obj.StackingLipTopLedge
+            - obj.WallThickness,
+            obj.yTotalWidth - obj.WallThickness * 2,
+            obj.UsableHeight,
+            FreeCAD.Vector(
+                obj.xTotalWidth + obj.Clearance - obj.WallThickness,
+                + obj.Clearance + obj.WallThickness,
+                0,
+            ),
+            FreeCAD.Vector(0, 0, -1),
+        )
+
+        scoop = face.extrude(FreeCAD.Vector(0, obj.yTotalWidth - obj.WallThickness * 2, 0))
+
+        vec_list = []
+        for x in range(xdiv):
+            vec_list.append(FreeCAD.Vector(-xtranslate, obj.Clearance + obj.WallThickness, 0))
+
+            if x > 0:
+                xtranslate += compwidth + obj.DividerThickness
+            else:
+                xtranslate += (
+                    +obj.WallThickness
+                    - obj.StackingLipTopLedge
+                    - obj.StackingLipTopChamfer
+                    - obj.StackingLipBottomChamfer
+                    + compwidth
+                    + obj.DividerThickness
+                )
+
+        funcfuse = Utils.copy_and_translate(scoop, vec_list)
+        funcfuse = funcfuse.fuse(scoopbox)
+
+        b_edges = []
+        for edge in funcfuse.Edges:
+            z0 = edge.Vertexes[0].Point.z
+            z1 = edge.Vertexes[1].Point.z
+            x0 = edge.Vertexes[0].Point.x
+            x1 = edge.Vertexes[1].Point.x
+
+            hdif = abs(z0 - z1)
+            if hdif == obj.UsableHeight and x0 == x1:
+                b_edges.append(edge)
+
+        return funcfuse.makeFillet(
+            obj.StackingLipBottomChamfer
+            + obj.StackingLipTopChamfer
+            + obj.StackingLipTopLedge
+            - obj.WallThickness
+            - 0.01 * unitmm,
+            b_edges,
+        )
 
 
 def make_stacking_lip(obj: FreeCAD.DocumentObject) -> Part.Shape:
@@ -536,10 +649,11 @@ def _make_compartments_no_deviders(
     func_fuse: Part.Shape,
 ) -> Part.Shape:
     # Fillet Bottom edges
-    b_edges = []
-    for edge in func_fuse.Edges:
-        z0 = edge.Vertexes[0].Point.z
-        z1 = edge.Vertexes[1].Point.z
+    #b_edges = []
+    #for edge in func_fuse.Edges:
+        #z0 = edge.Vertexes[0].Point.z
+        #z1 = edge.Vertexes[1].Point.z
+
     # Fillet Bottom edges
     b_edges = []
     for edge in func_fuse.Edges:
@@ -579,8 +693,8 @@ def _make_compartments_with_deviders(
             obj.yTotalWidth,
             xdivheight + stackingoffset,
             FreeCAD.Vector(
-                -obj.BinUnit / 2 + obj.DividerThickness,
-                -obj.BinUnit / 2,
+                obj.Clearance + obj.DividerThickness,
+                obj.Clearance,
                 -obj.TotalHeight,
             ),
             FreeCAD.Vector(0, 0, 1),
@@ -596,7 +710,7 @@ def _make_compartments_with_deviders(
             obj.xTotalWidth,
             obj.DividerThickness,
             ydivheight + stackingoffset,
-            FreeCAD.Vector(-obj.BinUnit / 2, -obj.BinUnit / 2, -obj.TotalHeight),
+            FreeCAD.Vector(obj.Clearance, obj.Clearance, -obj.TotalHeight),
             FreeCAD.Vector(0, 0, 1),
         )
 
@@ -606,9 +720,12 @@ def _make_compartments_with_deviders(
 
     if xdiv:
         func_fuse = func_fuse.cut(xdiv)
+
     if ydiv:
         func_fuse = func_fuse.cut(ydiv)
+
     b_edges = []
+
     for edge in func_fuse.Edges:
         z0 = edge.Vertexes[0].Point.z
         z1 = edge.Vertexes[1].Point.z
@@ -621,39 +738,156 @@ def _make_compartments_with_deviders(
 
     return func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
 
+class Compartments(Feature):
+    """Create Negative for Bin Compartments"""
 
-def make_compartments(obj: FreeCAD.DocumentObject) -> Part.Shape:
-    """Create compartment cutout objects.
+    def __init__(self, obj:FreeCAD.DocumentObject, x_div_default = X_DIVIDERS, y_div_default = Y_DIVIDERS):
+        """create bin compartments with the option for dividers.
 
-    Args:
-        obj (FreeCAD.DocumentObject): Document object.
+        Args:
+            obj (FreeCAD.DocumentObject): Document object
+            x_div_default: default value or set as input parameter
+            y_div_default: default value or set as input parameter
 
-    Returns:
-        Part.Shape: Compartments cutout shape.
+        """
 
-    """
-    func_fuse = Utils.rounded_rectangle_extrude(
-        obj.xTotalWidth - obj.WallThickness * 2,
-        obj.yTotalWidth - obj.WallThickness * 2,
-        -obj.UsableHeight,
-        obj.UsableHeight,
-        obj.BinOuterRadius - obj.WallThickness,
-    )
-    func_fuse.translate(
-        FreeCAD.Vector(
-            obj.xTotalWidth / 2 - obj.BinUnit / 2,
-            obj.yTotalWidth / 2 - obj.BinUnit / 2,
-            0,
-        ),
-    )
+        ## Gridfinity Parameters
 
-    if obj.xDividers == 0 and obj.yDividers == 0:
-        func_fuse = _make_compartments_no_deviders(obj, func_fuse)
+        obj.addProperty(
+            "App::PropertyInteger",
+            "xDividers",
+            "Gridfinity",
+            "Select the Number of Dividers in the x direction",
+        ).xDividers = x_div_default
 
-    else:
-        func_fuse = _make_compartments_with_deviders(obj, func_fuse)
+        obj.addProperty(
+            "App::PropertyInteger",
+            "yDividers",
+            "Gridfinity",
+            "Select the number of Dividers in the y direction",
+        ).yDividers = y_div_default
 
-    return func_fuse
+        ## Gridfinity Non Standard Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "InsideFilletRadius",
+            "GridfinityNonStandard",
+            "inside fillet at the bottom of the bin <br> <br> default = 1.85 mm",
+        ).InsideFilletRadius = INSIDE_FILLET_RADIUS
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "DividerThickness",
+            "GridfinityNonStandard",
+            (
+                "Thickness of the dividers, ideally an even multiple of layer width <br> <br> "
+                "default = 1.2 mm"
+            ),
+        ).DividerThickness = DIVIDER_THICKNESS
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "xDividerHeight",
+            "GridfinityNonStandard",
+            "Custom Height of x dividers <br> <br> default = 0 mm = full height",
+        ).xDividerHeight = CUSTOM_X_DIVIDER_HEIGHT
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "yDividerHeight",
+            "GridfinityNonStandard",
+            "Custom Height of y dividers <br> <br> default = 0 mm = full height",
+        ).yDividerHeight = CUSTOM_Y_DIVIDER_HEIGHT
+
+        ## Referance Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "UsableHeight",
+            "ReferenceParameters",
+            (
+                "Height of the bin minus the bottom unit, "
+                "the amount of the bin that can be effectively used"
+            ),
+            1,
+        )
+
+    def Make(obj: FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
+        """Create compartment cutout objects.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+            bin_inside_shape (Part.Wire): Profile of bin inside wall
+
+        Returns:
+            Part.Shape: Compartments cutout shape.
+
+        """
+        ## Calculated Parameters
+        obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
+
+        ## Error Checks
+        divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm + obj.LabelShelfStackingOffset
+
+        if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
+            obj.xDividerHeight = divmin
+
+            FreeCAD.Console.PrintWarning(
+                "Divider Height must be equal to or greater than:  ",
+            )
+
+            FreeCAD.Console.PrintWarning(divmin)
+
+            FreeCAD.Console.PrintWarning("\n")
+
+        if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
+            obj.yDividerHeight = divmin
+
+            FreeCAD.Console.PrintWarning(
+                "Divider Height must be equal to or greater than:  ",
+            )
+
+            FreeCAD.Console.PrintWarning(divmin)
+
+            FreeCAD.Console.PrintWarning("\n")
+
+        if (
+            obj.xDividerHeight < obj.TotalHeight
+            and obj.LabelShelfStyle != "Off"
+            and obj.xDividerHeight != 0
+            and obj.xDividers != 0
+        ):
+            obj.LabelShelfStyle = "Off"
+
+            FreeCAD.Console.PrintWarning(
+                "Label Shelf turned off for less than full height x dividers",
+            )
+        ## Compartment Generation
+        face = Part.Face(bin_inside_shape)
+
+        func_fuse = face.extrude(FreeCAD.Vector(0, 0, -obj.UsableHeight))
+        """
+        func_fuse = Utils.rounded_rectangle_extrude(
+            obj.xTotalWidth - obj.WallThickness * 2,
+            obj.yTotalWidth - obj.WallThickness * 2,
+            -obj.UsableHeight,
+            obj.UsableHeight,
+            obj.BinOuterRadius - obj.WallThickness,
+        )
+        func_fuse.translate(
+            FreeCAD.Vector(
+                obj.xTotalWidth / 2 - obj.BinUnit / 2,
+                obj.yTotalWidth / 2 - obj.BinUnit / 2,
+                0,
+            ),
+        )
+        """
+        if obj.xDividers == 0 and obj.yDividers == 0:
+            func_fuse = _make_compartments_no_deviders(obj, func_fuse)
+
+        else:
+            func_fuse = _make_compartments_with_deviders(obj, func_fuse)
+
+        return func_fuse
 
 
 def make_bin_base(obj: FreeCAD.DocumentObject, layout) -> Part.Shape:
