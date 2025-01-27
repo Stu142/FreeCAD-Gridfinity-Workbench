@@ -19,7 +19,7 @@ class Feature:
 class RectangleLayout(Feature):
     """ Creat layout for rectanlge shaped Gridfinity object and add relevant properties"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject):
+    def __init__(self, obj:FreeCAD.DocumentObject, baseplate_default = False):
         """Create Rectangle Layout.
 
         Args:
@@ -90,6 +90,16 @@ class RectangleLayout(Feature):
             "Size of the grid in y direction <br> <br> default = 42 mm",
         ).yGridSize = Y_GRID_SIZE
 
+        ## Hidden Properties
+        obj.addProperty(
+            "App::PropertyBool",
+            "Baseplate",
+            "Flags",
+            "Is the Gridfinity Object a baseplate",
+        ).Baseplate = baseplate_default
+
+        obj.setEditorMode("Baseplate", 2)
+
     def Make(self, obj:FreeCAD.DocumentObject):
         """Generate Rectanble layout and calculate relevant parameters.
 
@@ -105,9 +115,13 @@ class RectangleLayout(Feature):
             [True for y in range(obj.yGridUnits)] for x in range(obj.xGridUnits)
         ]
 
-        obj.xTotalWidth = obj.xGridUnits * obj.xGridSize - obj.Clearance * 2
+        if obj.Baseplate:
+            obj.xTotalWidth = obj.xGridUnits * obj.xGridSize
+            obj.yTotalWidth = obj.yGridUnits * obj.yGridSize
 
-        obj.yTotalWidth = obj.yGridUnits * obj.yGridSize - obj.Clearance * 2
+        else:
+            obj.xTotalWidth = obj.xGridUnits * obj.xGridSize - obj.Clearance * 2
+            obj.yTotalWidth = obj.yGridUnits * obj.yGridSize - obj.Clearance * 2
 
         obj.xMaxGrids = obj.xGridUnits
 
@@ -119,10 +133,22 @@ class RectangleLayout(Feature):
 class l_Layout(Feature):
 
     def __init__(self, obj:FreeCAD.DocumentObject):
-        """comment for stuff"""
+        """makes L layout
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+        """
 
     def Make(self, obj:FreeCAD.DocumentObject):
+        """makes L layout
 
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+
+        Returns:
+            Part.Shape: Extruded part to cut out inside of bin.
+
+        """
         #obj.xMaxGrids = len(layout)
         #obj.yMaxGrids = len(layout[0])
 

@@ -10,6 +10,9 @@ from .baseplate_feature_construction import (
     make_baseplate_connection_holes,
     make_baseplate_magnet_holes,
     make_baseplate_screw_bottom_chamfer,
+    make_baseplate_center_cut,
+    BaseplateBaseValues,
+    BaseplateSolidShape,
 )
 from .const import (
     BASE_THICKNESS,
@@ -58,7 +61,6 @@ from .grid_initial_layout import (
 )
 
 from .feature_construction import (
-    make_baseplate_center_cut,
     make_bin_base,
     make_bottom_holes,
     make_eco_bin_cut,
@@ -999,102 +1001,16 @@ class Baseplate(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self._add_bin_properties(obj)
+        self.features = [RectangleLayout(obj, baseplate_default = True),
+            BaseplateSolidShape(obj),
+            BaseplateBaseValues(obj),
 
-        self._add_reference_properties(obj)
-
-        self._add_expert_properties(obj)
+        ]
 
         obj.Proxy = self
 
-    def _add_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyInteger",
-            "xGridUnits",
-            "Gridfinity",
-            "Length of the edges of the outline",
-        ).xGridUnits = 2
 
-        obj.addProperty(
-            "App::PropertyInteger",
-            "yGridUnits",
-            "Gridfinity",
-            "Height of the extrusion",
-        ).yGridUnits = 2
-
-    def _add_reference_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "xTotalWidth",
-            "ReferenceDimensions",
-            "total width of bin in x direction",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "yTotalWidth",
-            "ReferenceDimensions",
-            "total width of bin in y direction",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "TotalHeight",
-            "ReferenceDimensions",
-            "total height of the bin",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileHeight",
-            "ReferenceDimensions",
-            "Height of the Gridfinity Base Profile",
-            1,
-        )
-
-    def _add_expert_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileBottomChamfer",
-            "zzExpertOnly",
-            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
-            1,
-        ).BaseProfileBottomChamfer = BASEPLATE_BOTTOM_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileVerticalSection",
-            "zzExpertOnly",
-            "Height of the vertical section in bin base profile",
-            1,
-        ).BaseProfileVerticalSection = BASEPLATE_VERTICAL_SECTION
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileTopChamfer",
-            "zzExpertOnly",
-            "Height of the top chamfer in the bin base profile",
-            1,
-        ).BaseProfileTopChamfer = BASEPLATE_TOP_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseplateProfileTotalHeight",
-            "zzExpertOnly",
-            "Height of the bin base profile",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "GridSize",
-            "zzExpertOnly",
-            "Size of the Grid",
-        ).GridSize = GRID_SIZE
-
+        """
         obj.addProperty(
             "App::PropertyLength",
             "HeightUnitValue",
@@ -1103,56 +1019,6 @@ class Baseplate(FoundationGridfinity):
             1,
         ).HeightUnitValue = 7
 
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinOuterRadius",
-            "zzExpertOnly",
-            "Outer radius of the baseplate",
-            1,
-        ).BinOuterRadius = BASEPLATE_OUTER_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinVerticalRadius",
-            "zzExpertOnly",
-            "Radius of the baseplate profile Vertical section",
-            1,
-        ).BinVerticalRadius = BASEPLATE_VERTICAL_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinBottomRadius",
-            "zzExpertOnly",
-            "bottom of baseplate corner radius",
-            1,
-        ).BinBottomRadius = BASEPLATE_BOTTOM_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseplateTopLedgeWidth",
-            "zzExpertOnly",
-            "Top ledge of baseplate",
-            1,
-        ).BaseplateTopLedgeWidth = BASEPLATE_TOP_LEDGE_WIDTH
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinUnit",
-            "zzExpertOnly",
-            "Width of a single bin unit",
-            2,
-        ).BinUnit = BIN_UNIT
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "Clearance",
-            "zzExpertOnly",
-            (
-                "The tolerance on each side of a bin between before the edge of the grid <br> <br> "
-                "default = 0.25 mm"
-            ),
-            1,
-        ).Clearance = CLEARANCE
 
         obj.addProperty(
             "App::PropertyLength",
@@ -1161,6 +1027,7 @@ class Baseplate(FoundationGridfinity):
             "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
             1,
         ).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
+        """
 
     def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
         """Generate partsbin shape.
@@ -1172,16 +1039,8 @@ class Baseplate(FoundationGridfinity):
             Part.Shape: PartsBin Shape.
 
         """
-        obj.xTotalWidth = obj.xGridUnits * obj.GridSize
 
-        obj.yTotalWidth = obj.yGridUnits * obj.GridSize
-
-        obj.BaseProfileHeight = (
-            obj.BaseProfileBottomChamfer
-            + obj.BaseProfileVerticalSection
-            + obj.BaseProfileTopChamfer
-        )
-
+        """
         obj.TotalHeight = obj.BaseProfileHeight
 
         obj.BinUnit = obj.GridSize - obj.BaseplateTopLedgeWidth * 2
@@ -1203,8 +1062,38 @@ class Baseplate(FoundationGridfinity):
                 0,
             ),
         )
+        """
 
-        return Part.Shape.cut(solid_center, fuse_total)
+        BaseplateBaseValues.Make(self, obj)
+
+        layout = RectangleLayout.Make(self, obj)
+
+        baseplate_outside_shape = Utils.create_rounded_rectangle(
+            obj.xTotalWidth,
+            obj.yTotalWidth,
+            0,
+            obj.BinOuterRadius,
+        )
+        baseplate_outside_shape.translate(
+            FreeCAD.Vector(
+                obj.xTotalWidth / 2,
+                obj.yTotalWidth / 2,
+                0,
+            ),
+        )
+
+        solid_shape = BaseplateSolidShape.Make(self, obj, baseplate_outside_shape)
+
+        fuse_total = make_complex_bin_base(obj,layout)
+        fuse_total.translate(
+            FreeCAD.Vector(
+                0,
+                0,
+                obj.TotalHeight,
+            ),
+        )
+
+        return Part.Shape.cut(solid_shape, fuse_total)
 
 
 class MagnetBaseplate(FoundationGridfinity):

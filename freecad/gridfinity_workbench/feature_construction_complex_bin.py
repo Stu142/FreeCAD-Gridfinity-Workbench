@@ -210,22 +210,6 @@ class BinBaseValues(Feature):
             1,
         )
 
-        obj.addProperty(
-            "App::PropertyLength",
-            "xBinUnit",
-            "ReferenceParameters",
-            "Width of a single bin unit in x direction after subtracting clearance on both sides",
-            1,
-        ).xBinUnit = BIN_UNIT
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "yBinUnit",
-            "ReferenceParameters",
-            "Width of a single bin unit in y direction after subtracting clearance on both sides",
-            1,
-        ).yBinUnit = BIN_UNIT
-
         ## Expert Only Parameters
         obj.addProperty(
             "App::PropertyLength",
@@ -293,10 +277,6 @@ class BinBaseValues(Feature):
 
         """
 
-        obj.xBinUnit = obj.xGridSize - CLEARANCE * 2 * unitmm
-
-        obj.yBinUnit = obj.yGridSize - CLEARANCE * 2 * unitmm
-
         obj.BaseProfileHeight = (
             obj.BaseProfileBottomChamfer
             + obj.BaseProfileVerticalSection
@@ -320,11 +300,15 @@ def make_complex_bin_base(
         Part.Shape: Complex bin base shape.
 
     """
+    if obj.Baseplate:
+        baseplate_size_adjustment = obj.BaseplateTopLedgeWidth - obj.Clearance
+    else:
+        baseplate_size_adjustment = 0 * unitmm
 
-    x_bt_cmf_width = obj.xBinUnit - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer
-    y_bt_cmf_width = obj.yBinUnit - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer
-    x_vert_width = obj.xBinUnit - 2 * obj.BaseProfileTopChamfer
-    y_vert_width = obj.yBinUnit - 2 * obj.BaseProfileTopChamfer
+    x_bt_cmf_width = (obj.xGridSize - obj.Clearance * 2) - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer - 2 * baseplate_size_adjustment
+    y_bt_cmf_width = (obj.yGridSize - obj.Clearance * 2) - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer - 2 * baseplate_size_adjustment
+    x_vert_width = (obj.xGridSize - obj.Clearance * 2) - 2 * obj.BaseProfileTopChamfer - 2 * baseplate_size_adjustment
+    y_vert_width = (obj.yGridSize - obj.Clearance * 2) - 2 * obj.BaseProfileTopChamfer - 2 * baseplate_size_adjustment
     xtranslate = zeromm
     ytranslate = zeromm
 
@@ -376,7 +360,7 @@ def make_complex_bin_base(
     func_fuse = b1 if obj.xMaxGrids < 2 and obj.yMaxGrids < 2 else Part.Solid.multiFuse(b1, parts)
 
     func_fuse.translate(
-        FreeCAD.Vector(obj.xBinUnit / 2 + obj.Clearance, obj.yBinUnit / 2 + obj.Clearance, 0),
+        FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0),
     )
 
     return func_fuse
@@ -643,7 +627,7 @@ class BinBottomHoles(Feature):
             xtranslate += obj.xGridSize.Value
 
         return Utils.copy_and_translate(hole_shape_sub_array, vec_list).translate(
-            FreeCAD.Vector(obj.xBinUnit / 2 + obj.Clearance, obj.yBinUnit / 2 + obj.Clearance, 0),
+            FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0),
         )
 
 class StackingLip(Feature):

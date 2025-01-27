@@ -9,6 +9,26 @@ import FreeCAD
 import Part
 from FreeCAD import Units
 
+from abc import abstractmethod
+from enum import Enum
+
+from .const import (
+    BASEPLATE_BOTTOM_CHAMFER,
+    BASEPLATE_VERTICAL_SECTION,
+    BASEPLATE_TOP_CHAMFER,
+    BASEPLATE_OUTER_RADIUS,
+    BASEPLATE_VERTICAL_RADIUS,
+    BASEPLATE_BOTTOM_RADIUS,
+    CLEARANCE,
+    BASEPLATE_TOP_LEDGE_WIDTH,
+
+)
+
+class Feature:
+    @abstractmethod
+    def Make(obj):
+        raise NotImplementedError()
+
 unitmm = Units.Quantity("1 mm")
 
 zeromm = Units.Quantity("0 mm")
@@ -387,3 +407,227 @@ def make_baseplate_connection_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:
         ytranslate += obj.GridSize
 
     return Part.Solid.fuse(hx2, hy2)
+
+def make_baseplate_center_cut(obj: FreeCAD.DocumentObject) -> Part.Shape:
+    """Create baseplate center cutout.
+
+    Args:
+        obj (FreeCAD.DocumentObject): Document object.
+
+    Returns:
+        Part.Shape: Baseplate center cutout shape.
+
+    """
+    inframedis = (
+        obj.GridSize / 2
+        - obj.BaseProfileTopChamfer
+        - obj.BaseProfileBottomChamfer
+        - obj.BaseplateTopLedgeWidth
+    )
+    magedge = (
+        obj.GridSize / 2
+        - obj.MagnetHoleDistanceFromEdge
+        - obj.MagnetHoleDiameter / 2
+        - obj.MagnetEdgeThickness
+    )
+    magcenter = obj.GridSize / 2 - obj.MagnetHoleDistanceFromEdge
+    smfillpos = inframedis - obj.SmallFillet + obj.SmallFillet * math.sin(math.pi / 4)
+    smfillposmag = magedge - obj.SmallFillet + obj.SmallFillet * math.sin(math.pi / 4)
+    smfilloffcen = (
+        obj.GridSize / 2
+        - obj.MagnetHoleDistanceFromEdge
+        - obj.MagnetHoleDiameter / 2
+        - obj.MagnetEdgeThickness
+        - obj.SmallFillet
+    )
+    smfillins = inframedis - obj.SmallFillet
+    bigfillpos = (
+        obj.GridSize / 2
+        - obj.MagnetHoleDistanceFromEdge
+        - (obj.MagnetHoleDiameter / 2 + obj.MagnetEdgeThickness) * math.sin(math.pi / 4)
+    )
+    mec_middle = FreeCAD.Vector(0, 0, 0)
+
+    v1 = FreeCAD.Vector(0, -inframedis, 0)
+    v2 = FreeCAD.Vector(-smfilloffcen, -inframedis, 0)
+    v3 = FreeCAD.Vector(-magedge, -smfillins, 0)
+    v4 = FreeCAD.Vector(-magedge, -magcenter, 0)
+    v5 = FreeCAD.Vector(-magcenter, -magedge, 0)
+    v6 = FreeCAD.Vector(-smfillins, -magedge, 0)
+    v7 = FreeCAD.Vector(-inframedis, -smfilloffcen, 0)
+    v8 = FreeCAD.Vector(-inframedis, 0, 0)
+
+    va1 = FreeCAD.Vector(-smfillposmag, -smfillpos, 0)
+    va2 = FreeCAD.Vector(-bigfillpos, -bigfillpos, 0)
+    va3 = FreeCAD.Vector(-smfillpos, -smfillposmag, 0)
+
+    l1 = Part.LineSegment(v1, v2)
+    ar1 = Part.Arc(l1.EndPoint, va1, v3)
+    l2 = Part.LineSegment(ar1.EndPoint, v4)
+    ar2 = Part.Arc(l2.EndPoint, va2, v5)
+    l3 = Part.LineSegment(ar2.EndPoint, v6)
+    ar3 = Part.Arc(l3.EndPoint, va3, v7)
+    l4 = Part.LineSegment(ar3.EndPoint, v8)
+    l5 = Part.LineSegment(l4.EndPoint, mec_middle)
+    l6 = Part.LineSegment(l5.EndPoint, l1.StartPoint)
+
+    wire = Utils.curve_to_wire([l1, ar1, l2, ar2, l3, ar3, l4, l5, l6])
+    partial_shape1 = Part.Face(wire).extrude(FreeCAD.Vector(0, 0, -obj.TotalHeight))
+    partial_shape2 = partial_shape1.mirror(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(0, 1, 0))
+    partial_shape3 = partial_shape1.mirror(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(1, 0, 0))
+    partial_shape4 = partial_shape2.mirror(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(1, 0, 0))
+
+    shape = partial_shape1.multiFuse([partial_shape2, partial_shape3, partial_shape4])
+
+    vec_list: list[FreeCAD.Vector] = []
+    xtranslate = 0
+    ytranslate = 0
+
+    for _ in range(obj.xGridUnits):
+        ytranslate = 0
+        for _ in range(obj.yGridUnits):
+            vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
+            ytranslate += obj.GridSize.Value
+        xtranslate += obj.GridSize.Value
+
+    return Utils.copy_and_translate(shape, vec_list)
+
+
+class BaseplateBaseValues(Feature):
+    """Add bin base properties and calculate values"""
+
+    def __init__(self, obj:FreeCAD.DocumentObject):
+        """Create BinBaseValues.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object
+
+        """
+        ## Reference Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "BaseProfileHeight",
+            "ReferenceParameters",
+            "Height of the Gridfinity Base Profile",
+            1,
+        )
+
+        ## Expert Only Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "BaseProfileBottomChamfer",
+            "zzExpertOnly",
+            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
+            1,
+        ).BaseProfileBottomChamfer = BASEPLATE_BOTTOM_CHAMFER
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "BaseProfileVerticalSection",
+            "zzExpertOnly",
+            "Height of the vertical section in bin base profile",
+            1,
+        ).BaseProfileVerticalSection = BASEPLATE_VERTICAL_SECTION
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "BaseProfileTopChamfer",
+            "zzExpertOnly",
+            "Height of the top chamfer in the bin base profile",
+            1,
+        ).BaseProfileTopChamfer = BASEPLATE_TOP_CHAMFER
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "BinOuterRadius",
+            "zzExpertOnly",
+            "Outer radius of the bin",
+            1,
+        ).BinOuterRadius = BASEPLATE_OUTER_RADIUS
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "BinVerticalRadius",
+            "zzExpertOnly",
+            "Radius of the base profile Vertical section",
+            1,
+        ).BinVerticalRadius = BASEPLATE_VERTICAL_RADIUS
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "BinBottomRadius",
+            "zzExpertOnly",
+            "bottom of bin corner radius",
+            1,
+        ).BinBottomRadius = BASEPLATE_BOTTOM_RADIUS
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "Clearance",
+            "zzExpertOnly",
+            (
+                "The tolerance on each side of a bin between before the edge of the grid <br> <br>"
+                "default = 0.25 mm"
+            ),
+        ).Clearance = CLEARANCE
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "BaseplateTopLedgeWidth",
+            "zzExpertOnly",
+            "Top ledge of baseplate",
+            1,
+        ).BaseplateTopLedgeWidth = BASEPLATE_TOP_LEDGE_WIDTH
+
+
+    def Make(self, obj:FreeCAD.DocumentObject) -> None:
+        """Generate Rectanble layout and calculate relevant parameters.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+
+        """
+
+        obj.BaseProfileHeight = (
+            obj.BaseProfileBottomChamfer
+            + obj.BaseProfileVerticalSection
+            + obj.BaseProfileTopChamfer
+        )
+
+        return
+
+class BaseplateSolidShape(Feature):
+    """Creates Solid which the baseplate is cut from"""
+
+    def __init__(self, obj:FreeCAD.DocumentObject):
+        """Makes solid which the baseplate is cut from
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+        """
+        obj.addProperty(
+            "App::PropertyLength",
+            "TotalHeight",
+            "ReferenceDimensions",
+            "total height of the bin",
+            1,
+        )
+
+    def Make(self, obj:FreeCAD.DocumentObject, baseplate_outside_shape):
+        """Creates solid which baseplate is cut from
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+            baseplate_outside_shape (Part.Wire): outside profile of the baseplate shape
+
+        Returns:
+            Part.Shape: Extruded part for the baseplate to be cut from.
+
+        """
+        ## Calculated Parameters
+        obj.TotalHeight = obj.BaseProfileHeight
+
+        ## Baseplate Solid Shape Generation
+        face = Part.Face(baseplate_outside_shape)
+
+        return face.extrude(FreeCAD.Vector(0, 0, obj.TotalHeight))
