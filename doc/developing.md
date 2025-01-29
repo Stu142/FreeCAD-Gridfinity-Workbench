@@ -54,3 +54,37 @@ MacOS: `TODO`
 * You can set a breakpoint anywhere in the code, generate a model in FreeCAD which covers that code and debug.  
   ![](images/debug_fun.png)  
   
+# Testing
+This repository uses the python unittest framework for its regression testing. All regression test should and will be run in the CI/CD via github actions. Here are some steps to run the test manualy.
+
+Both ways of working higly depend on the FreeCAD libraries installed on your system. Your global python interpeter should be able to find the `freecad` package and import this:
+
+![](images/python_freecad.png)
+
+## OS global python interpeter
+When the correct freecad import can be found, it is fairly easy to run the unittests:
+```sh
+python -m unittest discover tests -v
+```
+## Virtual enviroment
+When using a virtual enviroment. The enviroment should be able to find the FreeCAD libraries. This is exactly what the global `freecad` module does. This module needs to be copied to the enviroment `site-packages` folder. To find the location of the `freecad` module, perform the following steps:
+* open python interpeter
+* import freecad
+* freecad.__file__
+
+![](images/find_freecad_module_location.png)
+
+The location in the screenshot above is `/usr/lib/python3.13/site-packages/freecad`. This folder needs to be copied to the virtual enviroment:
+```sh
+cp -r /usr/lib/python3.13/site-packages/freecad .venv/lib/python3.13/site-packages/
+```
+
+Now you can run the unittest using the unittest framework
+```sh
+python -m unittest discover tests -v
+```
+
+## Test output
+The output of a test run shoul look something like this:
+
+![](images/python_unittest_output.png)
