@@ -30,7 +30,6 @@ from .const import (
     STACKING_LIP_BOTTOM_CHAMFER,
     STACKING_LIP_VERTICAL_SECTION,
     WALL_THICKNESS,
-    BIN_UNIT,
     BIN_BASE_BOTTOM_CHAMFER,
     BIN_BASE_VERTICAL_SECTION,
     BIN_BASE_TOP_CHAMFER,
@@ -368,7 +367,7 @@ def make_complex_bin_base(
 class BinSolidMidSection(Feature):
     """Generate bin mid section and add relevant properties"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject, default_height_units = HEIGHT_UNITS):
+    def __init__(self, obj:FreeCAD.DocumentObject, default_height_units = HEIGHT_UNITS, default_wall_thickness = WALL_THICKNESS):
         """Create bin solid mid section.
 
         Args:
@@ -404,7 +403,7 @@ class BinSolidMidSection(Feature):
             "WallThickness",
             "GridfinityNonStandard",
             "for stacking lip",
-        ).WallThickness = WALL_THICKNESS
+        ).WallThickness = default_wall_thickness
 
         ## Reference Parameters
         obj.addProperty(

@@ -30,7 +30,6 @@ from .const import (
     BIN_BASE_VERTICAL_RADIUS,
     BIN_BASE_VERTICAL_SECTION,
     BIN_OUTER_RADIUS,
-    BIN_UNIT,
     CLEARANCE,
     CONNECTION_HOLE_DIAMETER,
     GRID_SIZE,
@@ -54,6 +53,7 @@ from .const import (
     STACKING_LIP_BOTTOM_CHAMFER,
     STACKING_LIP_TOP_LEDGE,
     STACKING_LIP_VERTICAL_SECTION,
+    ECO_WALL_THICKNESS,
 )
 
 from .grid_initial_layout import (
@@ -63,7 +63,7 @@ from .grid_initial_layout import (
 from .feature_construction import (
     make_bin_base,
     make_bottom_holes,
-    make_eco_bin_cut,
+    EcoBinCut,
     Scoop,
     make_stacking_lip,
     Compartments,
@@ -429,6 +429,19 @@ class EcoBin(FoundationGridfinity):
             "python gridfinity object",
         )
 
+        self.features = [RectangleLayout(obj),
+            BinSolidMidSection(obj, default_wall_thickness = 0.8),
+            StackingLip(obj),
+            BinBottomHoles(obj),
+            BinBaseValues(obj),
+            LabelShelf(obj),
+            EcoBinCut(obj),
+
+        ]
+
+        obj.Proxy = self
+
+        """
         self._add_bin_properties(obj)
 
         self._add_custom_bin_properties(obj)
@@ -437,7 +450,7 @@ class EcoBin(FoundationGridfinity):
 
         self._add_expert_properties(obj)
 
-        obj.Proxy = self
+
 
     def _add_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
         obj.addProperty(
@@ -475,26 +488,9 @@ class EcoBin(FoundationGridfinity):
             "Toggle the magnet holes on or off",
         ).MagnetHoles = False
 
-        obj.addProperty(
-            "App::PropertyInteger",
-            "xDividers",
-            "Gridfinity",
-            "Select the Number of Dividers in the x direction",
-        ).xDividers = 0
 
-        obj.addProperty(
-            "App::PropertyInteger",
-            "yDividers",
-            "Gridfinity",
-            "Select the number of Dividers in the y direction",
-        ).yDividers = 0
 
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseWallThickness",
-            "Gridfinity",
-            "The thickness of the bin at the base",
-        ).BaseWallThickness = 0.8
+
 
     def _add_custom_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
         obj.addProperty(
@@ -554,36 +550,6 @@ class EcoBin(FoundationGridfinity):
             "Wall thickness of the bin <br> <br> default = 0.8 mm",
         ).WallThickness = 0.8
 
-        obj.addProperty(
-            "App::PropertyLength",
-            "InsideFilletRadius",
-            "GridfinityNonStandard",
-            "inside fillet at the bottom of the bin <br> <br> default = 1.5 mm",
-        ).InsideFilletRadius = 1.5
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "DividerThickness",
-            "GridfinityNonStandard",
-            (
-                "Thickness of the dividers, ideally an even multiple of layer width <br> <br> "
-                "default = 0.8 mm"
-            ),
-        ).DividerThickness = 0.8
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "xDividerHeight",
-            "GridfinityNonStandard",
-            "Custom Height of x dividers <br> <br> default = 0 mm = full height",
-        ).xDividerHeight = 0
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "yDividerHeight",
-            "GridfinityNonStandard",
-            "Custom Height of y dividers <br> <br> default = 0 mm = full height",
-        ).yDividerHeight = 0
 
     def _add_reference_properties(self, obj: FreeCAD.DocumentObject) -> None:
         obj.addProperty(
@@ -768,6 +734,7 @@ class EcoBin(FoundationGridfinity):
 
         obj.setEditorMode("ScrewHoleDepth", 2)
 
+        """
     def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
         """Create gridfinity EcoBin shape.
 
@@ -776,6 +743,8 @@ class EcoBin(FoundationGridfinity):
 
         Returns:
             Part.Shape: EcoBin shape.
+
+        """
 
         """
         ## Parameter Calculation
@@ -801,7 +770,8 @@ class EcoBin(FoundationGridfinity):
 
         else:
             obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
-
+        """
+        """
         ## Error Checking
 
         # Divider Minimum Height
@@ -836,9 +806,62 @@ class EcoBin(FoundationGridfinity):
             FreeCAD.Console.PrintWarning(
                 "Inside Fillet Radius must be equal to or less than:  1.6 mm\n",
             )
-
+            """
         ## Bin Construction
 
+        BinBaseValues.Make(self, obj)
+
+        layout = RectangleLayout.Make(self, obj)
+
+        bin_outside_shape = Utils.create_rounded_rectangle(
+            obj.xTotalWidth,
+            obj.yTotalWidth,
+            0,
+            obj.BinOuterRadius,
+        )
+        bin_outside_shape.translate(
+            FreeCAD.Vector(
+                obj.xTotalWidth / 2 + obj.Clearance,
+                obj.yTotalWidth / 2 + obj.Clearance,
+                0,
+            ),
+        )
+
+        bin_inside_shape = Utils.create_rounded_rectangle(
+            obj.xTotalWidth - obj.WallThickness * 2,
+            obj.yTotalWidth - obj.WallThickness * 2,
+            0,
+            obj.BinOuterRadius - obj.WallThickness,
+        )
+        bin_inside_shape.translate(
+            FreeCAD.Vector(
+                obj.xTotalWidth / 2 + obj.Clearance,
+                obj.yTotalWidth / 2 + obj.Clearance,
+                0,
+            ),
+        )
+
+        fuse_total = BinSolidMidSection.Make(self, obj, bin_outside_shape)
+
+        bin_base = make_complex_bin_base(obj,layout)
+
+        fuse_total = fuse_total.fuse(bin_base)
+
+        compartements = EcoBinCut.Make(obj, bin_inside_shape)
+
+        fuse_total = fuse_total.cut(compartements)
+
+        if obj.ScrewHoles or obj.MagnetHoles:
+            holes = BinBottomHoles.Make(obj, layout)
+
+            fuse_total = Part.Shape.cut(fuse_total, holes)
+
+        if obj.StackingLip:
+            stacking_lip = StackingLip.Make(obj, bin_outside_shape)
+
+            fuse_total = fuse_total.fuse(stacking_lip)
+
+        """
         fuse_total = make_bin_base(obj)
 
         solid_center = Utils.rounded_rectangle_extrude(
@@ -859,7 +882,7 @@ class EcoBin(FoundationGridfinity):
 
         fuse_total = fuse_total.fuse(solid_center)
 
-        compartements = make_eco_bin_cut(obj)
+        compartements = EcoBinCut.Make(obj)
 
         fuse_total = fuse_total.cut(compartements)
 
@@ -872,8 +895,9 @@ class EcoBin(FoundationGridfinity):
             holes = make_bottom_holes(obj)
 
             fuse_total = Part.Shape.cut(fuse_total, holes)
-
+        """
         return Part.Solid.removeSplitter(fuse_total)
+
 
 
 class PartsBin(FoundationGridfinity):
@@ -1210,65 +1234,6 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         conholes = BaseplateConnectionHoles.Make(obj)
 
         return Part.Shape.cut(fuse_total, conholes)
-
-
-        """
-        obj.xTotalWidth = obj.xGridUnits * obj.GridSize
-
-        obj.yTotalWidth = obj.yGridUnits * obj.GridSize
-
-        # Bottom of Bin placement, used for ability to reuse previous features.
-
-        obj.BaseProfileHeight = (
-            obj.BaseProfileBottomChamfer
-            + obj.BaseProfileVerticalSection
-            + obj.BaseProfileTopChamfer
-        )
-
-        # actaully the total height of the baseplate
-
-        obj.TotalHeight = obj.BaseProfileHeight + obj.BaseThickness
-
-        obj.BinUnit = obj.GridSize - obj.BaseplateTopLedgeWidth * 2
-
-        fuse_total = make_bin_base(obj)
-
-        fuse_total.translate(FreeCAD.Vector(0, 0, obj.TotalHeight - obj.BaseProfileHeight))
-
-        solid_center = Utils.rounded_rectangle_extrude(
-            obj.xTotalWidth,
-            obj.yTotalWidth,
-            -obj.TotalHeight,
-            obj.TotalHeight,
-            obj.BinOuterRadius,
-        )
-
-        solid_center.translate(
-            FreeCAD.Vector(
-                obj.xTotalWidth / 2 - obj.GridSize / 2,
-                obj.yTotalWidth / 2 - obj.GridSize / 2,
-                0,
-            ),
-        )
-
-        fuse_total = Part.Shape.cut(solid_center, fuse_total)
-
-        cutout = make_baseplate_center_cut(obj)
-
-        fuse_total = Part.Shape.cut(fuse_total, cutout)
-
-        magholes = make_baseplate_magnet_holes(obj)
-
-        fuse_total = Part.Shape.cut(fuse_total, magholes)
-
-        magchamfer = make_baseplate_screw_bottom_chamfer(obj)
-
-        fuse_total = Part.Shape.cut(fuse_total, magchamfer)
-
-        conholes = make_baseplate_connection_holes(obj)
-
-        return Part.Shape.cut(fuse_total, conholes)
-        """
 
 class LBinBlank(FoundationGridfinity):
     """L shaped blank bin object."""
