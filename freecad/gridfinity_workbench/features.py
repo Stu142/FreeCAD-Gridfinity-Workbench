@@ -7,9 +7,9 @@ import Part
 from FreeCAD import Units
 
 from .baseplate_feature_construction import (
-    make_baseplate_connection_holes,
-    make_baseplate_screw_bottom_chamfer,
-    make_baseplate_center_cut,
+    BaseplateConnectionHoles,
+    BaseplateScrewBottomChamfer,
+    BaseplateCenterCut,
     BaseplateBaseValues,
     BaseplateSolidShape,
     BaseplateMagnetHoles,
@@ -1066,6 +1066,7 @@ class MagnetBaseplate(FoundationGridfinity):
             BaseplateSolidShape(obj, magnet_baseplate_default = True),
             BaseplateBaseValues(obj),
             BaseplateMagnetHoles(obj),
+            BaseplateCenterCut(obj),
         ]
 
         obj.Proxy = self
@@ -1118,7 +1119,7 @@ class MagnetBaseplate(FoundationGridfinity):
 
         fuse_total = Part.Shape.cut(fuse_total, magholes)
 
-        cutout = make_baseplate_center_cut(obj)
+        cutout = BaseplateCenterCut.Make(obj)
 
         return Part.Shape.cut(fuse_total, cutout)
 
@@ -1140,255 +1141,16 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             "base",
             "python gridfinity object",
         )
-
-        self._add_bin_properties(obj)
-
-        self._add_reference_properties(obj)
-
-        self._add_expert_properties(obj)
-
-        self._add_custom_baseplate_properties(obj)
-
         obj.Proxy = self
 
-    def _add_bin_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyInteger",
-            "xGridUnits",
-            "Gridfinity",
-            "Length of the edges of the outline",
-        ).xGridUnits = 2
-
-        obj.addProperty(
-            "App::PropertyInteger",
-            "yGridUnits",
-            "Gridfinity",
-            "Height of the extrusion",
-        ).yGridUnits = 2
-
-    def _add_reference_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "xTotalWidth",
-            "ReferenceDimensions",
-            "total width of bin in x direction",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "yTotalWidth",
-            "ReferenceDimensions",
-            "total width of bin in y direction",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "TotalHeight",
-            "ReferenceDimensions",
-            "total height of the baseplate",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileHeight",
-            "ReferenceDimensions",
-            "Height of the Gridfinity Base Profile",
-            1,
-        )
-
-    def _add_custom_baseplate_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "SmallFillet",
-            "NonStandard",
-            "Small fillet on iside of baseplate <br> <br> default = 1 mm",
-        ).SmallFillet = BASEPLATE_SMALL_FILLET
-
-        obj.addProperty(
-            "App::PropertyEnumeration",
-            "MagnetHolesShape",
-            "NonStandard",
-            (
-                "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> "
-                "Round meant to be glued"
-            ),
-        )
-
-        obj.MagnetHolesShape = HOLE_SHAPES
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetHoleDiameter",
-            "NonStandard",
-            (
-                "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br> "
-                "default = 6.5 mm"
-            ),
-        ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetHoleDepth",
-            "NonStandard",
-            "Depth of Magnet Holes <br> <br> default = 2.4 mm",
-        ).MagnetHoleDepth = MAGNET_HOLE_DEPTH
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetEdgeThickness",
-            "NonStandard",
-            "Thickness of edge holding magnets in place <br> <br> default = 1.2 mm",
-        ).MagnetEdgeThickness = MAGNET_EDGE_THICKNESS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseThickness",
-            "NonStandard",
-            "Thickness of base under the normal baseplate  profile <br> <br> default = 6.4 mm",
-        ).BaseThickness = BASE_THICKNESS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetBaseHole",
-            "NonStandard",
-            "Diameter of the hole at the bottom of the magnet cutout <br> <br> default = 3 mm",
-        ).MagnetBaseHole = MAGNET_BASE_HOLE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetChamfer",
-            "NonStandard",
-            "Chamfer at top of magnet hole <br> <br> default = 0.4 mm",
-        ).MagnetChamfer = MAGNET_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetBottomChamfer",
-            "NonStandard",
-            "Chamfer at bottom of magnet hole <br> <br> default = 2 mm",
-        ).MagnetBottomChamfer = MAGNET_BOTTOM_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "ScrewHoleDiameter",
-            "NonStandard",
-            "Diameter of screw holes inside magnet holes <br> <br> default = 3 mm",
-        ).ScrewHoleDiameter = SCREW_HOLE_DIAMETER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "ConnectionHoleDiameter",
-            "NonStandard",
-            "Holes on the sides to connect multiple baseplates together <br> <br> default = 3.2 mm",
-        ).ConnectionHoleDiameter = CONNECTION_HOLE_DIAMETER
-
-    def _add_expert_properties(self, obj: FreeCAD.DocumentObject) -> None:
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileBottomChamfer",
-            "zzExpertOnly",
-            "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
-            1,
-        ).BaseProfileBottomChamfer = BASEPLATE_BOTTOM_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileVerticalSection",
-            "zzExpertOnly",
-            "Height of the vertical section in bin base profile",
-            1,
-        ).BaseProfileVerticalSection = BASEPLATE_VERTICAL_SECTION
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseProfileTopChamfer",
-            "zzExpertOnly",
-            "Height of the top chamfer in the bin base profile",
-            1,
-        ).BaseProfileTopChamfer = BASEPLATE_TOP_CHAMFER
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseplateProfileTotalHeight",
-            "zzExpertOnly",
-            "Height of the bin base profile",
-            1,
-        )
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "GridSize",
-            "zzExpertOnly",
-            "Size of the Grid",
-        ).GridSize = GRID_SIZE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "HeightUnitValue",
-            "zzExpertOnly",
-            "height per unit, default is 7mm",
-            1,
-        ).HeightUnitValue = 7
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinOuterRadius",
-            "zzExpertOnly",
-            "Outer radius of the baseplate",
-            1,
-        ).BinOuterRadius = BASEPLATE_OUTER_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinVerticalRadius",
-            "zzExpertOnly",
-            "Radius of the baseplate profile Vertical section",
-            1,
-        ).BinVerticalRadius = BASEPLATE_VERTICAL_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinBottomRadius",
-            "zzExpertOnly",
-            "bottom of baseplate corner radius",
-            1,
-        ).BinBottomRadius = BASEPLATE_BOTTOM_RADIUS
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BaseplateTopLedgeWidth",
-            "zzExpertOnly",
-            "Top ledge of baseplate",
-            1,
-        ).BaseplateTopLedgeWidth = BASEPLATE_TOP_LEDGE_WIDTH
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "BinUnit",
-            "zzExpertOnly",
-            "Width of a single bin unit",
-            2,
-        ).BinUnit = BIN_UNIT
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "Clearance",
-            "zzExpertOnly",
-            (
-                "The tolerance on each side of a bin between before the edge of the grid <br> <br> "
-                "default = 0.25 mm"
-            ),
-        ).Clearance = CLEARANCE
-
-        obj.addProperty(
-            "App::PropertyLength",
-            "MagnetHoleDistanceFromEdge",
-            "zzExpertOnly",
-            "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
-        ).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
+        self.features = [RectangleLayout(obj, baseplate_default = True),
+            BaseplateSolidShape(obj, screw_together_baseplate_default = True),
+            BaseplateBaseValues(obj),
+            BaseplateMagnetHoles(obj),
+            BaseplateCenterCut(obj),
+            BaseplateScrewBottomChamfer(obj),
+            BaseplateConnectionHoles(obj),
+        ]
 
     def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
         """Generate Parts Bin shape.
@@ -1398,6 +1160,57 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
 
         Returns:
             Part.Shape: ParstBin Shape.
+
+        """
+        BaseplateBaseValues.Make(self, obj)
+
+        layout = RectangleLayout.Make(self, obj)
+
+        baseplate_outside_shape = Utils.create_rounded_rectangle(
+            obj.xTotalWidth,
+            obj.yTotalWidth,
+            -obj.BaseThickness,
+            obj.BinOuterRadius,
+        )
+        baseplate_outside_shape.translate(
+            FreeCAD.Vector(
+                obj.xTotalWidth / 2,
+                obj.yTotalWidth / 2,
+                0,
+            ),
+        )
+
+        solid_shape = BaseplateSolidShape.Make(self, obj, baseplate_outside_shape)
+
+        fuse_total = make_complex_bin_base(obj,layout)
+        fuse_total.translate(
+            FreeCAD.Vector(
+                0,
+                0,
+                obj.TotalHeight,
+            ),
+        )
+
+        fuse_total = Part.Shape.cut(solid_shape, fuse_total)
+
+
+
+        magholes = BaseplateMagnetHoles.Make(obj)
+
+        fuse_total = Part.Shape.cut(fuse_total, magholes)
+
+        cutout = BaseplateCenterCut.Make(obj)
+
+        fuse_total = fuse_total.cut(cutout)
+
+        magchamfer = BaseplateScrewBottomChamfer.Make(obj)
+
+        fuse_total = Part.Shape.cut(fuse_total, magchamfer)
+
+        conholes = BaseplateConnectionHoles.Make(obj)
+
+        return Part.Shape.cut(fuse_total, conholes)
+
 
         """
         obj.xTotalWidth = obj.xGridUnits * obj.GridSize
@@ -1455,7 +1268,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         conholes = make_baseplate_connection_holes(obj)
 
         return Part.Shape.cut(fuse_total, conholes)
-
+        """
 
 class LBinBlank(FoundationGridfinity):
     """L shaped blank bin object."""
