@@ -156,6 +156,9 @@ class RectangleLayout(Feature):
         if obj.GenerationLocation == "Centered at Origin":
             obj.xLocationOffset = obj.xTotalWidth / 2
             obj.yLocationOffset = obj.yTotalWidth / 2
+        else:
+            obj.xLocationOffset = 0
+            obj.yLocationOffset = 0
 
         return rectangle_layout
 

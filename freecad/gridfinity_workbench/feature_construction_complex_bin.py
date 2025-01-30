@@ -375,13 +375,10 @@ def make_complex_bin_base(
 
         xtranslate += obj.xGridSize
 
-    func_fuse = b1 if obj.xMaxGrids < 2 and obj.yMaxGrids < 2 else Part.Solid.multiFuse(b1, parts)
+    fuse_total = b1 if obj.xMaxGrids < 2 and obj.yMaxGrids < 2 else Part.Solid.multiFuse(b1, parts)
 
-    func_fuse.translate(
-        FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0),
-    )
+    return fuse_total.translate(FreeCAD.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.xGridSize / 2 - obj.yLocationOffset,0,))
 
-    return func_fuse
 
 
 class BinSolidMidSection(Feature):
@@ -468,7 +465,9 @@ class BinSolidMidSection(Feature):
         ## Bin Solid Mid Section Generation
         face = Part.Face(bin_outside_shape)
 
-        return face.extrude(FreeCAD.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight))
+        fuse_total = face.extrude(FreeCAD.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight))
+
+        return fuse_total.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
 
 
 class BlankBinRecessedTop(Feature):
@@ -489,7 +488,7 @@ class BlankBinRecessedTop(Feature):
             "height per unit <br> <br> default = 0 mm",
         ).RecessedTopDepth = RECESSED_TOP_DEPTH
 
-    def Make(self, obj: FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
+    def Make(obj: FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
         """Generate Rectanble layout and calculate relevant parameters.
 
         Args:
@@ -502,7 +501,9 @@ class BlankBinRecessedTop(Feature):
         """
         face = Part.Face(bin_inside_shape)
 
-        return face.extrude(FreeCAD.Vector(0, 0, -obj.RecessedTopDepth))
+        fuse_total = face.extrude(FreeCAD.Vector(0, 0, -obj.RecessedTopDepth))
+
+        return fuse_total.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
 
 
 def make_l_mid_section(obj: FreeCAD.DocumentObject) -> Part.Shape:
@@ -795,4 +796,6 @@ class StackingLip(Feature):
 
         stacking_lip = Part.Wire(bin_outside_shape).makePipe(wire)
 
-        return Part.makeSolid(stacking_lip)
+        stacking_lip = Part.makeSolid(stacking_lip)
+
+        return stacking_lip.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))

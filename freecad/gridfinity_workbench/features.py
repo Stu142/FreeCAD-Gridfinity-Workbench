@@ -211,12 +211,13 @@ class BinBlank(FoundationGridfinity):
 
         fuse_total = BinSolidMidSection.Make(self, obj, bin_outside_shape)
 
+
         bin_base = make_complex_bin_base(obj, layout)
 
         fuse_total = fuse_total.fuse(bin_base)
 
         if obj.RecessedTopDepth > 0:
-            recessed_cut = BlankBinRecessedTop.Make(self, obj, bin_inside_shape)
+            recessed_cut = BlankBinRecessedTop.Make(obj, bin_inside_shape)
 
             fuse_total = fuse_total.cut(recessed_cut)
 
@@ -229,8 +230,8 @@ class BinBlank(FoundationGridfinity):
             holes = BinBottomHoles.Make(obj, layout)
 
             fuse_total = Part.Shape.cut(fuse_total, holes)
-
         return fuse_total
+
 
 
 class BinBase(FoundationGridfinity):
