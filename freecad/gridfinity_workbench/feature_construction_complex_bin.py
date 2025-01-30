@@ -47,11 +47,11 @@ zeromm = Units.Quantity("0 mm")
 GridfinityLayout = list[list[bool]]
 
 
-
 class Feature:
     @abstractmethod
     def Make(obj):
         raise NotImplementedError()
+
 
 @dataclass
 class LShapeData:
@@ -190,10 +190,11 @@ def rounded_l_extrude(
     face = Part.Face(w1)
     return face.extrude(FreeCAD.Vector(0, 0, height))
 
+
 class BinBaseValues(Feature):
     """Add bin base properties and calculate values"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject):
+    def __init__(self, obj: FreeCAD.DocumentObject):
         """Create BinBaseValues.
 
         Args:
@@ -268,7 +269,7 @@ class BinBaseValues(Feature):
             ),
         ).Clearance = CLEARANCE
 
-    def Make(self, obj:FreeCAD.DocumentObject) -> None:
+    def Make(self, obj: FreeCAD.DocumentObject) -> None:
         """Generate Rectanble layout and calculate relevant parameters.
 
         Args:
@@ -304,10 +305,28 @@ def make_complex_bin_base(
     else:
         baseplate_size_adjustment = 0 * unitmm
 
-    x_bt_cmf_width = (obj.xGridSize - obj.Clearance * 2) - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer - 2 * baseplate_size_adjustment
-    y_bt_cmf_width = (obj.yGridSize - obj.Clearance * 2) - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer - 2 * baseplate_size_adjustment
-    x_vert_width = (obj.xGridSize - obj.Clearance * 2) - 2 * obj.BaseProfileTopChamfer - 2 * baseplate_size_adjustment
-    y_vert_width = (obj.yGridSize - obj.Clearance * 2) - 2 * obj.BaseProfileTopChamfer - 2 * baseplate_size_adjustment
+    x_bt_cmf_width = (
+        (obj.xGridSize - obj.Clearance * 2)
+        - 2 * obj.BaseProfileBottomChamfer
+        - 2 * obj.BaseProfileTopChamfer
+        - 2 * baseplate_size_adjustment
+    )
+    y_bt_cmf_width = (
+        (obj.yGridSize - obj.Clearance * 2)
+        - 2 * obj.BaseProfileBottomChamfer
+        - 2 * obj.BaseProfileTopChamfer
+        - 2 * baseplate_size_adjustment
+    )
+    x_vert_width = (
+        (obj.xGridSize - obj.Clearance * 2)
+        - 2 * obj.BaseProfileTopChamfer
+        - 2 * baseplate_size_adjustment
+    )
+    y_vert_width = (
+        (obj.yGridSize - obj.Clearance * 2)
+        - 2 * obj.BaseProfileTopChamfer
+        - 2 * baseplate_size_adjustment
+    )
     xtranslate = zeromm
     ytranslate = zeromm
 
@@ -364,10 +383,16 @@ def make_complex_bin_base(
 
     return func_fuse
 
+
 class BinSolidMidSection(Feature):
     """Generate bin mid section and add relevant properties"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject, default_height_units = HEIGHT_UNITS, default_wall_thickness = WALL_THICKNESS):
+    def __init__(
+        self,
+        obj: FreeCAD.DocumentObject,
+        default_height_units=HEIGHT_UNITS,
+        default_wall_thickness=WALL_THICKNESS,
+    ):
         """Create bin solid mid section.
 
         Args:
@@ -422,7 +447,7 @@ class BinSolidMidSection(Feature):
             1,
         ).HeightUnitValue = HEIGHT_UNIT_VALUE
 
-    def Make(self, obj:FreeCAD.DocumentObject, bin_outside_shape) -> Part.Shape:
+    def Make(self, obj: FreeCAD.DocumentObject, bin_outside_shape) -> Part.Shape:
         """Generate bin solid mid section.
 
         Args:
@@ -445,10 +470,11 @@ class BinSolidMidSection(Feature):
 
         return face.extrude(FreeCAD.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight))
 
+
 class BlankBinRecessedTop(Feature):
     """Cut into blank bin to create recessed bin top"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject):
+    def __init__(self, obj: FreeCAD.DocumentObject):
         """Create blank bin recessed top section.
 
         Args:
@@ -463,7 +489,7 @@ class BlankBinRecessedTop(Feature):
             "height per unit <br> <br> default = 0 mm",
         ).RecessedTopDepth = RECESSED_TOP_DEPTH
 
-    def Make(self, obj:FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
+    def Make(self, obj: FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
         """Generate Rectanble layout and calculate relevant parameters.
 
         Args:
@@ -502,10 +528,11 @@ def make_l_mid_section(obj: FreeCAD.DocumentObject) -> Part.Shape:
         -obj.TotalHeight + obj.BaseProfileHeight,
     )
 
+
 class BinBottomHoles(Feature):
     """Cut into blank bin to create recessed bin top"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject):
+    def __init__(self, obj: FreeCAD.DocumentObject, magnet_holes_default=MAGNET_HOLES):
         """Create bin solid mid section.
 
         Args:
@@ -518,7 +545,7 @@ class BinBottomHoles(Feature):
             "MagnetHoles",
             "Gridfinity",
             "Toggle the magnet holes on or off",
-        ).MagnetHoles = MAGNET_HOLES
+        ).MagnetHoles = magnet_holes_default
 
         obj.addProperty(
             "App::PropertyBool",
@@ -629,10 +656,11 @@ class BinBottomHoles(Feature):
             FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0),
         )
 
+
 class StackingLip(Feature):
     """Cut into blank bin to create recessed bin top"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject, stacking_lip_default = STACKING_LIP):
+    def __init__(self, obj: FreeCAD.DocumentObject, stacking_lip_default=STACKING_LIP):
         """Create bin solid mid section.
 
         Args:
@@ -680,7 +708,6 @@ class StackingLip(Feature):
             1,
         ).StackingLipVerticalSection = STACKING_LIP_VERTICAL_SECTION
 
-
     def Make(obj: FreeCAD.DocumentObject, bin_outside_shape) -> Part.Shape:
         """Create stacking lip based on input bin shape.
 
@@ -702,12 +729,16 @@ class StackingLip(Feature):
         st2 = FreeCAD.Vector(
             obj.Clearance,
             obj.yGridSize / 2,
-            obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer,
+            obj.StackingLipBottomChamfer
+            + obj.StackingLipVerticalSection
+            + obj.StackingLipTopChamfer,
         )
         st3 = FreeCAD.Vector(
             obj.Clearance + obj.StackingLipTopLedge,
             obj.yGridSize / 2,
-            obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer,
+            obj.StackingLipBottomChamfer
+            + obj.StackingLipVerticalSection
+            + obj.StackingLipTopChamfer,
         )
         st4 = FreeCAD.Vector(
             obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,

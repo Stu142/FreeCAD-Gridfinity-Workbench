@@ -63,7 +63,7 @@ from .grid_initial_layout import (
 from .feature_construction import (
     make_bin_base,
     make_bottom_holes,
-    EcoBinCut,
+    EcoCompartments,
     Scoop,
     make_stacking_lip,
     Compartments,
@@ -155,8 +155,8 @@ class BinBlank(FoundationGridfinity):
             "python gridfinity object",
         )
 
-
-        self.features = [RectangleLayout(obj),
+        self.features = [
+            RectangleLayout(obj),
             BinSolidMidSection(obj),
             BlankBinRecessedTop(obj),
             StackingLip(obj),
@@ -211,7 +211,7 @@ class BinBlank(FoundationGridfinity):
 
         fuse_total = BinSolidMidSection.Make(self, obj, bin_outside_shape)
 
-        bin_base = make_complex_bin_base(obj,layout)
+        bin_base = make_complex_bin_base(obj, layout)
 
         fuse_total = fuse_total.fuse(bin_base)
 
@@ -244,10 +244,11 @@ class BinBase(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self.features = [RectangleLayout(obj),
-            BinSolidMidSection(obj, default_height_units = 1),
+        self.features = [
+            RectangleLayout(obj),
+            BinSolidMidSection(obj, default_height_units=1),
             BlankBinRecessedTop(obj),
-            StackingLip(obj, stacking_lip_default = False),
+            StackingLip(obj, stacking_lip_default=False),
             BinBottomHoles(obj),
             BinBaseValues(obj),
         ]
@@ -289,7 +290,7 @@ class BinBase(FoundationGridfinity):
 
         fuse_total = BinSolidMidSection.Make(self, obj, bin_outside_shape)
 
-        bin_base = make_complex_bin_base(obj,layout)
+        bin_base = make_complex_bin_base(obj, layout)
 
         fuse_total = fuse_total.fuse(bin_base)
 
@@ -310,6 +311,7 @@ class BinBase(FoundationGridfinity):
 
         return fuse_total
 
+
 class SimpleStorageBin(FoundationGridfinity):
     """Simple Storage Bin."""
 
@@ -329,14 +331,15 @@ class SimpleStorageBin(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self.features = [RectangleLayout(obj),
+        self.features = [
+            RectangleLayout(obj),
             BinSolidMidSection(obj),
             StackingLip(obj),
             BinBottomHoles(obj),
             BinBaseValues(obj),
-            Compartments(obj, x_div_default = 0, y_div_default = 0),
-            LabelShelf(obj, label_style_default = "Off"),
-            Scoop(obj, scoop_default = False),
+            Compartments(obj, x_div_default=0, y_div_default=0),
+            LabelShelf(obj, label_style_default="Off"),
+            Scoop(obj, scoop_default=False),
         ]
         obj.Proxy = self
 
@@ -385,7 +388,7 @@ class SimpleStorageBin(FoundationGridfinity):
 
         fuse_total = BinSolidMidSection.Make(self, obj, bin_outside_shape)
 
-        bin_base = make_complex_bin_base(obj,layout)
+        bin_base = make_complex_bin_base(obj, layout)
 
         fuse_total = fuse_total.fuse(bin_base)
 
@@ -415,6 +418,7 @@ class SimpleStorageBin(FoundationGridfinity):
 
         return Part.Solid.removeSplitter(fuse_total)
 
+
 class EcoBin(FoundationGridfinity):
     """Eco Bin."""
 
@@ -429,14 +433,14 @@ class EcoBin(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self.features = [RectangleLayout(obj),
-            BinSolidMidSection(obj, default_wall_thickness = 0.8),
+        self.features = [
+            RectangleLayout(obj),
+            BinSolidMidSection(obj, default_wall_thickness=0.8),
             StackingLip(obj),
-            BinBottomHoles(obj),
+            BinBottomHoles(obj, magnet_holes_default=False),
             BinBaseValues(obj),
             LabelShelf(obj),
-            EcoBinCut(obj),
-
+            EcoCompartments(obj),
         ]
 
         obj.Proxy = self
@@ -735,6 +739,7 @@ class EcoBin(FoundationGridfinity):
         obj.setEditorMode("ScrewHoleDepth", 2)
 
         """
+
     def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
         """Create gridfinity EcoBin shape.
 
@@ -772,40 +777,7 @@ class EcoBin(FoundationGridfinity):
             obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
         """
         """
-        ## Error Checking
 
-        # Divider Minimum Height
-
-        divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
-
-        if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
-            obj.xDividerHeight = divmin
-
-            FreeCAD.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  ",
-            )
-
-            FreeCAD.Console.PrintWarning(divmin)
-
-            FreeCAD.Console.PrintWarning("\n")
-
-        if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
-            obj.yDividerHeight = divmin
-
-            FreeCAD.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  ",
-            )
-
-            FreeCAD.Console.PrintWarning(divmin)
-
-            FreeCAD.Console.PrintWarning("\n")
-
-        if obj.InsideFilletRadius > (1.6 * unitmm):
-            obj.InsideFilletRadius = 1.6 * unitmm
-
-            FreeCAD.Console.PrintWarning(
-                "Inside Fillet Radius must be equal to or less than:  1.6 mm\n",
-            )
             """
         ## Bin Construction
 
@@ -843,11 +815,11 @@ class EcoBin(FoundationGridfinity):
 
         fuse_total = BinSolidMidSection.Make(self, obj, bin_outside_shape)
 
-        bin_base = make_complex_bin_base(obj,layout)
+        bin_base = make_complex_bin_base(obj, layout)
 
         fuse_total = fuse_total.fuse(bin_base)
 
-        compartements = EcoBinCut.Make(obj, bin_inside_shape)
+        compartements = EcoCompartments.Make(obj, bin_inside_shape)
 
         fuse_total = fuse_total.cut(compartements)
 
@@ -899,7 +871,6 @@ class EcoBin(FoundationGridfinity):
         return Part.Solid.removeSplitter(fuse_total)
 
 
-
 class PartsBin(FoundationGridfinity):
     """PartsBin object."""
 
@@ -919,7 +890,8 @@ class PartsBin(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self.features = [RectangleLayout(obj),
+        self.features = [
+            RectangleLayout(obj),
             BinSolidMidSection(obj),
             StackingLip(obj),
             BinBottomHoles(obj),
@@ -975,7 +947,7 @@ class PartsBin(FoundationGridfinity):
 
         fuse_total = BinSolidMidSection.Make(self, obj, bin_outside_shape)
 
-        bin_base = make_complex_bin_base(obj,layout)
+        bin_base = make_complex_bin_base(obj, layout)
 
         fuse_total = fuse_total.fuse(bin_base)
 
@@ -1025,16 +997,15 @@ class Baseplate(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self.features = [RectangleLayout(obj, baseplate_default = True),
+        self.features = [
+            RectangleLayout(obj, baseplate_default=True),
             BaseplateSolidShape(obj),
             BaseplateBaseValues(obj),
-
         ]
 
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
-
         BaseplateBaseValues.Make(self, obj)
 
         layout = RectangleLayout.Make(self, obj)
@@ -1055,7 +1026,7 @@ class Baseplate(FoundationGridfinity):
 
         solid_shape = BaseplateSolidShape.Make(self, obj, baseplate_outside_shape)
 
-        fuse_total = make_complex_bin_base(obj,layout)
+        fuse_total = make_complex_bin_base(obj, layout)
         fuse_total.translate(
             FreeCAD.Vector(
                 0,
@@ -1086,8 +1057,9 @@ class MagnetBaseplate(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self.features = [RectangleLayout(obj, baseplate_default = True),
-            BaseplateSolidShape(obj, magnet_baseplate_default = True),
+        self.features = [
+            RectangleLayout(obj, baseplate_default=True),
+            BaseplateSolidShape(obj, magnet_baseplate_default=True),
             BaseplateBaseValues(obj),
             BaseplateMagnetHoles(obj),
             BaseplateCenterCut(obj),
@@ -1126,7 +1098,7 @@ class MagnetBaseplate(FoundationGridfinity):
 
         solid_shape = BaseplateSolidShape.Make(self, obj, baseplate_outside_shape)
 
-        fuse_total = make_complex_bin_base(obj,layout)
+        fuse_total = make_complex_bin_base(obj, layout)
         fuse_total.translate(
             FreeCAD.Vector(
                 0,
@@ -1137,8 +1109,6 @@ class MagnetBaseplate(FoundationGridfinity):
 
         fuse_total = Part.Shape.cut(solid_shape, fuse_total)
 
-
-
         magholes = BaseplateMagnetHoles.Make(obj)
 
         fuse_total = Part.Shape.cut(fuse_total, magholes)
@@ -1146,6 +1116,7 @@ class MagnetBaseplate(FoundationGridfinity):
         cutout = BaseplateCenterCut.Make(obj)
 
         return Part.Shape.cut(fuse_total, cutout)
+
 
 class ScrewTogetherBaseplate(FoundationGridfinity):
     """Screw together baseplate object."""
@@ -1167,8 +1138,9 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         )
         obj.Proxy = self
 
-        self.features = [RectangleLayout(obj, baseplate_default = True),
-            BaseplateSolidShape(obj, screw_together_baseplate_default = True),
+        self.features = [
+            RectangleLayout(obj, baseplate_default=True),
+            BaseplateSolidShape(obj, screw_together_baseplate_default=True),
             BaseplateBaseValues(obj),
             BaseplateMagnetHoles(obj),
             BaseplateCenterCut(obj),
@@ -1206,7 +1178,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
 
         solid_shape = BaseplateSolidShape.Make(self, obj, baseplate_outside_shape)
 
-        fuse_total = make_complex_bin_base(obj,layout)
+        fuse_total = make_complex_bin_base(obj, layout)
         fuse_total.translate(
             FreeCAD.Vector(
                 0,
@@ -1216,8 +1188,6 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         )
 
         fuse_total = Part.Shape.cut(solid_shape, fuse_total)
-
-
 
         magholes = BaseplateMagnetHoles.Make(obj)
 
@@ -1234,6 +1204,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         conholes = BaseplateConnectionHoles.Make(obj)
 
         return Part.Shape.cut(fuse_total, conholes)
+
 
 class LBinBlank(FoundationGridfinity):
     """L shaped blank bin object."""

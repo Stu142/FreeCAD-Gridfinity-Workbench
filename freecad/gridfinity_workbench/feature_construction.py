@@ -29,16 +29,20 @@ from .const import (
     BASE_WALL_THICKNESS,
     ECO_X_DIVIDERS,
     ECO_Y_DIVIDERS,
+    ECO_INSIDE_FILLET_RADIUS,
 )
+
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
 
 SMALL_NUMBER = 0.01
 
+
 class Feature:
     @abstractmethod
     def Make(obj):
         raise NotImplementedError()
+
 
 def _label_shelf_full_width(
     obj: FreeCAD.DocumentObject,
@@ -219,10 +223,11 @@ def _label_shelf_fillet(
         h_edges,
     )
 
+
 class LabelShelf(Feature):
     """Create Label shelf for bins"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject, label_style_default = "Standard"):
+    def __init__(self, obj: FreeCAD.DocumentObject, label_style_default="Standard"):
         """create bin compartments with the option for dividers.
 
         Args:
@@ -247,7 +252,6 @@ class LabelShelf(Feature):
         )
 
         obj.LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
-
 
         ## Gridfinity Non Standard Parameters
         obj.addProperty(
@@ -389,10 +393,11 @@ class LabelShelf(Feature):
             funcfuse = Part.Shape.cut(funcfuse, Utils.copy_and_translate(bottomcutbox, vec_list))
         return funcfuse
 
+
 class Scoop(Feature):
     """Create Negative for Bin Compartments"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject, scoop_default = SCOOP):
+    def __init__(self, obj: FreeCAD.DocumentObject, scoop_default=SCOOP):
         """create bin compartments with the option for dividers.
 
         Args:
@@ -429,9 +434,9 @@ class Scoop(Feature):
         scooprad2 = obj.ScoopRadius + 1 * unitmm
         scooprad3 = obj.ScoopRadius + 1 * unitmm
 
-        xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
-            obj.xDividers + 1
-        )
+        xcomp_w = (
+            obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness
+        ) / (obj.xDividers + 1)
 
         xdivscoop = obj.xDividerHeight - obj.HeightUnitValue - obj.LabelShelfStackingOffset
 
@@ -495,9 +500,9 @@ class Scoop(Feature):
             + obj.StackingLipTopChamfer
             + obj.StackingLipBottomChamfer
         )
-        compwidth = (obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers) / (
-            xdiv
-        )
+        compwidth = (
+            obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers
+        ) / (xdiv)
 
         scoopbox = Part.makeBox(
             obj.StackingLipBottomChamfer
@@ -508,7 +513,7 @@ class Scoop(Feature):
             obj.UsableHeight,
             FreeCAD.Vector(
                 obj.xTotalWidth + obj.Clearance - obj.WallThickness,
-                + obj.Clearance + obj.WallThickness,
+                +obj.Clearance + obj.WallThickness,
                 0,
             ),
             FreeCAD.Vector(0, 0, -1),
@@ -653,10 +658,10 @@ def _make_compartments_no_deviders(
     func_fuse: Part.Shape,
 ) -> Part.Shape:
     # Fillet Bottom edges
-    #b_edges = []
-    #for edge in func_fuse.Edges:
-        #z0 = edge.Vertexes[0].Point.z
-        #z1 = edge.Vertexes[1].Point.z
+    # b_edges = []
+    # for edge in func_fuse.Edges:
+    # z0 = edge.Vertexes[0].Point.z
+    # z1 = edge.Vertexes[1].Point.z
 
     # Fillet Bottom edges
     b_edges = []
@@ -742,10 +747,13 @@ def _make_compartments_with_deviders(
 
     return func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
 
+
 class Compartments(Feature):
     """Create Negative for Bin Compartments"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject, x_div_default = X_DIVIDERS, y_div_default = Y_DIVIDERS):
+    def __init__(
+        self, obj: FreeCAD.DocumentObject, x_div_default=X_DIVIDERS, y_div_default=Y_DIVIDERS
+    ):
         """create bin compartments with the option for dividers.
 
         Args:
@@ -830,7 +838,12 @@ class Compartments(Feature):
         obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
 
         ## Error Checks
-        divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm + obj.LabelShelfStackingOffset
+        divmin = (
+            obj.HeightUnitValue
+            + obj.InsideFilletRadius
+            + 0.05 * unitmm
+            + obj.LabelShelfStackingOffset
+        )
 
         if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
             obj.xDividerHeight = divmin
@@ -957,6 +970,7 @@ def make_bin_base(obj: FreeCAD.DocumentObject, layout) -> Part.Shape:
         xtranslate += obj.GridSize
 
     return assembly2
+
 
 def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
     """Create bottom hole shape.
@@ -1145,7 +1159,7 @@ def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
             xdivheight,
             FreeCAD.Vector(
                 -obj.xGridSize / 2 + obj.Clearance + obj.DividerThickness,
-                -obj.yGridSize / 2 + obj.Clearance ,
+                -obj.yGridSize / 2 + obj.Clearance,
                 -obj.TotalHeight,
             ),
             FreeCAD.Vector(0, 0, 1),
@@ -1161,19 +1175,30 @@ def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
             obj.xTotalWidth,
             obj.DividerThickness,
             ydivheight,
-            FreeCAD.Vector(-obj.xGridSize / 2 + obj.Clearance, -obj.yGridSize / 2 + obj.Clearance, -obj.TotalHeight),
+            FreeCAD.Vector(
+                -obj.xGridSize / 2 + obj.Clearance,
+                -obj.yGridSize / 2 + obj.Clearance,
+                -obj.TotalHeight,
+            ),
             FreeCAD.Vector(0, 0, 1),
         )
         comp.translate(FreeCAD.Vector(0, ytranslate, 0))
         assembly = comp if assembly is None else assembly.fuse(comp)
         ytranslate += ycomp_w + obj.DividerThickness
 
-    return assembly.translate(FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0,))
+    return assembly.translate(
+        FreeCAD.Vector(
+            obj.xGridSize / 2,
+            obj.yGridSize / 2,
+            0,
+        )
+    )
 
-class EcoBinCut(Feature):
+
+class EcoCompartments(Feature):
     """Create Eco bin main cut and dividers"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject):
+    def __init__(self, obj: FreeCAD.DocumentObject):
         """Create Eco bin dividers
 
         Args:
@@ -1208,7 +1233,7 @@ class EcoBinCut(Feature):
             "InsideFilletRadius",
             "GridfinityNonStandard",
             "inside fillet at the bottom of the bin <br> <br> default = 1.5 mm",
-        ).InsideFilletRadius = 1.5
+        ).InsideFilletRadius = ECO_INSIDE_FILLET_RADIUS
 
         obj.addProperty(
             "App::PropertyLength",
@@ -1234,6 +1259,9 @@ class EcoBinCut(Feature):
             "Custom Height of y dividers <br> <br> default = 0 mm = full height",
         ).yDividerHeight = CUSTOM_Y_DIVIDER_HEIGHT
 
+        ## Hidden Parameters
+        obj.setEditorMode("ScrewHoles", 2)
+
     def Make(obj: FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
         """Create eco bin cutouts.
 
@@ -1245,9 +1273,47 @@ class EcoBinCut(Feature):
             Part.Shape: Eco bin cutout shape.
 
         """
+        ## Error Checking
+
+        # Divider Minimum Height
+
+        divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
+
+        if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
+            obj.xDividerHeight = divmin
+
+            FreeCAD.Console.PrintWarning(
+                "Divider Height must be equal to or greater than:  ",
+            )
+
+            FreeCAD.Console.PrintWarning(divmin)
+
+            FreeCAD.Console.PrintWarning("\n")
+
+        if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
+            obj.yDividerHeight = divmin
+
+            FreeCAD.Console.PrintWarning(
+                "Divider Height must be equal to or greater than:  ",
+            )
+
+            FreeCAD.Console.PrintWarning(divmin)
+
+            FreeCAD.Console.PrintWarning("\n")
+
+        if obj.InsideFilletRadius > (1.6 * unitmm):
+            obj.InsideFilletRadius = 1.6 * unitmm
+
+            FreeCAD.Console.PrintWarning(
+                "Inside Fillet Radius must be equal to or less than:  1.6 mm\n",
+            )
+
+        ## Eco Compartement Generation
         face = Part.Face(bin_inside_shape)
 
-        func_fuse = face.extrude(FreeCAD.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness))
+        func_fuse = face.extrude(
+            FreeCAD.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness)
+        )
 
         """
         func_fuse = Utils.rounded_rectangle_extrude(
@@ -1269,14 +1335,32 @@ class EcoBinCut(Feature):
         base_offset = obj.BaseWallThickness * math.tan(math.pi / 8)
 
         x_bt_cmf_width = (
-            obj.xGridSize - obj.Clearance * 2 - 2 * obj.BaseProfileTopChamfer - obj.BaseWallThickness * 2 - 0.4 * unitmm * 2
+            obj.xGridSize
+            - obj.Clearance * 2
+            - 2 * obj.BaseProfileTopChamfer
+            - obj.BaseWallThickness * 2
+            - 0.4 * unitmm * 2
         )
         y_bt_cmf_width = (
-            obj.yGridSize - obj.Clearance * 2 - 2 * obj.BaseProfileTopChamfer - obj.BaseWallThickness * 2 - 0.4 * unitmm * 2
+            obj.yGridSize
+            - obj.Clearance * 2
+            - 2 * obj.BaseProfileTopChamfer
+            - obj.BaseWallThickness * 2
+            - 0.4 * unitmm * 2
         )
 
-        x_vert_width = obj.xGridSize - obj.Clearance * 2 - 2 * obj.BaseProfileTopChamfer - obj.BaseWallThickness * 2
-        y_vert_width = obj.yGridSize - obj.Clearance * 2 - 2 * obj.BaseProfileTopChamfer - obj.BaseWallThickness * 2
+        x_vert_width = (
+            obj.xGridSize
+            - obj.Clearance * 2
+            - 2 * obj.BaseProfileTopChamfer
+            - obj.BaseWallThickness * 2
+        )
+        y_vert_width = (
+            obj.yGridSize
+            - obj.Clearance * 2
+            - 2 * obj.BaseProfileTopChamfer
+            - obj.BaseWallThickness * 2
+        )
 
         bt_chf_rad = obj.BinVerticalRadius - 0.4 * unitmm - obj.BaseWallThickness
 
@@ -1338,10 +1422,15 @@ class EcoBinCut(Feature):
                 ytranslate += obj.yGridSize
             xtranslate += obj.xGridSize
 
-
         eco_base_cut = Utils.copy_and_translate(assembly, vec_list)
 
-        eco_base_cut.translate(FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0,))
+        eco_base_cut.translate(
+            FreeCAD.Vector(
+                obj.xGridSize / 2,
+                obj.yGridSize / 2,
+                0,
+            )
+        )
 
         func_fuse = func_fuse.fuse(eco_base_cut)
 
@@ -1393,4 +1482,3 @@ class EcoBinCut(Feature):
 
             func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius / 2, b_edges)
         return func_fuse
-

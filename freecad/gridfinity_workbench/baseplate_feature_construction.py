@@ -36,7 +36,6 @@ from .const import (
     CONNECTION_HOLE_DIAMETER,
     SCREW_HOLE_DIAMETER,
     MAGNET_BOTTOM_CHAMFER,
-
 )
 
 HOLE_SHAPES = ["Round", "Hex"]
@@ -47,12 +46,15 @@ class Feature:
     def Make(obj):
         raise NotImplementedError()
 
+
 unitmm = Units.Quantity("1 mm")
 
 zeromm = Units.Quantity("0 mm")
 
 
-def _baseplate_magnet_hole_hex(obj: FreeCAD.DocumentObject, x_hole_pos: float, y_hole_pos: float) -> Part.Shape:
+def _baseplate_magnet_hole_hex(
+    obj: FreeCAD.DocumentObject, x_hole_pos: float, y_hole_pos: float
+) -> Part.Shape:
     # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed circle radius
     radius = obj.MagnetHoleDiameter / math.sqrt(3)
 
@@ -110,7 +112,9 @@ def _baseplate_magnet_hole_hex(obj: FreeCAD.DocumentObject, x_hole_pos: float, y
     return Part.Solid.multiFuse(c1, [c2, c3, c4])
 
 
-def _baseplate_magnet_hole_round(obj: FreeCAD.DocumentObject, x_hole_pos: float, y_hole_pos: float) -> Part.Shape:
+def _baseplate_magnet_hole_round(
+    obj: FreeCAD.DocumentObject, x_hole_pos: float, y_hole_pos: float
+) -> Part.Shape:
     c1 = Part.makeCylinder(
         obj.MagnetHoleDiameter / 2,
         obj.MagnetHoleDepth,
@@ -201,7 +205,7 @@ def _baseplate_magnet_hole_round(obj: FreeCAD.DocumentObject, x_hole_pos: float,
 class BaseplateMagnetHoles(Feature):
     """Creates baseplate magnet holes"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject):
+    def __init__(self, obj: FreeCAD.DocumentObject):
         """Makes baseplate magnet holes
 
         Args:
@@ -345,7 +349,13 @@ class BaseplateMagnetHoles(Feature):
 
         hm1 = hm1.multiFuse([ca1, ca2, ca3, ca4])
 
-        hm1.translate(FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0,))
+        hm1.translate(
+            FreeCAD.Vector(
+                obj.xGridSize / 2,
+                obj.yGridSize / 2,
+                0,
+            )
+        )
 
         xtranslate = zeromm
         ytranslate = zeromm
@@ -368,10 +378,11 @@ class BaseplateMagnetHoles(Feature):
 
         return hm3
 
+
 class BaseplateScrewBottomChamfer(Feature):
     """Creates Baseplate Connection Holes"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject):
+    def __init__(self, obj: FreeCAD.DocumentObject):
         """Creates Baseplate Connection Holes
 
         Args:
@@ -430,22 +441,38 @@ class BaseplateScrewBottomChamfer(Feature):
 
         cb1 = Part.makeCircle(
             obj.ScrewHoleDiameter / 2,
-            FreeCAD.Vector(-x_hole_pos, -y_hole_pos, -obj.TotalHeight + obj.MagnetBottomChamfer + obj.BaseProfileHeight),
+            FreeCAD.Vector(
+                -x_hole_pos,
+                -y_hole_pos,
+                -obj.TotalHeight + obj.MagnetBottomChamfer + obj.BaseProfileHeight,
+            ),
             FreeCAD.Vector(0, 0, 1),
         )
         cb2 = Part.makeCircle(
             obj.ScrewHoleDiameter / 2,
-            FreeCAD.Vector(x_hole_pos, -y_hole_pos, -obj.TotalHeight + obj.MagnetBottomChamfer + obj.BaseProfileHeight),
+            FreeCAD.Vector(
+                x_hole_pos,
+                -y_hole_pos,
+                -obj.TotalHeight + obj.MagnetBottomChamfer + obj.BaseProfileHeight,
+            ),
             FreeCAD.Vector(0, 0, 1),
         )
         cb3 = Part.makeCircle(
             obj.ScrewHoleDiameter / 2,
-            FreeCAD.Vector(-x_hole_pos, y_hole_pos, -obj.TotalHeight + obj.MagnetBottomChamfer + obj.BaseProfileHeight),
+            FreeCAD.Vector(
+                -x_hole_pos,
+                y_hole_pos,
+                -obj.TotalHeight + obj.MagnetBottomChamfer + obj.BaseProfileHeight,
+            ),
             FreeCAD.Vector(0, 0, 1),
         )
         cb4 = Part.makeCircle(
             obj.ScrewHoleDiameter / 2,
-            FreeCAD.Vector(x_hole_pos, y_hole_pos, -obj.TotalHeight + obj.MagnetBottomChamfer + obj.BaseProfileHeight),
+            FreeCAD.Vector(
+                x_hole_pos,
+                y_hole_pos,
+                -obj.TotalHeight + obj.MagnetBottomChamfer + obj.BaseProfileHeight,
+            ),
             FreeCAD.Vector(0, 0, 1),
         )
 
@@ -476,12 +503,19 @@ class BaseplateScrewBottomChamfer(Feature):
             hm3 = hm2 if hm3 is None else hm3.fuse(hm2)
             xtranslate += obj.xGridSize
 
-        return hm3.translate(FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0,))
+        return hm3.translate(
+            FreeCAD.Vector(
+                obj.xGridSize / 2,
+                obj.yGridSize / 2,
+                0,
+            )
+        )
+
 
 class BaseplateConnectionHoles(Feature):
     """Creates Baseplate Connection Holes"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject):
+    def __init__(self, obj: FreeCAD.DocumentObject):
         """Creates Baseplate Connection Holes
 
         Args:
@@ -569,11 +603,17 @@ class BaseplateConnectionHoles(Feature):
 
         fuse_total = Part.Solid.fuse(hx2, hy2)
 
-        return fuse_total.translate(FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0,))
+        return fuse_total.translate(
+            FreeCAD.Vector(
+                obj.xGridSize / 2,
+                obj.yGridSize / 2,
+                0,
+            )
+        )
+
 
 class BaseplateCenterCut(Feature):
-
-    def __init__(self, obj:FreeCAD.DocumentObject):
+    def __init__(self, obj: FreeCAD.DocumentObject):
         """makes L layout
 
         Args:
@@ -712,16 +752,21 @@ class BaseplateCenterCut(Feature):
                 ytranslate += obj.yGridSize.Value
             xtranslate += obj.xGridSize.Value
 
-
         fuse_total = Utils.copy_and_translate(shape, vec_list)
 
-        return fuse_total.translate(FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0,))
+        return fuse_total.translate(
+            FreeCAD.Vector(
+                obj.xGridSize / 2,
+                obj.yGridSize / 2,
+                0,
+            )
+        )
 
 
 class BaseplateBaseValues(Feature):
     """Add bin base properties and calculate values"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject):
+    def __init__(self, obj: FreeCAD.DocumentObject):
         """Create BinBaseValues.
 
         Args:
@@ -804,8 +849,7 @@ class BaseplateBaseValues(Feature):
             1,
         ).BaseplateTopLedgeWidth = BASEPLATE_TOP_LEDGE_WIDTH
 
-
-    def Make(self, obj:FreeCAD.DocumentObject) -> None:
+    def Make(self, obj: FreeCAD.DocumentObject) -> None:
         """Generate Rectanble layout and calculate relevant parameters.
 
         Args:
@@ -821,10 +865,16 @@ class BaseplateBaseValues(Feature):
 
         return
 
+
 class BaseplateSolidShape(Feature):
     """Creates Solid which the baseplate is cut from"""
 
-    def __init__(self, obj:FreeCAD.DocumentObject, magnet_baseplate_default = False, screw_together_baseplate_default = False):
+    def __init__(
+        self,
+        obj: FreeCAD.DocumentObject,
+        magnet_baseplate_default=False,
+        screw_together_baseplate_default=False,
+    ):
         """Makes solid which the baseplate is cut from
 
         Args:
@@ -859,7 +909,7 @@ class BaseplateSolidShape(Feature):
 
         obj.setEditorMode("ScrewTogetherBaseplate", 1)
 
-    def Make(self, obj:FreeCAD.DocumentObject, baseplate_outside_shape):
+    def Make(self, obj: FreeCAD.DocumentObject, baseplate_outside_shape):
         """Creates solid which baseplate is cut from
 
         Args:
