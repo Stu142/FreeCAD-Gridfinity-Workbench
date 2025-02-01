@@ -51,7 +51,7 @@ class Utils:
 
     @staticmethod
     def curve_to_wire(list_of_items: list[Part.LineSegment]) -> Part.Wire:
-        """Make a wire from cuvers (line,linesegment,arc,ect).
+        """Make a wire from cuves (line,linesegment,arc,ect).
 
         This function accepts all curves and makes it into a wire. Note that the wire should be
         closed.
@@ -63,6 +63,10 @@ class Utils:
             Part.Wire: The created wire
 
         """
+        if not list_of_items:
+            msg = "List is empty"
+            raise ValueError(msg)
+
         return Part.Wire([item.toShape() for item in list_of_items])
 
     @staticmethod
