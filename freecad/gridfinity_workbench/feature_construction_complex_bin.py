@@ -414,7 +414,7 @@ class BinSolidMidSection(Feature):
             1,
         ).HeightUnitValue = const.HEIGHT_UNIT_VALUE
 
-    def Make(self, obj: FreeCAD.DocumentObject, bin_outside_shape) -> Part.Shape:
+    def Make(self, obj: FreeCAD.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
         """Generate bin solid mid section.
 
         Args:
@@ -474,30 +474,6 @@ class BlankBinRecessedTop(Feature):
         fuse_total = face.extrude(FreeCAD.Vector(0, 0, -obj.RecessedTopDepth))
 
         return fuse_total.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
-
-"""
-def make_l_mid_section(obj: FreeCAD.DocumentObject) -> Part.Shape:
-    """#Create mid section of L shaped bin.
-
-    #Args:
-        #obj (FreeCAD.DocumentObject): DocumentObject.
-
-    #Returns:
-        #Part.Shape: L shaped mid section.
-"""
-    return rounded_l_extrude(
-        LShapeData(
-            obj.aTotalDimension,
-            obj.bTotalDimension,
-            obj.cTotalDimension,
-            obj.dTotalDimension,
-        ),
-        obj.Clearance,
-        obj.Clearance,
-        obj.BinOuterRadius,
-        -obj.TotalHeight + obj.BaseProfileHeight,
-    )
-"""
 
 class BinBottomHoles(Feature):
     """Cut into blank bin to create recessed bin top"""
