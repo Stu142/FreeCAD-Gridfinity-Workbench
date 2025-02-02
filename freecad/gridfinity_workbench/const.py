@@ -6,7 +6,7 @@ a custom grid size to your liking.
 """
 
 ## Global Parameters
-GRID_SIZE = 42  # to remove once all bins have independant x and y grid size
+#GRID_SIZE = 42  # to remove once all bins have independant x and y grid size
 X_GRID_SIZE = 42
 Y_GRID_SIZE = 42
 CLEARANCE = 0.25
@@ -18,6 +18,8 @@ SCREW_HOLE_DIAMETER = 3
 SCREW_HOLE_DEPTH = 6
 
 MAGNET_HOLE_DISTANCE_FROM_EDGE = 8
+
+HOLE_SHAPES = ["Round", "Hex"]
 
 ## Bins
 # General Bin Parameters

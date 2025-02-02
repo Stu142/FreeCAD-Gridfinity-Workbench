@@ -2,44 +2,14 @@
 
 import math
 from dataclasses import dataclass
-
 import FreeCAD
 import Part
 from FreeCAD import Units
-
 from .feature_construction import make_bottom_hole_shape
 from .utils import Utils
-
 from abc import abstractmethod
 from enum import Enum
-
-from .const import (
-    RECESSED_TOP_DEPTH,
-    HEIGHT_UNIT_VALUE,
-    HEIGHT_UNITS,
-    MAGNET_HOLES,
-    MAGNET_HOLE_DIAMETER,
-    MAGNET_HOLE_DEPTH,
-    SCREW_HOLES,
-    SCREW_HOLE_DIAMETER,
-    SCREW_HOLE_DEPTH,
-    MAGNET_HOLE_DISTANCE_FROM_EDGE,
-    SEQUENTIAL_BRIDGING_LAYER_HEIGHT,
-    STACKING_LIP,
-    STACKING_LIP_TOP_LEDGE,
-    STACKING_LIP_BOTTOM_CHAMFER,
-    STACKING_LIP_VERTICAL_SECTION,
-    WALL_THICKNESS,
-    BIN_BASE_BOTTOM_CHAMFER,
-    BIN_BASE_VERTICAL_SECTION,
-    BIN_BASE_TOP_CHAMFER,
-    BIN_OUTER_RADIUS,
-    BIN_BASE_VERTICAL_RADIUS,
-    BIN_BASE_BOTTOM_RADIUS,
-    CLEARANCE,
-)
-
-HOLE_SHAPES = ["Round", "Hex"]
+from . import const
 
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
@@ -217,7 +187,7 @@ class BinBaseValues(Feature):
             "zzExpertOnly",
             "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
-        ).BaseProfileBottomChamfer = BIN_BASE_BOTTOM_CHAMFER
+        ).BaseProfileBottomChamfer = const.BIN_BASE_BOTTOM_CHAMFER
 
         obj.addProperty(
             "App::PropertyLength",
@@ -225,7 +195,7 @@ class BinBaseValues(Feature):
             "zzExpertOnly",
             "Height of the vertical section in bin base profile",
             1,
-        ).BaseProfileVerticalSection = BIN_BASE_VERTICAL_SECTION
+        ).BaseProfileVerticalSection = const.BIN_BASE_VERTICAL_SECTION
 
         obj.addProperty(
             "App::PropertyLength",
@@ -233,7 +203,7 @@ class BinBaseValues(Feature):
             "zzExpertOnly",
             "Height of the top chamfer in the bin base profile",
             1,
-        ).BaseProfileTopChamfer = BIN_BASE_TOP_CHAMFER
+        ).BaseProfileTopChamfer = const.BIN_BASE_TOP_CHAMFER
 
         obj.addProperty(
             "App::PropertyLength",
@@ -241,7 +211,7 @@ class BinBaseValues(Feature):
             "zzExpertOnly",
             "Outer radius of the bin",
             1,
-        ).BinOuterRadius = BIN_OUTER_RADIUS
+        ).BinOuterRadius = const.BIN_OUTER_RADIUS
 
         obj.addProperty(
             "App::PropertyLength",
@@ -249,7 +219,7 @@ class BinBaseValues(Feature):
             "zzExpertOnly",
             "Radius of the base profile Vertical section",
             1,
-        ).BinVerticalRadius = BIN_BASE_VERTICAL_RADIUS
+        ).BinVerticalRadius = const.BIN_BASE_VERTICAL_RADIUS
 
         obj.addProperty(
             "App::PropertyLength",
@@ -257,7 +227,7 @@ class BinBaseValues(Feature):
             "zzExpertOnly",
             "bottom of bin corner radius",
             1,
-        ).BinBottomRadius = BIN_BASE_BOTTOM_RADIUS
+        ).BinBottomRadius = const.BIN_BASE_BOTTOM_RADIUS
 
         obj.addProperty(
             "App::PropertyLength",
@@ -267,7 +237,7 @@ class BinBaseValues(Feature):
                 "The tolerance on each side of a bin between before the edge of the grid <br> <br>"
                 "default = 0.25 mm"
             ),
-        ).Clearance = CLEARANCE
+        ).Clearance = const.CLEARANCE
 
     def Make(self, obj: FreeCAD.DocumentObject) -> None:
         """Generate Rectanble layout and calculate relevant parameters.
@@ -387,8 +357,8 @@ class BinSolidMidSection(Feature):
     def __init__(
         self,
         obj: FreeCAD.DocumentObject,
-        default_height_units=HEIGHT_UNITS,
-        default_wall_thickness=WALL_THICKNESS,
+        default_height_units = const.HEIGHT_UNITS,
+        default_wall_thickness = const.WALL_THICKNESS,
     ):
         """Create bin solid mid section.
 
@@ -442,7 +412,7 @@ class BinSolidMidSection(Feature):
             "zzExpertOnly",
             "height per unit, default is 7mm",
             1,
-        ).HeightUnitValue = HEIGHT_UNIT_VALUE
+        ).HeightUnitValue = const.HEIGHT_UNIT_VALUE
 
     def Make(self, obj: FreeCAD.DocumentObject, bin_outside_shape) -> Part.Shape:
         """Generate bin solid mid section.
@@ -486,7 +456,7 @@ class BlankBinRecessedTop(Feature):
             "RecessedTopDepth",
             "GridfinityNonStandard",
             "height per unit <br> <br> default = 0 mm",
-        ).RecessedTopDepth = RECESSED_TOP_DEPTH
+        ).RecessedTopDepth = const.RECESSED_TOP_DEPTH
 
     def Make(obj: FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
         """Generate Rectanble layout and calculate relevant parameters.
@@ -505,17 +475,16 @@ class BlankBinRecessedTop(Feature):
 
         return fuse_total.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
 
-
+"""
 def make_l_mid_section(obj: FreeCAD.DocumentObject) -> Part.Shape:
-    """Create mid section of L shaped bin.
+    """#Create mid section of L shaped bin.
 
-    Args:
-        obj (FreeCAD.DocumentObject): DocumentObject.
+    #Args:
+        #obj (FreeCAD.DocumentObject): DocumentObject.
 
-    Returns:
-        Part.Shape: L shaped mid section.
-
-    """
+    #Returns:
+        #Part.Shape: L shaped mid section.
+"""
     return rounded_l_extrude(
         LShapeData(
             obj.aTotalDimension,
@@ -528,12 +497,12 @@ def make_l_mid_section(obj: FreeCAD.DocumentObject) -> Part.Shape:
         obj.BinOuterRadius,
         -obj.TotalHeight + obj.BaseProfileHeight,
     )
-
+"""
 
 class BinBottomHoles(Feature):
     """Cut into blank bin to create recessed bin top"""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, magnet_holes_default=MAGNET_HOLES):
+    def __init__(self, obj: FreeCAD.DocumentObject, magnet_holes_default = const.MAGNET_HOLES):
         """Create bin solid mid section.
 
         Args:
@@ -553,7 +522,7 @@ class BinBottomHoles(Feature):
             "ScrewHoles",
             "Gridfinity",
             "Toggle the screw holes on or off",
-        ).ScrewHoles = SCREW_HOLES
+        ).ScrewHoles = const.SCREW_HOLES
 
         ## Gridfinity Non Standard Parameters
         obj.addProperty(
@@ -561,7 +530,7 @@ class BinBottomHoles(Feature):
             "SequentialBridgingLayerHeight",
             "GridfinityNonStandard",
             "Layer Height that you print in for optimal print results",
-        ).SequentialBridgingLayerHeight = SEQUENTIAL_BRIDGING_LAYER_HEIGHT
+        ).SequentialBridgingLayerHeight = const.SEQUENTIAL_BRIDGING_LAYER_HEIGHT
 
         obj.addProperty(
             "App::PropertyEnumeration",
@@ -572,7 +541,7 @@ class BinBottomHoles(Feature):
                 "glued"
             ),
         )
-        obj.MagnetHolesShape = HOLE_SHAPES
+        obj.MagnetHolesShape = const.HOLE_SHAPES
 
         obj.addProperty(
             "App::PropertyLength",
@@ -582,28 +551,28 @@ class BinBottomHoles(Feature):
                 "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br>"
                 "default = 6.5 mm"
             ),
-        ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
+        ).MagnetHoleDiameter = const.MAGNET_HOLE_DIAMETER
 
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDepth",
             "GridfinityNonStandard",
             "Depth of Magnet Holes <br> <br> default = 2.4 mm",
-        ).MagnetHoleDepth = MAGNET_HOLE_DEPTH
+        ).MagnetHoleDepth = const.MAGNET_HOLE_DEPTH
 
         obj.addProperty(
             "App::PropertyLength",
             "ScrewHoleDiameter",
             "GridfinityNonStandard",
             "Diameter of Screw Holes <br> <br> default = 3.0 mm",
-        ).ScrewHoleDiameter = SCREW_HOLE_DIAMETER
+        ).ScrewHoleDiameter = const.SCREW_HOLE_DIAMETER
 
         obj.addProperty(
             "App::PropertyLength",
             "ScrewHoleDepth",
             "GridfinityNonStandard",
             "Depth of Screw Holes <br> <br> default = 6.0 mm",
-        ).ScrewHoleDepth = SCREW_HOLE_DEPTH
+        ).ScrewHoleDepth = const.SCREW_HOLE_DEPTH
 
         ## Expert Only Parameters
         obj.addProperty(
@@ -612,7 +581,7 @@ class BinBottomHoles(Feature):
             "zzExpertOnly",
             "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
             1,
-        ).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
+        ).MagnetHoleDistanceFromEdge = const.MAGNET_HOLE_DISTANCE_FROM_EDGE
 
     def Make(
         obj: FreeCAD.DocumentObject,
@@ -662,7 +631,7 @@ class BinBottomHoles(Feature):
 class StackingLip(Feature):
     """Cut into blank bin to create recessed bin top"""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, stacking_lip_default=STACKING_LIP):
+    def __init__(self, obj: FreeCAD.DocumentObject, stacking_lip_default = const.STACKING_LIP):
         """Create bin solid mid section.
 
         Args:
@@ -684,7 +653,7 @@ class StackingLip(Feature):
             "zzExpertOnly",
             "Top Ledge of the stacking lip <br> <br> default = 0.4 mm",
             1,
-        ).StackingLipTopLedge = STACKING_LIP_TOP_LEDGE
+        ).StackingLipTopLedge = const.STACKING_LIP_TOP_LEDGE
 
         obj.addProperty(
             "App::PropertyLength",
@@ -700,7 +669,7 @@ class StackingLip(Feature):
             "zzExpertOnly",
             "Bottom Chamfer of the Stacking lip<br> <br> default = 0.7 mm",
             1,
-        ).StackingLipBottomChamfer = STACKING_LIP_BOTTOM_CHAMFER
+        ).StackingLipBottomChamfer = const.STACKING_LIP_BOTTOM_CHAMFER
 
         obj.addProperty(
             "App::PropertyLength",
@@ -708,7 +677,7 @@ class StackingLip(Feature):
             "zzExpertOnly",
             "vertical section of the Stacking lip<br> <br> default = 1.8 mm",
             1,
-        ).StackingLipVerticalSection = STACKING_LIP_VERTICAL_SECTION
+        ).StackingLipVerticalSection = const.STACKING_LIP_VERTICAL_SECTION
 
     def Make(obj: FreeCAD.DocumentObject, bin_outside_shape) -> Part.Shape:
         """Create stacking lip based on input bin shape.

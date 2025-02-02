@@ -4,42 +4,13 @@ Contains implementation to conscruct baseplate features.
 """
 
 import math
-
 import FreeCAD
 import Part
 from FreeCAD import Units
-
 from abc import abstractmethod
 from enum import Enum
-
 from .utils import Utils
-
-from .const import (
-    BASEPLATE_BOTTOM_CHAMFER,
-    BASEPLATE_VERTICAL_SECTION,
-    BASEPLATE_TOP_CHAMFER,
-    BASEPLATE_OUTER_RADIUS,
-    BASEPLATE_VERTICAL_RADIUS,
-    BASEPLATE_BOTTOM_RADIUS,
-    CLEARANCE,
-    BASEPLATE_TOP_LEDGE_WIDTH,
-    MAGNET_HOLES,
-    BASEPLATE_SMALL_FILLET,
-    MAGNET_HOLE_DIAMETER,
-    MAGNET_HOLE_DEPTH,
-    MAGNET_EDGE_THICKNESS,
-    MAGNET_BASE,
-    MAGNET_BASE_HOLE,
-    MAGNET_CHAMFER,
-    MAGNET_HOLE_DISTANCE_FROM_EDGE,
-    BASE_THICKNESS,
-    CONNECTION_HOLE_DIAMETER,
-    SCREW_HOLE_DIAMETER,
-    MAGNET_BOTTOM_CHAMFER,
-)
-
-HOLE_SHAPES = ["Round", "Hex"]
-
+from . import const
 
 class Feature:
     @abstractmethod
@@ -219,7 +190,7 @@ class BaseplateMagnetHoles(Feature):
             "MagnetHoles",
             "Gridfinity",
             "MagnetHoles",
-        ).MagnetHoles = MAGNET_HOLES
+        ).MagnetHoles = const.MAGNET_HOLES
 
         ## Gridfinity Non Standard Parameters
 
@@ -233,7 +204,7 @@ class BaseplateMagnetHoles(Feature):
             ),
         )
 
-        obj.MagnetHolesShape = HOLE_SHAPES
+        obj.MagnetHolesShape = const.HOLE_SHAPES
 
         obj.addProperty(
             "App::PropertyLength",
@@ -243,42 +214,42 @@ class BaseplateMagnetHoles(Feature):
                 "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br> "
                 "default = 6.5 mm"
             ),
-        ).MagnetHoleDiameter = MAGNET_HOLE_DIAMETER
+        ).MagnetHoleDiameter = const.MAGNET_HOLE_DIAMETER
 
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDepth",
             "NonStandard",
             "Depth of Magnet Holes <br> <br> default = 2.4 mm",
-        ).MagnetHoleDepth = MAGNET_HOLE_DEPTH
+        ).MagnetHoleDepth = const.MAGNET_HOLE_DEPTH
 
         obj.addProperty(
             "App::PropertyLength",
             "MagnetEdgeThickness",
             "NonStandard",
             "Thickness of edge holding magnets in place <br> <br> default = 1.2 mm",
-        ).MagnetEdgeThickness = MAGNET_EDGE_THICKNESS
+        ).MagnetEdgeThickness = const.MAGNET_EDGE_THICKNESS
 
         obj.addProperty(
             "App::PropertyLength",
             "MagnetBase",
             "NonStandard",
             "Thickness of base under the magnets <br> <br> default = 0.4 mm",
-        ).MagnetBase = MAGNET_BASE
+        ).MagnetBase = const.MAGNET_BASE
 
         obj.addProperty(
             "App::PropertyLength",
             "MagnetBaseHole",
             "NonStandard",
             "Diameter of the hole at the bottom of the magnet cutout <br> <br> default = 3 mm",
-        ).MagnetBaseHole = MAGNET_BASE_HOLE
+        ).MagnetBaseHole = const.MAGNET_BASE_HOLE
 
         obj.addProperty(
             "App::PropertyLength",
             "MagnetChamfer",
             "NonStandard",
             "Chamfer at top of magnet hole <br> <br> default = 0.4 mm",
-        ).MagnetChamfer = MAGNET_CHAMFER
+        ).MagnetChamfer = const.MAGNET_CHAMFER
 
         ## Gridfinity Expert Only Parameters
         obj.addProperty(
@@ -287,7 +258,7 @@ class BaseplateMagnetHoles(Feature):
             "zzExpertOnly",
             "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
             1,
-        ).MagnetHoleDistanceFromEdge = MAGNET_HOLE_DISTANCE_FROM_EDGE
+        ).MagnetHoleDistanceFromEdge = const.MAGNET_HOLE_DISTANCE_FROM_EDGE
 
         ## Gridfinity Hidden Properties
         obj.addProperty(
@@ -295,7 +266,7 @@ class BaseplateMagnetHoles(Feature):
             "BaseThickness",
             "Hidden",
             "Thickness of base under the normal baseplate  profile <br> <br> default = 6.4 mm",
-        ).BaseThickness = BASE_THICKNESS
+        ).BaseThickness = const.BASE_THICKNESS
 
         obj.setEditorMode("BaseThickness", 2)
 
@@ -395,7 +366,7 @@ class BaseplateScrewBottomChamfer(Feature):
             "ScrewHoleDiameter",
             "NonStandard",
             "Diameter of screw holes inside magnet holes <br> <br> default = 3 mm",
-        ).ScrewHoleDiameter = SCREW_HOLE_DIAMETER
+        ).ScrewHoleDiameter = const.SCREW_HOLE_DIAMETER
 
         ## Gridfinity Expert Only Parameters
         obj.addProperty(
@@ -403,7 +374,7 @@ class BaseplateScrewBottomChamfer(Feature):
             "MagnetBottomChamfer",
             "zzExpertOnly",
             "Diameter of screw holes inside magnet holes <br> <br> default = 3 mm",
-        ).MagnetBottomChamfer = MAGNET_BOTTOM_CHAMFER
+        ).MagnetBottomChamfer = const.MAGNET_BOTTOM_CHAMFER
 
     def Make(obj: FreeCAD.DocumentObject) -> Part.Shape:
         """Create screw chamfer for a baseplate.
@@ -526,7 +497,7 @@ class BaseplateConnectionHoles(Feature):
             "ConnectionHoleDiameter",
             "NonStandard",
             "Holes on the sides to connect multiple baseplates together <br> <br> default = 3.2 mm",
-        ).ConnectionHoleDiameter = CONNECTION_HOLE_DIAMETER
+        ).ConnectionHoleDiameter = const.CONNECTION_HOLE_DIAMETER
 
     def Make(obj: FreeCAD.DocumentObject) -> Part.Shape:
         """Create connection holes for a baseplate.
@@ -623,7 +594,7 @@ class BaseplateCenterCut(Feature):
             "SmallFillet",
             "NonStandard",
             "Small fillet on iside of baseplate <br> <br> default = 1 mm",
-        ).SmallFillet = BASEPLATE_SMALL_FILLET
+        ).SmallFillet = const.BASEPLATE_SMALL_FILLET
 
     def Make(obj: FreeCAD.DocumentObject) -> Part.Shape:
         """Create baseplate center cutout.
@@ -788,7 +759,7 @@ class BaseplateBaseValues(Feature):
             "zzExpertOnly",
             "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
-        ).BaseProfileBottomChamfer = BASEPLATE_BOTTOM_CHAMFER
+        ).BaseProfileBottomChamfer = const.BASEPLATE_BOTTOM_CHAMFER
 
         obj.addProperty(
             "App::PropertyLength",
@@ -796,7 +767,7 @@ class BaseplateBaseValues(Feature):
             "zzExpertOnly",
             "Height of the vertical section in bin base profile",
             1,
-        ).BaseProfileVerticalSection = BASEPLATE_VERTICAL_SECTION
+        ).BaseProfileVerticalSection = const.BASEPLATE_VERTICAL_SECTION
 
         obj.addProperty(
             "App::PropertyLength",
@@ -804,7 +775,7 @@ class BaseplateBaseValues(Feature):
             "zzExpertOnly",
             "Height of the top chamfer in the bin base profile",
             1,
-        ).BaseProfileTopChamfer = BASEPLATE_TOP_CHAMFER
+        ).BaseProfileTopChamfer = const.BASEPLATE_TOP_CHAMFER
 
         obj.addProperty(
             "App::PropertyLength",
@@ -812,7 +783,7 @@ class BaseplateBaseValues(Feature):
             "zzExpertOnly",
             "Outer radius of the bin",
             1,
-        ).BinOuterRadius = BASEPLATE_OUTER_RADIUS
+        ).BinOuterRadius = const.BASEPLATE_OUTER_RADIUS
 
         obj.addProperty(
             "App::PropertyLength",
@@ -820,7 +791,7 @@ class BaseplateBaseValues(Feature):
             "zzExpertOnly",
             "Radius of the base profile Vertical section",
             1,
-        ).BinVerticalRadius = BASEPLATE_VERTICAL_RADIUS
+        ).BinVerticalRadius = const.BASEPLATE_VERTICAL_RADIUS
 
         obj.addProperty(
             "App::PropertyLength",
@@ -828,7 +799,7 @@ class BaseplateBaseValues(Feature):
             "zzExpertOnly",
             "bottom of bin corner radius",
             1,
-        ).BinBottomRadius = BASEPLATE_BOTTOM_RADIUS
+        ).BinBottomRadius = const.BASEPLATE_BOTTOM_RADIUS
 
         obj.addProperty(
             "App::PropertyLength",
@@ -838,7 +809,7 @@ class BaseplateBaseValues(Feature):
                 "The tolerance on each side of a bin between before the edge of the grid <br> <br>"
                 "default = 0.25 mm"
             ),
-        ).Clearance = CLEARANCE
+        ).Clearance = const.CLEARANCE
 
         obj.addProperty(
             "App::PropertyLength",
@@ -846,7 +817,7 @@ class BaseplateBaseValues(Feature):
             "zzExpertOnly",
             "Top ledge of baseplate",
             1,
-        ).BaseplateTopLedgeWidth = BASEPLATE_TOP_LEDGE_WIDTH
+        ).BaseplateTopLedgeWidth = const.BASEPLATE_TOP_LEDGE_WIDTH
 
     def Make(self, obj: FreeCAD.DocumentObject) -> None:
         """Generate Rectanble layout and calculate relevant parameters.

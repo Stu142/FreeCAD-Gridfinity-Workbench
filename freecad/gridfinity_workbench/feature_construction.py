@@ -1,36 +1,13 @@
 """Module containing gridfinity feature constructions."""
 
 import math
-
 import FreeCAD
 import Part
 from FreeCAD import Units
-
 from .utils import Utils
-
 from abc import abstractmethod
 from enum import Enum
-
-from .const import (
-    X_DIVIDERS,
-    Y_DIVIDERS,
-    INSIDE_FILLET_RADIUS,
-    DIVIDER_THICKNESS,
-    CUSTOM_X_DIVIDER_HEIGHT,
-    CUSTOM_Y_DIVIDER_HEIGHT,
-    LABEL_SHELF_WIDTH,
-    LABEL_SHELF_LENGTH,
-    LABEL_SHELF_ANGLE,
-    LABEL_SHELF_STACKING_OFFSET,
-    LABEL_SHELF_VERTICAL_THICKNESS,
-    SCOOP,
-    SCOOP_RADIUS,
-    ECO_DIVIDER_THICKNESS,
-    BASE_WALL_THICKNESS,
-    ECO_X_DIVIDERS,
-    ECO_Y_DIVIDERS,
-    ECO_INSIDE_FILLET_RADIUS,
-)
+from . import const
 
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
@@ -328,21 +305,21 @@ class LabelShelf(Feature):
             "LabelShelfWidth",
             "GridfinityNonStandard",
             "Thickness of the Label Shelf <br> <br> default = 12 mm",
-        ).LabelShelfWidth = LABEL_SHELF_WIDTH
+        ).LabelShelfWidth = const.LABEL_SHELF_WIDTH
 
         obj.addProperty(
             "App::PropertyLength",
             "LabelShelfLength",
             "GridfinityNonStandard",
             "Length of the Label Shelf <br> <br> default = 42 mm",
-        ).LabelShelfLength = LABEL_SHELF_LENGTH
+        ).LabelShelfLength = const.LABEL_SHELF_LENGTH
 
         obj.addProperty(
             "App::PropertyAngle",
             "LabelShelfAngle",
             "GridfinityNonStandard",
             "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
-        ).LabelShelfAngle = LABEL_SHELF_ANGLE
+        ).LabelShelfAngle = const.LABEL_SHELF_ANGLE
 
         ## Expert Only Parameters
         obj.addProperty(
@@ -350,14 +327,14 @@ class LabelShelf(Feature):
             "LabelShelfStackingOffset",
             "zzExpertOnly",
             "Vertical Thickness of the Label Shelf <br> <br> default = 0.4 mm",
-        ).LabelShelfStackingOffset = LABEL_SHELF_STACKING_OFFSET
+        ).LabelShelfStackingOffset = const.LABEL_SHELF_STACKING_OFFSET
 
         obj.addProperty(
             "App::PropertyLength",
             "LabelShelfVerticalThickness",
             "zzExpertOnly",
             "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
-        ).LabelShelfVerticalThickness = LABEL_SHELF_VERTICAL_THICKNESS
+        ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
 
     def Make(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
         """Create label shelf.
@@ -482,7 +459,7 @@ class LabelShelf(Feature):
 class Scoop(Feature):
     """Create Negative for Bin Compartments"""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, scoop_default=SCOOP):
+    def __init__(self, obj: FreeCAD.DocumentObject, scoop_default=const.SCOOP):
         """create bin compartments with the option for dividers.
 
         Args:
@@ -496,7 +473,7 @@ class Scoop(Feature):
             "ScoopRadius",
             "GridfinityNonStandard",
             "Radius of the Scoop <br> <br> default = 21 mm",
-        ).ScoopRadius = SCOOP_RADIUS
+        ).ScoopRadius = const.SCOOP_RADIUS
 
         obj.addProperty(
             "App::PropertyBool",
@@ -646,17 +623,17 @@ class Scoop(Feature):
         )
         return fuse_total.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
 
-
+"""
 def make_stacking_lip(obj: FreeCAD.DocumentObject) -> Part.Shape:
-    """Create stacking lip.
+    #"""#Create stacking lip.
 
-    Args:
-        obj (FreeCAD.DocumentObject): Document object.
+    #Args:
+        #obj (FreeCAD.DocumentObject): Document object.
 
-    Returns:
-        Part.Shape: Stackinglip 3D object.
+    #Returns:
+        #Part.Shape: Stackinglip 3D object
 
-    """
+"""
     stacking_lip_path = Utils.create_rounded_rectangle(
         obj.xTotalWidth,
         obj.yTotalWidth,
@@ -737,7 +714,7 @@ def make_stacking_lip(obj: FreeCAD.DocumentObject) -> Part.Shape:
     stacking_lip = Part.Wire(stacking_lip_path).makePipe(wire)
 
     return Part.makeSolid(stacking_lip)
-
+    """
 
 def _make_compartments_no_deviders(
     obj: FreeCAD.DocumentObject,
@@ -838,7 +815,7 @@ class Compartments(Feature):
     """Create Negative for Bin Compartments"""
 
     def __init__(
-        self, obj: FreeCAD.DocumentObject, x_div_default=X_DIVIDERS, y_div_default=Y_DIVIDERS
+        self, obj: FreeCAD.DocumentObject, x_div_default=const.X_DIVIDERS, y_div_default=const.Y_DIVIDERS
     ):
         """create bin compartments with the option for dividers.
 
@@ -871,7 +848,7 @@ class Compartments(Feature):
             "InsideFilletRadius",
             "GridfinityNonStandard",
             "inside fillet at the bottom of the bin <br> <br> default = 1.85 mm",
-        ).InsideFilletRadius = INSIDE_FILLET_RADIUS
+        ).InsideFilletRadius = const.INSIDE_FILLET_RADIUS
 
         obj.addProperty(
             "App::PropertyLength",
@@ -881,21 +858,21 @@ class Compartments(Feature):
                 "Thickness of the dividers, ideally an even multiple of layer width <br> <br> "
                 "default = 1.2 mm"
             ),
-        ).DividerThickness = DIVIDER_THICKNESS
+        ).DividerThickness = const.DIVIDER_THICKNESS
 
         obj.addProperty(
             "App::PropertyLength",
             "xDividerHeight",
             "GridfinityNonStandard",
             "Custom Height of x dividers <br> <br> default = 0 mm = full height",
-        ).xDividerHeight = CUSTOM_X_DIVIDER_HEIGHT
+        ).xDividerHeight = const.CUSTOM_X_DIVIDER_HEIGHT
 
         obj.addProperty(
             "App::PropertyLength",
             "yDividerHeight",
             "GridfinityNonStandard",
             "Custom Height of y dividers <br> <br> default = 0 mm = full height",
-        ).yDividerHeight = CUSTOM_Y_DIVIDER_HEIGHT
+        ).yDividerHeight = const.CUSTOM_Y_DIVIDER_HEIGHT
 
         ## Referance Parameters
         obj.addProperty(
@@ -992,17 +969,17 @@ class Compartments(Feature):
 
         return func_fuse.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
 
-
+"""
 def make_bin_base(obj: FreeCAD.DocumentObject, layout) -> Part.Shape:
-    """Create bin base.
+    """#Create bin base.
 
-    Args:
-        obj (FreeCAD.DocumentObject): Document object.
+    #Args:
+        #obj (FreeCAD.DocumentObject): Document object.
 
-    Returns:
-        Part.Shape: Binbase 3D shape.
+    #Returns:
+        #Part.Shape: Binbase 3D shape.
 
-    """
+"""
     bt_cmf_width = obj.BinUnit - 2 * obj.BaseProfileBottomChamfer - 2 * obj.BaseProfileTopChamfer
     vert_width = obj.BinUnit - 2 * obj.BaseProfileTopChamfer
     xtranslate = zeromm
@@ -1057,6 +1034,7 @@ def make_bin_base(obj: FreeCAD.DocumentObject, layout) -> Part.Shape:
 
     return assembly2
 
+"""
 
 def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
     """Create bottom hole shape.
@@ -1178,42 +1156,6 @@ def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
         )
     return bottom_hole_shape
 
-
-def make_bottom_holes(obj: FreeCAD.DocumentObject) -> Part.Shape:
-    """Create bottom holes.
-
-    Args:
-        obj (FreeCAD.DocumentObject): Documentobject
-
-    Returns:
-        Part.Shape: bottom holes shape
-
-    """
-    bottom_hole_shape = make_bottom_hole_shape(obj)
-
-    hole_pos = obj.GridSize / 2 - obj.MagnetHoleDistanceFromEdge
-
-    hole_shape_sub_array = Utils.copy_and_translate(
-        bottom_hole_shape,
-        [
-            FreeCAD.Vector(-hole_pos, -hole_pos, -obj.TotalHeight),
-            FreeCAD.Vector(hole_pos, -hole_pos, -obj.TotalHeight),
-            FreeCAD.Vector(-hole_pos, hole_pos, -obj.TotalHeight),
-            FreeCAD.Vector(hole_pos, hole_pos, -obj.TotalHeight),
-        ],
-    )
-    vec_list = []
-    xtranslate = 0
-    for _ in range(obj.xGridUnits):
-        ytranslate = 0
-        for _ in range(obj.yGridUnits):
-            vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
-            ytranslate += obj.GridSize.Value
-        xtranslate += obj.GridSize.Value
-
-    return Utils.copy_and_translate(hole_shape_sub_array, vec_list)
-
-
 def _eco_bin_cut_fillet_edges_filter(obj: FreeCAD.DocumentObject, edge: Part.Edge) -> bool:
     divfil = -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1 * unitmm
     z0 = edge.Vertexes[0].Point.z
@@ -1299,21 +1241,21 @@ class EcoCompartments(Feature):
             "BaseWallThickness",
             "Gridfinity",
             "The thickness of the bin at the base",
-        ).BaseWallThickness = BASE_WALL_THICKNESS
+        ).BaseWallThickness = const.BASE_WALL_THICKNESS
 
         obj.addProperty(
             "App::PropertyInteger",
             "xDividers",
             "Gridfinity",
             "Select the Number of Dividers in the x direction",
-        ).xDividers = ECO_X_DIVIDERS
+        ).xDividers = const.ECO_X_DIVIDERS
 
         obj.addProperty(
             "App::PropertyInteger",
             "yDividers",
             "Gridfinity",
             "Select the number of Dividers in the y direction",
-        ).yDividers = ECO_Y_DIVIDERS
+        ).yDividers = const.ECO_Y_DIVIDERS
 
         ## Gridfinity Non Standard Parameters
         obj.addProperty(
@@ -1321,7 +1263,7 @@ class EcoCompartments(Feature):
             "InsideFilletRadius",
             "GridfinityNonStandard",
             "inside fillet at the bottom of the bin <br> <br> default = 1.5 mm",
-        ).InsideFilletRadius = ECO_INSIDE_FILLET_RADIUS
+        ).InsideFilletRadius = const.ECO_INSIDE_FILLET_RADIUS
 
         obj.addProperty(
             "App::PropertyLength",
@@ -1331,21 +1273,21 @@ class EcoCompartments(Feature):
                 "Thickness of the dividers, ideally an even multiple of layer width <br> <br> "
                 "default = 0.8 mm"
             ),
-        ).DividerThickness = ECO_DIVIDER_THICKNESS
+        ).DividerThickness = const.ECO_DIVIDER_THICKNESS
 
         obj.addProperty(
             "App::PropertyLength",
             "xDividerHeight",
             "GridfinityNonStandard",
             "Custom Height of x dividers <br> <br> default = 0 mm = full height",
-        ).xDividerHeight = CUSTOM_X_DIVIDER_HEIGHT
+        ).xDividerHeight = const.CUSTOM_X_DIVIDER_HEIGHT
 
         obj.addProperty(
             "App::PropertyLength",
             "yDividerHeight",
             "GridfinityNonStandard",
             "Custom Height of y dividers <br> <br> default = 0 mm = full height",
-        ).yDividerHeight = CUSTOM_Y_DIVIDER_HEIGHT
+        ).yDividerHeight = const.CUSTOM_Y_DIVIDER_HEIGHT
 
         ## Reference Parameters
         obj.addProperty(
