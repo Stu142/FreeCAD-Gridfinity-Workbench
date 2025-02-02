@@ -6,6 +6,7 @@ import FreeCAD
 import Part
 from FreeCAD import Units
 
+from .custom_shape import get_custom_shape
 from .baseplate_feature_construction import (
     make_baseplate_connection_holes,
     make_baseplate_magnet_holes,
@@ -123,6 +124,15 @@ class FoundationGridfinity:
     @abstractmethod
     def generate_gridfinity_shape(self, fp: FreeCAD.DocumentObject) -> Part.Shape:
         """Generate the TopoShape of the object."""
+
+
+class CustomBin(FoundationGridfinity):
+    """Gridfinity CustomBin object."""
+
+    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+        super().__init__(obj)
+        res = get_custom_shape()
+        FreeCAD.Console.PrintMessage(res)
 
 
 class BinBlank(FoundationGridfinity):
@@ -3660,3 +3670,5 @@ class LBinBlank(FoundationGridfinity):
             fusetotal = Part.Shape.cut(fusetotal, holes)
 
         return fusetotal
+
+

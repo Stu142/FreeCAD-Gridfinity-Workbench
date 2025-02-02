@@ -44,6 +44,7 @@ class GridfinityWorkbench(Workbench):
         "CreateMagnetBaseplate",
         "CreateScrewTogetherBaseplate",
         "CreateLBinBlank",
+        "CreateCustomBin",
     ]
 
     def GetClassName(self) -> str:  # noqa: N802
@@ -71,6 +72,7 @@ class GridfinityWorkbench(Workbench):
             CreatePartsBin,
             CreateScrewTogetherBaseplate,
             CreateSimpleStorageBin,
+            CreateCustomBin,
         )
 
         FreeCAD.Console.PrintMessage("switching to Gridfinity Workbench\n")
@@ -88,6 +90,7 @@ class GridfinityWorkbench(Workbench):
         FreeCADGui.addCommand("CreateMagnetBaseplate", CreateMagnetBaseplate())
         FreeCADGui.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
         FreeCADGui.addCommand("CreateLBinBlank", CreateLBinBlank())
+        FreeCADGui.addCommand("CreateCustomBin", CreateCustomBin())
 
 
 FreeCADGui.addWorkbench(GridfinityWorkbench())
