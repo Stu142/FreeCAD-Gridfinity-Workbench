@@ -376,7 +376,7 @@ class BaseplateMagnetHoles(Feature):
             hm3 = hm2 if hm3 is None else hm3.fuse(hm2)
             xtranslate += obj.xGridSize
 
-        return hm3
+        return hm3.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
 
 
 class BaseplateScrewBottomChamfer(Feature):
@@ -505,12 +505,11 @@ class BaseplateScrewBottomChamfer(Feature):
 
         return hm3.translate(
             FreeCAD.Vector(
-                obj.xGridSize / 2,
-                obj.yGridSize / 2,
+                obj.xGridSize / 2 - obj.xLocationOffset,
+                obj.yGridSize / 2 - obj.yLocationOffset,
                 0,
             )
         )
-
 
 class BaseplateConnectionHoles(Feature):
     """Creates Baseplate Connection Holes"""
@@ -605,8 +604,8 @@ class BaseplateConnectionHoles(Feature):
 
         return fuse_total.translate(
             FreeCAD.Vector(
-                obj.xGridSize / 2,
-                obj.yGridSize / 2,
+                obj.xGridSize / 2 - obj.xLocationOffset,
+                obj.yGridSize / 2 - obj.yLocationOffset,
                 0,
             )
         )
@@ -756,8 +755,8 @@ class BaseplateCenterCut(Feature):
 
         return fuse_total.translate(
             FreeCAD.Vector(
-                obj.xGridSize / 2,
-                obj.yGridSize / 2,
+                obj.xGridSize / 2 - obj.xLocationOffset,
+                obj.yGridSize / 2 - obj.yLocationOffset,
                 0,
             )
         )
@@ -931,4 +930,13 @@ class BaseplateSolidShape(Feature):
         ## Baseplate Solid Shape Generation
         face = Part.Face(baseplate_outside_shape)
 
-        return face.extrude(FreeCAD.Vector(0, 0, obj.TotalHeight))
+        fuse_total = face.extrude(FreeCAD.Vector(0, 0, obj.TotalHeight))
+
+        return fuse_total.translate(
+            FreeCAD.Vector(
+                -obj.xLocationOffset,
+                -obj.yLocationOffset,
+                0,
+            )
+        )
+

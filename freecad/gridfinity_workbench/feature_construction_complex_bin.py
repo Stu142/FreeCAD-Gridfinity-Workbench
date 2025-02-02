@@ -377,7 +377,7 @@ def make_complex_bin_base(
 
     fuse_total = b1 if obj.xMaxGrids < 2 and obj.yMaxGrids < 2 else Part.Solid.multiFuse(b1, parts)
 
-    return fuse_total.translate(FreeCAD.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.xGridSize / 2 - obj.yLocationOffset,0,))
+    return fuse_total.translate(FreeCAD.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset,0,))
 
 
 
@@ -653,9 +653,10 @@ class BinBottomHoles(Feature):
                 ytranslate += obj.yGridSize.Value
             xtranslate += obj.xGridSize.Value
 
-        return Utils.copy_and_translate(hole_shape_sub_array, vec_list).translate(
+        fuse_total = Utils.copy_and_translate(hole_shape_sub_array, vec_list).translate(
             FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0),
         )
+        return fuse_total.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
 
 
 class StackingLip(Feature):
