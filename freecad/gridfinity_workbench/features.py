@@ -6,6 +6,7 @@ import FreeCAD as fc  # noqa: N813
 import Part
 
 from . import const, utils
+from .custom_shape import get_custom_shape
 from .baseplate_feature_construction import (
     BaseplateBaseValues,
     BaseplateCenterCut,
@@ -93,6 +94,15 @@ class FoundationGridfinity:
     ) -> None:
         """Needed for JSON Serialization when saving a file containing gridfinity object."""
         return
+
+
+class CustomBin(FoundationGridfinity):
+    """Gridfinity CustomBin object."""
+
+    def __init__(self, obj: fc.DocumentObject) -> None:
+        super().__init__(obj)
+        res = get_custom_shape()
+        fc.Console.PrintMessage(res)
 
 
 class BinBlank(FoundationGridfinity):

@@ -44,6 +44,7 @@ class GridfinityWorkbench(Workbench):
         "CreateMagnetBaseplate",
         "CreateScrewTogetherBaseplate",
         "CreateLBinBlank",
+        "CreateCustomBin",
     ]
 
     def GetClassName(self) -> str:  # noqa: N802
@@ -71,6 +72,7 @@ class GridfinityWorkbench(Workbench):
             CreatePartsBin,
             CreateScrewTogetherBaseplate,
             CreateSimpleStorageBin,
+            CreateCustomBin,
         )
 
         fc.Console.PrintMessage("switching to Gridfinity Workbench\n")
@@ -88,6 +90,7 @@ class GridfinityWorkbench(Workbench):
         fcg.addCommand("CreateMagnetBaseplate", CreateMagnetBaseplate())
         fcg.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
         fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
+        fcg.addCommand("CreateCustomBin", CreateCustomBin())
 
 
 fcg.addWorkbench(GridfinityWorkbench())

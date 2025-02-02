@@ -18,6 +18,7 @@ from .features import (
     PartsBin,
     ScrewTogetherBaseplate,
     SimpleStorageBin,
+    CustomBin,
 )
 
 ICONDIR = Path(__file__).parent / "icons"
@@ -248,3 +249,12 @@ class CreateLBinBlank(BaseCommand):
     Pixmap = ICONDIR / "BetaLBinBlank.svg"
     MenuText = "Gridfinity L Shaped Blank Bin"
     ToolTip = "Create a Gridfinity L Shaped Blank Bin"
+
+
+class CreateCustomBin(BaseCommand):
+    """Create a custom bin."""
+    NAME = "CustomBin"
+    GRIDFINITY_FUNCTION = CustomBin
+    Pixmap = ICONDIR / "BetaLBinBlank.svg"
+    MenuText = "Gridfinity Custom Bin"
+    ToolTip = "Draw a custom shaped bin"
