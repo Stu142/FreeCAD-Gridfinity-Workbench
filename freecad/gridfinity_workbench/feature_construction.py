@@ -56,11 +56,10 @@ def _label_shelf_full_width(
     xtranslate = zeromm
     parts = []
     for x in range(xdiv):
-        face.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
 
         ls = face.extrude(FreeCAD.Vector(0, fw, 0))
 
-
+        ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
 
         if x == 0:
             firstls = ls
@@ -147,17 +146,6 @@ def _label_shelf_left(
 
     funcfuse = ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
 
-    y2 = obj.Clearance + obj.WallThickness
-    b_edges = []
-    for edge in funcfuse.Edges:
-        y0 = edge.Vertexes[0].Point.y
-        y1 = edge.Vertexes[1].Point.y
-        x0 = edge.Vertexes[0].Point.x
-        x1 = edge.Vertexes[1].Point.x
-
-        if y0 == y2 and y1 == y2 and x1 == y2 and x0 == y2:
-            b_edges.append(edge)
-
     left_end_fillet = _label_shelf_left_fillet(obj)
     left_end_fillet = left_end_fillet.extrude(FreeCAD.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset))
     return funcfuse.cut(left_end_fillet)
@@ -194,18 +182,6 @@ def _label_shelf_right(
         xtranslate += xcompwidth + obj.DividerThickness
 
     funcfuse = ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
-
-    y2 = obj.yTotalWidth + obj.Clearance - obj.WallThickness
-    x2 = obj.Clearance + obj.WallThickness
-    b_edges = []
-    for edge in funcfuse.Edges:
-        y0 = edge.Vertexes[0].Point.y
-        y1 = edge.Vertexes[1].Point.y
-        x0 = edge.Vertexes[0].Point.x
-        x1 = edge.Vertexes[1].Point.x
-
-        if y0 == y2 and y1 == y2 and x1 == x2 and x0 == x2:
-            b_edges.append(edge)
 
     right_end_fillet = _label_shelf_right_fillet(obj)
     right_end_fillet = right_end_fillet.translate(FreeCAD.Vector(0, obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness, 0))
@@ -1253,6 +1229,8 @@ def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
         obj.yDividers + 1
     )
 
+    stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
+
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
     ydivheight = obj.yDividerHeight if obj.yDividerHeight != 0 else obj.TotalHeight
 
@@ -1266,7 +1244,7 @@ def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
         comp = Part.makeBox(
             obj.DividerThickness,
             obj.yTotalWidth,
-            xdivheight,
+            xdivheight + stackingoffset,
             FreeCAD.Vector(
                 -obj.xGridSize / 2 + obj.Clearance + obj.DividerThickness,
                 -obj.yGridSize / 2 + obj.Clearance,
@@ -1284,7 +1262,7 @@ def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
         comp = Part.makeBox(
             obj.xTotalWidth,
             obj.DividerThickness,
-            ydivheight,
+            ydivheight + stackingoffset,
             FreeCAD.Vector(
                 -obj.xGridSize / 2 + obj.Clearance,
                 -obj.yGridSize / 2 + obj.Clearance,
@@ -1438,23 +1416,6 @@ class EcoCompartments(Feature):
         func_fuse = face.extrude(
             FreeCAD.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness)
         )
-
-        """
-        func_fuse = Utils.rounded_rectangle_extrude(
-            obj.xTotalWidth - obj.WallThickness * 2,
-            obj.yTotalWidth - obj.WallThickness * 2,
-            -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness,
-            obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness,
-            obj.BinOuterRadius - obj.WallThickness,
-        )
-        func_fuse.translate(
-            FreeCAD.Vector(
-                obj.xTotalWidth / 2 - obj.BinUnit / 2,
-                obj.yTotalWidth / 2 - obj.BinUnit / 2,
-                0,
-            ),
-        )
-        """
 
         base_offset = obj.BaseWallThickness * math.tan(math.pi / 8)
 
