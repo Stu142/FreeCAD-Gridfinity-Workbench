@@ -5,8 +5,9 @@ Contains command objects representing what should happen on a button press.
 
 from pathlib import Path
 
-import FreeCAD
 import FreeCADGui
+
+import FreeCAD
 
 from .features import (
     Baseplate,
@@ -36,19 +37,15 @@ class ViewProviderGridfinity:
         """
         # Set this object to the proxy object of the actual view provider
         obj.Proxy = self
-        self._check_attr() # required to set icon_path when reopening a bin after saving
+        self._check_attr()  # required to set icon_path when reopening a bin after saving
         self.icon_path = (
             icon_path or Path(__file__).parent / "icons" / "gridfinity_workbench_icon.svg"
         )
 
-    def _check_attr(self): # required to set icon_path when reopening a bin after saving
+    def _check_attr(self):  # required to set icon_path when reopening a bin after saving
         """Check for missing attributes."""
         if not hasattr(self, "icon_path"):
-            setattr(
-                self,
-                "icon_path",
-                Path(__file__).parent / "icons" / "gridfinity_workbench_icon.svg",
-            )
+            self.icon_path = Path(__file__).parent / "icons" / "gridfinity_workbench_icon.svg"
 
     def attach(self, vobj: FreeCADGui.ViewProviderDocumentObject) -> None:
         """Attach viewproviderdocument object to self.
@@ -66,17 +63,22 @@ class ViewProviderGridfinity:
             str: path of the icon.
 
         """
-        self._check_attr() # required to set icon_path when reopening a gridfinity object after saving
+        self._check_attr()  # required to set icon_path when reopening a gridfinity object after saving
         return self.icon_path
 
-    def dumps(self): # Needed for JSON Serialization when saving a file containing gridfinity object
-        self._check_attr() # set icon_path when reopening a gridfinity object after savin
-        return {"icon_path": self.icon_path} # ^^
+    def dumps(
+        self,
+    ):  # Needed for JSON Serialization when saving a file containing gridfinity object
+        self._check_attr()  # set icon_path when reopening a gridfinity object after savin
+        return {"icon_path": self.icon_path}  # ^^
 
-    def loads(self, state): # Needed for JSON Serialization when saving a file containing gridfinity object
-        if state and "icon_path" in state: # set icon_path when reopening a gridfinity object after savin
-            self.icon_path = state["icon_path"] # ^^
-        return None
+    def loads(
+        self, state,
+    ):  # Needed for JSON Serialization when saving a file containing gridfinity object
+        if (
+            state and "icon_path" in state
+        ):  # set icon_path when reopening a gridfinity object after savin
+            self.icon_path = state["icon_path"]  # ^^
 
 
 class BaseCommand:

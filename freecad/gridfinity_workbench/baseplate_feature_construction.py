@@ -4,18 +4,21 @@ Contains implementation to conscruct baseplate features.
 """
 
 import math
-import FreeCAD
-import Part
-from FreeCAD import Units
 from abc import abstractmethod
-from enum import Enum
-from .utils import Utils
+
+import Part
+
+import FreeCAD
+from FreeCAD import Units
+
 from . import const
+from .utils import Utils
+
 
 class Feature:
     @abstractmethod
     def Make(obj):
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 unitmm = Units.Quantity("1 mm")
@@ -24,7 +27,7 @@ zeromm = Units.Quantity("0 mm")
 
 
 def _baseplate_magnet_hole_hex(
-    obj: FreeCAD.DocumentObject, x_hole_pos: float, y_hole_pos: float
+    obj: FreeCAD.DocumentObject, x_hole_pos: float, y_hole_pos: float,
 ) -> Part.Shape:
     # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed circle radius
     radius = obj.MagnetHoleDiameter / math.sqrt(3)
@@ -84,7 +87,7 @@ def _baseplate_magnet_hole_hex(
 
 
 def _baseplate_magnet_hole_round(
-    obj: FreeCAD.DocumentObject, x_hole_pos: float, y_hole_pos: float
+    obj: FreeCAD.DocumentObject, x_hole_pos: float, y_hole_pos: float,
 ) -> Part.Shape:
     c1 = Part.makeCylinder(
         obj.MagnetHoleDiameter / 2,
@@ -183,7 +186,6 @@ class BaseplateMagnetHoles(Feature):
             obj (FreeCAD.DocumentObject): Document object.
 
         """
-
         ## Gridfinity Parameters
         obj.addProperty(
             "App::PropertyBool",
@@ -325,7 +327,7 @@ class BaseplateMagnetHoles(Feature):
                 obj.xGridSize / 2,
                 obj.yGridSize / 2,
                 0,
-            )
+            ),
         )
 
         xtranslate = zeromm
@@ -347,7 +349,13 @@ class BaseplateMagnetHoles(Feature):
             hm3 = hm2 if hm3 is None else hm3.fuse(hm2)
             xtranslate += obj.xGridSize
 
-        return hm3.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
+        return hm3.translate(
+            FreeCAD.Vector(
+                -obj.xLocationOffset,
+                -obj.yLocationOffset,
+                0,
+            ),
+        )
 
 
 class BaseplateScrewBottomChamfer(Feature):
@@ -358,8 +366,8 @@ class BaseplateScrewBottomChamfer(Feature):
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
-        """
 
+        """
         ## Gridfinity Non Standard Parameters
         obj.addProperty(
             "App::PropertyLength",
@@ -479,8 +487,9 @@ class BaseplateScrewBottomChamfer(Feature):
                 obj.xGridSize / 2 - obj.xLocationOffset,
                 obj.yGridSize / 2 - obj.yLocationOffset,
                 0,
-            )
+            ),
         )
+
 
 class BaseplateConnectionHoles(Feature):
     """Creates Baseplate Connection Holes"""
@@ -490,6 +499,7 @@ class BaseplateConnectionHoles(Feature):
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
+
         """
         ## Gridfinity Non Standard Parameters
         obj.addProperty(
@@ -578,16 +588,17 @@ class BaseplateConnectionHoles(Feature):
                 obj.xGridSize / 2 - obj.xLocationOffset,
                 obj.yGridSize / 2 - obj.yLocationOffset,
                 0,
-            )
+            ),
         )
 
 
 class BaseplateCenterCut(Feature):
     def __init__(self, obj: FreeCAD.DocumentObject):
-        """makes L layout
+        """Makes L layout
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
+
         """
         obj.addProperty(
             "App::PropertyLength",
@@ -729,7 +740,7 @@ class BaseplateCenterCut(Feature):
                 obj.xGridSize / 2 - obj.xLocationOffset,
                 obj.yGridSize / 2 - obj.yLocationOffset,
                 0,
-            )
+            ),
         )
 
 
@@ -826,14 +837,12 @@ class BaseplateBaseValues(Feature):
             obj (FreeCAD.DocumentObject): Document object.
 
         """
-
         obj.BaseProfileHeight = (
             obj.BaseProfileBottomChamfer
             + obj.BaseProfileVerticalSection
             + obj.BaseProfileTopChamfer
         )
 
-        return
 
 
 class BaseplateSolidShape(Feature):
@@ -851,6 +860,7 @@ class BaseplateSolidShape(Feature):
             obj (FreeCAD.DocumentObject): Document object.
             magnet_baseplate_default: boolean
             screw_together_baseplate_default: boolean
+
         """
         obj.addProperty(
             "App::PropertyLength",
@@ -908,6 +918,5 @@ class BaseplateSolidShape(Feature):
                 -obj.xLocationOffset,
                 -obj.yLocationOffset,
                 0,
-            )
+            ),
         )
-

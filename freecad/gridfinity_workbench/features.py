@@ -2,39 +2,38 @@
 
 from abc import abstractmethod
 
-import FreeCAD
 import Part
+
+import FreeCAD
 from FreeCAD import Units
 
 from .baseplate_feature_construction import (
-    BaseplateConnectionHoles,
-    BaseplateScrewBottomChamfer,
-    BaseplateCenterCut,
     BaseplateBaseValues,
-    BaseplateSolidShape,
+    BaseplateCenterCut,
+    BaseplateConnectionHoles,
     BaseplateMagnetHoles,
+    BaseplateScrewBottomChamfer,
+    BaseplateSolidShape,
 )
-
-from .grid_initial_layout import (
-    RectangleLayout,
-    L_Layout,
-)
-
 from .feature_construction import (
-    EcoCompartments,
-    Scoop,
     Compartments,
+    EcoCompartments,
     LabelShelf,
+    Scoop,
 )
 from .feature_construction_complex_bin import (
-    make_complex_bin_base,
+    BinBaseValues,
+    BinBottomHoles,
     BinSolidMidSection,
     BlankBinRecessedTop,
-    StackingLip,
-    BinBottomHoles,
-    BinBaseValues,
-    create_rounded_l,
     LShapeData,
+    StackingLip,
+    create_rounded_l,
+    make_complex_bin_base,
+)
+from .grid_initial_layout import (
+    L_Layout,
+    RectangleLayout,
 )
 from .utils import Utils
 from .version import __version__
@@ -89,10 +88,14 @@ class FoundationGridfinity:
     def generate_gridfinity_shape(self, fp: FreeCAD.DocumentObject) -> Part.Shape:
         """Generate the TopoShape of the object."""
 
-    def dumps(self): # Needed for JSON Serialization when saving a file containing gridfinity object
+    def dumps(
+        self,
+    ):  # Needed for JSON Serialization when saving a file containing gridfinity object
         return None
 
-    def loads(self, state): # Needed for JSON Serialization when saving a file containing gridfinity object
+    def loads(
+        self, state,
+    ):  # Needed for JSON Serialization when saving a file containing gridfinity object
         return None
 
 
@@ -137,7 +140,6 @@ class BinBlank(FoundationGridfinity):
             Part.Shape: Bin Blank shape
 
         """
-
         BinBaseValues.Make(self, obj)
 
         layout = RectangleLayout.Make(self, obj)
@@ -172,7 +174,6 @@ class BinBlank(FoundationGridfinity):
 
         fuse_total = BinSolidMidSection.Make(self, obj, bin_outside_shape)
 
-
         bin_base = make_complex_bin_base(obj, layout)
 
         fuse_total = fuse_total.fuse(bin_base)
@@ -192,7 +193,6 @@ class BinBlank(FoundationGridfinity):
 
             fuse_total = Part.Shape.cut(fuse_total, holes)
         return fuse_total
-
 
 
 class BinBase(FoundationGridfinity):
@@ -316,7 +316,6 @@ class SimpleStorageBin(FoundationGridfinity):
             Part.Shape: Storage bin shape.
 
         """
-
         BinBaseValues.Make(self, obj)
 
         layout = RectangleLayout.Make(self, obj)
@@ -419,7 +418,6 @@ class EcoBin(FoundationGridfinity):
             Part.Shape: EcoBin shape.
 
         """
-
         ## Bin Construction
 
         BinBaseValues.Make(self, obj)
@@ -478,9 +476,8 @@ class EcoBin(FoundationGridfinity):
 
         if obj.LabelShelfStyle != "Off":
             label_shelf = LabelShelf.Make(self, obj)
-            #return label_shelf# temp
+            # return label_shelf# temp
             fuse_total = fuse_total.fuse(label_shelf)
-
 
         return Part.Solid.removeSplitter(fuse_total)
 
@@ -527,7 +524,6 @@ class PartsBin(FoundationGridfinity):
             Part.Shape: Parts bin shape.
 
         """
-
         BinBaseValues.Make(self, obj)
 
         layout = RectangleLayout.Make(self, obj)
@@ -692,7 +688,6 @@ class MagnetBaseplate(FoundationGridfinity):
             Part.Shape: PartsBin Shape.
 
         """
-
         BaseplateBaseValues.Make(self, obj)
 
         layout = RectangleLayout.Make(self, obj)
@@ -846,7 +841,6 @@ class LBinBlank(FoundationGridfinity):
         ]
 
         obj.Proxy = self
-
 
         """
 
@@ -1096,7 +1090,6 @@ class LBinBlank(FoundationGridfinity):
         obj.setEditorMode("WallThickness", 2)
         """
 
-
     def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
         """Generate gridfinity L shaped bin.
 
@@ -1110,7 +1103,6 @@ class LBinBlank(FoundationGridfinity):
         BinBaseValues.Make(self, obj)
 
         layout = L_Layout.Make(self, obj)
-
 
         bin_outside_shape = create_rounded_l(
             LShapeData(
@@ -1168,7 +1160,6 @@ class LBinBlank(FoundationGridfinity):
 
         fuse_total = BinSolidMidSection.Make(self, obj, bin_outside_shape)
 
-
         bin_base = make_complex_bin_base(obj, layout)
 
         fuse_total = fuse_total.fuse(bin_base)
@@ -1222,5 +1213,3 @@ class LBinBlank(FoundationGridfinity):
 
         return fusetotal
         """
-
-

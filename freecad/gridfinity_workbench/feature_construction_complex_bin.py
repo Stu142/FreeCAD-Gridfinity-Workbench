@@ -1,15 +1,17 @@
 """Featrues for constructing a complex bin."""
 
 import math
+from abc import abstractmethod
 from dataclasses import dataclass
-import FreeCAD
+
 import Part
+
+import FreeCAD
 from FreeCAD import Units
+
+from . import const
 from .feature_construction import make_bottom_hole_shape
 from .utils import Utils
-from abc import abstractmethod
-from enum import Enum
-from . import const
 
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
@@ -20,7 +22,7 @@ GridfinityLayout = list[list[bool]]
 class Feature:
     @abstractmethod
     def Make(obj):
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 @dataclass
@@ -246,14 +248,12 @@ class BinBaseValues(Feature):
             obj (FreeCAD.DocumentObject): Document object.
 
         """
-
         obj.BaseProfileHeight = (
             obj.BaseProfileBottomChamfer
             + obj.BaseProfileVerticalSection
             + obj.BaseProfileTopChamfer
         )
 
-        return
 
 
 def make_complex_bin_base(
@@ -347,8 +347,13 @@ def make_complex_bin_base(
 
     fuse_total = b1 if obj.xMaxGrids < 2 and obj.yMaxGrids < 2 else Part.Solid.multiFuse(b1, parts)
 
-    return fuse_total.translate(FreeCAD.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset,0,))
-
+    return fuse_total.translate(
+        FreeCAD.Vector(
+            obj.xGridSize / 2 - obj.xLocationOffset,
+            obj.yGridSize / 2 - obj.yLocationOffset,
+            0,
+        ),
+    )
 
 
 class BinSolidMidSection(Feature):
@@ -357,8 +362,8 @@ class BinSolidMidSection(Feature):
     def __init__(
         self,
         obj: FreeCAD.DocumentObject,
-        default_height_units = const.HEIGHT_UNITS,
-        default_wall_thickness = const.WALL_THICKNESS,
+        default_height_units=const.HEIGHT_UNITS,
+        default_wall_thickness=const.WALL_THICKNESS,
     ):
         """Create bin solid mid section.
 
@@ -366,7 +371,6 @@ class BinSolidMidSection(Feature):
             obj (FreeCAD.DocumentObject): Document object
 
         """
-
         ## Gridfinity Standard Parameters
         obj.addProperty(
             "App::PropertyInteger",
@@ -437,7 +441,13 @@ class BinSolidMidSection(Feature):
 
         fuse_total = face.extrude(FreeCAD.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight))
 
-        return fuse_total.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
+        return fuse_total.translate(
+            FreeCAD.Vector(
+                -obj.xLocationOffset,
+                -obj.yLocationOffset,
+                0,
+            ),
+        )
 
 
 class BlankBinRecessedTop(Feature):
@@ -473,12 +483,19 @@ class BlankBinRecessedTop(Feature):
 
         fuse_total = face.extrude(FreeCAD.Vector(0, 0, -obj.RecessedTopDepth))
 
-        return fuse_total.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
+        return fuse_total.translate(
+            FreeCAD.Vector(
+                -obj.xLocationOffset,
+                -obj.yLocationOffset,
+                0,
+            ),
+        )
+
 
 class BinBottomHoles(Feature):
     """Cut into blank bin to create recessed bin top"""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, magnet_holes_default = const.MAGNET_HOLES):
+    def __init__(self, obj: FreeCAD.DocumentObject, magnet_holes_default=const.MAGNET_HOLES):
         """Create bin solid mid section.
 
         Args:
@@ -573,7 +590,6 @@ class BinBottomHoles(Feature):
             Part.Shape: Shape containing negatives of all holes.
 
         """
-
         bottom_hole_shape = make_bottom_hole_shape(obj)
 
         x_hole_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
@@ -601,13 +617,19 @@ class BinBottomHoles(Feature):
         fuse_total = Utils.copy_and_translate(hole_shape_sub_array, vec_list).translate(
             FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0),
         )
-        return fuse_total.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
+        return fuse_total.translate(
+            FreeCAD.Vector(
+                -obj.xLocationOffset,
+                -obj.yLocationOffset,
+                0,
+            ),
+        )
 
 
 class StackingLip(Feature):
     """Cut into blank bin to create recessed bin top"""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, stacking_lip_default = const.STACKING_LIP):
+    def __init__(self, obj: FreeCAD.DocumentObject, stacking_lip_default=const.STACKING_LIP):
         """Create bin solid mid section.
 
         Args:
@@ -744,4 +766,10 @@ class StackingLip(Feature):
 
         stacking_lip = Part.makeSolid(stacking_lip)
 
-        return stacking_lip.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
+        return stacking_lip.translate(
+            FreeCAD.Vector(
+                -obj.xLocationOffset,
+                -obj.yLocationOffset,
+                0,
+            ),
+        )

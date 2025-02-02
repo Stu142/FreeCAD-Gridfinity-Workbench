@@ -1,13 +1,15 @@
 """Module containing gridfinity feature constructions."""
 
 import math
-import FreeCAD
-import Part
-from FreeCAD import Units
-from .utils import Utils
 from abc import abstractmethod
-from enum import Enum
+
+import Part
+
+import FreeCAD
+from FreeCAD import Units
+
 from . import const
+from .utils import Utils
 
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
@@ -18,7 +20,7 @@ SMALL_NUMBER = 0.01
 class Feature:
     @abstractmethod
     def Make(obj):
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 def _label_shelf_full_width(
@@ -33,7 +35,6 @@ def _label_shelf_full_width(
     xtranslate = zeromm
     parts = []
     for x in range(xdiv):
-
         ls = face.extrude(FreeCAD.Vector(0, fw, 0))
 
         ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
@@ -48,17 +49,24 @@ def _label_shelf_full_width(
     funcfuse = ls if xdiv == 1 else Part.Solid.multiFuse(firstls, parts)
 
     right_end_fillet = _label_shelf_right_fillet(obj)
-    right_end_fillet = right_end_fillet.translate(FreeCAD.Vector(0, obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness, 0))
-    right_end_fillet = right_end_fillet.extrude(FreeCAD.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset))
+    right_end_fillet = right_end_fillet.translate(
+        FreeCAD.Vector(
+            0, obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness, 0,
+        ),
+    )
+    right_end_fillet = right_end_fillet.extrude(
+        FreeCAD.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
+    )
     funcfuse = funcfuse.cut(right_end_fillet)
 
     left_end_fillet = _label_shelf_left_fillet(obj)
-    left_end_fillet = left_end_fillet.extrude(FreeCAD.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset))
+    left_end_fillet = left_end_fillet.extrude(
+        FreeCAD.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
+    )
     return funcfuse.cut(left_end_fillet)
 
-
     return funcfuse
-    #return funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
+    # return funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
 
 
 def _label_shelf_center(
@@ -124,9 +132,10 @@ def _label_shelf_left(
     funcfuse = ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
 
     left_end_fillet = _label_shelf_left_fillet(obj)
-    left_end_fillet = left_end_fillet.extrude(FreeCAD.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset))
+    left_end_fillet = left_end_fillet.extrude(
+        FreeCAD.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
+    )
     return funcfuse.cut(left_end_fillet)
-
 
 
 def _label_shelf_right(
@@ -161,11 +170,15 @@ def _label_shelf_right(
     funcfuse = ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
 
     right_end_fillet = _label_shelf_right_fillet(obj)
-    right_end_fillet = right_end_fillet.translate(FreeCAD.Vector(0, obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness, 0))
-    right_end_fillet = right_end_fillet.extrude(FreeCAD.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset))
+    right_end_fillet = right_end_fillet.translate(
+        FreeCAD.Vector(
+            0, obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness, 0,
+        ),
+    )
+    right_end_fillet = right_end_fillet.extrude(
+        FreeCAD.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
+    )
     return funcfuse.cut(right_end_fillet)
-
-
 
 
 def _label_shelf_front_fillet(
@@ -173,7 +186,6 @@ def _label_shelf_front_fillet(
     shape: Part.Shape,
     stackingoffset: float,
 ) -> Part.Shape:
-
     tolabelend = (
         obj.Clearance
         + obj.StackingLipTopChamfer
@@ -202,8 +214,10 @@ def _label_shelf_front_fillet(
         h_edges,
     )
 
-def _label_shelf_left_fillet(obj: FreeCAD.DocumentObject,)-> Part.Shape:
 
+def _label_shelf_left_fillet(
+    obj: FreeCAD.DocumentObject,
+) -> Part.Shape:
     fillet_radius = obj.BinOuterRadius - obj.WallThickness
 
     # Drawing fillet shape starting bottom left corner and going clockwise
@@ -211,7 +225,9 @@ def _label_shelf_left_fillet(obj: FreeCAD.DocumentObject,)-> Part.Shape:
     l1y1 = obj.Clearance + obj.WallThickness
     l1y2 = obj.Clearance + obj.WallThickness + fillet_radius
 
-    arc1x = obj.Clearance + obj.WallThickness + fillet_radius - fillet_radius * math.sin(math.pi / 4)
+    arc1x = (
+        obj.Clearance + obj.WallThickness + fillet_radius - fillet_radius * math.sin(math.pi / 4)
+    )
     arc1y = arc1x
 
     l2x1 = l1y2
@@ -235,8 +251,9 @@ def _label_shelf_left_fillet(obj: FreeCAD.DocumentObject,)-> Part.Shape:
     return Part.Face(left_fillet_wire)
 
 
-def _label_shelf_right_fillet(obj: FreeCAD.DocumentObject,)-> Part.Shape:
-
+def _label_shelf_right_fillet(
+    obj: FreeCAD.DocumentObject,
+) -> Part.Shape:
     fillet_radius = obj.BinOuterRadius - obj.WallThickness
 
     # Drawing fillet shape starting bottom left corner and going clockwise
@@ -249,7 +266,9 @@ def _label_shelf_right_fillet(obj: FreeCAD.DocumentObject,)-> Part.Shape:
     l2x2 = l1y2
     l2y = l1y2
 
-    arc1x = obj.Clearance + obj.WallThickness + fillet_radius - fillet_radius * math.sin(math.pi / 4)
+    arc1x = (
+        obj.Clearance + obj.WallThickness + fillet_radius - fillet_radius * math.sin(math.pi / 4)
+    )
     arc1y = obj.Clearance + obj.WallThickness + fillet_radius * math.sin(math.pi / 4)
 
     l1v1 = FreeCAD.Vector(l1x, l1y1, 0)
@@ -268,16 +287,15 @@ def _label_shelf_right_fillet(obj: FreeCAD.DocumentObject,)-> Part.Shape:
     return Part.Face(right_fillet_wire)
 
 
-
-
 class LabelShelf(Feature):
     """Create Label shelf for bins"""
 
     def __init__(self, obj: FreeCAD.DocumentObject, label_style_default="Standard"):
-        """create bin compartments with the option for dividers.
+        """Create bin compartments with the option for dividers.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
+
         """
         ## Gridfinity Parameters
         obj.addProperty(
@@ -346,7 +364,6 @@ class LabelShelf(Feature):
             Part.Shape: Labelshelf 3D shape.
 
         """
-
         towall = obj.Clearance + obj.WallThickness
         tolabelend = (
             obj.Clearance
@@ -367,9 +384,6 @@ class LabelShelf(Feature):
         ycompwidth = (
             obj.yTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.yDividers
         ) / (ydiv)
-
-
-
 
         if self.bintype == "eco" and obj.TotalHeight < 15 and obj.LabelShelfStyle != "Overhang":
             obj.LabelShelfStyle = "Overhang"
@@ -421,12 +435,7 @@ class LabelShelf(Feature):
         if shelf_placement == "Right":
             funcfuse = _label_shelf_right(obj, xcompwidth, ycompwidth, face, label_shelf_height)
 
-
         funcfuse = _label_shelf_front_fillet(obj, funcfuse, stackingoffset)
-
-
-
-
 
         if label_shelf_height > obj.UsableHeight:
             ytranslate = obj.Clearance + obj.WallThickness
@@ -453,21 +462,26 @@ class LabelShelf(Feature):
                 xtranslate += xcompwidth + obj.DividerThickness
 
             funcfuse = Part.Shape.cut(funcfuse, Utils.copy_and_translate(bottomcutbox, vec_list))
-        return funcfuse.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
+        return funcfuse.translate(
+            FreeCAD.Vector(
+                -obj.xLocationOffset,
+                -obj.yLocationOffset,
+                0,
+            ),
+        )
 
 
 class Scoop(Feature):
     """Create Negative for Bin Compartments"""
 
     def __init__(self, obj: FreeCAD.DocumentObject, scoop_default=const.SCOOP):
-        """create bin compartments with the option for dividers.
+        """Create bin compartments with the option for dividers.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object
             scoop_default: default state of the scoop feature
 
         """
-
         obj.addProperty(
             "App::PropertyLength",
             "ScoopRadius",
@@ -621,7 +635,14 @@ class Scoop(Feature):
             - 0.01 * unitmm,
             b_edges,
         )
-        return fuse_total.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
+        return fuse_total.translate(
+            FreeCAD.Vector(
+                -obj.xLocationOffset,
+                -obj.yLocationOffset,
+                0,
+            ),
+        )
+
 
 def _make_compartments_no_deviders(
     obj: FreeCAD.DocumentObject,
@@ -722,9 +743,12 @@ class Compartments(Feature):
     """Create Negative for Bin Compartments"""
 
     def __init__(
-        self, obj: FreeCAD.DocumentObject, x_div_default=const.X_DIVIDERS, y_div_default=const.Y_DIVIDERS
+        self,
+        obj: FreeCAD.DocumentObject,
+        x_div_default=const.X_DIVIDERS,
+        y_div_default=const.Y_DIVIDERS,
     ):
-        """create bin compartments with the option for dividers.
+        """Create bin compartments with the option for dividers.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object
@@ -732,7 +756,6 @@ class Compartments(Feature):
             y_div_default: default value or set as input parameter
 
         """
-
         ## Gridfinity Parameters
 
         obj.addProperty(
@@ -874,7 +897,14 @@ class Compartments(Feature):
         else:
             func_fuse = _make_compartments_with_deviders(obj, func_fuse)
 
-        return func_fuse.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
+        return func_fuse.translate(
+            FreeCAD.Vector(
+                -obj.xLocationOffset,
+                -obj.yLocationOffset,
+                0,
+            ),
+        )
+
 
 def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
     """Create bottom hole shape.
@@ -996,6 +1026,7 @@ def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
         )
     return bottom_hole_shape
 
+
 def _eco_bin_cut_fillet_edges_filter(obj: FreeCAD.DocumentObject, edge: Part.Edge) -> bool:
     divfil = -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1 * unitmm
     z0 = edge.Vertexes[0].Point.z
@@ -1061,7 +1092,7 @@ def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
             obj.xGridSize / 2,
             obj.yGridSize / 2,
             0,
-        )
+        ),
     )
 
 
@@ -1073,8 +1104,8 @@ class EcoCompartments(Feature):
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
-        """
 
+        """
         ## Gridfinity Parameters
         obj.addProperty(
             "App::PropertyLength",
@@ -1196,7 +1227,7 @@ class EcoCompartments(Feature):
         face = Part.Face(bin_inside_shape)
 
         func_fuse = face.extrude(
-            FreeCAD.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness)
+            FreeCAD.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness),
         )
 
         base_offset = obj.BaseWallThickness * math.tan(math.pi / 8)
@@ -1296,7 +1327,7 @@ class EcoCompartments(Feature):
                 obj.xGridSize / 2,
                 obj.yGridSize / 2,
                 0,
-            )
+            ),
         )
 
         func_fuse = func_fuse.fuse(eco_base_cut)
@@ -1348,4 +1379,10 @@ class EcoCompartments(Feature):
                     b_edges.append(edge)
 
             func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius / 2, b_edges)
-        return func_fuse.translate(FreeCAD.Vector(-obj.xLocationOffset,-obj.yLocationOffset,0,))
+        return func_fuse.translate(
+            FreeCAD.Vector(
+                -obj.xLocationOffset,
+                -obj.yLocationOffset,
+                0,
+            ),
+        )

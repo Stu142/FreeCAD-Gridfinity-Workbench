@@ -6,8 +6,9 @@ workbench code.
 
 import math
 
-import FreeCAD
 import Part
+
+import FreeCAD
 
 
 class Utils:

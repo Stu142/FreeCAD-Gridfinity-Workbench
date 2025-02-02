@@ -1,19 +1,18 @@
+from abc import abstractmethod
+
 import FreeCAD
 
 from . import const
-
-from abc import abstractmethod
-from enum import Enum
 
 
 class Feature:
     @abstractmethod
     def Make(obj):
-        raise NotImplementedError()
+        raise NotImplementedError
+
 
 def _universal_Properties(self, obj: FreeCAD.DocumentObject) -> None:
     """Properties used by all gridfinity objects."""
-
     ## Generation Location Property
 
     obj.addProperty(
@@ -117,7 +116,6 @@ class RectangleLayout(Feature):
             "Length of the edges of the outline <br> <br> default = 2",
         ).yGridUnits = const.Y_GRID_UNITS
 
-
         ## Hidden Properties
         obj.addProperty(
             "App::PropertyBool",
@@ -138,7 +136,6 @@ class RectangleLayout(Feature):
             rectangle_layout: 2 dimentional list of feature locations
 
         """
-
         if obj.Baseplate:
             obj.xTotalWidth = obj.xGridUnits * obj.xGridSize
             obj.yTotalWidth = obj.yGridUnits * obj.yGridSize
@@ -163,16 +160,16 @@ class RectangleLayout(Feature):
         return rectangle_layout
 
 
-
 class L_Layout(Feature):
     """Creat layout matrix for L shaped Gridfinity object and add relevant properties"""
 
     def __init__(self, obj: FreeCAD.DocumentObject, baseplate_default=False):
-        """makes L layout
+        """Makes L layout
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
             baseplate_default: bool
+
         """
         _universal_Properties(self, obj)
         ## Gridfinity Parameters
@@ -242,7 +239,7 @@ class L_Layout(Feature):
         obj.setEditorMode("Baseplate", 2)
 
     def Make(self, obj: FreeCAD.DocumentObject):
-        """makes L layout
+        """Makes L layout
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
@@ -251,7 +248,6 @@ class L_Layout(Feature):
             Part.Shape: Extruded part to cut out inside of bin.
 
         """
-
         ## Calculated Parameters
 
         if obj.Baseplate:
