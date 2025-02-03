@@ -6,8 +6,9 @@ workbench code.
 
 import math
 
-import FreeCAD
 import Part
+
+import FreeCAD
 
 
 def copy_and_translate(shape: Part.Shape, vec_list: list[FreeCAD.Vector]) -> Part.Shape:
