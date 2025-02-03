@@ -10,8 +10,9 @@ import FreeCAD
 from FreeCAD import Units
 
 from . import const
+
+from . import utils
 from .feature_construction import make_bottom_hole_shape
-from .utils import Utils
 
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
@@ -135,7 +136,7 @@ def create_rounded_l(
         Part.Arc(l6v2, arc6v, l1v1),
     ]
 
-    return Utils.curve_to_wire(lines)
+    return utils.curve_to_wire(lines)
 
 
 def rounded_l_extrude(
@@ -300,7 +301,7 @@ def make_complex_bin_base(
     xtranslate = zeromm
     ytranslate = zeromm
 
-    bottom_chamfer = Utils.rounded_rectangle_chamfer(
+    bottom_chamfer = utils.rounded_rectangle_chamfer(
         x_bt_cmf_width,
         y_bt_cmf_width,
         -obj.TotalHeight,
@@ -308,7 +309,7 @@ def make_complex_bin_base(
         obj.BinBottomRadius,
     )
 
-    vertical_section = Utils.rounded_rectangle_extrude(
+    vertical_section = utils.rounded_rectangle_extrude(
         x_vert_width,
         y_vert_width,
         -obj.TotalHeight + obj.BaseProfileBottomChamfer,
@@ -317,7 +318,7 @@ def make_complex_bin_base(
     )
     assembly = Part.Shape.fuse(bottom_chamfer, vertical_section)
 
-    top_chamfer = Utils.rounded_rectangle_chamfer(
+    top_chamfer = utils.rounded_rectangle_chamfer(
         x_vert_width,
         y_vert_width,
         -obj.TotalHeight + obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection,
@@ -346,6 +347,7 @@ def make_complex_bin_base(
         xtranslate += obj.xGridSize
 
     fuse_total = b1 if obj.xMaxGrids < 2 and obj.yMaxGrids < 2 else Part.Solid.multiFuse(b1, parts)
+
 
     return fuse_total.translate(
         FreeCAD.Vector(

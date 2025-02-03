@@ -2,14 +2,12 @@
 
 import math
 from abc import abstractmethod
-
 import Part
-
 import FreeCAD
 from FreeCAD import Units
-
 from . import const
-from .utils import Utils
+from . import utils
+
 
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
@@ -461,7 +459,7 @@ class LabelShelf(Feature):
                 vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
                 xtranslate += xcompwidth + obj.DividerThickness
 
-            funcfuse = Part.Shape.cut(funcfuse, Utils.copy_and_translate(bottomcutbox, vec_list))
+            funcfuse = Part.Shape.cut(funcfuse, utils.copy_and_translate(bottomcutbox, vec_list))
         return funcfuse.translate(
             FreeCAD.Vector(
                 -obj.xLocationOffset,
@@ -613,7 +611,7 @@ class Scoop(Feature):
                     + obj.DividerThickness
                 )
 
-        funcfuse = Utils.copy_and_translate(scoop, vec_list)
+        funcfuse = utils.copy_and_translate(scoop, vec_list)
         funcfuse = funcfuse.fuse(scoopbox)
 
         b_edges = []
@@ -737,7 +735,6 @@ def _make_compartments_with_deviders(
             b_edges.append(edge)
 
     return func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
-
 
 class Compartments(Feature):
     """Create Negative for Bin Compartments"""
@@ -1026,7 +1023,6 @@ def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
         )
     return bottom_hole_shape
 
-
 def _eco_bin_cut_fillet_edges_filter(obj: FreeCAD.DocumentObject, edge: Part.Edge) -> bool:
     divfil = -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1 * unitmm
     z0 = edge.Vertexes[0].Point.z
@@ -1180,7 +1176,7 @@ class EcoCompartments(Feature):
         Args:
             obj (FreeCAD.DocumentObject): Document object.
             bin_inside_shape (Part.Wire): Profile of bin inside wall
-
+            
         Returns:
             Part.Shape: Eco bin cutout shape.
 
@@ -1200,7 +1196,7 @@ class EcoCompartments(Feature):
             FreeCAD.Console.PrintWarning(
                 "Divider Height must be equal to or greater than:  ",
             )
-
+            
             FreeCAD.Console.PrintWarning(divmin)
 
             FreeCAD.Console.PrintWarning("\n")

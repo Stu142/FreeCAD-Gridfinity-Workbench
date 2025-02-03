@@ -7,6 +7,7 @@ import Part
 import FreeCAD
 from FreeCAD import Units
 
+from . import utils
 from .baseplate_feature_construction import (
     BaseplateBaseValues,
     BaseplateCenterCut,
@@ -35,7 +36,6 @@ from .grid_initial_layout import (
     L_Layout,
     RectangleLayout,
 )
-from .utils import Utils
 from .version import __version__
 
 unitmm = Units.Quantity("1 mm")
@@ -320,7 +320,8 @@ class SimpleStorageBin(FoundationGridfinity):
 
         layout = RectangleLayout.Make(self, obj)
 
-        bin_outside_shape = Utils.create_rounded_rectangle(
+        bin_outside_shape = utils.create_rounded_rectangle(
+
             obj.xTotalWidth,
             obj.yTotalWidth,
             0,
@@ -424,7 +425,7 @@ class EcoBin(FoundationGridfinity):
 
         layout = RectangleLayout.Make(self, obj)
 
-        bin_outside_shape = Utils.create_rounded_rectangle(
+        bin_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
             obj.yTotalWidth,
             0,
@@ -438,7 +439,7 @@ class EcoBin(FoundationGridfinity):
             ),
         )
 
-        bin_inside_shape = Utils.create_rounded_rectangle(
+        bin_inside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth - obj.WallThickness * 2,
             obj.yTotalWidth - obj.WallThickness * 2,
             0,
@@ -490,7 +491,7 @@ class PartsBin(FoundationGridfinity):
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
-
+            
         """
         super().__init__(obj)
 
@@ -528,7 +529,8 @@ class PartsBin(FoundationGridfinity):
 
         layout = RectangleLayout.Make(self, obj)
 
-        bin_outside_shape = Utils.create_rounded_rectangle(
+
+        bin_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
             obj.yTotalWidth,
             0,
@@ -542,7 +544,7 @@ class PartsBin(FoundationGridfinity):
             ),
         )
 
-        bin_inside_shape = Utils.create_rounded_rectangle(
+        bin_inside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth - obj.WallThickness * 2,
             obj.yTotalWidth - obj.WallThickness * 2,
             0,
@@ -621,7 +623,8 @@ class Baseplate(FoundationGridfinity):
 
         layout = RectangleLayout.Make(self, obj)
 
-        baseplate_outside_shape = Utils.create_rounded_rectangle(
+
+        baseplate_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
             obj.yTotalWidth,
             0,
@@ -772,7 +775,8 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
 
         layout = RectangleLayout.Make(self, obj)
 
-        baseplate_outside_shape = Utils.create_rounded_rectangle(
+
+        baseplate_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.BaseThickness,

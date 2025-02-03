@@ -51,7 +51,8 @@ Select the Property view tab on the bottom right and change the values. Hit ente
 - Alternatively, download and place the files in the FreeCAD/Mod File. 
 
 # Dependencies
-- This Workbench has been verified as working on FreeCAD 0.21.1, 0.21.2 and 1.0.0
+- version 0.8.0 and up has been verified as working on FreeCAD 1.0
+- Up to version 0.7.2 has been verified as working on FreeCAD 0.21.1, 0.21.2 and 1.0.0
 
 # Contributions
 - Clone this repository
