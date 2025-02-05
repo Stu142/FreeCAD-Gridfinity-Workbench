@@ -52,3 +52,29 @@ class UtilsTest(unittest.TestCase):
         self.assertTrue(wire.isClosed)
         self.assertEqual(wire.Length, 10 * 4)
         self.assertEqual(len(wire.Edges), 4)
+
+    def test_create_rounded_rectangle_radius_1(self) -> None:
+        length, width, radius = 5, 6, 1
+        rect = utils.create_rounded_rectangle(length, width, 0, radius)
+        self.assertEqual(rect.BoundBox.XLength, length)
+        self.assertEqual(rect.BoundBox.YLength, width)
+        self.assertAlmostEqual(Part.Face(rect).Area, 29.14159265)
+
+    def test_create_rounded_rectangle_radius_2_5(self) -> None:
+        length, width, radius = 7, 8, 2.5
+        rect = utils.create_rounded_rectangle(length, width, 0, radius)
+        self.assertEqual(rect.BoundBox.XLength, length)
+        self.assertEqual(rect.BoundBox.YLength, width)
+        self.assertAlmostEqual(Part.Face(rect).Area, 50.63495408)
+
+    def test_create_rounded_rectangle_radius_0(self) -> None:
+        length, width, radius = 5, 6, 0
+        self.assertRaises(ValueError, utils.create_rounded_rectangle, length, width, 0, radius)
+
+    def test_create_rounded_rectangle_radius_equal_to_half_widhtx(self) -> None:
+        length, width, radius = 4, 6, 2
+        self.assertRaises(ValueError, utils.create_rounded_rectangle, length, width, 0, radius)
+
+    def test_create_rounded_rectangle_radius_equal_to_half_widhty(self) -> None:
+        length, width, radius = 6, 4, 2
+        self.assertRaises(ValueError, utils.create_rounded_rectangle, length, width, 0, radius)
