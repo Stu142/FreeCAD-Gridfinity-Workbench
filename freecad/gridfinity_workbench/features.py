@@ -6,6 +6,7 @@ import FreeCAD
 import Part
 from FreeCAD import Units
 
+from . import utils
 from .baseplate_feature_construction import (
     make_baseplate_connection_holes,
     make_baseplate_magnet_holes,
@@ -68,7 +69,6 @@ from .feature_construction_complex_bin import (
     make_complex_stacking_lip,
     make_l_mid_section,
 )
-from .utils import Utils
 from .version import __version__
 
 unitmm = Units.Quantity("1 mm")
@@ -464,7 +464,7 @@ class BinBlank(FoundationGridfinity):
 
         fuse_total = make_bin_base(obj)
 
-        solid_center = Utils.rounded_rectangle_extrude(
+        solid_center = utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight + obj.BaseProfileHeight,
@@ -817,7 +817,7 @@ class BinBase(FoundationGridfinity):
 
         fuse_total = make_bin_base(obj)
 
-        solid_center = Utils.rounded_rectangle_extrude(
+        solid_center = utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight + obj.BaseProfileHeight,
@@ -1349,7 +1349,7 @@ class SimpleStorageBin(FoundationGridfinity):
 
         fuse_total = make_bin_base(obj)
 
-        solid_center = Utils.rounded_rectangle_extrude(
+        solid_center = utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight + obj.BaseProfileHeight,
@@ -1820,7 +1820,7 @@ class EcoBin(FoundationGridfinity):
 
         fuse_total = make_bin_base(obj)
 
-        solid_center = Utils.rounded_rectangle_extrude(
+        solid_center = utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight + obj.BaseProfileHeight,
@@ -2358,7 +2358,7 @@ class PartsBin(FoundationGridfinity):
 
         fuse_total = make_bin_base(obj)
 
-        solid_center = Utils.rounded_rectangle_extrude(
+        solid_center = utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight + obj.BaseProfileHeight,
@@ -2611,7 +2611,7 @@ class Baseplate(FoundationGridfinity):
 
         fuse_total = make_bin_base(obj)
 
-        solid_center = Utils.rounded_rectangle_extrude(
+        solid_center = utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight,
@@ -2930,7 +2930,7 @@ class MagnetBaseplate(FoundationGridfinity):
 
         fuse_total.translate(FreeCAD.Vector(0, 0, obj.TotalHeight - obj.BaseProfileHeight))
 
-        solid_center = Utils.rounded_rectangle_extrude(
+        solid_center = utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight,
@@ -3257,7 +3257,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
 
         fuse_total.translate(FreeCAD.Vector(0, 0, obj.TotalHeight - obj.BaseProfileHeight))
 
-        solid_center = Utils.rounded_rectangle_extrude(
+        solid_center = utils.rounded_rectangle_extrude(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.TotalHeight,
