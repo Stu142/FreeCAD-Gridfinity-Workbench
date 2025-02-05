@@ -8,6 +8,7 @@ import FreeCAD
 from FreeCAD import Units
 
 from . import utils
+
 from .baseplate_feature_construction import (
     BaseplateBaseValues,
     BaseplateCenterCut,
@@ -16,7 +17,7 @@ from .baseplate_feature_construction import (
     BaseplateScrewBottomChamfer,
     BaseplateSolidShape,
 )
-from .feature_construction import (
+from .feature_construction import  (
     Compartments,
     EcoCompartments,
     LabelShelf,
@@ -144,7 +145,7 @@ class BinBlank(FoundationGridfinity):
 
         layout = RectangleLayout.Make(self, obj)
 
-        bin_outside_shape = Utils.create_rounded_rectangle(
+        bin_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
             obj.yTotalWidth,
             0,
@@ -158,7 +159,7 @@ class BinBlank(FoundationGridfinity):
             ),
         )
 
-        bin_inside_shape = Utils.create_rounded_rectangle(
+        bin_inside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth - obj.WallThickness * 2,
             obj.yTotalWidth - obj.WallThickness * 2,
             0,
@@ -223,7 +224,7 @@ class BinBase(FoundationGridfinity):
 
         layout = RectangleLayout.Make(self, obj)
 
-        bin_outside_shape = Utils.create_rounded_rectangle(
+        bin_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
             obj.yTotalWidth,
             0,
@@ -237,7 +238,7 @@ class BinBase(FoundationGridfinity):
             ),
         )
 
-        bin_inside_shape = Utils.create_rounded_rectangle(
+        bin_inside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth - obj.WallThickness * 2,
             obj.yTotalWidth - obj.WallThickness * 2,
             0,
@@ -335,7 +336,7 @@ class SimpleStorageBin(FoundationGridfinity):
             ),
         )
 
-        bin_inside_shape = Utils.create_rounded_rectangle(
+        bin_inside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth - obj.WallThickness * 2,
             obj.yTotalWidth - obj.WallThickness * 2,
             0,
@@ -491,7 +492,7 @@ class PartsBin(FoundationGridfinity):
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
-            
+
         """
         super().__init__(obj)
 
@@ -695,7 +696,7 @@ class MagnetBaseplate(FoundationGridfinity):
 
         layout = RectangleLayout.Make(self, obj)
 
-        baseplate_outside_shape = Utils.create_rounded_rectangle(
+        baseplate_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
             obj.yTotalWidth,
             -obj.MagnetHoleDepth - obj.MagnetBase,
@@ -863,22 +864,27 @@ class LBinBlank(FoundationGridfinity):
 
         bin_outside_shape = create_rounded_l(
             LShapeData(
-                obj.aTotalDimension,
-                obj.bTotalDimension,
-                obj.cTotalDimension,
-                obj.dTotalDimension,
+                obj.x1TotalDimension,
+                obj.y1TotalDimension,
+                obj.x2TotalDimension,
+                obj.y2TotalDimension,
             ),
             obj.Clearance,
             obj.Clearance,
             obj.BinOuterRadius,
         )
 
+        FreeCAD.Console.PrintMessage(layout)
+        FreeCAD.Console.PrintMessage("\n")
+
+        #return bin_outside_shape # temp
+
         bin_inside_shape = create_rounded_l(
             LShapeData(
-                obj.aTotalDimension - obj.WallThickness * 2,
-                obj.bTotalDimension - obj.WallThickness * 2,
-                obj.cTotalDimension - obj.WallThickness * 2,
-                obj.dTotalDimension,
+                obj.x1TotalDimension - obj.WallThickness * 2,
+                obj.y1TotalDimension - obj.WallThickness * 2,
+                obj.x2TotalDimension - obj.WallThickness * 2,
+                obj.y2TotalDimension,
             ),
             obj.Clearance + obj.WallThickness,
             obj.Clearance + obj.WallThickness,
@@ -905,5 +911,6 @@ class LBinBlank(FoundationGridfinity):
             holes = BinBottomHoles.Make(obj, layout)
 
             fuse_total = Part.Shape.cut(fuse_total, holes)
+
         return fuse_total
 

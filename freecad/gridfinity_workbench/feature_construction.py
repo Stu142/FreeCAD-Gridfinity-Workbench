@@ -1,7 +1,6 @@
 """Module containing gridfinity feature constructions."""
 
 import math
-from abc import abstractmethod
 import Part
 import FreeCAD
 from FreeCAD import Units
@@ -13,12 +12,6 @@ unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
 
 SMALL_NUMBER = 0.01
-
-
-class Feature:
-    @abstractmethod
-    def Make(obj):
-        raise NotImplementedError
 
 
 def _label_shelf_full_width(
@@ -244,7 +237,7 @@ def _label_shelf_left_fillet(
         Part.LineSegment(l2v1, l2v2),
     ]
 
-    left_fillet_wire = Utils.curve_to_wire(lines)
+    left_fillet_wire = utils.curve_to_wire(lines)
 
     return Part.Face(left_fillet_wire)
 
@@ -281,11 +274,11 @@ def _label_shelf_right_fillet(
         Part.Arc(l2v2, arc1v, l1v1),
     ]
 
-    right_fillet_wire = Utils.curve_to_wire(lines)
+    right_fillet_wire = utils.curve_to_wire(lines)
     return Part.Face(right_fillet_wire)
 
 
-class LabelShelf(Feature):
+class LabelShelf(utils.Feature):
     """Create Label shelf for bins"""
 
     def __init__(self, obj: FreeCAD.DocumentObject, label_style_default="Standard"):
@@ -469,7 +462,7 @@ class LabelShelf(Feature):
         )
 
 
-class Scoop(Feature):
+class Scoop(utils.Feature):
     """Create Negative for Bin Compartments"""
 
     def __init__(self, obj: FreeCAD.DocumentObject, scoop_default=const.SCOOP):
@@ -736,7 +729,7 @@ def _make_compartments_with_deviders(
 
     return func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
 
-class Compartments(Feature):
+class Compartments(utils.Feature):
     """Create Negative for Bin Compartments"""
 
     def __init__(
@@ -872,22 +865,7 @@ class Compartments(Feature):
         face = Part.Face(bin_inside_shape)
 
         func_fuse = face.extrude(FreeCAD.Vector(0, 0, -obj.UsableHeight))
-        """
-        func_fuse = Utils.rounded_rectangle_extrude(
-            obj.xTotalWidth - obj.WallThickness * 2,
-            obj.yTotalWidth - obj.WallThickness * 2,
-            -obj.UsableHeight,
-            obj.UsableHeight,
-            obj.BinOuterRadius - obj.WallThickness,
-        )
-        func_fuse.translate(
-            FreeCAD.Vector(
-                obj.xTotalWidth / 2 - obj.BinUnit / 2,
-                obj.yTotalWidth / 2 - obj.BinUnit / 2,
-                0,
-            ),
-        )
-        """
+
         if obj.xDividers == 0 and obj.yDividers == 0:
             func_fuse = _make_compartments_no_deviders(obj, func_fuse)
 
@@ -1092,7 +1070,7 @@ def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
     )
 
 
-class EcoCompartments(Feature):
+class EcoCompartments(utils.Feature):
     """Create Eco bin main cut and dividers"""
 
     def __init__(self, obj: FreeCAD.DocumentObject):
@@ -1176,7 +1154,7 @@ class EcoCompartments(Feature):
         Args:
             obj (FreeCAD.DocumentObject): Document object.
             bin_inside_shape (Part.Wire): Profile of bin inside wall
-            
+
         Returns:
             Part.Shape: Eco bin cutout shape.
 
@@ -1196,7 +1174,7 @@ class EcoCompartments(Feature):
             FreeCAD.Console.PrintWarning(
                 "Divider Height must be equal to or greater than:  ",
             )
-            
+
             FreeCAD.Console.PrintWarning(divmin)
 
             FreeCAD.Console.PrintWarning("\n")
@@ -1274,7 +1252,7 @@ class EcoCompartments(Feature):
                     obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection + base_offset
                 )
 
-        bottom_chamfer = Utils.rounded_rectangle_chamfer(
+        bottom_chamfer = utils.rounded_rectangle_chamfer(
             x_bt_cmf_width,
             y_bt_cmf_width,
             -obj.TotalHeight + obj.BaseWallThickness + magoffset,
@@ -1282,7 +1260,7 @@ class EcoCompartments(Feature):
             bt_chf_rad,
         )
 
-        vertical_section = Utils.rounded_rectangle_extrude(
+        vertical_section = utils.rounded_rectangle_extrude(
             x_vert_width,
             y_vert_width,
             -obj.TotalHeight + obj.BaseWallThickness + 0.4 * unitmm + magoffset,
@@ -1294,7 +1272,7 @@ class EcoCompartments(Feature):
             v_chf_rad,
         )
 
-        top_chamfer = Utils.rounded_rectangle_chamfer(
+        top_chamfer = utils.rounded_rectangle_chamfer(
             x_vert_width + tp_chf_offset,
             y_vert_width + tp_chf_offset,
             -obj.TotalHeight
@@ -1316,7 +1294,7 @@ class EcoCompartments(Feature):
                 ytranslate += obj.yGridSize
             xtranslate += obj.xGridSize
 
-        eco_base_cut = Utils.copy_and_translate(assembly, vec_list)
+        eco_base_cut = utils.copy_and_translate(assembly, vec_list)
 
         eco_base_cut.translate(
             FreeCAD.Vector(
@@ -1328,7 +1306,7 @@ class EcoCompartments(Feature):
 
         func_fuse = func_fuse.fuse(eco_base_cut)
 
-        outer_trim1 = Utils.rounded_rectangle_extrude(
+        outer_trim1 = utils.rounded_rectangle_extrude(
             obj.xTotalWidth - obj.WallThickness * 2,
             obj.yTotalWidth - obj.WallThickness * 2,
             -obj.TotalHeight,
@@ -1342,7 +1320,7 @@ class EcoCompartments(Feature):
             ),
         )
 
-        outer_trim2 = Utils.rounded_rectangle_extrude(
+        outer_trim2 = utils.rounded_rectangle_extrude(
             obj.xTotalWidth + 20 * unitmm,
             obj.yTotalWidth + 20 * unitmm,
             -obj.TotalHeight,

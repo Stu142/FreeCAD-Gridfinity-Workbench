@@ -4,21 +4,11 @@ Contains implementation to conscruct baseplate features.
 """
 
 import math
-from abc import abstractmethod
-
 import Part
-
 import FreeCAD
 from FreeCAD import Units
-
 from . import const
-from .utils import Utils
-
-
-class Feature:
-    @abstractmethod
-    def Make(obj):
-        raise NotImplementedError
+from . import utils
 
 
 unitmm = Units.Quantity("1 mm")
@@ -176,7 +166,7 @@ def _baseplate_magnet_hole_round(
     )
 
 
-class BaseplateMagnetHoles(Feature):
+class BaseplateMagnetHoles(utils.Feature):
     """Creates baseplate magnet holes"""
 
     def __init__(self, obj: FreeCAD.DocumentObject):
@@ -358,7 +348,7 @@ class BaseplateMagnetHoles(Feature):
         )
 
 
-class BaseplateScrewBottomChamfer(Feature):
+class BaseplateScrewBottomChamfer(utils.Feature):
     """Creates Baseplate Connection Holes"""
 
     def __init__(self, obj: FreeCAD.DocumentObject):
@@ -491,7 +481,7 @@ class BaseplateScrewBottomChamfer(Feature):
         )
 
 
-class BaseplateConnectionHoles(Feature):
+class BaseplateConnectionHoles(utils.Feature):
     """Creates Baseplate Connection Holes"""
 
     def __init__(self, obj: FreeCAD.DocumentObject):
@@ -592,7 +582,7 @@ class BaseplateConnectionHoles(Feature):
         )
 
 
-class BaseplateCenterCut(Feature):
+class BaseplateCenterCut(utils.Feature):
     def __init__(self, obj: FreeCAD.DocumentObject):
         """Makes L layout
 
@@ -714,7 +704,7 @@ class BaseplateCenterCut(Feature):
         l5 = Part.LineSegment(l4.EndPoint, mec_middle)
         l6 = Part.LineSegment(l5.EndPoint, l1.StartPoint)
 
-        wire = Utils.curve_to_wire([l1, ar1, l2, ar2, l3, ar3, l4, l5, l6])
+        wire = utils.curve_to_wire([l1, ar1, l2, ar2, l3, ar3, l4, l5, l6])
         partial_shape1 = Part.Face(wire).extrude(FreeCAD.Vector(0, 0, -obj.TotalHeight))
         partial_shape2 = partial_shape1.mirror(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(0, 1, 0))
         partial_shape3 = partial_shape1.mirror(FreeCAD.Vector(0, 0, 0), FreeCAD.Vector(1, 0, 0))
@@ -733,7 +723,7 @@ class BaseplateCenterCut(Feature):
                 ytranslate += obj.yGridSize.Value
             xtranslate += obj.xGridSize.Value
 
-        fuse_total = Utils.copy_and_translate(shape, vec_list)
+        fuse_total = utils.copy_and_translate(shape, vec_list)
 
         return fuse_total.translate(
             FreeCAD.Vector(
@@ -744,7 +734,7 @@ class BaseplateCenterCut(Feature):
         )
 
 
-class BaseplateBaseValues(Feature):
+class BaseplateBaseValues(utils.Feature):
     """Add bin base properties and calculate values"""
 
     def __init__(self, obj: FreeCAD.DocumentObject):
@@ -845,7 +835,7 @@ class BaseplateBaseValues(Feature):
 
 
 
-class BaseplateSolidShape(Feature):
+class BaseplateSolidShape(utils.Feature):
     """Creates Solid which the baseplate is cut from"""
 
     def __init__(

@@ -1,16 +1,11 @@
 """Featrues for constructing a complex bin."""
 
 import math
-from abc import abstractmethod
 from dataclasses import dataclass
-
 import Part
-
 import FreeCAD
 from FreeCAD import Units
-
 from . import const
-
 from . import utils
 from .feature_construction import make_bottom_hole_shape
 
@@ -18,12 +13,6 @@ unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
 
 GridfinityLayout = list[list[bool]]
-
-
-class Feature:
-    @abstractmethod
-    def Make(obj):
-        raise NotImplementedError
 
 
 @dataclass
@@ -40,10 +29,10 @@ class LShapeData:
          a
     """
 
-    a: float
-    b: float
-    c: float
-    d: float
+    x1: float
+    y1: float
+    x2: float
+    y2: float
 
 
 def create_rounded_l(
@@ -68,30 +57,30 @@ def create_rounded_l(
 
     l1x = xoffset
     l1y1 = yoffset + radius
-    l1y2 = yoffset + shape_data.b + shape_data.d - radius
+    l1y2 = yoffset + shape_data.y1 - radius
     arc1x = xoffset + radius - radius * math.sin(math.pi / 4)
-    arc1y = yoffset + shape_data.b + shape_data.d - radius + radius * math.sin(math.pi / 4)
+    arc1y = yoffset + shape_data.y1 - radius + radius * math.sin(math.pi / 4)
 
     l2x1 = xoffset + radius
-    l2x2 = xoffset + shape_data.c - radius
-    l2y = yoffset + shape_data.b + shape_data.d
-    arc2x = xoffset + shape_data.c - radius + radius * math.sin(math.pi / 4)
+    l2x2 = xoffset + shape_data.x2 - radius
+    l2y = yoffset + shape_data.y1
+    arc2x = xoffset + shape_data.x2 - radius + radius * math.sin(math.pi / 4)
     arc2y = arc1y
 
-    l3x = xoffset + shape_data.c
+    l3x = xoffset + shape_data.x2
     l3y1 = l1y2
-    l3y2 = yoffset + shape_data.b + radius
-    arc3x = xoffset + shape_data.c + radius - radius * math.sin(math.pi / 4)
-    arc3y = xoffset + shape_data.b + radius - radius * math.sin(math.pi / 4)
+    l3y2 = yoffset + shape_data.y2 + radius
+    arc3x = xoffset + shape_data.x2 + radius - radius * math.sin(math.pi / 4)
+    arc3y = xoffset + shape_data.y2 + radius - radius * math.sin(math.pi / 4)
 
-    l4x1 = xoffset + shape_data.c + radius
-    l4x2 = xoffset + shape_data.a - radius
-    l4y = yoffset + shape_data.b
-    arc4x = xoffset + shape_data.a - radius + radius * math.sin(math.pi / 4)
-    arc4y = yoffset + shape_data.b - radius + radius * math.sin(math.pi / 4)
+    l4x1 = xoffset + shape_data.x2 + radius
+    l4x2 = xoffset + shape_data.x1 - radius
+    l4y = yoffset + shape_data.y2
+    arc4x = xoffset + shape_data.x1 - radius + radius * math.sin(math.pi / 4)
+    arc4y = yoffset + shape_data.y2 - radius + radius * math.sin(math.pi / 4)
 
-    l5x = xoffset + shape_data.a
-    lsy1 = yoffset + shape_data.b - radius
+    l5x = xoffset + shape_data.x1
+    lsy1 = yoffset + shape_data.y2 - radius
     l5y2 = l1y1
     arc5x = arc4x
     arc5y = yoffset + radius - radius * math.sin(math.pi / 4)
@@ -164,7 +153,7 @@ def rounded_l_extrude(
     return face.extrude(FreeCAD.Vector(0, 0, height))
 
 
-class BinBaseValues(Feature):
+class BinBaseValues(utils.Feature):
     """Add bin base properties and calculate values"""
 
     def __init__(self, obj: FreeCAD.DocumentObject):
@@ -358,7 +347,7 @@ def make_complex_bin_base(
     )
 
 
-class BinSolidMidSection(Feature):
+class BinSolidMidSection(utils.Feature):
     """Generate bin mid section and add relevant properties"""
 
     def __init__(
@@ -452,7 +441,7 @@ class BinSolidMidSection(Feature):
         )
 
 
-class BlankBinRecessedTop(Feature):
+class BlankBinRecessedTop(utils.Feature):
     """Cut into blank bin to create recessed bin top"""
 
     def __init__(self, obj: FreeCAD.DocumentObject):
@@ -494,7 +483,7 @@ class BlankBinRecessedTop(Feature):
         )
 
 
-class BinBottomHoles(Feature):
+class BinBottomHoles(utils.Feature):
     """Cut into blank bin to create recessed bin top"""
 
     def __init__(self, obj: FreeCAD.DocumentObject, magnet_holes_default=const.MAGNET_HOLES):
@@ -597,7 +586,7 @@ class BinBottomHoles(Feature):
         x_hole_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
         y_hole_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
 
-        hole_shape_sub_array = Utils.copy_and_translate(
+        hole_shape_sub_array = utils.copy_and_translate(
             bottom_hole_shape,
             [
                 FreeCAD.Vector(-x_hole_pos, -y_hole_pos, -obj.TotalHeight),
@@ -616,7 +605,7 @@ class BinBottomHoles(Feature):
                 ytranslate += obj.yGridSize.Value
             xtranslate += obj.xGridSize.Value
 
-        fuse_total = Utils.copy_and_translate(hole_shape_sub_array, vec_list).translate(
+        fuse_total = utils.copy_and_translate(hole_shape_sub_array, vec_list).translate(
             FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0),
         )
         return fuse_total.translate(
@@ -628,7 +617,7 @@ class BinBottomHoles(Feature):
         )
 
 
-class StackingLip(Feature):
+class StackingLip(utils.Feature):
     """Cut into blank bin to create recessed bin top"""
 
     def __init__(self, obj: FreeCAD.DocumentObject, stacking_lip_default=const.STACKING_LIP):

@@ -5,11 +5,14 @@ workbench code.
 """
 
 import math
-
 import Part
-
 import FreeCAD
+from abc import abstractmethod
 
+class Feature:
+    @abstractmethod
+    def Make(obj):
+        raise NotImplementedError
 
 def copy_and_translate(shape: Part.Shape, vec_list: list[FreeCAD.Vector]) -> Part.Shape:
     """Copy a shape and translates.

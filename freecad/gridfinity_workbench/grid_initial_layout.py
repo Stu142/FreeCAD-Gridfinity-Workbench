@@ -176,54 +176,54 @@ class L_Layout(Feature):
 
         obj.addProperty(
             "App::PropertyInteger",
-            "aGridUnits",
+            "x1GridUnits",
             "Gridfinity",
             "Height of the extrusion",
-        ).aGridUnits = 3
+        ).x1GridUnits = 3
         obj.addProperty(
             "App::PropertyInteger",
-            "bGridUnits",
+            "y1GridUnits",
             "Gridfinity",
             "Height of the extrusion",
-        ).bGridUnits = 1
+        ).y1GridUnits = 2
         obj.addProperty(
             "App::PropertyInteger",
-            "cGridUnits",
+            "x2GridUnits",
             "Gridfinity",
             "Height of the extrusion",
-        ).cGridUnits = 1
+        ).x2GridUnits = 1
         obj.addProperty(
             "App::PropertyInteger",
-            "dGridUnits",
+            "y2GridUnits",
             "Gridfinity",
             "Height of the extrusion",
-        ).dGridUnits = 1
+        ).y2GridUnits = 1
 
         ## Reference Parameters
         obj.addProperty(
             "App::PropertyLength",
-            "aTotalDimension",
+            "x1TotalDimension",
             "ReferenceDimensions",
             "total width of a dimension",
             1,
         )
         obj.addProperty(
             "App::PropertyLength",
-            "bTotalDimension",
+            "y1TotalDimension",
             "ReferenceDimensions",
             "total width of b dimension",
             1,
         )
         obj.addProperty(
             "App::PropertyLength",
-            "cTotalDimension",
+            "x2TotalDimension",
             "ReferenceDimensions",
             "total width of c dimension",
             1,
         )
         obj.addProperty(
             "App::PropertyLength",
-            "dTotalDimension",
+            "y2TotalDimension",
             "ReferenceDimensions",
             "total width of d dimension",
             1,
@@ -251,26 +251,26 @@ class L_Layout(Feature):
         ## Calculated Parameters
 
         if obj.Baseplate:
-            obj.aTotalDimension = obj.aGridUnits * obj.xGridSize
-            obj.bTotalDimension = obj.bGridUnits * obj.yGridSize
-            obj.cTotalDimension = obj.cGridUnits * obj.xGridSize
-            obj.dTotalDimension = obj.dGridUnits * obj.yGridSize
+            obj.x1TotalDimension = obj.x1GridUnits * obj.xGridSize
+            obj.y1TotalDimension = obj.y1GridUnits * obj.yGridSize
+            obj.x2TotalDimension = obj.x2GridUnits * obj.xGridSize
+            obj.y2TotalDimension = obj.y2GridUnits * obj.yGridSize
 
-            obj.xTotalWidth = obj.aGridUnits * obj.xGridSize
-            obj.yTotalWidth = (obj.bGridUnits + obj.dGridUnits) * obj.yGridSize
+            obj.xTotalWidth = obj.x1GridUnits * obj.xGridSize
+            obj.yTotalWidth = obj.y1GridUnits * obj.yGridSize
 
         else:
-            obj.aTotalDimension = obj.aGridUnits * obj.xGridSize - obj.Clearance * 2
-            obj.bTotalDimension = obj.bGridUnits * obj.yGridSize - obj.Clearance * 2
-            obj.cTotalDimension = obj.cGridUnits * obj.xGridSize - obj.Clearance * 2
-            obj.dTotalDimension = obj.dGridUnits * obj.yGridSize
+            obj.x1TotalDimension = obj.x1GridUnits * obj.xGridSize - obj.Clearance * 2
+            obj.y1TotalDimension = obj.y1GridUnits * obj.yGridSize - obj.Clearance * 2
+            obj.x2TotalDimension = obj.x2GridUnits * obj.xGridSize - obj.Clearance * 2
+            obj.y2TotalDimension = obj.y2GridUnits * obj.yGridSize
 
-            obj.xTotalWidth = obj.aGridUnits * obj.xGridSize - obj.Clearance * 2
-            obj.yTotalWidth = (obj.bGridUnits + obj.dGridUnits) * obj.yGridSize - obj.Clearance * 2
+            obj.xTotalWidth = obj.x1GridUnits * obj.xGridSize - obj.Clearance * 2
+            obj.yTotalWidth = obj.y1GridUnits * obj.yGridSize - obj.Clearance * 2
 
-        obj.xMaxGrids = obj.aGridUnits
+        obj.xMaxGrids = obj.x1GridUnits
 
-        obj.yMaxGrids = obj.bGridUnits + obj.dGridUnits
+        obj.yMaxGrids = obj.y1GridUnits
 
         if obj.GenerationLocation == "Centered at Origin":
             obj.xLocationOffset = obj.xTotalWidth / 2
@@ -281,14 +281,14 @@ class L_Layout(Feature):
 
         ## L layout matrix creation
         layout = [
-            [False for y in range(obj.bGridUnits + obj.dGridUnits)] for x in range(obj.aGridUnits)
+            [False for y in range(obj.y1GridUnits)] for x in range(obj.x1GridUnits)
         ]
 
-        for x in range(obj.aGridUnits):
-            for y in range(obj.bGridUnits + obj.dGridUnits):
-                if x < obj.cGridUnits:
+        for x in range(obj.x1GridUnits):
+            for y in range(obj.y1GridUnits):
+                if x < obj.x2GridUnits:
                     layout[x][y] = True
-                if y < obj.bGridUnits:
+                if y < obj.y2GridUnits:
                     layout[x][y] = True
 
         return layout
