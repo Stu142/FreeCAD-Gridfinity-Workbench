@@ -23,6 +23,7 @@ except ImportError:
 
 
 ICONPATH = Path(__file__).parent / "icons"
+UIPATH = Path(__file__).parent / "ui"
 
 
 class GridfinityWorkbench(Workbench):
@@ -89,5 +90,7 @@ class GridfinityWorkbench(Workbench):
         fcg.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
         fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
 
+        FreeCADGui.addIconPath(str(ICONPATH))
+        FreeCADGui.addPreferencePage(str(UIPATH / "preferences.ui"), "Gridfinity")
 
 fcg.addWorkbench(GridfinityWorkbench())
