@@ -248,6 +248,16 @@ class L_Layout(Feature):
             Part.Shape: Extruded part to cut out inside of bin.
 
         """
+        ## Error Checking
+
+        if obj.x2GridUnits >= obj.x1GridUnits:
+            obj.x2GridUnits = obj.x1GridUnits - 1
+            FreeCAD.Console.PrintWarning("x2 Grid Units must be less than x1")
+
+        if obj.y2GridUnits >= obj.y1GridUnits:
+            obj.y2GridUnits = obj.y1GridUnits - 1
+            FreeCAD.Console.PrintWarning("y2 Grid Units must be less than y1")
+
         ## Calculated Parameters
 
         if obj.Baseplate:

@@ -176,13 +176,7 @@ class BaseplateMagnetHoles(utils.Feature):
             obj (FreeCAD.DocumentObject): Document object.
 
         """
-        ## Gridfinity Parameters
-        obj.addProperty(
-            "App::PropertyBool",
-            "MagnetHoles",
-            "Gridfinity",
-            "MagnetHoles",
-        ).MagnetHoles = const.MAGNET_HOLES
+
 
         ## Gridfinity Non Standard Parameters
 
@@ -191,8 +185,10 @@ class BaseplateMagnetHoles(utils.Feature):
             "MagnetHolesShape",
             "NonStandard",
             (
-                "Shape of magnet holes. <br> <br> Hex meant to be press fit. <br> "
-                "Round meant to be glued"
+                "Shape of magnet holes, change to suit your printers capabilities which might require testing."
+                "<br> Round press fit by default, increase to 6.5 mm if using glue"
+                "<br> <br> Hex is alternative press fit style."
+                "<br> <br> default = 6.2 mm"
             ),
         )
 
@@ -203,8 +199,10 @@ class BaseplateMagnetHoles(utils.Feature):
             "MagnetHoleDiameter",
             "NonStandard",
             (
-                "Diameter of Magnet Holes <br>For Hex holes, inscribed diameter<br> <br> "
-                "default = 6.5 mm"
+                "Diameter of Magnet Holes"
+                "<br> Round press fit by default, increase to 6.5 mm if using glue"
+                "<br> <br> Hex is alternative press fit style, inscribed diameter<br> <br>"
+                "<br> <br> default = 6.2 mm"
             ),
         ).MagnetHoleDiameter = const.MAGNET_HOLE_DIAMETER
 
@@ -233,7 +231,10 @@ class BaseplateMagnetHoles(utils.Feature):
             "App::PropertyLength",
             "MagnetBaseHole",
             "NonStandard",
-            "Diameter of the hole at the bottom of the magnet cutout <br> <br> default = 3 mm",
+            "Diameter of the hole at the bottom of the magnet cutout"
+            "<br> Set to zero to make disapear"
+
+            "<br> <br> default = 3 mm",
         ).MagnetBaseHole = const.MAGNET_BASE_HOLE
 
         obj.addProperty(
@@ -261,6 +262,15 @@ class BaseplateMagnetHoles(utils.Feature):
         ).BaseThickness = const.BASE_THICKNESS
 
         obj.setEditorMode("BaseThickness", 2)
+
+        obj.addProperty(
+            "App::PropertyBool",
+            "MagnetHoles",
+            "ShouldBeHidden",
+            "MagnetHoles",
+        ).MagnetHoles = const.MAGNET_HOLES
+
+        obj.setEditorMode("MagnetHoles", 2)
 
     def Make(obj: FreeCAD.DocumentObject) -> Part.Shape:
         """Create magentholes for a baseplate.
@@ -868,7 +878,7 @@ class BaseplateSolidShape(utils.Feature):
             "Thickness of base under the normal baseplate  profile <br> <br> default = 6.4 mm",
         ).MagnetBaseplate = magnet_baseplate_default
 
-        obj.setEditorMode("MagnetBaseplate", 1)
+        obj.setEditorMode("MagnetBaseplate", 2)
 
         obj.addProperty(
             "App::PropertyBool",
@@ -877,7 +887,7 @@ class BaseplateSolidShape(utils.Feature):
             "Thickness of base under the normal baseplate  profile <br> <br> default = 6.4 mm",
         ).ScrewTogetherBaseplate = screw_together_baseplate_default
 
-        obj.setEditorMode("ScrewTogetherBaseplate", 1)
+        obj.setEditorMode("ScrewTogetherBaseplate", 2)
 
     def Make(self, obj: FreeCAD.DocumentObject, baseplate_outside_shape):
         """Creates solid which baseplate is cut from

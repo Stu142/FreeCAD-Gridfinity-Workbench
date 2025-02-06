@@ -1,13 +1,10 @@
 """Feature modules contain bins an baseplate objects."""
 
-from abc import abstractmethod
-
 import Part
-
 import FreeCAD
 from FreeCAD import Units
-
 from . import utils
+from abc import abstractmethod
 
 from .baseplate_feature_construction import (
     BaseplateBaseValues,
@@ -22,17 +19,14 @@ from .feature_construction import  (
     EcoCompartments,
     LabelShelf,
     Scoop,
-)
-from .feature_construction_complex_bin import (
     BinBaseValues,
     BinBottomHoles,
     BinSolidMidSection,
     BlankBinRecessedTop,
-    LShapeData,
     StackingLip,
-    create_rounded_l,
     make_complex_bin_base,
 )
+
 from .grid_initial_layout import (
     L_Layout,
     RectangleLayout,
@@ -862,8 +856,8 @@ class LBinBlank(FoundationGridfinity):
         layout = L_Layout.Make(self, obj)
 
 
-        bin_outside_shape = create_rounded_l(
-            LShapeData(
+        bin_outside_shape = utils.create_rounded_l(
+            utils.LShapeData(
                 obj.x1TotalDimension,
                 obj.y1TotalDimension,
                 obj.x2TotalDimension,
@@ -874,13 +868,8 @@ class LBinBlank(FoundationGridfinity):
             obj.BinOuterRadius,
         )
 
-        FreeCAD.Console.PrintMessage(layout)
-        FreeCAD.Console.PrintMessage("\n")
-
-        #return bin_outside_shape # temp
-
-        bin_inside_shape = create_rounded_l(
-            LShapeData(
+        bin_inside_shape = utils.create_rounded_l(
+            utils.LShapeData(
                 obj.x1TotalDimension - obj.WallThickness * 2,
                 obj.y1TotalDimension - obj.WallThickness * 2,
                 obj.x2TotalDimension - obj.WallThickness * 2,
