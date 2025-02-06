@@ -1,17 +1,9 @@
-from abc import abstractmethod
-
 import FreeCAD
 
-from . import const
+from . import const, utils
 
 
-class Feature:
-    @abstractmethod
-    def Make(obj):
-        raise NotImplementedError
-
-
-def _universal_Properties(self, obj: FreeCAD.DocumentObject) -> None:
+def _universal_properties(obj: FreeCAD.DocumentObject) -> None:
     """Properties used by all gridfinity objects."""
     ## Generation Location Property
 
@@ -19,7 +11,7 @@ def _universal_Properties(self, obj: FreeCAD.DocumentObject) -> None:
         "App::PropertyEnumeration",
         "GenerationLocation",
         "Gridfinity",
-        "Choose to turn the label shelf on or off",
+        "Location of the bin. Change depending on how you want to customize",
     )
 
     obj.GenerationLocation = ["Positive from Origin", "Centered at Origin"]
@@ -27,16 +19,16 @@ def _universal_Properties(self, obj: FreeCAD.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyLength",
         "xLocationOffset",
-        "Hidden",
-        "Length of the edges of the outline <br> <br> default = 2",
+        "ShouldBeHidden",
+        "changing bin location in the x direction",
     )
     obj.setEditorMode("xLocationOffset", 2)
 
     obj.addProperty(
         "App::PropertyLength",
         "yLocationOffset",
-        "Hidden",
-        "Length of the edges of the outline <br> <br> default = 2",
+        "ShouldBeHidden",
+        "changing bin location in the y direction",
     )
     obj.setEditorMode("yLocationOffset", 2)
 
@@ -61,7 +53,7 @@ def _universal_Properties(self, obj: FreeCAD.DocumentObject) -> None:
         "App::PropertyInteger",
         "xMaxGrids",
         "ReferenceParameters",
-        "Overall largest number of grids in x direction",
+        "Overall number of grids in x direction",
         1,
     )
 
@@ -69,7 +61,7 @@ def _universal_Properties(self, obj: FreeCAD.DocumentObject) -> None:
         "App::PropertyInteger",
         "yMaxGrids",
         "ReferenceParameters",
-        "Overall largest number of grids in y direction",
+        "Overall number of grids in y direction",
         1,
     )
     ## Expert Parameters
@@ -78,55 +70,56 @@ def _universal_Properties(self, obj: FreeCAD.DocumentObject) -> None:
         "App::PropertyLength",
         "xGridSize",
         "zzExpertOnly",
-        "Size of the grid in x direction <br> <br> default = 42 mm",
+        "Size of each grid in x direction <br> <br> default = 42 mm",
     ).xGridSize = const.X_GRID_SIZE
 
     obj.addProperty(
         "App::PropertyLength",
         "yGridSize",
         "zzExpertOnly",
-        "Size of the grid in y direction <br> <br> default = 42 mm",
+        "Size of each grid in y direction <br> <br> default = 42 mm",
     ).yGridSize = const.Y_GRID_SIZE
 
 
-class RectangleLayout(Feature):
-    """Creat layout for rectanlge shaped Gridfinity object and add relevant properties"""
+class RectangleLayout(utils.Feature):
+    """Create layout for rectanlge shaped Gridfinity object and add relevant properties."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, baseplate_default=False):
+    def __init__(self, obj: FreeCAD.DocumentObject, baseplate_default=False) -> None:
         """Create Rectangle Layout.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object
+            baseplate_default (Bool): is Gridfinity Object baseplate
 
         """
-        _universal_Properties(self, obj)
+        _universal_properties(obj)
 
         ## Standard Gridfinity Parameters
         obj.addProperty(
             "App::PropertyInteger",
             "xGridUnits",
             "Gridfinity",
-            "Length of the edges of the outline <br> <br> default = 2",
+            "Number of grid units in the x direction <br> <br> default = 2",
         ).xGridUnits = const.X_GRID_UNITS
 
         obj.addProperty(
             "App::PropertyInteger",
             "yGridUnits",
             "Gridfinity",
-            "Length of the edges of the outline <br> <br> default = 2",
+            "Number of grid units in the y direction <br> <br> default = 2",
         ).yGridUnits = const.Y_GRID_UNITS
 
         ## Hidden Properties
         obj.addProperty(
             "App::PropertyBool",
             "Baseplate",
-            "Flags",
+            "ShouldBeHidden",
             "Is the Gridfinity Object a baseplate",
         ).Baseplate = baseplate_default
 
         obj.setEditorMode("Baseplate", 2)
 
-    def Make(self, obj: FreeCAD.DocumentObject):
+    def make(self, obj: FreeCAD.DocumentObject) -> None:
         """Generate Rectanble layout and calculate relevant parameters.
 
         Args:
@@ -155,48 +148,46 @@ class RectangleLayout(Feature):
             obj.xLocationOffset = 0
             obj.yLocationOffset = 0
 
-        rectangle_layout = [[True for y in range(obj.yGridUnits)] for x in range(obj.xGridUnits)]
-
-        return rectangle_layout
+        return [[True for y in range(obj.yGridUnits)] for x in range(obj.xGridUnits)]
 
 
-class L_Layout(Feature):
-    """Creat layout matrix for L shaped Gridfinity object and add relevant properties"""
+class L_Layout(utils.Feature):
+    """Creat layout matrix for L shaped Gridfinity object and add relevant properties."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, baseplate_default=False):
-        """Makes L layout
+    def __init__(self, obj: FreeCAD.DocumentObject, baseplate_default=False) -> None:
+        """Make L layout.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
             baseplate_default: bool
 
         """
-        _universal_Properties(self, obj)
+        _universal_properties(obj)
         ## Gridfinity Parameters
 
         obj.addProperty(
             "App::PropertyInteger",
             "x1GridUnits",
             "Gridfinity",
-            "Height of the extrusion",
+            "Overall grid units in the x direction",
         ).x1GridUnits = 3
         obj.addProperty(
             "App::PropertyInteger",
             "y1GridUnits",
             "Gridfinity",
-            "Height of the extrusion",
+            "Overall grid units in the y direction",
         ).y1GridUnits = 2
         obj.addProperty(
             "App::PropertyInteger",
             "x2GridUnits",
             "Gridfinity",
-            "Height of the extrusion",
+            "Grid units of L part in the x direction",
         ).x2GridUnits = 1
         obj.addProperty(
             "App::PropertyInteger",
             "y2GridUnits",
             "Gridfinity",
-            "Height of the extrusion",
+            "Grid units of L part in the y direction",
         ).y2GridUnits = 1
 
         ## Reference Parameters
@@ -204,28 +195,28 @@ class L_Layout(Feature):
             "App::PropertyLength",
             "x1TotalDimension",
             "ReferenceDimensions",
-            "total width of a dimension",
+            "total dimension of the gridfintiy object in the x direction",
             1,
         )
         obj.addProperty(
             "App::PropertyLength",
             "y1TotalDimension",
             "ReferenceDimensions",
-            "total width of b dimension",
+            "total dimension of the gridfintiy object in the y direction",
             1,
         )
         obj.addProperty(
             "App::PropertyLength",
             "x2TotalDimension",
             "ReferenceDimensions",
-            "total width of c dimension",
+            "total width of the L part in the x direction",
             1,
         )
         obj.addProperty(
             "App::PropertyLength",
             "y2TotalDimension",
             "ReferenceDimensions",
-            "total width of d dimension",
+            "total width of the L part in the y direction",
             1,
         )
         ## Hidden Properties
@@ -238,8 +229,8 @@ class L_Layout(Feature):
 
         obj.setEditorMode("Baseplate", 2)
 
-    def Make(self, obj: FreeCAD.DocumentObject):
-        """Makes L layout
+    def make(self, obj: FreeCAD.DocumentObject) -> None:
+        """Make L layout.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
@@ -290,9 +281,7 @@ class L_Layout(Feature):
             obj.yLocationOffset = 0
 
         ## L layout matrix creation
-        layout = [
-            [False for y in range(obj.y1GridUnits)] for x in range(obj.x1GridUnits)
-        ]
+        layout = [[False for y in range(obj.y1GridUnits)] for x in range(obj.x1GridUnits)]
 
         for x in range(obj.x1GridUnits):
             for y in range(obj.y1GridUnits):

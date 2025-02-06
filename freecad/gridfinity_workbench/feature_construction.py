@@ -1,12 +1,13 @@
 """Module containing gridfinity feature constructions."""
 
 import math
+
 import Part
+
 import FreeCAD
 from FreeCAD import Units
-from . import const
-from . import utils
 
+from . import const, utils
 
 unitmm = Units.Quantity("1 mm")
 zeromm = Units.Quantity("0 mm")
@@ -44,7 +45,9 @@ def _label_shelf_full_width(
     right_end_fillet = _label_shelf_right_fillet(obj)
     right_end_fillet = right_end_fillet.translate(
         FreeCAD.Vector(
-            0, obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness, 0,
+            0,
+            obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness,
+            0,
         ),
     )
     right_end_fillet = right_end_fillet.extrude(
@@ -59,7 +62,6 @@ def _label_shelf_full_width(
     return funcfuse.cut(left_end_fillet)
 
     return funcfuse
-    # return funcfuse.makeFillet(obj.BinOuterRadius - obj.WallThickness, b_edges)
 
 
 def _label_shelf_center(
@@ -165,7 +167,9 @@ def _label_shelf_right(
     right_end_fillet = _label_shelf_right_fillet(obj)
     right_end_fillet = right_end_fillet.translate(
         FreeCAD.Vector(
-            0, obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness, 0,
+            0,
+            obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness,
+            0,
         ),
     )
     right_end_fillet = right_end_fillet.extrude(
@@ -281,13 +285,14 @@ def _label_shelf_right_fillet(
 
 
 class LabelShelf(utils.Feature):
-    """Create Label shelf for bins"""
+    """Create Label shelf for bins."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, label_style_default="Standard"):
+    def __init__(self, obj: FreeCAD.DocumentObject, label_style_default="Standard") -> None:
         """Create bin compartments with the option for dividers.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
+            label_style_default (Enum): list of label shelf styles
 
         """
         ## Gridfinity Parameters
@@ -295,7 +300,7 @@ class LabelShelf(utils.Feature):
             "App::PropertyEnumeration",
             "LabelShelfStyle",
             "Gridfinity",
-            "Choose to turn the label shelf on or off",
+            "Choose to have the label shelf Off or a Standard or Overhang style",
         )
 
         obj.LabelShelfStyle = ["Off", "Standard", "Overhang"]
@@ -305,7 +310,7 @@ class LabelShelf(utils.Feature):
             "App::PropertyEnumeration",
             "LabelShelfPlacement",
             "Gridfinity",
-            "Choose the style of the label shelf",
+            "Choose the Placement of the label shelf for each compartement",
         )
 
         obj.LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
@@ -315,14 +320,15 @@ class LabelShelf(utils.Feature):
             "App::PropertyLength",
             "LabelShelfWidth",
             "GridfinityNonStandard",
-            "Thickness of the Label Shelf <br> <br> default = 12 mm",
+            "Width of the Label Shelf, how far it sticks out from the wall"
+            " <br> <br> default = 12 mm",
         ).LabelShelfWidth = const.LABEL_SHELF_WIDTH
 
         obj.addProperty(
             "App::PropertyLength",
             "LabelShelfLength",
             "GridfinityNonStandard",
-            "Length of the Label Shelf <br> <br> default = 42 mm",
+            "Length of the Label Shelf, how long it is <br> <br> default = 42 mm",
         ).LabelShelfLength = const.LABEL_SHELF_LENGTH
 
         obj.addProperty(
@@ -337,7 +343,8 @@ class LabelShelf(utils.Feature):
             "App::PropertyLength",
             "LabelShelfStackingOffset",
             "zzExpertOnly",
-            "Vertical Thickness of the Label Shelf <br> <br> default = 0.4 mm",
+            "label shelf height decreased when stacking lip is enabled so bin above does not sit"
+            "uneven with one end on the label shelf <br> <br> default = 0.4 mm",
         ).LabelShelfStackingOffset = const.LABEL_SHELF_STACKING_OFFSET
 
         obj.addProperty(
@@ -347,7 +354,7 @@ class LabelShelf(utils.Feature):
             "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
         ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
 
-    def Make(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
+    def make(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
         """Create label shelf.
 
         Args:
@@ -465,9 +472,9 @@ class LabelShelf(utils.Feature):
 
 
 class Scoop(utils.Feature):
-    """Create Negative for Bin Compartments"""
+    """Create Negative for Bin Compartments."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, scoop_default=const.SCOOP):
+    def __init__(self, obj: FreeCAD.DocumentObject, scoop_default=const.SCOOP) -> None:
         """Create bin compartments with the option for dividers.
 
         Args:
@@ -489,7 +496,7 @@ class Scoop(utils.Feature):
             "Toggle the Scoop fillet on or off",
         ).Scoop = scoop_default
 
-    def Make(obj: FreeCAD.DocumentObject) -> Part.Shape:
+    def make(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
         """Create scoop feature.
 
         Args:
@@ -642,12 +649,6 @@ def _make_compartments_no_deviders(
     func_fuse: Part.Shape,
 ) -> Part.Shape:
     # Fillet Bottom edges
-    # b_edges = []
-    # for edge in func_fuse.Edges:
-    # z0 = edge.Vertexes[0].Point.z
-    # z1 = edge.Vertexes[1].Point.z
-
-    # Fillet Bottom edges
     b_edges = []
     for edge in func_fuse.Edges:
         z0 = edge.Vertexes[0].Point.z
@@ -731,15 +732,16 @@ def _make_compartments_with_deviders(
 
     return func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
 
+
 class Compartments(utils.Feature):
-    """Create Negative for Bin Compartments"""
+    """Create Negative for Bin Compartments."""
 
     def __init__(
         self,
         obj: FreeCAD.DocumentObject,
         x_div_default=const.X_DIVIDERS,
         y_div_default=const.Y_DIVIDERS,
-    ):
+    ) -> None:
         """Create bin compartments with the option for dividers.
 
         Args:
@@ -754,14 +756,14 @@ class Compartments(utils.Feature):
             "App::PropertyInteger",
             "xDividers",
             "Gridfinity",
-            "Select the Number of Dividers in the x direction",
+            "Number of Dividers in the x direction",
         ).xDividers = x_div_default
 
         obj.addProperty(
             "App::PropertyInteger",
             "yDividers",
             "Gridfinity",
-            "Select the number of Dividers in the y direction",
+            "Number of Dividers in the y direction",
         ).yDividers = y_div_default
 
         ## Gridfinity Non Standard Parameters
@@ -777,8 +779,8 @@ class Compartments(utils.Feature):
             "DividerThickness",
             "GridfinityNonStandard",
             (
-                "Thickness of the dividers, ideally an even multiple of layer width <br> <br> "
-                "default = 1.2 mm"
+                "Thickness of the dividers, ideally an even multiple of printer layer width"
+                "<br> <br> default = 1.2 mm"
             ),
         ).DividerThickness = const.DIVIDER_THICKNESS
 
@@ -808,7 +810,7 @@ class Compartments(utils.Feature):
             1,
         )
 
-    def Make(obj: FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
+    def make(self, obj: FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
         """Create compartment cutout objects.
 
         Args:
@@ -1003,6 +1005,7 @@ def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
         )
     return bottom_hole_shape
 
+
 def _eco_bin_cut_fillet_edges_filter(obj: FreeCAD.DocumentObject, edge: Part.Edge) -> bool:
     divfil = -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1 * unitmm
     z0 = edge.Vertexes[0].Point.z
@@ -1073,10 +1076,10 @@ def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
 
 
 class EcoCompartments(utils.Feature):
-    """Create Eco bin main cut and dividers"""
+    """Create Eco bin main cut and dividers."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject):
-        """Create Eco bin dividers
+    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+        """Create Eco bin dividers.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
@@ -1087,21 +1090,21 @@ class EcoCompartments(utils.Feature):
             "App::PropertyLength",
             "BaseWallThickness",
             "Gridfinity",
-            "The thickness of the bin at the base",
+            "Wall thickness of the bin base",
         ).BaseWallThickness = const.BASE_WALL_THICKNESS
 
         obj.addProperty(
             "App::PropertyInteger",
             "xDividers",
             "Gridfinity",
-            "Select the Number of Dividers in the x direction",
+            "Number of Dividers in the x direction",
         ).xDividers = const.ECO_X_DIVIDERS
 
         obj.addProperty(
             "App::PropertyInteger",
             "yDividers",
             "Gridfinity",
-            "Select the number of Dividers in the y direction",
+            "Number of Dividers in the y direction",
         ).yDividers = const.ECO_Y_DIVIDERS
 
         ## Gridfinity Non Standard Parameters
@@ -1150,11 +1153,17 @@ class EcoCompartments(utils.Feature):
         ## Hidden Parameters
         obj.setEditorMode("ScrewHoles", 2)
 
-    def Make(obj: FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
+    def make(
+        self,
+        obj: FreeCAD.DocumentObject,
+        layout: GridfinityLayout,
+        bin_inside_shape,
+    ) -> Part.Shape:
         """Create eco bin cutouts.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
+            layout (GridfinityLayout): 2 dimentional list of feature locations.
             bin_inside_shape (Part.Wire): Profile of bin inside wall
 
         Returns:
@@ -1289,10 +1298,11 @@ class EcoCompartments(utils.Feature):
 
         xtranslate, ytranslate = zeromm, zeromm
         vec_list = []
-        for _ in range(obj.xMaxGrids):
+        for x in range(obj.xMaxGrids):
             ytranslate = zeromm
-            for _ in range(obj.yMaxGrids):
-                vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
+            for y in range(obj.yMaxGrids):
+                if layout[x][y]:
+                    vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
                 ytranslate += obj.yGridSize
             xtranslate += obj.xGridSize
 
@@ -1363,10 +1373,11 @@ class EcoCompartments(utils.Feature):
             ),
         )
 
-class BinBaseValues(utils.Feature):
-    """Add bin base properties and calculate values"""
 
-    def __init__(self, obj: FreeCAD.DocumentObject):
+class BinBaseValues(utils.Feature):
+    """Add bin base properties and calculate values."""
+
+    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
         """Create BinBaseValues.
 
         Args:
@@ -1378,7 +1389,7 @@ class BinBaseValues(utils.Feature):
             "App::PropertyLength",
             "BaseProfileHeight",
             "ReferenceParameters",
-            "Height of the Gridfinity Base Profile",
+            "Height of the Gridfinity Base Profile, bottom of the bin",
             1,
         )
 
@@ -1436,12 +1447,13 @@ class BinBaseValues(utils.Feature):
             "Clearance",
             "zzExpertOnly",
             (
-                "The tolerance on each side of a bin between before the edge of the grid <br> <br>"
+                "The clearance on each side of a bin between before the edge of the grid,"
+                "gives some clearance between bins <br> <br>"
                 "default = 0.25 mm"
             ),
         ).Clearance = const.CLEARANCE
 
-    def Make(self, obj: FreeCAD.DocumentObject) -> None:
+    def make(self, obj: FreeCAD.DocumentObject) -> None:
         """Generate Rectanble layout and calculate relevant parameters.
 
         Args:
@@ -1453,6 +1465,7 @@ class BinBaseValues(utils.Feature):
             + obj.BaseProfileVerticalSection
             + obj.BaseProfileTopChamfer
         )
+
 
 def make_complex_bin_base(
     obj: FreeCAD.DocumentObject,
@@ -1545,7 +1558,6 @@ def make_complex_bin_base(
 
     fuse_total = b1 if obj.xMaxGrids < 2 and obj.yMaxGrids < 2 else Part.Solid.multiFuse(b1, parts)
 
-
     return fuse_total.translate(
         FreeCAD.Vector(
             obj.xGridSize / 2 - obj.xLocationOffset,
@@ -1554,10 +1566,11 @@ def make_complex_bin_base(
         ),
     )
 
-class BlankBinRecessedTop(utils.Feature):
-    """Cut into blank bin to create recessed bin top"""
 
-    def __init__(self, obj: FreeCAD.DocumentObject):
+class BlankBinRecessedTop(utils.Feature):
+    """Cut into blank bin to create recessed bin top."""
+
+    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
         """Create blank bin recessed top section.
 
         Args:
@@ -1572,7 +1585,7 @@ class BlankBinRecessedTop(utils.Feature):
             "height per unit <br> <br> default = 0 mm",
         ).RecessedTopDepth = const.RECESSED_TOP_DEPTH
 
-    def Make(obj: FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
+    def make(self, obj: FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
         """Generate Rectanble layout and calculate relevant parameters.
 
         Args:
@@ -1597,9 +1610,13 @@ class BlankBinRecessedTop(utils.Feature):
 
 
 class BinBottomHoles(utils.Feature):
-    """Cut into blank bin to create recessed bin top"""
+    """Cut into blank bin to create recessed bin top."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, magnet_holes_default=const.MAGNET_HOLES):
+    def __init__(
+        self,
+        obj: FreeCAD.DocumentObject,
+        magnet_holes_default=const.MAGNET_HOLES,
+    ) -> None:
         """Create bin solid mid section.
 
         Args:
@@ -1626,7 +1643,8 @@ class BinBottomHoles(utils.Feature):
             "App::PropertyLength",
             "SequentialBridgingLayerHeight",
             "GridfinityNonStandard",
-            "Layer Height that you print in for optimal print results",
+            "Layer Height that you print in for optimal print results,"
+            "used for  screw holes bridging with magnet holes also on",
         ).SequentialBridgingLayerHeight = const.SEQUENTIAL_BRIDGING_LAYER_HEIGHT
 
         obj.addProperty(
@@ -1634,7 +1652,8 @@ class BinBottomHoles(utils.Feature):
             "MagnetHolesShape",
             "GridfinityNonStandard",
             (
-                "Shape of magnet holes, change to suit your printers capabilities which might require testing."
+                "Shape of magnet holes, change to suit your printers capabilities"
+                "which might require testing."
                 "<br> Round press fit by default, increase to 6.5 mm if using glue"
                 "<br> <br> Hex is alternative press fit style."
                 "<br> <br> default = 6.2 mm"
@@ -1665,7 +1684,8 @@ class BinBottomHoles(utils.Feature):
             "App::PropertyLength",
             "ScrewHoleDiameter",
             "GridfinityNonStandard",
-            "Diameter of Screw Holes <br> <br> default = 3.0 mm",
+            "Diameter of Screw Holes, used to put screws in bin to secure in place"
+            "<br> <br> default = 3.0 mm",
         ).ScrewHoleDiameter = const.SCREW_HOLE_DIAMETER
 
         obj.addProperty(
@@ -1684,7 +1704,8 @@ class BinBottomHoles(utils.Feature):
             1,
         ).MagnetHoleDistanceFromEdge = const.MAGNET_HOLE_DISTANCE_FROM_EDGE
 
-    def Make(
+    def make(
+        self,
         obj: FreeCAD.DocumentObject,
         layout: GridfinityLayout,
     ) -> Part.Shape:
@@ -1733,11 +1754,16 @@ class BinBottomHoles(utils.Feature):
             ),
         )
 
-class StackingLip(utils.Feature):
-    """Cut into blank bin to create recessed bin top"""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, stacking_lip_default=const.STACKING_LIP):
-        """Create bin solid mid section.
+class StackingLip(utils.Feature):
+    """Create bin stacking lip."""
+
+    def __init__(
+        self,
+        obj: FreeCAD.DocumentObject,
+        stacking_lip_default=const.STACKING_LIP,
+    ) -> None:
+        """Create bin stacking lip.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object
@@ -1784,7 +1810,7 @@ class StackingLip(utils.Feature):
             1,
         ).StackingLipVerticalSection = const.STACKING_LIP_VERTICAL_SECTION
 
-    def Make(obj: FreeCAD.DocumentObject, bin_outside_shape) -> Part.Shape:
+    def make(self, obj: FreeCAD.DocumentObject, bin_outside_shape) -> Part.Shape:
         """Create stacking lip based on input bin shape.
 
         Args:
@@ -1881,16 +1907,17 @@ class StackingLip(utils.Feature):
             ),
         )
 
+
 class BinSolidMidSection(utils.Feature):
-    """Generate bin mid section and add relevant properties"""
+    """Generate bin mid section and add relevant properties."""
 
     def __init__(
         self,
         obj: FreeCAD.DocumentObject,
         default_height_units=const.HEIGHT_UNITS,
         default_wall_thickness=const.WALL_THICKNESS,
-    ):
-        """Create bin solid mid section.
+    ) -> None:
+        """Create bin solid mid section and add properties.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object
@@ -1943,7 +1970,7 @@ class BinSolidMidSection(utils.Feature):
             1,
         ).HeightUnitValue = const.HEIGHT_UNIT_VALUE
 
-    def Make(self, obj: FreeCAD.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
+    def make(self, obj: FreeCAD.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
         """Generate bin solid mid section.
 
         Args:

@@ -22,9 +22,6 @@ HOLE_SHAPES = ["Round", "Hex"]
 
 ## Bins
 # General Bin Parameters
-HEIGHT_UNIT = (
-    7  # leaving for teporary compatability. replacing due to naming confusion with other parameters
-)
 HEIGHT_UNITS = 6
 HEIGHT_UNIT_VALUE = 7
 WALL_THICKNESS = 1
@@ -39,8 +36,6 @@ BIN_BASE_TOP_CHAMFER = 2.15
 BIN_OUTER_RADIUS = 3.75
 BIN_BASE_VERTICAL_RADIUS = 1.6
 BIN_BASE_BOTTOM_RADIUS = 0.8
-
-# BIN_UNIT = GRID_SIZE - CLEARANCE * 2
 
 STACKING_LIP = True
 STACKING_LIP_TOP_LEDGE = 0.4
@@ -106,5 +101,5 @@ MAGNET_CHAMFER = 0.4
 
 # Screw Together Baseplate Specific
 CONNECTION_HOLE_DIAMETER = 3.2
-MAGNET_BOTTOM_CHAMFER = 2
+MAGNET_BOTTOM_CHAMFER = 3
 BASE_THICKNESS = 6.4

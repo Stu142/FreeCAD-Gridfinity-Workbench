@@ -5,15 +5,22 @@ workbench code.
 """
 
 import math
-import Part
-import FreeCAD
 from abc import abstractmethod
 from dataclasses import dataclass
 
+import Part
+
+import FreeCAD
+
+
 class Feature:
+    """Gloabal feature class."""
+
     @abstractmethod
-    def Make(obj):
+    def make(self, obj: FreeCAD.DocumentObject) -> None:
+        """Make a Gridfinity Feature."""
         raise NotImplementedError
+
 
 def copy_and_translate(shape: Part.Shape, vec_list: list[FreeCAD.Vector]) -> Part.Shape:
     """Copy a shape and translates.
@@ -182,6 +189,7 @@ def rounded_rectangle_extrude(
     face = Part.Face(w1)
     return face.extrude(FreeCAD.Vector(0, 0, height))
 
+
 @dataclass
 class LShapeData:
     """Data class containing information regarding a L shape.
@@ -200,6 +208,7 @@ class LShapeData:
     y1: float
     x2: float
     y2: float
+
 
 def create_rounded_l(
     shape_data: LShapeData,
