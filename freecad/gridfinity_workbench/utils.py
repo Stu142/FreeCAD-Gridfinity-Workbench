@@ -58,7 +58,7 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[FreeCAD.Vector]) -> Par
 
 
 def curve_to_wire(list_of_items: list[Part.LineSegment]) -> Part.Wire:
-    """Make a wire from cuvers (line,linesegment,arc,ect).
+    """Make a wire from curves (line,linesegment,arc,ect).
 
     This function accepts all curves and makes it into a wire. Note that the wire should be
     closed.
@@ -70,6 +70,10 @@ def curve_to_wire(list_of_items: list[Part.LineSegment]) -> Part.Wire:
         Part.Wire: The created wire
 
     """
+    if not list_of_items:
+        msg = "List is empty"
+        raise ValueError(msg)
+
     return Part.Wire([item.toShape() for item in list_of_items])
 
 
@@ -91,6 +95,13 @@ def create_rounded_rectangle(
         Part.Wire: Wire representing a rounded rectangle.
 
     """
+    if radius <= 0:
+        msg = "Radius should be > 0"
+        raise ValueError(msg)
+    if radius >= xwidth / 2 or radius >= ywidth / 2:
+        msg = "Radius should be smaller than xwidth /2 or ywidth / 2"
+        raise ValueError(msg)
+
     xfarv = xwidth / 2
     yfarv = ywidth / 2
     xclosev = xwidth / 2 - radius
