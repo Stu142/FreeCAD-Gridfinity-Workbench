@@ -3,11 +3,10 @@
 Contains command objects representing what should happen on a button press.
 """
 
-
+from pathlib import Path
 
 import FreeCADGui
 import FreeCAD
-from pathlib import Path
 
 from .features import (
     Baseplate,
