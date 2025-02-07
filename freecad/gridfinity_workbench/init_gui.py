@@ -5,8 +5,9 @@ The file name is given by FreeCAD. FreeCAD uses this file to initialize GUI comp
 
 from pathlib import Path
 from typing import ClassVar
-import FreeCAD
+
 import FreeCADGui
+import FreeCAD
 
 
 try:
