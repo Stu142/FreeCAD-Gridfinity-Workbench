@@ -2,8 +2,9 @@
 
 from abc import abstractmethod
 
-import FreeCAD
 import Part
+
+import FreeCAD
 from FreeCAD import Units
 
 from . import const, utils

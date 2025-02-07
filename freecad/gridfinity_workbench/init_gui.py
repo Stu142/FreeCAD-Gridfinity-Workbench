@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import ClassVar
 
 import FreeCADGui
-import FreeCAD
 
+import FreeCAD
 
 try:
     from FreeCADGui import Workbench

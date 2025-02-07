@@ -5,8 +5,9 @@ Contains command objects representing what should happen on a button press.
 
 from pathlib import Path
 
-import FreeCAD
 import FreeCADGui
+
+import FreeCAD
 
 from .features import (
     Baseplate,

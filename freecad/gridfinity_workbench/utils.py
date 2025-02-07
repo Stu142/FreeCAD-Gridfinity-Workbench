@@ -8,8 +8,9 @@ import math
 from abc import abstractmethod
 from dataclasses import dataclass
 
-import FreeCAD
 import Part
+
+import FreeCAD
 
 
 class Feature:
