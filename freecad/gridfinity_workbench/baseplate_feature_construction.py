@@ -5,9 +5,8 @@ Contains implementation to conscruct baseplate features.
 
 import math
 
-import Part
-
 import FreeCAD
+import Part
 from FreeCAD import Units
 
 from . import const, utils
