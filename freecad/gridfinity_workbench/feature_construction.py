@@ -386,8 +386,6 @@ class LabelShelf(utils.Feature):
                 "Label shelf style set to Overhand due to low bin height",
             )
 
-
-
         towall = obj.Clearance + obj.WallThickness
         tolabelend = (
             obj.Clearance
