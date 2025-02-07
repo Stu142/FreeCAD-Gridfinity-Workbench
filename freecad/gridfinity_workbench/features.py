@@ -7,7 +7,7 @@ import Part
 import FreeCAD
 from FreeCAD import Units
 
-from . import utils
+from . import const, utils
 from .baseplate_feature_construction import (
     BaseplateBaseValues,
     BaseplateCenterCut,
@@ -29,7 +29,7 @@ from .feature_construction import (
     make_complex_bin_base,
 )
 from .grid_initial_layout import (
-    L_Layout,
+    LShapedLayout,
     RectangleLayout,
 )
 from .version import __version__
@@ -92,7 +92,6 @@ class FoundationGridfinity:
 
     def loads(
         self,
-        state,
     ) -> None:
         """Needed for JSON Serialization when saving a file containing gridfinity object."""
         return
@@ -119,11 +118,15 @@ class BinBlank(FoundationGridfinity):
         )
         self.bintype = "standard"
         self.features = [
-            RectangleLayout(obj),
-            BinSolidMidSection(obj),
+            RectangleLayout(obj, baseplate_default=False),
+            BinSolidMidSection(
+                obj,
+                default_height_units=const.HEIGHT_UNITS,
+                default_wall_thickness=const.WALL_THICKNESS,
+            ),
             BlankBinRecessedTop(obj),
-            StackingLip(obj),
-            BinBottomHoles(obj),
+            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
+            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
             BinBaseValues(obj),
         ]
 
@@ -207,11 +210,15 @@ class BinBase(FoundationGridfinity):
 
         self.bintype = "standard"
         self.features = [
-            RectangleLayout(obj),
-            BinSolidMidSection(obj, default_height_units=1),
+            RectangleLayout(obj, baseplate_default=False),
+            BinSolidMidSection(
+                obj,
+                default_height_units=1,
+                default_wall_thickness=const.WALL_THICKNESS,
+            ),
             BlankBinRecessedTop(obj),
             StackingLip(obj, stacking_lip_default=False),
-            BinBottomHoles(obj),
+            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
             BinBaseValues(obj),
         ]
 
@@ -294,10 +301,14 @@ class SimpleStorageBin(FoundationGridfinity):
         )
         self.bintype = "standard"
         self.features = [
-            RectangleLayout(obj),
-            BinSolidMidSection(obj),
-            StackingLip(obj),
-            BinBottomHoles(obj),
+            RectangleLayout(obj, baseplate_default=False),
+            BinSolidMidSection(
+                obj,
+                default_height_units=const.HEIGHT_UNITS,
+                default_wall_thickness=const.WALL_THICKNESS,
+            ),
+            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
+            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
             BinBaseValues(obj),
             Compartments(obj, x_div_default=0, y_div_default=0),
             LabelShelf(obj, label_style_default="Off"),
@@ -396,12 +407,16 @@ class EcoBin(FoundationGridfinity):
 
         self.bintype = "eco"
         self.features = [
-            RectangleLayout(obj),
-            BinSolidMidSection(obj, default_wall_thickness=0.8),
-            StackingLip(obj),
+            RectangleLayout(obj, baseplate_default=False),
+            BinSolidMidSection(
+                obj,
+                default_height_units=const.HEIGHT_UNITS,
+                default_wall_thickness=const.ECO_WALL_THICKNESS,
+            ),
+            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
             BinBottomHoles(obj, magnet_holes_default=False),
             BinBaseValues(obj),
-            LabelShelf(obj),
+            LabelShelf(obj, label_style_default="Standard"),
             EcoCompartments(obj),
         ]
 
@@ -499,14 +514,18 @@ class PartsBin(FoundationGridfinity):
 
         self.bintype = "standard"
         self.features = [
-            RectangleLayout(obj),
-            BinSolidMidSection(obj),
-            StackingLip(obj),
-            BinBottomHoles(obj),
+            RectangleLayout(obj, baseplate_default=False),
+            BinSolidMidSection(
+                obj,
+                default_height_units=const.HEIGHT_UNITS,
+                default_wall_thickness=const.WALL_THICKNESS,
+            ),
+            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
+            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
             BinBaseValues(obj),
-            Compartments(obj),
-            LabelShelf(obj),
-            Scoop(obj),
+            Compartments(obj, x_div_default=const.X_DIVIDERS, y_div_default=const.Y_DIVIDERS),
+            LabelShelf(obj, label_style_default="Standard"),
+            Scoop(obj, scoop_default=const.SCOOP),
         ]
         obj.Proxy = self
 
@@ -640,7 +659,12 @@ class Baseplate(FoundationGridfinity):
             ),
         )
 
-        solid_shape = BaseplateSolidShape.make(self, obj, baseplate_outside_shape)
+        solid_shape = BaseplateSolidShape.make(
+            self,
+            obj,
+            baseplate_outside_shape,
+            baseplate_type="standard",
+        )
 
         fuse_total = make_complex_bin_base(obj, layout)
         fuse_total.translate(
@@ -675,7 +699,7 @@ class MagnetBaseplate(FoundationGridfinity):
 
         self.features = [
             RectangleLayout(obj, baseplate_default=True),
-            BaseplateSolidShape(obj, magnet_baseplate_default=True),
+            BaseplateSolidShape(obj),
             BaseplateBaseValues(obj),
             BaseplateMagnetHoles(obj),
             BaseplateCenterCut(obj),
@@ -711,7 +735,12 @@ class MagnetBaseplate(FoundationGridfinity):
             ),
         )
 
-        solid_shape = BaseplateSolidShape.make(self, obj, baseplate_outside_shape)
+        solid_shape = BaseplateSolidShape.make(
+            self,
+            obj,
+            baseplate_outside_shape,
+            baseplate_type="magnet",
+        )
 
         fuse_total = make_complex_bin_base(obj, layout)
         fuse_total.translate(
@@ -755,7 +784,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
 
         self.features = [
             RectangleLayout(obj, baseplate_default=True),
-            BaseplateSolidShape(obj, screw_together_baseplate_default=True),
+            BaseplateSolidShape(obj),
             BaseplateBaseValues(obj),
             BaseplateMagnetHoles(obj),
             BaseplateCenterCut(obj),
@@ -791,7 +820,12 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             ),
         )
 
-        solid_shape = BaseplateSolidShape.make(self, obj, baseplate_outside_shape)
+        solid_shape = BaseplateSolidShape.make(
+            self,
+            obj,
+            baseplate_outside_shape,
+            baseplate_type="screw_together",
+        )
 
         fuse_total = make_complex_bin_base(obj, layout)
         fuse_total.translate(
@@ -838,11 +872,15 @@ class LBinBlank(FoundationGridfinity):
         self.bintype = "standard"
 
         self.features = [
-            L_Layout(obj),
-            BinSolidMidSection(obj),
+            LShapedLayout(obj, baseplate_default=False),
+            BinSolidMidSection(
+                obj,
+                default_height_units=const.HEIGHT_UNITS,
+                default_wall_thickness=const.WALL_THICKNESS,
+            ),
             BlankBinRecessedTop(obj),
-            StackingLip(obj),
-            BinBottomHoles(obj),
+            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
+            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
             BinBaseValues(obj),
         ]
 
@@ -860,7 +898,7 @@ class LBinBlank(FoundationGridfinity):
         """
         BinBaseValues.make(self, obj)
 
-        layout = L_Layout.make(self, obj)
+        layout = LShapedLayout.make(self, obj)
 
         bin_outside_shape = utils.create_rounded_l(
             utils.LShapeData(

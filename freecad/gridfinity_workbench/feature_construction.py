@@ -284,15 +284,26 @@ def _label_shelf_right_fillet(
     return Part.Face(right_fillet_wire)
 
 
+"""
+def _label_shelf_profile(
+    obj: FreeCAD.DocumentObject,
+    v4_z: float,
+    ) -> Part.Wire:
+
+
+    return utils.curve_to_wire(lines)
+    """
+
+
 class LabelShelf(utils.Feature):
     """Create Label shelf for bins."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, label_style_default="Standard") -> None:
+    def __init__(self, obj: FreeCAD.DocumentObject, *, label_style_default: str) -> None:
         """Create bin compartments with the option for dividers.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
-            label_style_default (Enum): list of label shelf styles
+            label_style_default (str): list of label shelf styles
 
         """
         ## Gridfinity Parameters
@@ -364,6 +375,22 @@ class LabelShelf(utils.Feature):
             Part.Shape: Labelshelf 3D shape.
 
         """
+        eco_usable_height = 14
+        if (
+            self.bintype == "eco"
+            and obj.TotalHeight < eco_usable_height
+            and obj.LabelShelfStyle != "Overhang"
+        ):
+            obj.LabelShelfStyle = "Overhang"
+            FreeCAD.Console.PrintWarning("\n")
+            FreeCAD.Console.PrintWarning(
+                "Label shelf style set to Overhand due to low bin height",
+            )
+
+        if obj.LabelShelfStyle == "Overhang":
+            shelf_angle = 0
+            shelf_placement = "Full Width"
+
         towall = obj.Clearance + obj.WallThickness
         tolabelend = (
             obj.Clearance
@@ -385,21 +412,9 @@ class LabelShelf(utils.Feature):
             obj.yTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.yDividers
         ) / (ydiv)
 
-        if self.bintype == "eco" and obj.TotalHeight < 15 and obj.LabelShelfStyle != "Overhang":
-            obj.LabelShelfStyle = "Overhang"
-            FreeCAD.Console.PrintWarning("\n")
-            FreeCAD.Console.PrintWarning(
-                "Label shelf style set to Overhand due to low bin height",
-            )
-
-        if obj.LabelShelfStyle == "Overhang":
-            shelf_angle = 0
-            shelf_placement = "Full Width"
-
         # Calculate V4 Z coordinate by using an angle
         side_a = abs(towall - tolabelend)
-        beta = shelf_angle
-        alpha = 90 - beta
+        alpha = 90 - shelf_angle
         side_c = side_a / math.sin(math.radians(alpha))
         side_b = math.sqrt(-pow(side_a, 2) + pow(side_c, 2))
         v4_z = -obj.LabelShelfVerticalThickness - side_b * unitmm
@@ -409,14 +424,14 @@ class LabelShelf(utils.Feature):
         v3 = FreeCAD.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness + stackingoffset)
         v4 = FreeCAD.Vector(towall, 0, v4_z + stackingoffset)
 
-        l1 = Part.LineSegment(v1, v2)
-        l2 = Part.LineSegment(v2, v3)
-        l3 = Part.LineSegment(v3, v4)
-        l4 = Part.LineSegment(v4, v1)
+        lines = [
+            Part.LineSegment(v1, v2),
+            Part.LineSegment(v2, v3),
+            Part.LineSegment(v3, v4),
+            Part.LineSegment(v4, v1),
+        ]
 
-        s1 = Part.Shape([l1, l2, l3, l4])
-
-        wire = Part.Wire(s1.Edges)
+        wire = utils.curve_to_wire(lines)
 
         face = Part.Face(wire)
 
@@ -474,12 +489,12 @@ class LabelShelf(utils.Feature):
 class Scoop(utils.Feature):
     """Create Negative for Bin Compartments."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, scoop_default=const.SCOOP) -> None:
+    def __init__(self, obj: FreeCAD.DocumentObject, *, scoop_default: bool) -> None:
         """Create bin compartments with the option for dividers.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object
-            scoop_default: default state of the scoop feature
+            scoop_default (bool): default state of the scoop feature
 
         """
         obj.addProperty(
@@ -739,15 +754,15 @@ class Compartments(utils.Feature):
     def __init__(
         self,
         obj: FreeCAD.DocumentObject,
-        x_div_default=const.X_DIVIDERS,
-        y_div_default=const.Y_DIVIDERS,
+        x_div_default: int,
+        y_div_default: int,
     ) -> None:
         """Create bin compartments with the option for dividers.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object
-            x_div_default: default value or set as input parameter
-            y_div_default: default value or set as input parameter
+            x_div_default (int): default value or set as input parameter
+            y_div_default (int): default value or set as input parameter
 
         """
         ## Gridfinity Parameters
@@ -810,7 +825,7 @@ class Compartments(utils.Feature):
             1,
         )
 
-    def make(self, obj: FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
+    def make(self, obj: FreeCAD.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
         """Create compartment cutout objects.
 
         Args:
@@ -1075,6 +1090,41 @@ def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
     )
 
 
+def _eco_error_check(obj: FreeCAD.DocumentObject) -> None:
+    # Divider Minimum Height
+
+    divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
+
+    if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
+        obj.xDividerHeight = divmin
+
+        FreeCAD.Console.PrintWarning(
+            "Divider Height must be equal to or greater than:  ",
+        )
+
+        FreeCAD.Console.PrintWarning(divmin)
+
+        FreeCAD.Console.PrintWarning("\n")
+
+    if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
+        obj.yDividerHeight = divmin
+
+        FreeCAD.Console.PrintWarning(
+            "Divider Height must be equal to or greater than:  ",
+        )
+
+        FreeCAD.Console.PrintWarning(divmin)
+
+        FreeCAD.Console.PrintWarning("\n")
+
+    if obj.InsideFilletRadius > (1.6 * unitmm):
+        obj.InsideFilletRadius = 1.6 * unitmm
+
+        FreeCAD.Console.PrintWarning(
+            "Inside Fillet Radius must be equal to or less than:  1.6 mm\n",
+        )
+
+
 class EcoCompartments(utils.Feature):
     """Create Eco bin main cut and dividers."""
 
@@ -1157,7 +1207,7 @@ class EcoCompartments(utils.Feature):
         self,
         obj: FreeCAD.DocumentObject,
         layout: GridfinityLayout,
-        bin_inside_shape,
+        bin_inside_shape: Part.Wire,
     ) -> Part.Shape:
         """Create eco bin cutouts.
 
@@ -1175,38 +1225,7 @@ class EcoCompartments(utils.Feature):
         obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
         ## Error Checking
 
-        # Divider Minimum Height
-
-        divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
-
-        if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
-            obj.xDividerHeight = divmin
-
-            FreeCAD.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  ",
-            )
-
-            FreeCAD.Console.PrintWarning(divmin)
-
-            FreeCAD.Console.PrintWarning("\n")
-
-        if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
-            obj.yDividerHeight = divmin
-
-            FreeCAD.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  ",
-            )
-
-            FreeCAD.Console.PrintWarning(divmin)
-
-            FreeCAD.Console.PrintWarning("\n")
-
-        if obj.InsideFilletRadius > (1.6 * unitmm):
-            obj.InsideFilletRadius = 1.6 * unitmm
-
-            FreeCAD.Console.PrintWarning(
-                "Inside Fillet Radius must be equal to or less than:  1.6 mm\n",
-            )
+        _eco_error_check()
 
         ## Eco Compartement Generation
         face = Part.Face(bin_inside_shape)
@@ -1556,7 +1575,12 @@ def make_complex_bin_base(
 
         xtranslate += obj.xGridSize
 
-    fuse_total = b1 if obj.xMaxGrids < 2 and obj.yMaxGrids < 2 else Part.Solid.multiFuse(b1, parts)
+    larger_than_single_grid = 2
+    fuse_total = (
+        b1
+        if obj.xMaxGrids < larger_than_single_grid and obj.yMaxGrids < larger_than_single_grid
+        else Part.Solid.multiFuse(b1, parts)
+    )
 
     return fuse_total.translate(
         FreeCAD.Vector(
@@ -1585,12 +1609,12 @@ class BlankBinRecessedTop(utils.Feature):
             "height per unit <br> <br> default = 0 mm",
         ).RecessedTopDepth = const.RECESSED_TOP_DEPTH
 
-    def make(self, obj: FreeCAD.DocumentObject, bin_inside_shape) -> Part.Shape:
+    def make(self, obj: FreeCAD.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
         """Generate Rectanble layout and calculate relevant parameters.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
-            Part.Wire (bin_inside_shape: shape of the bin inside the walls
+            bin_inside_shape (Part.Wire): shape of the bin inside the walls
 
         Returns:
             Part.Shape: Extruded part to cut out inside of bin.
@@ -1615,12 +1639,14 @@ class BinBottomHoles(utils.Feature):
     def __init__(
         self,
         obj: FreeCAD.DocumentObject,
-        magnet_holes_default=const.MAGNET_HOLES,
+        *,
+        magnet_holes_default: bool,
     ) -> None:
         """Create bin solid mid section.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object
+            magnet_holes_default (bool): does the object have magnet holes
 
         """
         ## Gridfinity Parameters
@@ -1761,12 +1787,14 @@ class StackingLip(utils.Feature):
     def __init__(
         self,
         obj: FreeCAD.DocumentObject,
-        stacking_lip_default=const.STACKING_LIP,
+        *,
+        stacking_lip_default: bool,
     ) -> None:
         """Create bin stacking lip.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object
+            stacking_lip_default (bool): stacking lip on or off
 
         """
         ## Gridfinity Parameters
@@ -1810,7 +1838,7 @@ class StackingLip(utils.Feature):
             1,
         ).StackingLipVerticalSection = const.STACKING_LIP_VERTICAL_SECTION
 
-    def make(self, obj: FreeCAD.DocumentObject, bin_outside_shape) -> Part.Shape:
+    def make(self, obj: FreeCAD.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
         """Create stacking lip based on input bin shape.
 
         Args:
@@ -1914,13 +1942,15 @@ class BinSolidMidSection(utils.Feature):
     def __init__(
         self,
         obj: FreeCAD.DocumentObject,
-        default_height_units=const.HEIGHT_UNITS,
-        default_wall_thickness=const.WALL_THICKNESS,
+        default_height_units: int,
+        default_wall_thickness: int,
     ) -> None:
         """Create bin solid mid section and add properties.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object
+            default_height_units (int): height units of the bin at generation
+            default_wall_thickness (int): Wall thickness of the bin at generation
 
         """
         ## Gridfinity Standard Parameters
@@ -1975,7 +2005,7 @@ class BinSolidMidSection(utils.Feature):
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
-            Part.Wire (bin_shape): shape of the bin
+            bin_outside_shape (Part.Wire): shape of the bin
 
         Returns:
             Part.Shape: Extruded bin mid section of the input shape

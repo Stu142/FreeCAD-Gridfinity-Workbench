@@ -76,7 +76,7 @@ class ViewProviderGridfinity:
 
     def loads(
         self,
-        state,
+        state: tuple,
     ) -> None:
         """Needed for JSON Serialization when saving a file containing gridfinity object."""
         if (

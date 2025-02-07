@@ -1,3 +1,5 @@
+"""Makes grid layouts, calculates total width properties."""
+
 import FreeCAD
 
 from . import const, utils
@@ -84,7 +86,7 @@ def _universal_properties(obj: FreeCAD.DocumentObject) -> None:
 class RectangleLayout(utils.Feature):
     """Create layout for rectanlge shaped Gridfinity object and add relevant properties."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, baseplate_default=False) -> None:
+    def __init__(self, obj: FreeCAD.DocumentObject, *, baseplate_default: bool) -> None:
         """Create Rectangle Layout.
 
         Args:
@@ -151,15 +153,15 @@ class RectangleLayout(utils.Feature):
         return [[True for y in range(obj.yGridUnits)] for x in range(obj.xGridUnits)]
 
 
-class L_Layout(utils.Feature):
+class LShapedLayout(utils.Feature):
     """Creat layout matrix for L shaped Gridfinity object and add relevant properties."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, baseplate_default=False) -> None:
+    def __init__(self, obj: FreeCAD.DocumentObject, *, baseplate_default: bool) -> None:
         """Make L layout.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
-            baseplate_default: bool
+            baseplate_default (bool): is the object a baseplate
 
         """
         _universal_properties(obj)

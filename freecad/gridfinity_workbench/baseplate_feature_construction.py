@@ -866,14 +866,12 @@ class BaseplateSolidShape(utils.Feature):
     def __init__(
         self,
         obj: FreeCAD.DocumentObject,
-        magnet_baseplate_default=False,
-        screw_together_baseplate_default=False,
     ) -> None:
         """Make solid which the baseplate is cut from.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
-            magnet_baseplate_default: boolean
+            baseplate_type (str): is the object a mbaseplate with magnets
             screw_together_baseplate_default: boolean
 
         """
@@ -885,40 +883,28 @@ class BaseplateSolidShape(utils.Feature):
             1,
         )
 
-        ## Hidden Parameters
-        obj.addProperty(
-            "App::PropertyBool",
-            "MagnetBaseplate",
-            "Hidden",
-            "Is the baseplate the magnet version",
-        ).MagnetBaseplate = magnet_baseplate_default
-
-        obj.setEditorMode("MagnetBaseplate", 2)
-
-        obj.addProperty(
-            "App::PropertyBool",
-            "ScrewTogetherBaseplate",
-            "Hidden",
-            "Is the baseplate a screw together",
-        ).ScrewTogetherBaseplate = screw_together_baseplate_default
-
-        obj.setEditorMode("ScrewTogetherBaseplate", 2)
-
-    def make(self, obj: FreeCAD.DocumentObject, baseplate_outside_shape: Part.Wire) -> Part.Shape:
+    def make(
+        self,
+        obj: FreeCAD.DocumentObject,
+        baseplate_outside_shape: Part.Wire,
+        *,
+        baseplate_type: str,
+    ) -> Part.Shape:
         """Create solid which baseplate is cut from.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
             baseplate_outside_shape (Part.Wire): outside profile of the baseplate shape
+            baseplate_type (str): type of baseplate being generated
 
         Returns:
             Part.Shape: Extruded part for the baseplate to be cut from.
 
         """
         ## Calculated Parameters
-        if obj.MagnetBaseplate:
+        if baseplate_type == "magnet":
             obj.TotalHeight = obj.BaseProfileHeight + obj.MagnetHoleDepth + obj.MagnetBase
-        elif obj.ScrewTogetherBaseplate:
+        elif baseplate_type == "screw_together":
             obj.TotalHeight = obj.BaseProfileHeight + obj.BaseThickness
         else:
             obj.TotalHeight = obj.BaseProfileHeight
