@@ -386,9 +386,7 @@ class LabelShelf(utils.Feature):
                 "Label shelf style set to Overhand due to low bin height",
             )
 
-        if obj.LabelShelfStyle == "Overhang":
-            shelf_angle = 0
-            shelf_placement = "Full Width"
+
 
         towall = obj.Clearance + obj.WallThickness
         tolabelend = (
@@ -398,9 +396,6 @@ class LabelShelf(utils.Feature):
             + obj.StackingLipBottomChamfer
             + obj.LabelShelfWidth
         )
-        stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
-        shelf_angle = obj.LabelShelfAngle.Value
-        shelf_placement = obj.LabelShelfPlacement
 
         xdiv = obj.xDividers + 1
         ydiv = obj.yDividers + 1
@@ -410,6 +405,14 @@ class LabelShelf(utils.Feature):
         ycompwidth = (
             obj.yTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.yDividers
         ) / (ydiv)
+
+        stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
+        shelf_angle = obj.LabelShelfAngle.Value
+        shelf_placement = obj.LabelShelfPlacement
+
+        if obj.LabelShelfStyle == "Overhang":
+            shelf_angle = 0
+            shelf_placement = "Full Width"
 
         # Calculate V4 Z coordinate by using an angle
         side_a = abs(towall - tolabelend)
@@ -1224,7 +1227,7 @@ class EcoCompartments(utils.Feature):
         obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
         ## Error Checking
 
-        _eco_error_check()
+        _eco_error_check(obj)
 
         ## Eco Compartement Generation
         face = Part.Face(bin_inside_shape)
