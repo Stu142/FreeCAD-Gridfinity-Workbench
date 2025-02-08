@@ -2,14 +2,13 @@
 
 import math
 
-import FreeCAD
+import FreeCAD as fc  # noqa: N813
 import Part
-from FreeCAD import Units
 
 from . import const, utils
 
-unitmm = Units.Quantity("1 mm")
-zeromm = Units.Quantity("0 mm")
+unitmm = fc.Units.Quantity("1 mm")
+zeromm = fc.Units.Quantity("0 mm")
 
 SMALL_NUMBER = 0.01
 
@@ -17,7 +16,7 @@ GridfinityLayout = list[list[bool]]
 
 
 def _label_shelf_full_width(
-    obj: FreeCAD.DocumentObject,
+    obj: fc.DocumentObject,
     face: Part.Face,
     xcompwidth: float,
     label_shelf_height: float,
@@ -28,9 +27,9 @@ def _label_shelf_full_width(
     xtranslate = zeromm
     parts = []
     for x in range(xdiv):
-        ls = face.extrude(FreeCAD.Vector(0, fw, 0))
+        ls = face.extrude(fc.Vector(0, fw, 0))
 
-        ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
+        ls.translate(fc.Vector(xtranslate, ytranslate, 0))
 
         if x == 0:
             firstls = ls
@@ -43,20 +42,20 @@ def _label_shelf_full_width(
 
     right_end_fillet = _label_shelf_right_fillet(obj)
     right_end_fillet = right_end_fillet.translate(
-        FreeCAD.Vector(
+        fc.Vector(
             0,
             obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness,
             0,
         ),
     )
     right_end_fillet = right_end_fillet.extrude(
-        FreeCAD.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
+        fc.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
     )
     funcfuse = funcfuse.cut(right_end_fillet)
 
     left_end_fillet = _label_shelf_left_fillet(obj)
     left_end_fillet = left_end_fillet.extrude(
-        FreeCAD.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
+        fc.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
     )
     return funcfuse.cut(left_end_fillet)
 
@@ -64,7 +63,7 @@ def _label_shelf_full_width(
 
 
 def _label_shelf_center(
-    obj: FreeCAD.DocumentObject,
+    obj: fc.DocumentObject,
     xcompwidth: float,
     ycompwidth: float,
     face: Part.Face,
@@ -78,9 +77,9 @@ def _label_shelf_center(
     for x in range(xdiv):
         ytranslate = ysp
         for y in range(ydiv):
-            ls = face.extrude(FreeCAD.Vector(0, obj.LabelShelfLength, 0))
+            ls = face.extrude(fc.Vector(0, obj.LabelShelfLength, 0))
 
-            ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
+            ls.translate(fc.Vector(xtranslate, ytranslate, 0))
 
             if x == 0 and y == 0:
                 firstls = ls
@@ -95,7 +94,7 @@ def _label_shelf_center(
 
 
 def _label_shelf_left(
-    obj: FreeCAD.DocumentObject,
+    obj: fc.DocumentObject,
     xcompwidth: float,
     ycompwidth: float,
     face: Part.Face,
@@ -110,9 +109,9 @@ def _label_shelf_left(
     for x in range(xdiv):
         ytranslate = ysp
         for y in range(ydiv):
-            ls = face.extrude(FreeCAD.Vector(0, obj.LabelShelfLength, 0))
+            ls = face.extrude(fc.Vector(0, obj.LabelShelfLength, 0))
 
-            ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
+            ls.translate(fc.Vector(xtranslate, ytranslate, 0))
 
             if x == 0 and y == 0:
                 firstls = ls
@@ -127,13 +126,13 @@ def _label_shelf_left(
 
     left_end_fillet = _label_shelf_left_fillet(obj)
     left_end_fillet = left_end_fillet.extrude(
-        FreeCAD.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
+        fc.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
     )
     return funcfuse.cut(left_end_fillet)
 
 
 def _label_shelf_right(
-    obj: FreeCAD.DocumentObject,
+    obj: fc.DocumentObject,
     xcompwidth: float,
     ycompwidth: float,
     face: Part.Face,
@@ -148,9 +147,9 @@ def _label_shelf_right(
     for x in range(xdiv):
         ytranslate = ysp
         for y in range(ydiv):
-            ls = face.extrude(FreeCAD.Vector(0, obj.LabelShelfLength, 0))
+            ls = face.extrude(fc.Vector(0, obj.LabelShelfLength, 0))
 
-            ls.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
+            ls.translate(fc.Vector(xtranslate, ytranslate, 0))
 
             if x == 0 and y == 0:
                 firstls = ls
@@ -165,20 +164,20 @@ def _label_shelf_right(
 
     right_end_fillet = _label_shelf_right_fillet(obj)
     right_end_fillet = right_end_fillet.translate(
-        FreeCAD.Vector(
+        fc.Vector(
             0,
             obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness,
             0,
         ),
     )
     right_end_fillet = right_end_fillet.extrude(
-        FreeCAD.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
+        fc.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
     )
     return funcfuse.cut(right_end_fillet)
 
 
 def _label_shelf_front_fillet(
-    obj: FreeCAD.DocumentObject,
+    obj: fc.DocumentObject,
     shape: Part.Shape,
     stackingoffset: float,
 ) -> Part.Shape:
@@ -212,7 +211,7 @@ def _label_shelf_front_fillet(
 
 
 def _label_shelf_left_fillet(
-    obj: FreeCAD.DocumentObject,
+    obj: fc.DocumentObject,
 ) -> Part.Shape:
     fillet_radius = obj.BinOuterRadius - obj.WallThickness
 
@@ -230,11 +229,11 @@ def _label_shelf_left_fillet(
     l2x2 = l1x
     l2y = l1y1
 
-    l1v1 = FreeCAD.Vector(l1x, l1y1, 0)
-    l1v2 = FreeCAD.Vector(l1x, l1y2, 0)
-    arc1v = FreeCAD.Vector(arc1x, arc1y, 0)
-    l2v1 = FreeCAD.Vector(l2x1, l2y, 0)
-    l2v2 = FreeCAD.Vector(l2x2, l2y, 0)
+    l1v1 = fc.Vector(l1x, l1y1, 0)
+    l1v2 = fc.Vector(l1x, l1y2, 0)
+    arc1v = fc.Vector(arc1x, arc1y, 0)
+    l2v1 = fc.Vector(l2x1, l2y, 0)
+    l2v2 = fc.Vector(l2x2, l2y, 0)
 
     lines = [
         Part.LineSegment(l1v1, l1v2),
@@ -248,7 +247,7 @@ def _label_shelf_left_fillet(
 
 
 def _label_shelf_right_fillet(
-    obj: FreeCAD.DocumentObject,
+    obj: fc.DocumentObject,
 ) -> Part.Shape:
     fillet_radius = obj.BinOuterRadius - obj.WallThickness
 
@@ -267,11 +266,11 @@ def _label_shelf_right_fillet(
     )
     arc1y = obj.Clearance + obj.WallThickness + fillet_radius * math.sin(math.pi / 4)
 
-    l1v1 = FreeCAD.Vector(l1x, l1y1, 0)
-    l1v2 = FreeCAD.Vector(l1x, l1y2, 0)
-    l2v1 = FreeCAD.Vector(l2x1, l2y, 0)
-    l2v2 = FreeCAD.Vector(l2x2, l2y, 0)
-    arc1v = FreeCAD.Vector(arc1x, arc1y, 0)
+    l1v1 = fc.Vector(l1x, l1y1, 0)
+    l1v2 = fc.Vector(l1x, l1y2, 0)
+    l2v1 = fc.Vector(l2x1, l2y, 0)
+    l2v2 = fc.Vector(l2x2, l2y, 0)
+    arc1v = fc.Vector(arc1x, arc1y, 0)
 
     lines = [
         Part.LineSegment(l1v1, l1v2),
@@ -297,7 +296,7 @@ def _label_shelf_profile(
 class LabelShelf(utils.Feature):
     """Create Label shelf for bins."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, *, label_style_default: str) -> None:
+    def __init__(self, obj: fc.DocumentObject, *, label_style_default: str) -> None:
         """Create bin compartments with the option for dividers.
 
         Args:
@@ -364,7 +363,7 @@ class LabelShelf(utils.Feature):
             "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
         ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
 
-    def make(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
+    def make(self, obj: fc.DocumentObject) -> Part.Shape:
         """Create label shelf.
 
         Args:
@@ -381,8 +380,8 @@ class LabelShelf(utils.Feature):
             and obj.LabelShelfStyle != "Overhang"
         ):
             obj.LabelShelfStyle = "Overhang"
-            FreeCAD.Console.PrintWarning("\n")
-            FreeCAD.Console.PrintWarning(
+            fc.Console.PrintWarning("\n")
+            fc.Console.PrintWarning(
                 "Label shelf style set to Overhand due to low bin height",
             )
 
@@ -419,10 +418,10 @@ class LabelShelf(utils.Feature):
         side_b = math.sqrt(-pow(side_a, 2) + pow(side_c, 2))
         v4_z = -obj.LabelShelfVerticalThickness - side_b * unitmm
 
-        v1 = FreeCAD.Vector(towall, 0, stackingoffset)
-        v2 = FreeCAD.Vector(tolabelend, 0, stackingoffset)
-        v3 = FreeCAD.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness + stackingoffset)
-        v4 = FreeCAD.Vector(towall, 0, v4_z + stackingoffset)
+        v1 = fc.Vector(towall, 0, stackingoffset)
+        v2 = fc.Vector(tolabelend, 0, stackingoffset)
+        v3 = fc.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness + stackingoffset)
+        v4 = fc.Vector(towall, 0, v4_z + stackingoffset)
 
         lines = [
             Part.LineSegment(v1, v2),
@@ -463,22 +462,22 @@ class LabelShelf(utils.Feature):
                 + obj.LabelShelfWidth
                 - obj.WallThickness,
                 obj.yTotalWidth,
-                FreeCAD.Vector(
+                fc.Vector(
                     towall,
                     0,
                     -obj.UsableHeight - label_shelf_height + stackingoffset,
                 ),
-                FreeCAD.Vector(0, 1, 0),
+                fc.Vector(0, 1, 0),
             )
 
             vec_list = []
             for _ in range(xdiv):
-                vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
+                vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
                 xtranslate += xcompwidth + obj.DividerThickness
 
             funcfuse = Part.Shape.cut(funcfuse, utils.copy_and_translate(bottomcutbox, vec_list))
         return funcfuse.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 -obj.xLocationOffset,
                 -obj.yLocationOffset,
                 0,
@@ -489,7 +488,7 @@ class LabelShelf(utils.Feature):
 class Scoop(utils.Feature):
     """Create Negative for Bin Compartments."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, *, scoop_default: bool) -> None:
+    def __init__(self, obj: fc.DocumentObject, *, scoop_default: bool) -> None:
         """Create bin compartments with the option for dividers.
 
         Args:
@@ -511,7 +510,7 @@ class Scoop(utils.Feature):
             "Toggle the Scoop fillet on or off",
         ).Scoop = scoop_default
 
-    def make(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
+    def make(self, obj: fc.DocumentObject) -> Part.Shape:
         """Create scoop feature.
 
         Args:
@@ -541,22 +540,22 @@ class Scoop(utils.Feature):
         scooprad = min(obj.ScoopRadius, scooprad1, scooprad2, scooprad3)
 
         if scooprad <= 0:
-            FreeCAD.Console.PrintMessage(
+            fc.Console.PrintMessage(
                 "scooop could not be made due to bin selected parameters\n",
             )
             return None
 
-        v1 = FreeCAD.Vector(
+        v1 = fc.Vector(
             obj.xTotalWidth + obj.Clearance - obj.WallThickness,
             0,
             -obj.UsableHeight + scooprad,
         )
-        v2 = FreeCAD.Vector(
+        v2 = fc.Vector(
             obj.xTotalWidth + obj.Clearance - obj.WallThickness,
             0,
             -obj.UsableHeight,
         )
-        v3 = FreeCAD.Vector(
+        v3 = fc.Vector(
             obj.xTotalWidth + obj.Clearance - obj.WallThickness - scooprad,
             0,
             -obj.UsableHeight,
@@ -565,7 +564,7 @@ class Scoop(utils.Feature):
         l1 = Part.LineSegment(v1, v2)
         l2 = Part.LineSegment(v2, v3)
 
-        vc1 = FreeCAD.Vector(
+        vc1 = fc.Vector(
             obj.xTotalWidth
             + obj.Clearance
             - obj.WallThickness
@@ -602,19 +601,19 @@ class Scoop(utils.Feature):
             - obj.WallThickness,
             obj.yTotalWidth - obj.WallThickness * 2,
             obj.UsableHeight,
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth + obj.Clearance - obj.WallThickness,
                 +obj.Clearance + obj.WallThickness,
                 0,
             ),
-            FreeCAD.Vector(0, 0, -1),
+            fc.Vector(0, 0, -1),
         )
 
-        scoop = face.extrude(FreeCAD.Vector(0, obj.yTotalWidth - obj.WallThickness * 2, 0))
+        scoop = face.extrude(fc.Vector(0, obj.yTotalWidth - obj.WallThickness * 2, 0))
 
         vec_list = []
         for x in range(xdiv):
-            vec_list.append(FreeCAD.Vector(-xtranslate, obj.Clearance + obj.WallThickness, 0))
+            vec_list.append(fc.Vector(-xtranslate, obj.Clearance + obj.WallThickness, 0))
 
             if x > 0:
                 xtranslate += compwidth + obj.DividerThickness
@@ -651,7 +650,7 @@ class Scoop(utils.Feature):
             b_edges,
         )
         return fuse_total.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 -obj.xLocationOffset,
                 -obj.yLocationOffset,
                 0,
@@ -660,7 +659,7 @@ class Scoop(utils.Feature):
 
 
 def _make_compartments_no_deviders(
-    obj: FreeCAD.DocumentObject,
+    obj: fc.DocumentObject,
     func_fuse: Part.Shape,
 ) -> Part.Shape:
     # Fillet Bottom edges
@@ -676,7 +675,7 @@ def _make_compartments_no_deviders(
 
 
 def _make_compartments_with_deviders(
-    obj: FreeCAD.DocumentObject,
+    obj: fc.DocumentObject,
     func_fuse: Part.Shape,
 ) -> Part.Shape:
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
@@ -701,14 +700,14 @@ def _make_compartments_with_deviders(
             obj.DividerThickness,
             obj.yTotalWidth,
             xdivheight + stackingoffset,
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.Clearance + obj.DividerThickness,
                 obj.Clearance,
                 -obj.TotalHeight,
             ),
-            FreeCAD.Vector(0, 0, 1),
+            fc.Vector(0, 0, 1),
         )
-        comp.translate(FreeCAD.Vector(xtranslate, 0, 0))
+        comp.translate(fc.Vector(xtranslate, 0, 0))
         xdiv = comp if xdiv is None else xdiv.fuse(comp)
         xtranslate += xcomp_w + obj.DividerThickness
 
@@ -719,11 +718,11 @@ def _make_compartments_with_deviders(
             obj.xTotalWidth,
             obj.DividerThickness,
             ydivheight + stackingoffset,
-            FreeCAD.Vector(obj.Clearance, obj.Clearance, -obj.TotalHeight),
-            FreeCAD.Vector(0, 0, 1),
+            fc.Vector(obj.Clearance, obj.Clearance, -obj.TotalHeight),
+            fc.Vector(0, 0, 1),
         )
 
-        comp.translate(FreeCAD.Vector(0, ytranslate, 0))
+        comp.translate(fc.Vector(0, ytranslate, 0))
         ydiv = comp if ydiv is None else ydiv.fuse(comp)
         ytranslate += ycomp_w + obj.DividerThickness
 
@@ -753,7 +752,7 @@ class Compartments(utils.Feature):
 
     def __init__(
         self,
-        obj: FreeCAD.DocumentObject,
+        obj: fc.DocumentObject,
         x_div_default: int,
         y_div_default: int,
     ) -> None:
@@ -825,7 +824,7 @@ class Compartments(utils.Feature):
             1,
         )
 
-    def make(self, obj: FreeCAD.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
+    def make(self, obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
         """Create compartment cutout objects.
 
         Args:
@@ -850,24 +849,24 @@ class Compartments(utils.Feature):
         if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
             obj.xDividerHeight = divmin
 
-            FreeCAD.Console.PrintWarning(
+            fc.Console.PrintWarning(
                 "Divider Height must be equal to or greater than:  ",
             )
 
-            FreeCAD.Console.PrintWarning(divmin)
+            fc.Console.PrintWarning(divmin)
 
-            FreeCAD.Console.PrintWarning("\n")
+            fc.Console.PrintWarning("\n")
 
         if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
             obj.yDividerHeight = divmin
 
-            FreeCAD.Console.PrintWarning(
+            fc.Console.PrintWarning(
                 "Divider Height must be equal to or greater than:  ",
             )
 
-            FreeCAD.Console.PrintWarning(divmin)
+            fc.Console.PrintWarning(divmin)
 
-            FreeCAD.Console.PrintWarning("\n")
+            fc.Console.PrintWarning("\n")
 
         if (
             obj.xDividerHeight < obj.TotalHeight
@@ -877,13 +876,13 @@ class Compartments(utils.Feature):
         ):
             obj.LabelShelfStyle = "Off"
 
-            FreeCAD.Console.PrintWarning(
+            fc.Console.PrintWarning(
                 "Label Shelf turned off for less than full height x dividers",
             )
         ## Compartment Generation
         face = Part.Face(bin_inside_shape)
 
-        func_fuse = face.extrude(FreeCAD.Vector(0, 0, -obj.UsableHeight))
+        func_fuse = face.extrude(fc.Vector(0, 0, -obj.UsableHeight))
 
         if obj.xDividers == 0 and obj.yDividers == 0:
             func_fuse = _make_compartments_no_deviders(obj, func_fuse)
@@ -892,7 +891,7 @@ class Compartments(utils.Feature):
             func_fuse = _make_compartments_with_deviders(obj, func_fuse)
 
         return func_fuse.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 -obj.xLocationOffset,
                 -obj.yLocationOffset,
                 0,
@@ -900,7 +899,7 @@ class Compartments(utils.Feature):
         )
 
 
-def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
+def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
     """Create bottom hole shape.
 
     Return one combined shape containing of the different hole types.
@@ -922,20 +921,20 @@ def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
             # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed
             # circle radius
             radius = obj.MagnetHoleDiameter / math.sqrt(3)
-            p = FreeCAD.ActiveDocument.addObject("Part::RegularPolygon")
+            p = fc.ActiveDocument.addObject("Part::RegularPolygon")
             p.Polygon = 6
             p.Circumradius = radius
             p.recompute()
 
             p_wire: Part.Wire = p.Shape
-            magnet_hole_shape = Part.Face(p_wire).extrude(FreeCAD.Vector(0, 0, obj.MagnetHoleDepth))
-            FreeCAD.ActiveDocument.removeObject(p.Name)
+            magnet_hole_shape = Part.Face(p_wire).extrude(fc.Vector(0, 0, obj.MagnetHoleDepth))
+            fc.ActiveDocument.removeObject(p.Name)
         else:
             magnet_hole_shape = Part.makeCylinder(
                 obj.MagnetHoleDiameter / 2,
                 obj.MagnetHoleDepth,
-                FreeCAD.Vector(0, 0, 0),
-                FreeCAD.Vector(0, 0, 1),
+                fc.Vector(0, 0, 0),
+                fc.Vector(0, 0, 1),
             )
 
         bottom_hole_shape = (
@@ -948,8 +947,8 @@ def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
         screw_hole_shape = Part.makeCylinder(
             obj.ScrewHoleDiameter / 2,
             obj.ScrewHoleDepth,
-            FreeCAD.Vector(0, 0, 0),
-            FreeCAD.Vector(0, 0, 1),
+            fc.Vector(0, 0, 0),
+            fc.Vector(0, 0, 1),
         )
 
         bottom_hole_shape = (
@@ -963,8 +962,8 @@ def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
             obj.ScrewHoleDiameter,
             obj.ScrewHoleDiameter,
             sqbr2_depth,
-            FreeCAD.Vector(-obj.ScrewHoleDiameter / 2, -obj.ScrewHoleDiameter / 2, 0),
-            FreeCAD.Vector(0, 0, 1),
+            fc.Vector(-obj.ScrewHoleDiameter / 2, -obj.ScrewHoleDiameter / 2, 0),
+            fc.Vector(0, 0, 1),
         )
         arc_pt_off_x = (
             math.sqrt(
@@ -973,32 +972,32 @@ def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
         ) * unitmm
         arc_pt_off_y = obj.ScrewHoleDiameter / 2
 
-        va1 = FreeCAD.Vector(
+        va1 = fc.Vector(
             arc_pt_off_x,
             arc_pt_off_y,
             0,
         )
-        va2 = FreeCAD.Vector(
+        va2 = fc.Vector(
             -arc_pt_off_x,
             arc_pt_off_y,
             0,
         )
-        va3 = FreeCAD.Vector(
+        va3 = fc.Vector(
             -arc_pt_off_x,
             -arc_pt_off_y,
             0,
         )
-        va4 = FreeCAD.Vector(
+        va4 = fc.Vector(
             arc_pt_off_x,
             -arc_pt_off_y,
             0,
         )
-        var1 = FreeCAD.Vector(
+        var1 = fc.Vector(
             obj.MagnetHoleDiameter / 2,
             0,
             0,
         )
-        var2 = FreeCAD.Vector(
+        var2 = fc.Vector(
             -obj.MagnetHoleDiameter / 2,
             0,
             0,
@@ -1010,7 +1009,7 @@ def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
         s1 = Part.Shape([line_1, ar1, ar2, line_2])
         w1 = Part.Wire(s1.Edges)
         sq1_1 = Part.Face(w1)
-        sq1_1 = sq1_1.extrude(FreeCAD.Vector(0, 0, sqbr1_depth))
+        sq1_1 = sq1_1.extrude(fc.Vector(0, 0, sqbr1_depth))
         holes_interface_shape = Part.Solid.fuse(sq1_1, b1)
 
         bottom_hole_shape = (
@@ -1021,14 +1020,14 @@ def make_bottom_hole_shape(obj: FreeCAD.DocumentObject) -> Part.Shape:
     return bottom_hole_shape
 
 
-def _eco_bin_cut_fillet_edges_filter(obj: FreeCAD.DocumentObject, edge: Part.Edge) -> bool:
+def _eco_bin_cut_fillet_edges_filter(obj: fc.DocumentObject, edge: Part.Edge) -> bool:
     divfil = -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1 * unitmm
     z0 = edge.Vertexes[0].Point.z
     z1 = edge.Vertexes[1].Point.z
     return z1 != z0 and (z1 >= divfil or z0 >= divfil)
 
 
-def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
+def _eco_bin_deviders(obj: fc.DocumentObject) -> Part.Shape:
     xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
         obj.xDividers + 1
     )
@@ -1052,14 +1051,14 @@ def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
             obj.DividerThickness,
             obj.yTotalWidth,
             xdivheight + stackingoffset,
-            FreeCAD.Vector(
+            fc.Vector(
                 -obj.xGridSize / 2 + obj.Clearance + obj.DividerThickness,
                 -obj.yGridSize / 2 + obj.Clearance,
                 -obj.TotalHeight,
             ),
-            FreeCAD.Vector(0, 0, 1),
+            fc.Vector(0, 0, 1),
         )
-        comp.translate(FreeCAD.Vector(xtranslate, 0, 0))
+        comp.translate(fc.Vector(xtranslate, 0, 0))
 
         assembly = comp if assembly is None else assembly.fuse(comp)
         xtranslate += xcomp_w + obj.DividerThickness
@@ -1070,19 +1069,19 @@ def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
             obj.xTotalWidth,
             obj.DividerThickness,
             ydivheight + stackingoffset,
-            FreeCAD.Vector(
+            fc.Vector(
                 -obj.xGridSize / 2 + obj.Clearance,
                 -obj.yGridSize / 2 + obj.Clearance,
                 -obj.TotalHeight,
             ),
-            FreeCAD.Vector(0, 0, 1),
+            fc.Vector(0, 0, 1),
         )
-        comp.translate(FreeCAD.Vector(0, ytranslate, 0))
+        comp.translate(fc.Vector(0, ytranslate, 0))
         assembly = comp if assembly is None else assembly.fuse(comp)
         ytranslate += ycomp_w + obj.DividerThickness
 
     return assembly.translate(
-        FreeCAD.Vector(
+        fc.Vector(
             obj.xGridSize / 2,
             obj.yGridSize / 2,
             0,
@@ -1090,7 +1089,7 @@ def _eco_bin_deviders(obj: FreeCAD.DocumentObject) -> Part.Shape:
     )
 
 
-def _eco_error_check(obj: FreeCAD.DocumentObject) -> None:
+def _eco_error_check(obj: fc.DocumentObject) -> None:
     # Divider Minimum Height
 
     divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
@@ -1098,29 +1097,29 @@ def _eco_error_check(obj: FreeCAD.DocumentObject) -> None:
     if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
         obj.xDividerHeight = divmin
 
-        FreeCAD.Console.PrintWarning(
+        fc.Console.PrintWarning(
             "Divider Height must be equal to or greater than:  ",
         )
 
-        FreeCAD.Console.PrintWarning(divmin)
+        fc.Console.PrintWarning(divmin)
 
-        FreeCAD.Console.PrintWarning("\n")
+        fc.Console.PrintWarning("\n")
 
     if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
         obj.yDividerHeight = divmin
 
-        FreeCAD.Console.PrintWarning(
+        fc.Console.PrintWarning(
             "Divider Height must be equal to or greater than:  ",
         )
 
-        FreeCAD.Console.PrintWarning(divmin)
+        fc.Console.PrintWarning(divmin)
 
-        FreeCAD.Console.PrintWarning("\n")
+        fc.Console.PrintWarning("\n")
 
     if obj.InsideFilletRadius > (1.6 * unitmm):
         obj.InsideFilletRadius = 1.6 * unitmm
 
-        FreeCAD.Console.PrintWarning(
+        fc.Console.PrintWarning(
             "Inside Fillet Radius must be equal to or less than:  1.6 mm\n",
         )
 
@@ -1128,7 +1127,7 @@ def _eco_error_check(obj: FreeCAD.DocumentObject) -> None:
 class EcoCompartments(utils.Feature):
     """Create Eco bin main cut and dividers."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+    def __init__(self, obj: fc.DocumentObject) -> None:
         """Create Eco bin dividers.
 
         Args:
@@ -1205,7 +1204,7 @@ class EcoCompartments(utils.Feature):
 
     def make(
         self,
-        obj: FreeCAD.DocumentObject,
+        obj: fc.DocumentObject,
         layout: GridfinityLayout,
         bin_inside_shape: Part.Wire,
     ) -> Part.Shape:
@@ -1231,7 +1230,7 @@ class EcoCompartments(utils.Feature):
         face = Part.Face(bin_inside_shape)
 
         func_fuse = face.extrude(
-            FreeCAD.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness),
+            fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness),
         )
 
         base_offset = obj.BaseWallThickness * math.tan(math.pi / 8)
@@ -1321,14 +1320,14 @@ class EcoCompartments(utils.Feature):
             ytranslate = zeromm
             for y in range(obj.yMaxGrids):
                 if layout[x][y]:
-                    vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
+                    vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
                 ytranslate += obj.yGridSize
             xtranslate += obj.xGridSize
 
         eco_base_cut = utils.copy_and_translate(assembly, vec_list)
 
         eco_base_cut.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xGridSize / 2,
                 obj.yGridSize / 2,
                 0,
@@ -1344,7 +1343,7 @@ class EcoCompartments(utils.Feature):
             obj.TotalHeight,
             obj.BinOuterRadius - obj.WallThickness,
         ).translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
                 0,
@@ -1358,7 +1357,7 @@ class EcoCompartments(utils.Feature):
             obj.TotalHeight - obj.BaseProfileHeight,
             obj.BinOuterRadius,
         ).translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
                 0,
@@ -1385,7 +1384,7 @@ class EcoCompartments(utils.Feature):
 
             func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius / 2, b_edges)
         return func_fuse.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 -obj.xLocationOffset,
                 -obj.yLocationOffset,
                 0,
@@ -1396,7 +1395,7 @@ class EcoCompartments(utils.Feature):
 class BinBaseValues(utils.Feature):
     """Add bin base properties and calculate values."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+    def __init__(self, obj: fc.DocumentObject) -> None:
         """Create BinBaseValues.
 
         Args:
@@ -1472,7 +1471,7 @@ class BinBaseValues(utils.Feature):
             ),
         ).Clearance = const.CLEARANCE
 
-    def make(self, obj: FreeCAD.DocumentObject) -> None:
+    def make(self, obj: fc.DocumentObject) -> None:
         """Generate Rectanble layout and calculate relevant parameters.
 
         Args:
@@ -1487,7 +1486,7 @@ class BinBaseValues(utils.Feature):
 
 
 def make_complex_bin_base(
-    obj: FreeCAD.DocumentObject,
+    obj: fc.DocumentObject,
     layout: GridfinityLayout,
 ) -> Part.Shape:
     """Creaet complex shaped bin base.
@@ -1564,7 +1563,7 @@ def make_complex_bin_base(
         for y in range(obj.yMaxGrids):
             if layout[x][y]:
                 b = assembly.copy()
-                b.translate(FreeCAD.Vector(xtranslate, ytranslate, 0))
+                b.translate(fc.Vector(xtranslate, ytranslate, 0))
 
             if x == 0 and y == 0:
                 b1 = b
@@ -1583,7 +1582,7 @@ def make_complex_bin_base(
     )
 
     return fuse_total.translate(
-        FreeCAD.Vector(
+        fc.Vector(
             obj.xGridSize / 2 - obj.xLocationOffset,
             obj.yGridSize / 2 - obj.yLocationOffset,
             0,
@@ -1594,7 +1593,7 @@ def make_complex_bin_base(
 class BlankBinRecessedTop(utils.Feature):
     """Cut into blank bin to create recessed bin top."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+    def __init__(self, obj: fc.DocumentObject) -> None:
         """Create blank bin recessed top section.
 
         Args:
@@ -1609,7 +1608,7 @@ class BlankBinRecessedTop(utils.Feature):
             "height per unit <br> <br> default = 0 mm",
         ).RecessedTopDepth = const.RECESSED_TOP_DEPTH
 
-    def make(self, obj: FreeCAD.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
+    def make(self, obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
         """Generate Rectanble layout and calculate relevant parameters.
 
         Args:
@@ -1622,10 +1621,10 @@ class BlankBinRecessedTop(utils.Feature):
         """
         face = Part.Face(bin_inside_shape)
 
-        fuse_total = face.extrude(FreeCAD.Vector(0, 0, -obj.RecessedTopDepth))
+        fuse_total = face.extrude(fc.Vector(0, 0, -obj.RecessedTopDepth))
 
         return fuse_total.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 -obj.xLocationOffset,
                 -obj.yLocationOffset,
                 0,
@@ -1638,7 +1637,7 @@ class BinBottomHoles(utils.Feature):
 
     def __init__(
         self,
-        obj: FreeCAD.DocumentObject,
+        obj: fc.DocumentObject,
         *,
         magnet_holes_default: bool,
     ) -> None:
@@ -1732,7 +1731,7 @@ class BinBottomHoles(utils.Feature):
 
     def make(
         self,
-        obj: FreeCAD.DocumentObject,
+        obj: fc.DocumentObject,
         layout: GridfinityLayout,
     ) -> Part.Shape:
         """Make bin bottom holes.
@@ -1753,10 +1752,10 @@ class BinBottomHoles(utils.Feature):
         hole_shape_sub_array = utils.copy_and_translate(
             bottom_hole_shape,
             [
-                FreeCAD.Vector(-x_hole_pos, -y_hole_pos, -obj.TotalHeight),
-                FreeCAD.Vector(x_hole_pos, -y_hole_pos, -obj.TotalHeight),
-                FreeCAD.Vector(-x_hole_pos, y_hole_pos, -obj.TotalHeight),
-                FreeCAD.Vector(x_hole_pos, y_hole_pos, -obj.TotalHeight),
+                fc.Vector(-x_hole_pos, -y_hole_pos, -obj.TotalHeight),
+                fc.Vector(x_hole_pos, -y_hole_pos, -obj.TotalHeight),
+                fc.Vector(-x_hole_pos, y_hole_pos, -obj.TotalHeight),
+                fc.Vector(x_hole_pos, y_hole_pos, -obj.TotalHeight),
             ],
         )
         vec_list = []
@@ -1765,15 +1764,15 @@ class BinBottomHoles(utils.Feature):
             ytranslate = 0
             for y in range(obj.yMaxGrids):
                 if layout[x][y]:
-                    vec_list.append(FreeCAD.Vector(xtranslate, ytranslate, 0))
+                    vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
                 ytranslate += obj.yGridSize.Value
             xtranslate += obj.xGridSize.Value
 
         fuse_total = utils.copy_and_translate(hole_shape_sub_array, vec_list).translate(
-            FreeCAD.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0),
+            fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0),
         )
         return fuse_total.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 -obj.xLocationOffset,
                 -obj.yLocationOffset,
                 0,
@@ -1786,7 +1785,7 @@ class StackingLip(utils.Feature):
 
     def __init__(
         self,
-        obj: FreeCAD.DocumentObject,
+        obj: fc.DocumentObject,
         *,
         stacking_lip_default: bool,
     ) -> None:
@@ -1838,7 +1837,7 @@ class StackingLip(utils.Feature):
             1,
         ).StackingLipVerticalSection = const.STACKING_LIP_VERTICAL_SECTION
 
-    def make(self, obj: FreeCAD.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
+    def make(self, obj: fc.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
         """Create stacking lip based on input bin shape.
 
         Args:
@@ -1855,32 +1854,32 @@ class StackingLip(utils.Feature):
         )
 
         ## Stacking Lip Generation
-        st1 = FreeCAD.Vector(obj.Clearance, obj.yGridSize / 2, 0)
-        st2 = FreeCAD.Vector(
+        st1 = fc.Vector(obj.Clearance, obj.yGridSize / 2, 0)
+        st2 = fc.Vector(
             obj.Clearance,
             obj.yGridSize / 2,
             obj.StackingLipBottomChamfer
             + obj.StackingLipVerticalSection
             + obj.StackingLipTopChamfer,
         )
-        st3 = FreeCAD.Vector(
+        st3 = fc.Vector(
             obj.Clearance + obj.StackingLipTopLedge,
             obj.yGridSize / 2,
             obj.StackingLipBottomChamfer
             + obj.StackingLipVerticalSection
             + obj.StackingLipTopChamfer,
         )
-        st4 = FreeCAD.Vector(
+        st4 = fc.Vector(
             obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
             obj.yGridSize / 2,
             obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
         )
-        st5 = FreeCAD.Vector(
+        st5 = fc.Vector(
             obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
             obj.yGridSize / 2,
             obj.StackingLipBottomChamfer,
         )
-        st6 = FreeCAD.Vector(
+        st6 = fc.Vector(
             obj.Clearance
             + obj.StackingLipTopLedge
             + obj.StackingLipTopChamfer
@@ -1888,7 +1887,7 @@ class StackingLip(utils.Feature):
             obj.yGridSize / 2,
             0,
         )
-        st7 = FreeCAD.Vector(
+        st7 = fc.Vector(
             obj.Clearance
             + obj.StackingLipTopLedge
             + obj.StackingLipTopChamfer
@@ -1896,7 +1895,7 @@ class StackingLip(utils.Feature):
             obj.yGridSize / 2,
             -obj.StackingLipVerticalSection,
         )
-        st8 = FreeCAD.Vector(
+        st8 = fc.Vector(
             obj.Clearance + obj.WallThickness,
             obj.yGridSize / 2,
             -obj.StackingLipVerticalSection
@@ -1907,7 +1906,7 @@ class StackingLip(utils.Feature):
                 - obj.WallThickness
             ),
         )
-        st9 = FreeCAD.Vector(obj.Clearance + obj.WallThickness, obj.yGridSize / 2, 0)
+        st9 = fc.Vector(obj.Clearance + obj.WallThickness, obj.yGridSize / 2, 0)
 
         stl1 = Part.LineSegment(st1, st2)
         stl2 = Part.LineSegment(st2, st3)
@@ -1928,7 +1927,7 @@ class StackingLip(utils.Feature):
         stacking_lip = Part.makeSolid(stacking_lip)
 
         return stacking_lip.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 -obj.xLocationOffset,
                 -obj.yLocationOffset,
                 0,
@@ -1941,7 +1940,7 @@ class BinSolidMidSection(utils.Feature):
 
     def __init__(
         self,
-        obj: FreeCAD.DocumentObject,
+        obj: fc.DocumentObject,
         default_height_units: int,
         default_wall_thickness: int,
     ) -> None:
@@ -2000,7 +1999,7 @@ class BinSolidMidSection(utils.Feature):
             1,
         ).HeightUnitValue = const.HEIGHT_UNIT_VALUE
 
-    def make(self, obj: FreeCAD.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
+    def make(self, obj: fc.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
         """Generate bin solid mid section.
 
         Args:
@@ -2021,10 +2020,10 @@ class BinSolidMidSection(utils.Feature):
         ## Bin Solid Mid Section Generation
         face = Part.Face(bin_outside_shape)
 
-        fuse_total = face.extrude(FreeCAD.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight))
+        fuse_total = face.extrude(fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight))
 
         return fuse_total.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 -obj.xLocationOffset,
                 -obj.yLocationOffset,
                 0,

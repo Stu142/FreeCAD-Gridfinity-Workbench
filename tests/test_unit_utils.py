@@ -4,12 +4,10 @@ import freecad  # noqa: I001,F401
 import unittest
 from unittest import mock
 
-import FreeCAD
+import FreeCAD as fc  # noqa:N813
 import Part
 
 from freecad.gridfinity_workbench import utils
-
-Vector = FreeCAD.Vector
 
 
 class UtilsTest(unittest.TestCase):
@@ -20,7 +18,7 @@ class UtilsTest(unittest.TestCase):
 
     def test_copy_and_translate_vector_list(self) -> None:
         shape = mock.MagicMock(spec=Part.Shape)
-        vec_list = [FreeCAD.Vector(1, 2, 3), FreeCAD.Vector(4, 5, 6)]
+        vec_list = [fc.Vector(1, 2, 3), fc.Vector(4, 5, 6)]
 
         utils.copy_and_translate(shape, vec_list)
 
@@ -33,7 +31,7 @@ class UtilsTest(unittest.TestCase):
         self.assertRaises(ValueError, utils.curve_to_wire, [])
 
     def test_curve_to_wire_one_line(self) -> None:
-        vertexes = [Vector(0, 0, 0), Vector(10, 0, 0)]
+        vertexes = [fc.Vector(0, 0, 0), fc.Vector(10, 0, 0)]
         line = Part.LineSegment(vertexes[0], vertexes[1])
 
         wire = utils.curve_to_wire([line])
@@ -42,10 +40,10 @@ class UtilsTest(unittest.TestCase):
         self.assertListEqual(vertexes, [vertex.Point for vertex in wire.Vertexes])
 
     def test_cuve_to_wire_rectangle(self) -> None:
-        line_1 = Part.LineSegment(Vector(0, 0, 0), Vector(10, 0, 0))
-        line_2 = Part.LineSegment(Vector(10, 0, 0), Vector(10, 10, 0))
-        line_3 = Part.LineSegment(Vector(10, 10, 0), Vector(10, 0, 0))
-        line_4 = Part.LineSegment(Vector(10, 0, 0), Vector(0, 0, 0))
+        line_1 = Part.LineSegment(fc.Vector(0, 0, 0), fc.Vector(10, 0, 0))
+        line_2 = Part.LineSegment(fc.Vector(10, 0, 0), fc.Vector(10, 10, 0))
+        line_3 = Part.LineSegment(fc.Vector(10, 10, 0), fc.Vector(10, 0, 0))
+        line_4 = Part.LineSegment(fc.Vector(10, 0, 0), fc.Vector(0, 0, 0))
 
         wire = utils.curve_to_wire([line_1, line_2, line_3, line_4])
 

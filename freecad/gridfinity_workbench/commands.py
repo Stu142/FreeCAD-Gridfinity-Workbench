@@ -5,8 +5,8 @@ Contains command objects representing what should happen on a button press.
 
 from pathlib import Path
 
-import FreeCAD
-import FreeCADGui
+import FreeCAD as fc  # noqa: N813
+import FreeCADGui as fcg  # noqa: N813
 
 from .features import (
     Baseplate,
@@ -26,7 +26,7 @@ ICONDIR = Path(__file__).parent / "icons"
 class ViewProviderGridfinity:
     """Gridfinity workbench viewprovider."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, icon_path: Path) -> None:
+    def __init__(self, obj: fc.DocumentObject, icon_path: Path) -> None:
         """Create a gridfinity viewprovider.
 
         Args:
@@ -46,7 +46,7 @@ class ViewProviderGridfinity:
         if not hasattr(self, "icon_path"):
             self.icon_path = Path(__file__).parent / "icons" / "gridfinity_workbench_icon.svg"
 
-    def attach(self, vobj: FreeCADGui.ViewProviderDocumentObject) -> None:
+    def attach(self, vobj: fcg.ViewProviderDocumentObject) -> None:
         """Attach viewproviderdocument object to self.
 
         Args:
@@ -103,37 +103,37 @@ class BaseCommand:
             bool: True when command is active, otherwise False.
 
         """
-        return FreeCAD.ActiveDocument is not None
+        return fc.ActiveDocument is not None
 
     def Activated(self) -> None:  # noqa: N802
         """Execute when command is activated."""
-        FreeCADGui.doCommand("import freecad.gridfinity_workbench.commands")
-        FreeCADGui.doCommandGui(
+        fcg.doCommand("import freecad.gridfinity_workbench.commands")
+        fcg.doCommandGui(
             f"freecad.gridfinity_workbench.commands.{self.__class__.__name__}.create()",
         )
-        FreeCAD.ActiveDocument.recompute()
-        FreeCADGui.SendMsgToActiveView("ViewFit")
+        fc.ActiveDocument.recompute()
+        fcg.SendMsgToActiveView("ViewFit")
 
     @classmethod
-    def create(cls) -> FreeCAD.DocumentObject:
+    def create(cls) -> fc.DocumentObject:
         """Create the gridfinity workbench object.
 
         Returns:
             FreeCAD.DocumentObject: FreeCAD object containing gridfinity model and properties.
 
         """
-        if FreeCAD.GuiUp:
+        if fc.GuiUp:
             # borrowed from threaded profiles
-            body = FreeCADGui.ActiveDocument.ActiveView.getActiveObject("pdbody")
-            part = FreeCADGui.ActiveDocument.ActiveView.getActiveObject("part")
+            body = fcg.ActiveDocument.ActiveView.getActiveObject("pdbody")
+            part = fcg.ActiveDocument.ActiveView.getActiveObject("part")
 
             if body:
-                obj = FreeCAD.ActiveDocument.addObject(
+                obj = fc.ActiveDocument.addObject(
                     "PartDesign::FeaturePython",
                     cls.NAME,
                 )
             else:
-                obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", cls.NAME)
+                obj = fc.ActiveDocument.addObject("Part::FeaturePython", cls.NAME)
             ViewProviderGridfinity(obj.ViewObject, str(cls.Pixmap))
             cls.GRIDFINITY_FUNCTION(obj)
 
@@ -142,7 +142,7 @@ class BaseCommand:
             elif part:
                 part.Group += [obj]
         else:
-            obj = FreeCAD.ActiveDocument.addObject("Part::FeaturePython", cls.NAME)
+            obj = fc.ActiveDocument.addObject("Part::FeaturePython", cls.NAME)
             cls.GRIDFINITY_FUNCTION(obj)
         return obj
 

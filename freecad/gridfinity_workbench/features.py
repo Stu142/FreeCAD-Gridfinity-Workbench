@@ -2,9 +2,8 @@
 
 from abc import abstractmethod
 
-import FreeCAD
+import FreeCAD as fc  # noqa: N813
 import Part
-from FreeCAD import Units
 
 from . import const, utils
 from .baseplate_feature_construction import (
@@ -33,7 +32,7 @@ from .grid_initial_layout import (
 )
 from .version import __version__
 
-unitmm = Units.Quantity("1 mm")
+unitmm = fc.Units.Quantity("1 mm")
 
 
 __all__ = [
@@ -49,7 +48,7 @@ __all__ = [
 
 
 class FoundationGridfinity:
-    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+    def __init__(self, obj: fc.DocumentObject) -> None:
         obj.addProperty(
             "App::PropertyString",
             "version",
@@ -80,7 +79,7 @@ class FoundationGridfinity:
             fp.Shape = gridfinity_shape
 
     @abstractmethod
-    def generate_gridfinity_shape(self, fp: FreeCAD.DocumentObject) -> Part.Shape:
+    def generate_gridfinity_shape(self, fp: fc.DocumentObject) -> Part.Shape:
         """Generate the TopoShape of the object."""
 
     def dumps(
@@ -99,7 +98,7 @@ class FoundationGridfinity:
 class BinBlank(FoundationGridfinity):
     """Gridfinity BinBlank object."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+    def __init__(self, obj: fc.DocumentObject) -> None:
         """Create BinBlank object.
 
         Args:
@@ -131,7 +130,7 @@ class BinBlank(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate BinBlanek Shape.
 
         Args:
@@ -152,7 +151,7 @@ class BinBlank(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         bin_outside_shape.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
                 0,
@@ -166,7 +165,7 @@ class BinBlank(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
         bin_inside_shape.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
                 0,
@@ -197,7 +196,7 @@ class BinBlank(FoundationGridfinity):
 
 
 class BinBase(FoundationGridfinity):
-    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+    def __init__(self, obj: fc.DocumentObject) -> None:
         super().__init__(obj)
 
         obj.addProperty(
@@ -223,7 +222,7 @@ class BinBase(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         BinBaseValues.make(self, obj)
 
         layout = RectangleLayout.make(self, obj)
@@ -235,7 +234,7 @@ class BinBase(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         bin_outside_shape.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
                 0,
@@ -249,7 +248,7 @@ class BinBase(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
         bin_inside_shape.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
                 0,
@@ -283,7 +282,7 @@ class BinBase(FoundationGridfinity):
 class SimpleStorageBin(FoundationGridfinity):
     """Simple Storage Bin."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+    def __init__(self, obj: fc.DocumentObject) -> None:
         """Initialize Simple storage bin properties.
 
         Args:
@@ -315,7 +314,7 @@ class SimpleStorageBin(FoundationGridfinity):
         ]
         obj.Proxy = self
 
-    def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate simple storage bin.
 
         Args:
@@ -336,7 +335,7 @@ class SimpleStorageBin(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         bin_outside_shape.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
                 0,
@@ -350,7 +349,7 @@ class SimpleStorageBin(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
         bin_inside_shape.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
                 0,
@@ -393,7 +392,7 @@ class SimpleStorageBin(FoundationGridfinity):
 class EcoBin(FoundationGridfinity):
     """Eco Bin."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+    def __init__(self, obj: fc.DocumentObject) -> None:
         """Initialize Eco bin properties."""
         super().__init__(obj)
 
@@ -421,7 +420,7 @@ class EcoBin(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Create gridfinity EcoBin shape.
 
         Args:
@@ -444,7 +443,7 @@ class EcoBin(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         bin_outside_shape.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
                 0,
@@ -458,7 +457,7 @@ class EcoBin(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
         bin_inside_shape.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
                 0,
@@ -495,7 +494,7 @@ class EcoBin(FoundationGridfinity):
 class PartsBin(FoundationGridfinity):
     """PartsBin object."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+    def __init__(self, obj: fc.DocumentObject) -> None:
         """Initialize Partsbin properties.
 
         Args:
@@ -528,7 +527,7 @@ class PartsBin(FoundationGridfinity):
         ]
         obj.Proxy = self
 
-    def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate Parts bin.
 
         Args:
@@ -549,7 +548,7 @@ class PartsBin(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         bin_outside_shape.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
                 0,
@@ -563,7 +562,7 @@ class PartsBin(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
         bin_inside_shape.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
                 0,
@@ -606,7 +605,7 @@ class PartsBin(FoundationGridfinity):
 class Baseplate(FoundationGridfinity):
     """BasePlate object."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+    def __init__(self, obj: fc.DocumentObject) -> None:
         """Initialize Baseplate properties.
 
         Args:
@@ -630,7 +629,7 @@ class Baseplate(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate Baseplate.
 
         Args:
@@ -651,7 +650,7 @@ class Baseplate(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         baseplate_outside_shape.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2,
                 obj.yTotalWidth / 2,
                 0,
@@ -667,7 +666,7 @@ class Baseplate(FoundationGridfinity):
 
         fuse_total = make_complex_bin_base(obj, layout)
         fuse_total.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 0,
                 0,
                 obj.TotalHeight,
@@ -680,7 +679,7 @@ class Baseplate(FoundationGridfinity):
 class MagnetBaseplate(FoundationGridfinity):
     """Magnet baseplate object."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+    def __init__(self, obj: fc.DocumentObject) -> None:
         """Initialize magnet baseplate properties.
 
         Args:
@@ -706,7 +705,7 @@ class MagnetBaseplate(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate partsbin shape.
 
         Args:
@@ -727,7 +726,7 @@ class MagnetBaseplate(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         baseplate_outside_shape.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2,
                 obj.yTotalWidth / 2,
                 0,
@@ -743,7 +742,7 @@ class MagnetBaseplate(FoundationGridfinity):
 
         fuse_total = make_complex_bin_base(obj, layout)
         fuse_total.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 0,
                 0,
                 obj.TotalHeight,
@@ -764,7 +763,7 @@ class MagnetBaseplate(FoundationGridfinity):
 class ScrewTogetherBaseplate(FoundationGridfinity):
     """Screw together baseplate object."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+    def __init__(self, obj: fc.DocumentObject) -> None:
         """Initialize screw together baseplate properties.
 
         Args:
@@ -791,7 +790,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             BaseplateConnectionHoles(obj),
         ]
 
-    def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate Parts Bin shape.
 
         Args:
@@ -812,7 +811,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         baseplate_outside_shape.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 obj.xTotalWidth / 2,
                 obj.yTotalWidth / 2,
                 0,
@@ -828,7 +827,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
 
         fuse_total = make_complex_bin_base(obj, layout)
         fuse_total.translate(
-            FreeCAD.Vector(
+            fc.Vector(
                 0,
                 0,
                 obj.TotalHeight,
@@ -857,7 +856,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
 class LBinBlank(FoundationGridfinity):
     """L shaped blank bin object."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject) -> None:
+    def __init__(self, obj: fc.DocumentObject) -> None:
         """Initialize L shaped blank bin properties.
 
         Args:
@@ -885,7 +884,7 @@ class LBinBlank(FoundationGridfinity):
 
         obj.Proxy = self
 
-    def generate_gridfinity_shape(self, obj: FreeCAD.DocumentObject) -> Part.Shape:
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate gridfinity L shaped bin.
 
         Args:

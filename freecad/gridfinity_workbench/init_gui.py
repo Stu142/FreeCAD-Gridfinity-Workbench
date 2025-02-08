@@ -6,18 +6,18 @@ The file name is given by FreeCAD. FreeCAD uses this file to initialize GUI comp
 from pathlib import Path
 from typing import ClassVar
 
-import FreeCAD
-import FreeCADGui
+import FreeCAD as fc  # noqa: N813
+import FreeCADGui as fcg  # noqa: N813
 
 try:
     from FreeCADGui import Workbench
 
 except ImportError:
-    FreeCAD.Console.PrintWarning(
+    fc.Console.PrintWarning(
         "you are using the GridfinityWorkbench with an old version of FreeCAD (<0.16)",
     )
 
-    FreeCAD.Console.PrintWarning(
+    fc.Console.PrintWarning(
         "the class Workbench is loaded, although not imported: magic",
     )
 
@@ -73,21 +73,21 @@ class GridfinityWorkbench(Workbench):
             CreateSimpleStorageBin,
         )
 
-        FreeCAD.Console.PrintMessage("switching to Gridfinity Workbench\n")
+        fc.Console.PrintMessage("switching to Gridfinity Workbench\n")
 
         self.appendToolbar("Gridfinity", self.toolbox)
 
         self.appendMenu("Gridfinity", self.toolbox)
 
-        FreeCADGui.addCommand("CreateBinBlank", CreateBinBlank())
-        FreeCADGui.addCommand("CreateBinBase", CreateBinBase())
-        FreeCADGui.addCommand("CreateSimpleStorageBin", CreateSimpleStorageBin())
-        FreeCADGui.addCommand("CreateEcoBin", CreateEcoBin())
-        FreeCADGui.addCommand("CreatePartsBin", CreatePartsBin())
-        FreeCADGui.addCommand("CreateBaseplate", CreateBaseplate())
-        FreeCADGui.addCommand("CreateMagnetBaseplate", CreateMagnetBaseplate())
-        FreeCADGui.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
-        FreeCADGui.addCommand("CreateLBinBlank", CreateLBinBlank())
+        fcg.addCommand("CreateBinBlank", CreateBinBlank())
+        fcg.addCommand("CreateBinBase", CreateBinBase())
+        fcg.addCommand("CreateSimpleStorageBin", CreateSimpleStorageBin())
+        fcg.addCommand("CreateEcoBin", CreateEcoBin())
+        fcg.addCommand("CreatePartsBin", CreatePartsBin())
+        fcg.addCommand("CreateBaseplate", CreateBaseplate())
+        fcg.addCommand("CreateMagnetBaseplate", CreateMagnetBaseplate())
+        fcg.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
+        fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
 
 
-FreeCADGui.addWorkbench(GridfinityWorkbench())
+fcg.addWorkbench(GridfinityWorkbench())

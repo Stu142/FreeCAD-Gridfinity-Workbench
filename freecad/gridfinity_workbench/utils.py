@@ -8,7 +8,7 @@ import math
 from abc import abstractmethod
 from dataclasses import dataclass
 
-import FreeCAD
+import FreeCAD as fc  # noqa:N813
 import Part
 
 
@@ -16,12 +16,12 @@ class Feature:
     """Gloabal feature class."""
 
     @abstractmethod
-    def make(self, obj: FreeCAD.DocumentObject) -> None:
+    def make(self, obj: fc.DocumentObject) -> None:
         """Make a Gridfinity Feature."""
         raise NotImplementedError
 
 
-def copy_and_translate(shape: Part.Shape, vec_list: list[FreeCAD.Vector]) -> Part.Shape:
+def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Shape:
     """Copy a shape and translates.
 
     This function copies and translate a shape by a vector for as many times as there are
@@ -115,23 +115,23 @@ def create_rounded_rectangle(
     xarcv = xwidth / 2 - radius + radius * math.sin(math.pi / 4)
     yarcv = ywidth / 2 - radius + radius * math.sin(math.pi / 4)
 
-    v1 = FreeCAD.Vector(-xclosev, yfarv, zsketchplane)
-    v1 = FreeCAD.Vector(-xclosev, yfarv, zsketchplane)
-    v2 = FreeCAD.Vector(xclosev, yfarv, zsketchplane)
-    v3 = FreeCAD.Vector(xfarv, yclosev, zsketchplane)
-    v4 = FreeCAD.Vector(xfarv, -yclosev, zsketchplane)
-    v5 = FreeCAD.Vector(xclosev, -yfarv, zsketchplane)
-    v6 = FreeCAD.Vector(-xclosev, -yfarv, zsketchplane)
-    v7 = FreeCAD.Vector(-xfarv, -yclosev, zsketchplane)
-    v8 = FreeCAD.Vector(-xfarv, yclosev, zsketchplane)
+    v1 = fc.Vector(-xclosev, yfarv, zsketchplane)
+    v1 = fc.Vector(-xclosev, yfarv, zsketchplane)
+    v2 = fc.Vector(xclosev, yfarv, zsketchplane)
+    v3 = fc.Vector(xfarv, yclosev, zsketchplane)
+    v4 = fc.Vector(xfarv, -yclosev, zsketchplane)
+    v5 = fc.Vector(xclosev, -yfarv, zsketchplane)
+    v6 = fc.Vector(-xclosev, -yfarv, zsketchplane)
+    v7 = fc.Vector(-xfarv, -yclosev, zsketchplane)
+    v8 = fc.Vector(-xfarv, yclosev, zsketchplane)
 
-    vc1 = FreeCAD.Vector(-xarcv, yarcv, zsketchplane)
+    vc1 = fc.Vector(-xarcv, yarcv, zsketchplane)
     c1 = Part.Arc(v1, vc1, v8)
-    vc2 = FreeCAD.Vector(xarcv, yarcv, zsketchplane)
+    vc2 = fc.Vector(xarcv, yarcv, zsketchplane)
     c2 = Part.Arc(v2, vc2, v3)
-    vc3 = FreeCAD.Vector(xarcv, -yarcv, zsketchplane)
+    vc3 = fc.Vector(xarcv, -yarcv, zsketchplane)
     c3 = Part.Arc(v4, vc3, v5)
-    vc4 = FreeCAD.Vector(-xarcv, -yarcv, zsketchplane)
+    vc4 = fc.Vector(-xarcv, -yarcv, zsketchplane)
     c4 = Part.Arc(v6, vc4, v7)
 
     l1 = Part.LineSegment(v1, v2)
@@ -197,7 +197,7 @@ def rounded_rectangle_extrude(
     """
     w1 = create_rounded_rectangle(xwidth, ywidth, zsketchplane, radius)
     face = Part.Face(w1)
-    return face.extrude(FreeCAD.Vector(0, 0, height))
+    return face.extrude(fc.Vector(0, 0, height))
 
 
 @dataclass
@@ -276,24 +276,24 @@ def create_rounded_l(
     arc6x = arc1x
     arc6y = yoffset + radius - radius * math.sin(math.pi / 4)
 
-    l1v1 = FreeCAD.Vector(l1x, l1y1, 0)
-    l1v2 = FreeCAD.Vector(l1x, l1y2, 0)
-    arc1v = FreeCAD.Vector(arc1x, arc1y, 0)
-    l2v1 = FreeCAD.Vector(l2x1, l2y, 0)
-    l2v2 = FreeCAD.Vector(l2x2, l2y, 0)
-    arc2v = FreeCAD.Vector(arc2x, arc2y, 0)
-    l3v1 = FreeCAD.Vector(l3x, l3y1, 0)
-    l3v2 = FreeCAD.Vector(l3x, l3y2, 0)
-    arc3v = FreeCAD.Vector(arc3x, arc3y, 0)
-    l4v1 = FreeCAD.Vector(l4x1, l4y, 0)
-    l4v2 = FreeCAD.Vector(l4x2, l4y, 0)
-    arc4v = FreeCAD.Vector(arc4x, arc4y, 0)
-    l5v1 = FreeCAD.Vector(l5x, lsy1, 0)
-    l5v2 = FreeCAD.Vector(l5x, l5y2, 0)
-    arc5v = FreeCAD.Vector(arc5x, arc5y, 0)
-    l6v1 = FreeCAD.Vector(l6x1, l6y, 0)
-    l6v2 = FreeCAD.Vector(l6x2, l6y, 0)
-    arc6v = FreeCAD.Vector(arc6x, arc6y, 0)
+    l1v1 = fc.Vector(l1x, l1y1, 0)
+    l1v2 = fc.Vector(l1x, l1y2, 0)
+    arc1v = fc.Vector(arc1x, arc1y, 0)
+    l2v1 = fc.Vector(l2x1, l2y, 0)
+    l2v2 = fc.Vector(l2x2, l2y, 0)
+    arc2v = fc.Vector(arc2x, arc2y, 0)
+    l3v1 = fc.Vector(l3x, l3y1, 0)
+    l3v2 = fc.Vector(l3x, l3y2, 0)
+    arc3v = fc.Vector(arc3x, arc3y, 0)
+    l4v1 = fc.Vector(l4x1, l4y, 0)
+    l4v2 = fc.Vector(l4x2, l4y, 0)
+    arc4v = fc.Vector(arc4x, arc4y, 0)
+    l5v1 = fc.Vector(l5x, lsy1, 0)
+    l5v2 = fc.Vector(l5x, l5y2, 0)
+    arc5v = fc.Vector(arc5x, arc5y, 0)
+    l6v1 = fc.Vector(l6x1, l6y, 0)
+    l6v2 = fc.Vector(l6x2, l6y, 0)
+    arc6v = fc.Vector(arc6x, arc6y, 0)
 
     lines = [
         Part.LineSegment(l1v1, l1v2),
@@ -335,4 +335,4 @@ def rounded_l_extrude(
     """
     w1 = create_rounded_l(shape_data, xoffset, yoffset, radius)
     face = Part.Face(w1)
-    return face.extrude(FreeCAD.Vector(0, 0, height))
+    return face.extrude(fc.Vector(0, 0, height))
