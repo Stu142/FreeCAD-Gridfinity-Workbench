@@ -2,8 +2,9 @@
 
 from abc import abstractmethod
 
-import FreeCAD as fc  # noqa: N813
 import Part
+
+import FreeCAD as fc  # noqa: N813
 
 from . import const, utils
 from .baseplate_feature_construction import (
@@ -14,6 +15,13 @@ from .baseplate_feature_construction import (
     BaseplateScrewBottomChamfer,
     BaseplateSolidShape,
 )
+from .custom_shape import get_custom_shape
+
+from .custom_shape_features import (
+    custom_shape_solid,
+    custom_shape_trim,
+)
+
 from .feature_construction import (
     BinBaseValues,
     BinBottomHoles,
@@ -93,7 +101,74 @@ class FoundationGridfinity:
     ) -> None:
         """Needed for JSON Serialization when saving a file containing gridfinity object."""
         return
+    
+class CustomBin(FoundationGridfinity):
+    """Gridfinity CustomBin object."""
 
+    def __init__(self, obj: fc.DocumentObject) -> None:
+        super().__init__(obj)
+        #res = get_custom_shape()
+        #fc.Console.PrintMessage(res)
+
+        obj.addProperty(
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
+        )
+        self.bintype = "standard"
+        self.features = [
+            RectangleLayout(obj, baseplate_default=False),
+            BinSolidMidSection(
+                obj,
+                default_height_units=const.HEIGHT_UNITS,
+                default_wall_thickness=const.WALL_THICKNESS,
+            ),
+            BlankBinRecessedTop(obj),
+            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
+            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
+            BinBaseValues(obj),
+        ]
+
+        obj.Proxy = self
+
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        """Generate BinBlanek Shape.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+
+        Returns:
+            Part.Shape: Bin Blank shape
+
+        """
+        layout = [[False, False, False, False, False, False, False, False, False, False],
+                  [False, False, False, False, False, False, False, False, False, False],
+                  [False, False, True, True, True, True, False, False, False, False],
+                  [False, False, True, False, True, True, False, False, False, False],
+                  [False, False, True, True, True, False, False, False, False, False],
+                  [False, False, False, False, False, False, False, False, False, False],
+                  [False, False, False, False, False, False, False, False, False, False],
+                  [False, False, False, False, False, False, False, False, False, False],
+                  [False, False, False, False, False, False, False, False, False, False],
+                  [False, False, False, False, False, False, False, False, False, False]]
+        ## Temporary values calculated here
+        if obj.NonStandardHeight:
+            obj.TotalHeight = obj.CustomHeight
+
+        else:
+            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
+
+        obj.xMaxGrids = 10
+        obj.yMaxGrids = 10
+
+        fuse_total = custom_shape_solid(obj, layout)
+
+        outside_trim = custom_shape_trim(obj, layout, obj.Clearance.Value, obj.Clearance.Value)
+        fuse_total = fuse_total.cut(outside_trim)
+
+        fuse_total = Part.Solid.removeSplitter(fuse_total)
+        return fuse_total
 
 class BinBlank(FoundationGridfinity):
     """Gridfinity BinBlank object."""
