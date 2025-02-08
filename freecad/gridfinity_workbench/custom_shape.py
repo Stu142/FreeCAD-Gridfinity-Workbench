@@ -105,7 +105,7 @@ class GridDialog(QDialog):
 
 
 def get_custom_shape() -> list[list[bool]] | None:
-    """Get a custom shape from the user."""
+    """Get a custom shape from the user. Returns None if the user aborted the operation."""
     dialog = GridDialog(10, 10, 40, 50)
     if not dialog.exec():
         return None
