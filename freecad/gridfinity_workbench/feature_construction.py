@@ -5,7 +5,7 @@ import math
 import FreeCAD as fc  # noqa: N813
 import Part
 
-from . import const, utils
+from . import const, preferences, utils
 
 unitmm = fc.Units.Quantity("1 mm")
 zeromm = fc.Units.Quantity("0 mm")
@@ -1469,7 +1469,7 @@ class BinBaseValues(utils.Feature):
                 "gives some clearance between bins <br> <br>"
                 "default = 0.25 mm"
             ),
-        ).Clearance = const.CLEARANCE
+        ).Clearance = preferences.clearance()
 
     def make(self, obj: fc.DocumentObject) -> None:
         """Generate Rectanble layout and calculate relevant parameters.
@@ -1661,7 +1661,7 @@ class BinBottomHoles(utils.Feature):
             "ScrewHoles",
             "Gridfinity",
             "Toggle the screw holes on or off",
-        ).ScrewHoles = const.SCREW_HOLES
+        ).ScrewHoles = preferences.bin_screw_holes()
 
         ## Gridfinity Non Standard Parameters
         obj.addProperty(
@@ -1696,14 +1696,14 @@ class BinBottomHoles(utils.Feature):
                 "<br> <br> Hex is alternative press fit style, inscribed diameter<br> <br>"
                 "<br> <br> default = 6.2 mm"
             ),
-        ).MagnetHoleDiameter = const.MAGNET_HOLE_DIAMETER
+        ).MagnetHoleDiameter = preferences.magnet_hole_diameter()
 
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDepth",
             "GridfinityNonStandard",
             "Depth of Magnet Holes <br> <br> default = 2.4 mm",
-        ).MagnetHoleDepth = const.MAGNET_HOLE_DEPTH
+        ).MagnetHoleDepth = preferences.manget_hole_depth()
 
         obj.addProperty(
             "App::PropertyLength",
@@ -1711,14 +1711,14 @@ class BinBottomHoles(utils.Feature):
             "GridfinityNonStandard",
             "Diameter of Screw Holes, used to put screws in bin to secure in place"
             "<br> <br> default = 3.0 mm",
-        ).ScrewHoleDiameter = const.SCREW_HOLE_DIAMETER
+        ).ScrewHoleDiameter = preferences.screw_hole_diameter()
 
         obj.addProperty(
             "App::PropertyLength",
             "ScrewHoleDepth",
             "GridfinityNonStandard",
             "Depth of Screw Holes <br> <br> default = 6.0 mm",
-        ).ScrewHoleDepth = const.SCREW_HOLE_DEPTH
+        ).ScrewHoleDepth = preferences.screw_hole_depth()
 
         ## Expert Only Parameters
         obj.addProperty(
@@ -1997,7 +1997,7 @@ class BinSolidMidSection(utils.Feature):
             "zzExpertOnly",
             "height per unit, default is 7mm",
             1,
-        ).HeightUnitValue = const.HEIGHT_UNIT_VALUE
+        ).HeightUnitValue = preferences.grid_height()
 
     def make(self, obj: fc.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
         """Generate bin solid mid section.

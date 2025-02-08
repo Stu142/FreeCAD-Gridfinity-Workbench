@@ -5,7 +5,7 @@ from abc import abstractmethod
 import FreeCAD as fc  # noqa: N813
 import Part
 
-from . import const, utils
+from . import const, preferences, utils
 from .baseplate_feature_construction import (
     BaseplateBaseValues,
     BaseplateCenterCut,
@@ -119,12 +119,12 @@ class BinBlank(FoundationGridfinity):
             RectangleLayout(obj, baseplate_default=False),
             BinSolidMidSection(
                 obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
+                default_height_units=preferences.bin_height(),
+                default_wall_thickness=preferences.bin_wall_thickness(),
             ),
             BlankBinRecessedTop(obj),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
+            StackingLip(obj, stacking_lip_default=preferences.stacking_lip()),
+            BinBottomHoles(obj, magnet_holes_default=preferences.bin_magnet_holes()),
             BinBaseValues(obj),
         ]
 
@@ -212,11 +212,11 @@ class BinBase(FoundationGridfinity):
             BinSolidMidSection(
                 obj,
                 default_height_units=1,
-                default_wall_thickness=const.WALL_THICKNESS,
+                default_wall_thickness=preferences.bin_wall_thickness(),
             ),
             BlankBinRecessedTop(obj),
             StackingLip(obj, stacking_lip_default=False),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
+            BinBottomHoles(obj, magnet_holes_default=preferences.bin_magnet_holes()),
             BinBaseValues(obj),
         ]
 
@@ -302,11 +302,11 @@ class SimpleStorageBin(FoundationGridfinity):
             RectangleLayout(obj, baseplate_default=False),
             BinSolidMidSection(
                 obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
+                default_height_units=preferences.bin_height(),
+                default_wall_thickness=preferences.bin_wall_thickness(),
             ),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
+            StackingLip(obj, stacking_lip_default=preferences.stacking_lip()),
+            BinBottomHoles(obj, magnet_holes_default=preferences.bin_magnet_holes()),
             BinBaseValues(obj),
             Compartments(obj, x_div_default=0, y_div_default=0),
             LabelShelf(obj, label_style_default="Off"),
@@ -408,10 +408,10 @@ class EcoBin(FoundationGridfinity):
             RectangleLayout(obj, baseplate_default=False),
             BinSolidMidSection(
                 obj,
-                default_height_units=const.HEIGHT_UNITS,
+                default_height_units=preferences.bin_height(),
                 default_wall_thickness=const.ECO_WALL_THICKNESS,
             ),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
+            StackingLip(obj, stacking_lip_default=preferences.stacking_lip()),
             BinBottomHoles(obj, magnet_holes_default=False),
             BinBaseValues(obj),
             LabelShelf(obj, label_style_default="Standard"),
@@ -515,11 +515,11 @@ class PartsBin(FoundationGridfinity):
             RectangleLayout(obj, baseplate_default=False),
             BinSolidMidSection(
                 obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
+                default_height_units=preferences.bin_height(),
+                default_wall_thickness=preferences.bin_wall_thickness(),
             ),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
+            StackingLip(obj, stacking_lip_default=preferences.stacking_lip()),
+            BinBottomHoles(obj, magnet_holes_default=preferences.bin_magnet_holes()),
             BinBaseValues(obj),
             Compartments(obj, x_div_default=const.X_DIVIDERS, y_div_default=const.Y_DIVIDERS),
             LabelShelf(obj, label_style_default="Standard"),
@@ -873,12 +873,12 @@ class LBinBlank(FoundationGridfinity):
             LShapedLayout(obj, baseplate_default=False),
             BinSolidMidSection(
                 obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
+                default_height_units=preferences.bin_height(),
+                default_wall_thickness=preferences.bin_wall_thickness(),
             ),
             BlankBinRecessedTop(obj),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
+            StackingLip(obj, stacking_lip_default=preferences.stacking_lip()),
+            BinBottomHoles(obj, magnet_holes_default=preferences.bin_magnet_holes()),
             BinBaseValues(obj),
         ]
 

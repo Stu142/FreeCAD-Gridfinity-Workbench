@@ -8,7 +8,7 @@ import math
 import FreeCAD as fc  # noqa: N813
 import Part
 
-from . import const, utils
+from . import const, preferences, utils
 
 GridfinityLayout = list[list[bool]]
 
@@ -208,14 +208,14 @@ class BaseplateMagnetHoles(utils.Feature):
                 "<br> <br> Hex is alternative press fit style, inscribed diameter<br> <br>"
                 "<br> <br> default = 6.2 mm"
             ),
-        ).MagnetHoleDiameter = const.MAGNET_HOLE_DIAMETER
+        ).MagnetHoleDiameter = preferences.magnet_hole_diameter()
 
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDepth",
             "NonStandard",
             "Depth of Magnet Holes <br> <br> default = 2.4 mm",
-        ).MagnetHoleDepth = const.MAGNET_HOLE_DEPTH
+        ).MagnetHoleDepth = preferences.manget_hole_depth()
 
         obj.addProperty(
             "App::PropertyLength",
@@ -379,7 +379,7 @@ class BaseplateScrewBottomChamfer(utils.Feature):
             "ScrewHoleDiameter",
             "NonStandard",
             "Diameter of screw holes inside magnet holes <br> <br> default = 3 mm",
-        ).ScrewHoleDiameter = const.SCREW_HOLE_DIAMETER
+        ).ScrewHoleDiameter = preferences.screw_hole_diameter()
 
         ## Gridfinity Expert Only Parameters
         obj.addProperty(
@@ -834,7 +834,7 @@ class BaseplateBaseValues(utils.Feature):
             "Clearance",
             "zzExpertOnly",
             ("The Clearance between bin and baseplate <br> <br>default = 0.25 mm"),
-        ).Clearance = const.CLEARANCE
+        ).Clearance = preferences.clearance()
 
         obj.addProperty(
             "App::PropertyLength",

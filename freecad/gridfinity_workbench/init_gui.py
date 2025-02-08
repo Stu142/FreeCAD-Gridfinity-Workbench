@@ -90,7 +90,8 @@ class GridfinityWorkbench(Workbench):
         fcg.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
         fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
 
-        FreeCADGui.addIconPath(str(ICONPATH))
-        FreeCADGui.addPreferencePage(str(UIPATH / "preferences.ui"), "Gridfinity")
+        fcg.addIconPath(str(ICONPATH))
+        fcg.addPreferencePage(str(UIPATH / "preferences.ui"), "Gridfinity")
+
 
 fcg.addWorkbench(GridfinityWorkbench())
