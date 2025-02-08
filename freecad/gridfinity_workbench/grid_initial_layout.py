@@ -1,11 +1,11 @@
 """Makes grid layouts, calculates total width properties."""
 
-import FreeCAD
+import FreeCAD as fc  # noqa: N813
 
 from . import const, utils
 
 
-def _universal_properties(obj: FreeCAD.DocumentObject) -> None:
+def _universal_properties(obj: fc.DocumentObject) -> None:
     """Properties used by all gridfinity objects."""
     ## Generation Location Property
 
@@ -86,7 +86,7 @@ def _universal_properties(obj: FreeCAD.DocumentObject) -> None:
 class RectangleLayout(utils.Feature):
     """Create layout for rectanlge shaped Gridfinity object and add relevant properties."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, *, baseplate_default: bool) -> None:
+    def __init__(self, obj: fc.DocumentObject, *, baseplate_default: bool) -> None:
         """Create Rectangle Layout.
 
         Args:
@@ -121,7 +121,7 @@ class RectangleLayout(utils.Feature):
 
         obj.setEditorMode("Baseplate", 2)
 
-    def make(self, obj: FreeCAD.DocumentObject) -> None:
+    def make(self, obj: fc.DocumentObject) -> None:
         """Generate Rectanble layout and calculate relevant parameters.
 
         Args:
@@ -156,7 +156,7 @@ class RectangleLayout(utils.Feature):
 class LShapedLayout(utils.Feature):
     """Creat layout matrix for L shaped Gridfinity object and add relevant properties."""
 
-    def __init__(self, obj: FreeCAD.DocumentObject, *, baseplate_default: bool) -> None:
+    def __init__(self, obj: fc.DocumentObject, *, baseplate_default: bool) -> None:
         """Make L layout.
 
         Args:
@@ -231,7 +231,7 @@ class LShapedLayout(utils.Feature):
 
         obj.setEditorMode("Baseplate", 2)
 
-    def make(self, obj: FreeCAD.DocumentObject) -> None:
+    def make(self, obj: fc.DocumentObject) -> None:
         """Make L layout.
 
         Args:
@@ -245,11 +245,11 @@ class LShapedLayout(utils.Feature):
 
         if obj.x2GridUnits >= obj.x1GridUnits:
             obj.x2GridUnits = obj.x1GridUnits - 1
-            FreeCAD.Console.PrintWarning("x2 Grid Units must be less than x1")
+            fc.Console.PrintWarning("x2 Grid Units must be less than x1")
 
         if obj.y2GridUnits >= obj.y1GridUnits:
             obj.y2GridUnits = obj.y1GridUnits - 1
-            FreeCAD.Console.PrintWarning("y2 Grid Units must be less than y1")
+            fc.Console.PrintWarning("y2 Grid Units must be less than y1")
 
         ## Calculated Parameters
 
