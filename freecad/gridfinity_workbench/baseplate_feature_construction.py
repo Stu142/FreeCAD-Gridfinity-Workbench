@@ -156,18 +156,16 @@ def _baseplate_magnet_hole_round(
         fc.Vector(0, 0, 1),
     )
 
-    ch1 = [ct1, cb1]
-    ch1 = Part.makeLoft(ch1, solid=True)
-    ch2 = [ct2, cb2]
-    ch2 = Part.makeLoft(ch2, solid=True)
-    ch3 = [ct3, cb3]
-    ch3 = Part.makeLoft(ch3, solid=True)
-    ch4 = [ct4, cb4]
-    ch4 = Part.makeLoft(ch4, solid=True)
+    ch = [
+        Part.makeLoft([ct1, cb1], solid=True),
+        Part.makeLoft([ct2, cb2], solid=True),
+        Part.makeLoft([ct3, cb3], solid=True),
+        Part.makeLoft([ct4, cb4], solid=True),
+    ]
 
     return Part.Solid.multiFuse(
         c1,
-        [c2, c3, c4, ch1, ch2, ch3, ch4],
+        [c2, c3, c4, *ch],
     )
 
 
@@ -263,7 +261,6 @@ class BaseplateMagnetHoles(utils.Feature):
             "Hidden",
             "Thickness of base under the normal baseplate  profile <br> <br> default = 6.4 mm",
         ).BaseThickness = const.BASE_THICKNESS
-
         obj.setEditorMode("BaseThickness", 2)
 
         obj.addProperty(
@@ -272,7 +269,6 @@ class BaseplateMagnetHoles(utils.Feature):
             "ShouldBeHidden",
             "MagnetHoles",
         ).MagnetHoles = const.MAGNET_HOLES
-
         obj.setEditorMode("MagnetHoles", 2)
 
     def make(self, obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.Shape:
@@ -295,8 +291,7 @@ class BaseplateMagnetHoles(utils.Feature):
         elif obj.MagnetHolesShape == "Round":
             hm1 = _baseplate_magnet_hole_round(obj, x_hole_pos, y_hole_pos)
         else:
-            msg = f"Unexpected hole shape: {obj.MagnetHolesShape}"
-            raise ValueError(msg)
+            raise ValueError(f"Unexpected hole shape: {obj.MagnetHolesShape}")
 
         # Screw holes
         ca1 = Part.makeCylinder(
@@ -325,14 +320,7 @@ class BaseplateMagnetHoles(utils.Feature):
         )
 
         hm1 = hm1.multiFuse([ca1, ca2, ca3, ca4])
-
-        hm1.translate(
-            fc.Vector(
-                obj.xGridSize / 2,
-                obj.yGridSize / 2,
-                0,
-            ),
-        )
+        hm1.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0))
 
         xtranslate = zeromm
         ytranslate = zeromm
@@ -354,13 +342,7 @@ class BaseplateMagnetHoles(utils.Feature):
             hm3 = hm2 if hm3 is None else hm3.fuse(hm2)
             xtranslate += obj.xGridSize
 
-        return hm3.translate(
-            fc.Vector(
-                -obj.xLocationOffset,
-                -obj.yLocationOffset,
-                0,
-            ),
-        )
+        return hm3.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
 
 
 class BaseplateScrewBottomChamfer(utils.Feature):
@@ -462,14 +444,10 @@ class BaseplateScrewBottomChamfer(utils.Feature):
             fc.Vector(0, 0, 1),
         )
 
-        ch1 = [ct1, cb1]
-        ch1 = Part.makeLoft(ch1, solid=True)
-        ch2 = [ct2, cb2]
-        ch2 = Part.makeLoft(ch2, solid=True)
-        ch3 = [ct3, cb3]
-        ch3 = Part.makeLoft(ch3, solid=True)
-        ch4 = [ct4, cb4]
-        ch4 = Part.makeLoft(ch4, solid=True)
+        ch1 = Part.makeLoft([ct1, cb1], solid=True)
+        ch2 = Part.makeLoft([ct2, cb2], solid=True)
+        ch3 = Part.makeLoft([ct3, cb3], solid=True)
+        ch4 = Part.makeLoft([ct4, cb4], solid=True)
 
         xtranslate = zeromm
         ytranslate = zeromm
@@ -483,7 +461,6 @@ class BaseplateScrewBottomChamfer(utils.Feature):
             for y in range(obj.yMaxGrids):
                 if layout[x][y]:
                     hm1_copy = hm1.copy()
-
                     hm1_copy.translate(fc.Vector(xtranslate, ytranslate, 0))
                 hm2 = hm1_copy if hm2 is None else hm2.fuse(hm1_copy)
                 ytranslate += obj.yGridSize
@@ -589,14 +566,15 @@ class BaseplateConnectionHoles(utils.Feature):
             ytranslate += obj.yGridSize
 
         fuse_total = Part.Solid.fuse(hx2, hy2)
-
-        return fuse_total.translate(
+        fuse_total = fuse_total.translate(
             fc.Vector(
                 obj.xGridSize / 2 - obj.xLocationOffset,
                 obj.yGridSize / 2 - obj.yLocationOffset,
                 0,
             ),
         )
+
+        return fuse_total
 
 
 def _center_cut_wire(obj: fc.DocumentObject) -> None:
@@ -630,15 +608,12 @@ def _center_cut_wire(obj: fc.DocumentObject) -> None:
     )
 
     x_magcenter = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
-
     y_magcenter = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
 
     x_smfillpos = x_inframedis - obj.SmallFillet + obj.SmallFillet * math.sin(math.pi / 4)
-
     y_smfillpos = y_inframedis - obj.SmallFillet + obj.SmallFillet * math.sin(math.pi / 4)
 
     x_smfillposmag = x_magedge - obj.SmallFillet + obj.SmallFillet * math.sin(math.pi / 4)
-
     y_smfillposmag = y_magedge - obj.SmallFillet + obj.SmallFillet * math.sin(math.pi / 4)
 
     x_smfilloffcen = (
@@ -658,7 +633,6 @@ def _center_cut_wire(obj: fc.DocumentObject) -> None:
     )
 
     x_smfillins = x_inframedis - obj.SmallFillet
-
     y_smfillins = y_inframedis - obj.SmallFillet
 
     x_bigfillpos = (
@@ -702,7 +676,7 @@ def _center_cut_wire(obj: fc.DocumentObject) -> None:
 
 
 class BaseplateCenterCut(utils.Feature):
-    """Cut out the  center section of each baseplate grid."""
+    """Cut out the center section of each baseplate grid."""
 
     def __init__(self, obj: fc.DocumentObject) -> None:
         """Cut out the  center section of each baseplate grid.
@@ -911,11 +885,6 @@ class BaseplateSolidShape(utils.Feature):
         face = Part.Face(baseplate_outside_shape)
 
         fuse_total = face.extrude(fc.Vector(0, 0, obj.TotalHeight))
+        fuse_total = fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
 
-        return fuse_total.translate(
-            fc.Vector(
-                -obj.xLocationOffset,
-                -obj.yLocationOffset,
-                0,
-            ),
-        )
+        return fuse_total

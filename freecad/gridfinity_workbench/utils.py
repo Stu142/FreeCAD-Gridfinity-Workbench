@@ -29,11 +29,11 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
 
     Args:
         shape (Part.Shape): Shape to copy.
-        vec_list (list[FreeCAD.Vector]): List of vectors wher the copies should be translated
+        vec_list (list[FreeCAD.Vector]): List of vectors where the copies should be translated
             to.
 
     Raises:
-        ValueError: List is empty
+        ValueError: List is empty.
         RuntimeError: Nothing copied.
 
     Returns:
@@ -41,8 +41,7 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
 
     """
     if not vec_list:
-        msg = "Vector list is empty"
-        raise ValueError(msg)
+        raise ValueError("Vector list is empty")
 
     final_shape: Part.Shape | None = None
     for vec in vec_list:
@@ -51,8 +50,7 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
         final_shape = tmp if final_shape is None else final_shape.fuse(tmp)
 
     if final_shape is None:
-        msg = "Nothing has been copied"
-        raise RuntimeError(msg)
+        raise RuntimeError("Nothing has been copied")
 
     return final_shape
 
@@ -67,12 +65,11 @@ def curve_to_wire(list_of_items: list[Part.LineSegment]) -> Part.Wire:
         list_of_items (list[Part.LineSegment]): List of items to convert in a wire.
 
     Returns:
-        Part.Wire: The created wire
+        Part.Wire: The created wire.
 
     """
     if not list_of_items:
-        msg = "List is empty"
-        raise ValueError(msg)
+        raise ValueError("List is empty")
 
     return Part.Wire([item.toShape() for item in list_of_items])
 
@@ -96,11 +93,9 @@ def create_rounded_rectangle(
 
     """
     if radius <= 0:
-        msg = "Radius should be > 0"
-        raise ValueError(msg)
+        raise ValueError("Radius should be > 0")
     if radius >= xwidth / 2 or radius >= ywidth / 2:
-        msg = "Radius should be smaller than xwidth /2 or ywidth / 2"
-        raise ValueError(msg)
+        raise ValueError("Radius should be smaller than xwidth/2 and ywidth/2")
 
     xfarv = xwidth / 2
     yfarv = ywidth / 2
@@ -171,8 +166,7 @@ def rounded_rectangle_chamfer(
         zsketchplane + height,
         radius + height,
     )
-    wires = [w1, w2]
-    return Part.makeLoft(wires, solid=True)
+    return Part.makeLoft([w1, w2], solid=True)
 
 
 def rounded_rectangle_extrude(
@@ -196,8 +190,7 @@ def rounded_rectangle_extrude(
 
     """
     w1 = create_rounded_rectangle(xwidth, ywidth, zsketchplane, radius)
-    face = Part.Face(w1)
-    return face.extrude(fc.Vector(0, 0, height))
+    return Part.Face(w1).extrude(fc.Vector(0, 0, height))
 
 
 @dataclass
@@ -205,13 +198,13 @@ class LShapeData:
     """Data class containing information regarding a L shape.
 
     L shape side names:
-      c
-    ┌───┐
-    │   │d
-    │   └──────┐
-    │          │b
-    └──────────┘
-         a
+        x2
+      ┌───┐
+      │   │
+    y1│   └──────┐
+      │          │ y2
+      └──────────┘
+           x1
     """
 
     x1: float
@@ -230,8 +223,8 @@ def create_rounded_l(
 
     Args:
         shape_data (LShapeData): Size data for the L shape.
-        xoffset (float): Offest in the X direction
-        yoffset (float): Offset in the Y direction
+        xoffset (float): Offest in the X direction.
+        yoffset (float): Offset in the Y direction.
         radius (float): Radius of the corners.
 
     Returns:
@@ -334,5 +327,4 @@ def rounded_l_extrude(
 
     """
     w1 = create_rounded_l(shape_data, xoffset, yoffset, radius)
-    face = Part.Face(w1)
-    return face.extrude(fc.Vector(0, 0, height))
+    return Part.Face(w1).extrude(fc.Vector(0, 0, height))

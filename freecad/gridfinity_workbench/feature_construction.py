@@ -59,8 +59,6 @@ def _label_shelf_full_width(
     )
     return funcfuse.cut(left_end_fillet)
 
-    return funcfuse
-
 
 def _label_shelf_center(
     obj: fc.DocumentObject,
@@ -78,7 +76,6 @@ def _label_shelf_center(
         ytranslate = ysp
         for y in range(ydiv):
             ls = face.extrude(fc.Vector(0, obj.LabelShelfLength, 0))
-
             ls.translate(fc.Vector(xtranslate, ytranslate, 0))
 
             if x == 0 and y == 0:
@@ -475,14 +472,9 @@ class LabelShelf(utils.Feature):
                 vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
                 xtranslate += xcompwidth + obj.DividerThickness
 
-            funcfuse = Part.Shape.cut(funcfuse, utils.copy_and_translate(bottomcutbox, vec_list))
-        return funcfuse.translate(
-            fc.Vector(
-                -obj.xLocationOffset,
-                -obj.yLocationOffset,
-                0,
-            ),
-        )
+            funcfuse = funcfuse.cut(utils.copy_and_translate(bottomcutbox, vec_list))
+
+        return funcfuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
 
 
 class Scoop(utils.Feature):
@@ -649,13 +641,7 @@ class Scoop(utils.Feature):
             - 0.01 * unitmm,
             b_edges,
         )
-        return fuse_total.translate(
-            fc.Vector(
-                -obj.xLocationOffset,
-                -obj.yLocationOffset,
-                0,
-            ),
-        )
+        return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
 
 
 def _make_compartments_no_deviders(
@@ -728,7 +714,6 @@ def _make_compartments_with_deviders(
 
     if xdiv:
         func_fuse = func_fuse.cut(xdiv)
-
     if ydiv:
         func_fuse = func_fuse.cut(ydiv)
 
@@ -848,25 +833,15 @@ class Compartments(utils.Feature):
 
         if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
             obj.xDividerHeight = divmin
-
             fc.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  ",
+                f"Divider Height must be equal to or greater than:  {divmin}\n",
             )
-
-            fc.Console.PrintWarning(divmin)
-
-            fc.Console.PrintWarning("\n")
 
         if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
             obj.yDividerHeight = divmin
-
             fc.Console.PrintWarning(
-                "Divider Height must be equal to or greater than:  ",
+                f"Divider Height must be equal to or greater than:  {divmin}\n",
             )
-
-            fc.Console.PrintWarning(divmin)
-
-            fc.Console.PrintWarning("\n")
 
         if (
             obj.xDividerHeight < obj.TotalHeight
@@ -875,7 +850,6 @@ class Compartments(utils.Feature):
             and obj.xDividers != 0
         ):
             obj.LabelShelfStyle = "Off"
-
             fc.Console.PrintWarning(
                 "Label Shelf turned off for less than full height x dividers",
             )
@@ -886,17 +860,10 @@ class Compartments(utils.Feature):
 
         if obj.xDividers == 0 and obj.yDividers == 0:
             func_fuse = _make_compartments_no_deviders(obj, func_fuse)
-
         else:
             func_fuse = _make_compartments_with_deviders(obj, func_fuse)
 
-        return func_fuse.translate(
-            fc.Vector(
-                -obj.xLocationOffset,
-                -obj.yLocationOffset,
-                0,
-            ),
-        )
+        return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
 
 
 def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
@@ -1080,13 +1047,7 @@ def _eco_bin_deviders(obj: fc.DocumentObject) -> Part.Shape:
         assembly = comp if assembly is None else assembly.fuse(comp)
         ytranslate += ycomp_w + obj.DividerThickness
 
-    return assembly.translate(
-        fc.Vector(
-            obj.xGridSize / 2,
-            obj.yGridSize / 2,
-            0,
-        ),
-    )
+    return assembly.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0))
 
 
 def _eco_error_check(obj: fc.DocumentObject) -> None:
@@ -1096,29 +1057,18 @@ def _eco_error_check(obj: fc.DocumentObject) -> None:
 
     if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
         obj.xDividerHeight = divmin
-
         fc.Console.PrintWarning(
-            "Divider Height must be equal to or greater than:  ",
+            f"Divider Height must be equal to or greater than:  {divmin}\n",
         )
-
-        fc.Console.PrintWarning(divmin)
-
-        fc.Console.PrintWarning("\n")
 
     if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
         obj.yDividerHeight = divmin
-
         fc.Console.PrintWarning(
-            "Divider Height must be equal to or greater than:  ",
+            f"Divider Height must be equal to or greater than:  {divmin}\n",
         )
-
-        fc.Console.PrintWarning(divmin)
-
-        fc.Console.PrintWarning("\n")
 
     if obj.InsideFilletRadius > (1.6 * unitmm):
         obj.InsideFilletRadius = 1.6 * unitmm
-
         fc.Console.PrintWarning(
             "Inside Fillet Radius must be equal to or less than:  1.6 mm\n",
         )
@@ -1264,11 +1214,9 @@ class EcoCompartments(utils.Feature):
         )
 
         bt_chf_rad = obj.BinVerticalRadius - 0.4 * unitmm - obj.BaseWallThickness
-
         bt_chf_rad = 0.01 * unitmm if bt_chf_rad <= SMALL_NUMBER else bt_chf_rad
 
         v_chf_rad = obj.BinVerticalRadius - obj.BaseWallThickness
-
         v_chf_rad = 0.01 * unitmm if v_chf_rad <= SMALL_NUMBER else v_chf_rad
 
         magoffset, tp_chf_offset = zeromm, zeromm
@@ -1325,14 +1273,7 @@ class EcoCompartments(utils.Feature):
             xtranslate += obj.xGridSize
 
         eco_base_cut = utils.copy_and_translate(assembly, vec_list)
-
-        eco_base_cut.translate(
-            fc.Vector(
-                obj.xGridSize / 2,
-                obj.yGridSize / 2,
-                0,
-            ),
-        )
+        eco_base_cut.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0))
 
         func_fuse = func_fuse.fuse(eco_base_cut)
 
@@ -1369,9 +1310,7 @@ class EcoCompartments(utils.Feature):
         func_fuse = func_fuse.cut(outer_trim2)
 
         if obj.xDividers > 0 or obj.yDividers > 0:
-            deviders = _eco_bin_deviders(obj)
-
-            func_fuse = func_fuse.cut(deviders)
+            func_fuse = func_fuse.cut(_eco_bin_deviders(obj))
 
             b_edges = []
             divfil = -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1 * unitmm
@@ -1383,13 +1322,8 @@ class EcoCompartments(utils.Feature):
                     b_edges.append(edge)
 
             func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius / 2, b_edges)
-        return func_fuse.translate(
-            fc.Vector(
-                -obj.xLocationOffset,
-                -obj.yLocationOffset,
-                0,
-            ),
-        )
+
+        return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
 
 
 class BinBaseValues(utils.Feature):
@@ -1620,16 +1554,9 @@ class BlankBinRecessedTop(utils.Feature):
 
         """
         face = Part.Face(bin_inside_shape)
-
         fuse_total = face.extrude(fc.Vector(0, 0, -obj.RecessedTopDepth))
 
-        return fuse_total.translate(
-            fc.Vector(
-                -obj.xLocationOffset,
-                -obj.yLocationOffset,
-                0,
-            ),
-        )
+        return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
 
 
 class BinBottomHoles(utils.Feature):
@@ -1771,13 +1698,7 @@ class BinBottomHoles(utils.Feature):
         fuse_total = utils.copy_and_translate(hole_shape_sub_array, vec_list).translate(
             fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0),
         )
-        return fuse_total.translate(
-            fc.Vector(
-                -obj.xLocationOffset,
-                -obj.yLocationOffset,
-                0,
-            ),
-        )
+        return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
 
 
 class StackingLip(utils.Feature):
@@ -1908,31 +1829,27 @@ class StackingLip(utils.Feature):
         )
         st9 = fc.Vector(obj.Clearance + obj.WallThickness, obj.yGridSize / 2, 0)
 
-        stl1 = Part.LineSegment(st1, st2)
-        stl2 = Part.LineSegment(st2, st3)
-        stl3 = Part.LineSegment(st3, st4)
-        stl4 = Part.LineSegment(st4, st5)
-        stl5 = Part.LineSegment(st5, st6)
-        stl6 = Part.LineSegment(st6, st7)
-        stl7 = Part.LineSegment(st7, st8)
-        stl8 = Part.LineSegment(st8, st9)
-        stl9 = Part.LineSegment(st9, st1)
+        line_segments = [
+            Part.LineSegment(st1, st2),
+            Part.LineSegment(st2, st3),
+            Part.LineSegment(st3, st4),
+            Part.LineSegment(st4, st5),
+            Part.LineSegment(st5, st6),
+            Part.LineSegment(st6, st7),
+            Part.LineSegment(st7, st8),
+            Part.LineSegment(st8, st9),
+            Part.LineSegment(st9, st1),
+        ]
 
-        sts1 = Part.Shape([stl1, stl2, stl3, stl4, stl5, stl6, stl7, stl8, stl9])
-
-        wire = Part.Wire(sts1.Edges)
+        wire = Part.Wire(Part.Shape(line_segments).Edges)
 
         stacking_lip = Part.Wire(bin_outside_shape).makePipe(wire)
-
         stacking_lip = Part.makeSolid(stacking_lip)
-
-        return stacking_lip.translate(
-            fc.Vector(
-                -obj.xLocationOffset,
-                -obj.yLocationOffset,
-                0,
-            ),
+        stacking_lip = stacking_lip.translate(
+            fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0),
         )
+
+        return stacking_lip
 
 
 class BinSolidMidSection(utils.Feature):
@@ -2013,7 +1930,6 @@ class BinSolidMidSection(utils.Feature):
         ## Calculated Values
         if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
-
         else:
             obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
 
@@ -2021,11 +1937,6 @@ class BinSolidMidSection(utils.Feature):
         face = Part.Face(bin_outside_shape)
 
         fuse_total = face.extrude(fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight))
+        fuse_total = fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
 
-        return fuse_total.translate(
-            fc.Vector(
-                -obj.xLocationOffset,
-                -obj.yLocationOffset,
-                0,
-            ),
-        )
+        return fuse_total
