@@ -12,13 +12,13 @@ from .features import (
     Baseplate,
     BinBase,
     BinBlank,
+    CustomBin,
     EcoBin,
     LBinBlank,
     MagnetBaseplate,
     PartsBin,
     ScrewTogetherBaseplate,
     SimpleStorageBin,
-    CustomBin,
 )
 
 ICONDIR = Path(__file__).parent / "icons"
@@ -253,6 +253,7 @@ class CreateLBinBlank(BaseCommand):
 
 class CreateCustomBin(BaseCommand):
     """Create a custom bin."""
+
     NAME = "CustomBin"
     GRIDFINITY_FUNCTION = CustomBin
     Pixmap = ICONDIR / "BetaLBinBlank.svg"

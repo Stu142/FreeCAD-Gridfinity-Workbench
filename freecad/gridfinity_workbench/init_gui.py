@@ -66,13 +66,13 @@ class GridfinityWorkbench(Workbench):
             CreateBaseplate,
             CreateBinBase,
             CreateBinBlank,
+            CreateCustomBin,
             CreateEcoBin,
             CreateLBinBlank,
             CreateMagnetBaseplate,
             CreatePartsBin,
             CreateScrewTogetherBaseplate,
             CreateSimpleStorageBin,
-            CreateCustomBin,
         )
 
         fc.Console.PrintMessage("switching to Gridfinity Workbench\n")

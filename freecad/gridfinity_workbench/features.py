@@ -6,7 +6,6 @@ import FreeCAD as fc  # noqa: N813
 import Part
 
 from . import const, utils
-from .custom_shape import get_custom_shape
 from .baseplate_feature_construction import (
     BaseplateBaseValues,
     BaseplateCenterCut,
@@ -15,6 +14,7 @@ from .baseplate_feature_construction import (
     BaseplateScrewBottomChamfer,
     BaseplateSolidShape,
 )
+from .custom_shape import get_custom_shape
 from .feature_construction import (
     BinBaseValues,
     BinBottomHoles,
