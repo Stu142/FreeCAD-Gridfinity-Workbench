@@ -26,17 +26,17 @@
       <string>Grid</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="2" column="0">
-       <widget class="QLabel" name="GridHeightLabel">
+      <item row="3" column="0">
+       <widget class="QLabel" name="ClearanceLabel">
         <property name="text">
-         <string>Grid height</string>
+         <string>Clearance</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="GridSizeXLabel">
+      <item row="1" column="0">
+       <widget class="QLabel" name="GridSizeYLabel">
         <property name="text">
-         <string>Grid size X</string>
+         <string>Grid size Y</string>
         </property>
        </widget>
       </item>
@@ -94,10 +94,32 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="GridSizeYLabel">
+      <item row="2" column="0">
+       <widget class="QLabel" name="GridHeightLabel">
         <property name="text">
-         <string>Grid size Y</string>
+         <string>Grid height</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="Gui::PrefDoubleSpinBox" name="ClearanceSpinbox">
+        <property name="suffix">
+         <string> mm</string>
+        </property>
+        <property name="maximum">
+         <double>10000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.050000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.250000000000000</double>
+        </property>
+        <property name="prefEntry" stdset="0">
+         <cstring>Clearance</cstring>
+        </property>
+        <property name="prefPath" stdset="0">
+         <cstring>Mod/Gridfinity</cstring>
         </property>
        </widget>
       </item>
@@ -133,32 +155,10 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="Gui::PrefDoubleSpinBox" name="ClearanceSpinbox">
-        <property name="suffix">
-         <string> mm</string>
-        </property>
-        <property name="maximum">
-         <double>10000.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.050000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.250000000000000</double>
-        </property>
-        <property name="prefEntry" stdset="0">
-         <cstring>Clearance</cstring>
-        </property>
-        <property name="prefPath" stdset="0">
-         <cstring>Mod/Gridfinity</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="ClearanceLabel">
+      <item row="0" column="0">
+       <widget class="QLabel" name="GridSizeXLabel">
         <property name="text">
-         <string>Clearance</string>
+         <string>Grid size X</string>
         </property>
        </widget>
       </item>
@@ -171,110 +171,6 @@
       <string>Magnet and Screw Holes</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="0">
-       <widget class="QLabel" name="MagnetDiameterLabel">
-        <property name="text">
-         <string>Magnet Hole Diameter</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="ScrewDiameterLabel">
-        <property name="text">
-         <string>Screw Hole Diameter</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="ScrewDepthLabel">
-        <property name="text">
-         <string>Screw Hole Depth</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="MagnetDepthLabel">
-        <property name="text">
-         <string>Hagnet Hole Depth</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="Gui::PrefDoubleSpinBox" name="ScrewHoleDepthSpinbox">
-        <property name="suffix">
-         <string> mm</string>
-        </property>
-        <property name="maximum">
-         <double>10000.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>6.000000000000000</double>
-        </property>
-        <property name="prefEntry" stdset="0">
-         <cstring>ScrewHoleDepth</cstring>
-        </property>
-        <property name="prefPath" stdset="0">
-         <cstring>Mod/Gridfinity</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="Gui::PrefDoubleSpinBox" name="ScrewHoleDiameterSpinbox">
-        <property name="suffix">
-         <string> mm</string>
-        </property>
-        <property name="maximum">
-         <double>10000.000000000000000</double>
-        </property>
-        <property name="value">
-         <double>3.000000000000000</double>
-        </property>
-        <property name="prefEntry" stdset="0">
-         <cstring>ScrewHoleDiameter</cstring>
-        </property>
-        <property name="prefPath" stdset="0">
-         <cstring>Mod/Gridfinity</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="Gui::PrefDoubleSpinBox" name="doubleSpinBox">
-        <property name="suffix">
-         <string> mm</string>
-        </property>
-        <property name="maximum">
-         <double>10000.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>2.400000000000000</double>
-        </property>
-        <property name="prefEntry" stdset="0">
-         <cstring>MagnetHoleDepth</cstring>
-        </property>
-        <property name="prefPath" stdset="0">
-         <cstring>Mod/Gridfinity</cstring>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
        <widget class="Gui::PrefDoubleSpinBox" name="doubleSpinBox_2">
         <property name="suffix">
@@ -297,6 +193,126 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="MagnetDepthLabel">
+        <property name="text">
+         <string>Hagnet Hole Depth</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4">
+       <widget class="Gui::PrefDoubleSpinBox" name="ScrewHoleDepthSpinbox">
+        <property name="suffix">
+         <string> mm</string>
+        </property>
+        <property name="maximum">
+         <double>10000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>6.000000000000000</double>
+        </property>
+        <property name="prefEntry" stdset="0">
+         <cstring>ScrewHoleDepth</cstring>
+        </property>
+        <property name="prefPath" stdset="0">
+         <cstring>Mod/Gridfinity</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5">
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="4">
+       <widget class="Gui::PrefDoubleSpinBox" name="ScrewHoleDiameterSpinbox">
+        <property name="suffix">
+         <string> mm</string>
+        </property>
+        <property name="maximum">
+         <double>10000.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>3.000000000000000</double>
+        </property>
+        <property name="prefEntry" stdset="0">
+         <cstring>ScrewHoleDiameter</cstring>
+        </property>
+        <property name="prefPath" stdset="0">
+         <cstring>Mod/Gridfinity</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="Gui::PrefDoubleSpinBox" name="doubleSpinBox">
+        <property name="suffix">
+         <string> mm</string>
+        </property>
+        <property name="maximum">
+         <double>10000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>2.400000000000000</double>
+        </property>
+        <property name="prefEntry" stdset="0">
+         <cstring>MagnetHoleDepth</cstring>
+        </property>
+        <property name="prefPath" stdset="0">
+         <cstring>Mod/Gridfinity</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QLabel" name="ScrewDiameterLabel">
+        <property name="text">
+         <string>Screw Hole Diameter</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLabel" name="ScrewDepthLabel">
+        <property name="text">
+         <string>Screw Hole Depth</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <spacer name="horizontalSpacer_5">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Policy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="MagnetDiameterLabel">
+        <property name="text">
+         <string>Magnet Hole Diameter</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -306,7 +322,14 @@
       <string>Default Bin</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="4">
+      <item row="1" column="0">
+       <widget class="QLabel" name="BinWidthYLabel">
+        <property name="text">
+         <string>Width Y</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5">
        <spacer name="horizontalSpacer_3">
         <property name="orientation">
          <enum>Qt::Orientation::Horizontal</enum>
@@ -319,14 +342,14 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="BinWidthXLabel">
+      <item row="3" column="0">
+       <widget class="QLabel" name="BinWallThicknessLabel">
         <property name="text">
-         <string>Width X</string>
+         <string>Wall thickness</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="2">
+      <item row="2" column="3">
        <widget class="Gui::PrefCheckBox" name="checkBox">
         <property name="text">
          <string>Screw holes</string>
@@ -361,7 +384,30 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
+      <item row="2" column="0">
+       <widget class="QLabel" name="BinHeightLabel">
+        <property name="text">
+         <string>Height</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <spacer name="horizontalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Policy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="1" column="3">
        <widget class="Gui::PrefCheckBox" name="MagnetHolesCheckbox">
         <property name="text">
          <string>Magnet holes</string>
@@ -396,27 +442,6 @@
         </property>
         <property name="prefPath" stdset="0">
          <cstring>Mod/Gridfinity</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="BinWidthYLabel">
-        <property name="text">
-         <string>Width Y</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="BinWallThicknessLabel">
-        <property name="text">
-         <string>Wall thickness</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="BinHeightLabel">
-        <property name="text">
-         <string>Height</string>
         </property>
        </widget>
       </item>
@@ -464,7 +489,7 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
+      <item row="0" column="3">
        <widget class="Gui::PrefCheckBox" name="StackingLipCheckbox">
         <property name="text">
          <string>Stacking lip</string>
@@ -477,6 +502,13 @@
         </property>
         <property name="prefPath" stdset="0">
          <cstring>Mod/Gridfinity</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="BinWidthXLabel">
+        <property name="text">
+         <string>Width X</string>
         </property>
        </widget>
       </item>
