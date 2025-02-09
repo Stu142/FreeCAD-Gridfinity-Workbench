@@ -27,9 +27,9 @@ def _label_shelf_full_width(
     xtranslate = zeromm
     parts = []
     for x in range(xdiv):
-        ls = face.extrude(fc.Vector(0, fw, 0))
+        ls = face.extrude(fc.Vector(0, fw))
 
-        ls.translate(fc.Vector(xtranslate, ytranslate, 0))
+        ls.translate(fc.Vector(xtranslate, ytranslate))
 
         if x == 0:
             firstls = ls
@@ -45,7 +45,6 @@ def _label_shelf_full_width(
         fc.Vector(
             0,
             obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness,
-            0,
         ),
     )
     right_end_fillet = right_end_fillet.extrude(
@@ -75,8 +74,8 @@ def _label_shelf_center(
     for x in range(xdiv):
         ytranslate = ysp
         for y in range(ydiv):
-            ls = face.extrude(fc.Vector(0, obj.LabelShelfLength, 0))
-            ls.translate(fc.Vector(xtranslate, ytranslate, 0))
+            ls = face.extrude(fc.Vector(0, obj.LabelShelfLength))
+            ls.translate(fc.Vector(xtranslate, ytranslate))
 
             if x == 0 and y == 0:
                 firstls = ls
@@ -106,9 +105,9 @@ def _label_shelf_left(
     for x in range(xdiv):
         ytranslate = ysp
         for y in range(ydiv):
-            ls = face.extrude(fc.Vector(0, obj.LabelShelfLength, 0))
+            ls = face.extrude(fc.Vector(0, obj.LabelShelfLength))
 
-            ls.translate(fc.Vector(xtranslate, ytranslate, 0))
+            ls.translate(fc.Vector(xtranslate, ytranslate))
 
             if x == 0 and y == 0:
                 firstls = ls
@@ -144,9 +143,9 @@ def _label_shelf_right(
     for x in range(xdiv):
         ytranslate = ysp
         for y in range(ydiv):
-            ls = face.extrude(fc.Vector(0, obj.LabelShelfLength, 0))
+            ls = face.extrude(fc.Vector(0, obj.LabelShelfLength))
 
-            ls.translate(fc.Vector(xtranslate, ytranslate, 0))
+            ls.translate(fc.Vector(xtranslate, ytranslate))
 
             if x == 0 and y == 0:
                 firstls = ls
@@ -162,9 +161,7 @@ def _label_shelf_right(
     right_end_fillet = _label_shelf_right_fillet(obj)
     right_end_fillet = right_end_fillet.translate(
         fc.Vector(
-            0,
-            obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness,
-            0,
+            0, obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness, 0,
         ),
     )
     right_end_fillet = right_end_fillet.extrude(
@@ -226,11 +223,11 @@ def _label_shelf_left_fillet(
     l2x2 = l1x
     l2y = l1y1
 
-    l1v1 = fc.Vector(l1x, l1y1, 0)
-    l1v2 = fc.Vector(l1x, l1y2, 0)
-    arc1v = fc.Vector(arc1x, arc1y, 0)
-    l2v1 = fc.Vector(l2x1, l2y, 0)
-    l2v2 = fc.Vector(l2x2, l2y, 0)
+    l1v1 = fc.Vector(l1x, l1y1)
+    l1v2 = fc.Vector(l1x, l1y2)
+    arc1v = fc.Vector(arc1x, arc1y)
+    l2v1 = fc.Vector(l2x1, l2y)
+    l2v2 = fc.Vector(l2x2, l2y)
 
     lines = [
         Part.LineSegment(l1v1, l1v2),
@@ -263,11 +260,11 @@ def _label_shelf_right_fillet(
     )
     arc1y = obj.Clearance + obj.WallThickness + fillet_radius * math.sin(math.pi / 4)
 
-    l1v1 = fc.Vector(l1x, l1y1, 0)
-    l1v2 = fc.Vector(l1x, l1y2, 0)
-    l2v1 = fc.Vector(l2x1, l2y, 0)
-    l2v2 = fc.Vector(l2x2, l2y, 0)
-    arc1v = fc.Vector(arc1x, arc1y, 0)
+    l1v1 = fc.Vector(l1x, l1y1)
+    l1v2 = fc.Vector(l1x, l1y2)
+    l2v1 = fc.Vector(l2x1, l2y)
+    l2v2 = fc.Vector(l2x2, l2y)
+    arc1v = fc.Vector(arc1x, arc1y)
 
     lines = [
         Part.LineSegment(l1v1, l1v2),
@@ -415,19 +412,14 @@ class LabelShelf(utils.Feature):
         side_b = math.sqrt(-pow(side_a, 2) + pow(side_c, 2))
         v4_z = -obj.LabelShelfVerticalThickness - side_b * unitmm
 
-        v1 = fc.Vector(towall, 0, stackingoffset)
-        v2 = fc.Vector(tolabelend, 0, stackingoffset)
-        v3 = fc.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness + stackingoffset)
-        v4 = fc.Vector(towall, 0, v4_z + stackingoffset)
-
-        lines = [
-            Part.LineSegment(v1, v2),
-            Part.LineSegment(v2, v3),
-            Part.LineSegment(v3, v4),
-            Part.LineSegment(v4, v1),
+        v = [
+            fc.Vector(towall, 0, stackingoffset),
+            fc.Vector(tolabelend, 0, stackingoffset),
+            fc.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness + stackingoffset),
+            fc.Vector(towall, 0, v4_z + stackingoffset),
         ]
 
-        wire = utils.curve_to_wire(lines)
+        wire = utils.curve_to_wire(utils.loop(v))
 
         face = Part.Face(wire)
 
@@ -469,12 +461,12 @@ class LabelShelf(utils.Feature):
 
             vec_list = []
             for _ in range(xdiv):
-                vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
+                vec_list.append(fc.Vector(xtranslate, ytranslate))
                 xtranslate += xcompwidth + obj.DividerThickness
 
             funcfuse = funcfuse.cut(utils.copy_and_translate(bottomcutbox, vec_list))
 
-        return funcfuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
+        return funcfuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
 class Scoop(utils.Feature):
@@ -596,16 +588,15 @@ class Scoop(utils.Feature):
             fc.Vector(
                 obj.xTotalWidth + obj.Clearance - obj.WallThickness,
                 +obj.Clearance + obj.WallThickness,
-                0,
             ),
             fc.Vector(0, 0, -1),
         )
 
-        scoop = face.extrude(fc.Vector(0, obj.yTotalWidth - obj.WallThickness * 2, 0))
+        scoop = face.extrude(fc.Vector(0, obj.yTotalWidth - obj.WallThickness * 2))
 
         vec_list = []
         for x in range(xdiv):
-            vec_list.append(fc.Vector(-xtranslate, obj.Clearance + obj.WallThickness, 0))
+            vec_list.append(fc.Vector(-xtranslate, obj.Clearance + obj.WallThickness))
 
             if x > 0:
                 xtranslate += compwidth + obj.DividerThickness
@@ -641,7 +632,7 @@ class Scoop(utils.Feature):
             - 0.01 * unitmm,
             b_edges,
         )
-        return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
+        return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
 def _make_compartments_no_deviders(
@@ -693,7 +684,7 @@ def _make_compartments_with_deviders(
             ),
             fc.Vector(0, 0, 1),
         )
-        comp.translate(fc.Vector(xtranslate, 0, 0))
+        comp.translate(fc.Vector(xtranslate, 0))
         xdiv = comp if xdiv is None else xdiv.fuse(comp)
         xtranslate += xcomp_w + obj.DividerThickness
 
@@ -708,7 +699,7 @@ def _make_compartments_with_deviders(
             fc.Vector(0, 0, 1),
         )
 
-        comp.translate(fc.Vector(0, ytranslate, 0))
+        comp.translate(fc.Vector(0, ytranslate))
         ydiv = comp if ydiv is None else ydiv.fuse(comp)
         ytranslate += ycomp_w + obj.DividerThickness
 
@@ -863,7 +854,7 @@ class Compartments(utils.Feature):
         else:
             func_fuse = _make_compartments_with_deviders(obj, func_fuse)
 
-        return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
+        return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
 def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
@@ -929,7 +920,7 @@ def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
             obj.ScrewHoleDiameter,
             obj.ScrewHoleDiameter,
             sqbr2_depth,
-            fc.Vector(-obj.ScrewHoleDiameter / 2, -obj.ScrewHoleDiameter / 2, 0),
+            fc.Vector(-obj.ScrewHoleDiameter / 2, -obj.ScrewHoleDiameter / 2),
             fc.Vector(0, 0, 1),
         )
         arc_pt_off_x = (
@@ -939,36 +930,12 @@ def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
         ) * unitmm
         arc_pt_off_y = obj.ScrewHoleDiameter / 2
 
-        va1 = fc.Vector(
-            arc_pt_off_x,
-            arc_pt_off_y,
-            0,
-        )
-        va2 = fc.Vector(
-            -arc_pt_off_x,
-            arc_pt_off_y,
-            0,
-        )
-        va3 = fc.Vector(
-            -arc_pt_off_x,
-            -arc_pt_off_y,
-            0,
-        )
-        va4 = fc.Vector(
-            arc_pt_off_x,
-            -arc_pt_off_y,
-            0,
-        )
-        var1 = fc.Vector(
-            obj.MagnetHoleDiameter / 2,
-            0,
-            0,
-        )
-        var2 = fc.Vector(
-            -obj.MagnetHoleDiameter / 2,
-            0,
-            0,
-        )
+        va1 = fc.Vector(arc_pt_off_x, arc_pt_off_y)
+        va2 = fc.Vector(-arc_pt_off_x, arc_pt_off_y)
+        va3 = fc.Vector(-arc_pt_off_x, -arc_pt_off_y)
+        va4 = fc.Vector(arc_pt_off_x, -arc_pt_off_y)
+        var1 = fc.Vector(obj.MagnetHoleDiameter / 2, 0)
+        var2 = fc.Vector(-obj.MagnetHoleDiameter / 2, 0)
         line_1 = Part.LineSegment(va1, va2)
         line_2 = Part.LineSegment(va3, va4)
         ar1 = Part.Arc(va1, var1, va4)
@@ -1018,7 +985,7 @@ def _eco_bin_deviders(obj: fc.DocumentObject) -> Part.Shape:
             ),
             fc.Vector(0, 0, 1),
         )
-        comp.translate(fc.Vector(xtranslate, 0, 0))
+        comp.translate(fc.Vector(xtranslate, 0))
 
         assembly = comp if assembly is None else assembly.fuse(comp)
         xtranslate += xcomp_w + obj.DividerThickness
@@ -1036,11 +1003,11 @@ def _eco_bin_deviders(obj: fc.DocumentObject) -> Part.Shape:
             ),
             fc.Vector(0, 0, 1),
         )
-        comp.translate(fc.Vector(0, ytranslate, 0))
+        comp.translate(fc.Vector(0, ytranslate))
         assembly = comp if assembly is None else assembly.fuse(comp)
         ytranslate += ycomp_w + obj.DividerThickness
 
-    return assembly.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0))
+    return assembly.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
 
 def _eco_error_check(obj: fc.DocumentObject) -> None:
@@ -1261,28 +1228,23 @@ class EcoCompartments(utils.Feature):
             ytranslate = zeromm
             for y in range(obj.yMaxGrids):
                 if layout[x][y]:
-                    vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
+                    vec_list.append(fc.Vector(xtranslate, ytranslate))
                 ytranslate += obj.yGridSize
             xtranslate += obj.xGridSize
 
         eco_base_cut = utils.copy_and_translate(assembly, vec_list)
-        eco_base_cut.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0))
+        eco_base_cut.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
         func_fuse = func_fuse.fuse(eco_base_cut)
 
+        trim_tanslation = fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance)
         outer_trim1 = utils.rounded_rectangle_extrude(
             obj.xTotalWidth - obj.WallThickness * 2,
             obj.yTotalWidth - obj.WallThickness * 2,
             -obj.TotalHeight,
             obj.TotalHeight,
             obj.BinOuterRadius - obj.WallThickness,
-        ).translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-                0,
-            ),
-        )
+        ).translate(trim_tanslation)
 
         outer_trim2 = utils.rounded_rectangle_extrude(
             obj.xTotalWidth + 20 * unitmm,
@@ -1290,13 +1252,7 @@ class EcoCompartments(utils.Feature):
             -obj.TotalHeight,
             obj.TotalHeight - obj.BaseProfileHeight,
             obj.BinOuterRadius,
-        ).translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-                0,
-            ),
-        )
+        ).translate(trim_tanslation)
 
         outer_trim2 = outer_trim2.cut(outer_trim1)
 
@@ -1316,7 +1272,7 @@ class EcoCompartments(utils.Feature):
 
             func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius / 2, b_edges)
 
-        return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
+        return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
 class BinBaseValues(utils.Feature):
@@ -1490,7 +1446,7 @@ def make_complex_bin_base(
         for y in range(obj.yMaxGrids):
             if layout[x][y]:
                 b = assembly.copy()
-                b.translate(fc.Vector(xtranslate, ytranslate, 0))
+                b.translate(fc.Vector(xtranslate, ytranslate))
 
             if x == 0 and y == 0:
                 b1 = b
@@ -1509,11 +1465,7 @@ def make_complex_bin_base(
     )
 
     return fuse_total.translate(
-        fc.Vector(
-            obj.xGridSize / 2 - obj.xLocationOffset,
-            obj.yGridSize / 2 - obj.yLocationOffset,
-            0,
-        ),
+        fc.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset),
     )
 
 
@@ -1549,7 +1501,7 @@ class BlankBinRecessedTop(utils.Feature):
         face = Part.Face(bin_inside_shape)
         fuse_total = face.extrude(fc.Vector(0, 0, -obj.RecessedTopDepth))
 
-        return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
+        return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
 class BinBottomHoles(utils.Feature):
@@ -1670,13 +1622,7 @@ class BinBottomHoles(utils.Feature):
         y_hole_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
 
         hole_shape_sub_array = utils.copy_and_translate(
-            bottom_hole_shape,
-            [
-                fc.Vector(-x_hole_pos, -y_hole_pos, -obj.TotalHeight),
-                fc.Vector(x_hole_pos, -y_hole_pos, -obj.TotalHeight),
-                fc.Vector(-x_hole_pos, y_hole_pos, -obj.TotalHeight),
-                fc.Vector(x_hole_pos, y_hole_pos, -obj.TotalHeight),
-            ],
+            bottom_hole_shape, utils.corners(x_hole_pos, y_hole_pos, -obj.TotalHeight),
         )
         vec_list = []
         xtranslate = 0
@@ -1684,14 +1630,14 @@ class BinBottomHoles(utils.Feature):
             ytranslate = 0
             for y in range(obj.yMaxGrids):
                 if layout[x][y]:
-                    vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
+                    vec_list.append(fc.Vector(xtranslate, ytranslate))
                 ytranslate += obj.yGridSize.Value
             xtranslate += obj.xGridSize.Value
 
         fuse_total = utils.copy_and_translate(hole_shape_sub_array, vec_list).translate(
-            fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2, 0),
+            fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2),
         )
-        return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
+        return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
 class StackingLip(utils.Feature):
@@ -1768,78 +1714,68 @@ class StackingLip(utils.Feature):
         )
 
         ## Stacking Lip Generation
-        st1 = fc.Vector(obj.Clearance, obj.yGridSize / 2, 0)
-        st2 = fc.Vector(
-            obj.Clearance,
-            obj.yGridSize / 2,
-            obj.StackingLipBottomChamfer
-            + obj.StackingLipVerticalSection
-            + obj.StackingLipTopChamfer,
-        )
-        st3 = fc.Vector(
-            obj.Clearance + obj.StackingLipTopLedge,
-            obj.yGridSize / 2,
-            obj.StackingLipBottomChamfer
-            + obj.StackingLipVerticalSection
-            + obj.StackingLipTopChamfer,
-        )
-        st4 = fc.Vector(
-            obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
-            obj.yGridSize / 2,
-            obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
-        )
-        st5 = fc.Vector(
-            obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
-            obj.yGridSize / 2,
-            obj.StackingLipBottomChamfer,
-        )
-        st6 = fc.Vector(
-            obj.Clearance
-            + obj.StackingLipTopLedge
-            + obj.StackingLipTopChamfer
-            + obj.StackingLipBottomChamfer,
-            obj.yGridSize / 2,
-            0,
-        )
-        st7 = fc.Vector(
-            obj.Clearance
-            + obj.StackingLipTopLedge
-            + obj.StackingLipTopChamfer
-            + obj.StackingLipBottomChamfer,
-            obj.yGridSize / 2,
-            -obj.StackingLipVerticalSection,
-        )
-        st8 = fc.Vector(
-            obj.Clearance + obj.WallThickness,
-            obj.yGridSize / 2,
-            -obj.StackingLipVerticalSection
-            - (
-                obj.StackingLipTopLedge
-                + obj.StackingLipTopChamfer
-                + obj.StackingLipBottomChamfer
-                - obj.WallThickness
+        st = [
+            fc.Vector(obj.Clearance, obj.yGridSize / 2, 0),
+            fc.Vector(
+                obj.Clearance,
+                obj.yGridSize / 2,
+                obj.StackingLipBottomChamfer
+                + obj.StackingLipVerticalSection
+                + obj.StackingLipTopChamfer,
             ),
-        )
-        st9 = fc.Vector(obj.Clearance + obj.WallThickness, obj.yGridSize / 2, 0)
-
-        line_segments = [
-            Part.LineSegment(st1, st2),
-            Part.LineSegment(st2, st3),
-            Part.LineSegment(st3, st4),
-            Part.LineSegment(st4, st5),
-            Part.LineSegment(st5, st6),
-            Part.LineSegment(st6, st7),
-            Part.LineSegment(st7, st8),
-            Part.LineSegment(st8, st9),
-            Part.LineSegment(st9, st1),
+            fc.Vector(
+                obj.Clearance + obj.StackingLipTopLedge,
+                obj.yGridSize / 2,
+                obj.StackingLipBottomChamfer
+                + obj.StackingLipVerticalSection
+                + obj.StackingLipTopChamfer,
+            ),
+            fc.Vector(
+                obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
+                obj.yGridSize / 2,
+                obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
+            ),
+                fc.Vector(
+                obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
+                obj.yGridSize / 2,
+                obj.StackingLipBottomChamfer,
+            ),
+            fc.Vector(
+                obj.Clearance
+                + obj.StackingLipTopLedge
+                + obj.StackingLipTopChamfer
+                + obj.StackingLipBottomChamfer,
+                obj.yGridSize / 2,
+                0,
+            ),
+            fc.Vector(
+                obj.Clearance
+                + obj.StackingLipTopLedge
+                + obj.StackingLipTopChamfer
+                + obj.StackingLipBottomChamfer,
+                obj.yGridSize / 2,
+                -obj.StackingLipVerticalSection,
+            ),
+            fc.Vector(
+                obj.Clearance + obj.WallThickness,
+                obj.yGridSize / 2,
+                -obj.StackingLipVerticalSection
+                - (
+                    obj.StackingLipTopLedge
+                    + obj.StackingLipTopChamfer
+                    + obj.StackingLipBottomChamfer
+                    - obj.WallThickness
+                ),
+            ),
+            fc.Vector(obj.Clearance + obj.WallThickness, obj.yGridSize / 2, 0),
         ]
 
-        wire = Part.Wire(Part.Shape(line_segments).Edges)
+        wire = Part.Wire(Part.Shape(utils.loop(st)).Edges)
 
         stacking_lip = Part.Wire(bin_outside_shape).makePipe(wire)
         stacking_lip = Part.makeSolid(stacking_lip)
         stacking_lip = stacking_lip.translate(
-            fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0),
+            fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset),
         )
 
         return stacking_lip
@@ -1930,6 +1866,6 @@ class BinSolidMidSection(utils.Feature):
         face = Part.Face(bin_outside_shape)
 
         fuse_total = face.extrude(fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight))
-        fuse_total = fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset, 0))
+        fuse_total = fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
         return fuse_total

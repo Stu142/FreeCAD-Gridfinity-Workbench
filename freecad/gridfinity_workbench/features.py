@@ -148,11 +148,7 @@ class BinBlank(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         bin_outside_shape.translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-                0,
-            ),
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
         )
 
         bin_inside_shape = utils.create_rounded_rectangle(
@@ -162,11 +158,7 @@ class BinBlank(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
         bin_inside_shape.translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-                0,
-            ),
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
         )
 
         fuse_total = BinSolidMidSection.make(self, obj, bin_outside_shape)
@@ -503,11 +495,7 @@ class PartsBin(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         bin_outside_shape.translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-                0,
-            ),
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance, 0),
         )
 
         bin_inside_shape = utils.create_rounded_rectangle(
@@ -517,11 +505,7 @@ class PartsBin(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
         bin_inside_shape.translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-                0,
-            ),
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance, 0),
         )
 
         fuse_total = BinSolidMidSection.make(self, obj, bin_outside_shape)
