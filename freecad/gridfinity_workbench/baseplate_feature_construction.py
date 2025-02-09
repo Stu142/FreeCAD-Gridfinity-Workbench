@@ -76,7 +76,7 @@ def _baseplate_magnet_hole_hex(
     c4 = f.extrude(fc.Vector(0, 0, -obj.MagnetHoleDepth))
     fc.ActiveDocument.removeObject(p.Name)
 
-    return Part.Solid.multiFuse(c1, [c2, c3, c4])
+    return c1.multiFuse([c2, c3, c4])
 
 
 def _baseplate_magnet_hole_round(
@@ -163,10 +163,7 @@ def _baseplate_magnet_hole_round(
         Part.makeLoft([ct4, cb4], solid=True),
     ]
 
-    return Part.Solid.multiFuse(
-        c1,
-        [c2, c3, c4, *ch],
-    )
+    return c1.multiFuse([c2, c3, c4, *ch])
 
 
 class BaseplateMagnetHoles(utils.Feature):
@@ -452,7 +449,7 @@ class BaseplateScrewBottomChamfer(utils.Feature):
         xtranslate = zeromm
         ytranslate = zeromm
 
-        hm1 = Part.Solid.multiFuse(ch1, [ch2, ch3, ch4])
+        hm1 = ch1.multiFuse([ch2, ch3, ch4])
         hm2: Part.Shape | None = None
         hm3: Part.Shape | None = None
 
@@ -540,7 +537,7 @@ class BaseplateConnectionHoles(utils.Feature):
 
         xtranslate = zeromm
         ytranslate = zeromm
-        hx1 = Part.Solid.fuse(c1, c2)
+        hx1 = c1.fuse(c2)
         hx2: Part.Shape | None = None
 
         for _ in range(obj.xMaxGrids):
@@ -554,7 +551,7 @@ class BaseplateConnectionHoles(utils.Feature):
 
         xtranslate = zeromm
         ytranslate = zeromm
-        hy1 = Part.Solid.fuse(c3, c4)
+        hy1 = c3.fuse(c4)
         hy2: Part.Shape | None = None
 
         for _ in range(obj.yMaxGrids):
@@ -565,7 +562,7 @@ class BaseplateConnectionHoles(utils.Feature):
             hy2 = hy1_copy if hy2 is None else hy2.fuse(hy1_copy)
             ytranslate += obj.yGridSize
 
-        fuse_total = Part.Solid.fuse(hx2, hy2)
+        fuse_total = hx2.fuse(hy2)
         fuse_total = fuse_total.translate(
             fc.Vector(
                 obj.xGridSize / 2 - obj.xLocationOffset,

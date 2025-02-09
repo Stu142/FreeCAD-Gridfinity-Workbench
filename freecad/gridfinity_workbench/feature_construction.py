@@ -38,7 +38,7 @@ def _label_shelf_full_width(
 
         xtranslate += xcompwidth + obj.DividerThickness
 
-    funcfuse = ls if xdiv == 1 else Part.Solid.multiFuse(firstls, parts)
+    funcfuse = ls if xdiv == 1 else firstls.multiFuse(parts)
 
     right_end_fillet = _label_shelf_right_fillet(obj)
     right_end_fillet = right_end_fillet.translate(
@@ -87,7 +87,7 @@ def _label_shelf_center(
 
         xtranslate += xcompwidth + obj.DividerThickness
 
-    return ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
+    return ls if xdiv == 1 and ydiv == 1 else firstls.multiFuse(parts)
 
 
 def _label_shelf_left(
@@ -119,7 +119,7 @@ def _label_shelf_left(
 
         xtranslate += xcompwidth + obj.DividerThickness
 
-    funcfuse = ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
+    funcfuse = ls if xdiv == 1 and ydiv == 1 else firstls.multiFuse(parts)
 
     left_end_fillet = _label_shelf_left_fillet(obj)
     left_end_fillet = left_end_fillet.extrude(
@@ -157,7 +157,7 @@ def _label_shelf_right(
 
         xtranslate += xcompwidth + obj.DividerThickness
 
-    funcfuse = ls if xdiv == 1 and ydiv == 1 else Part.Solid.multiFuse(firstls, parts)
+    funcfuse = ls if xdiv == 1 and ydiv == 1 else firstls.multiFuse(parts)
 
     right_end_fillet = _label_shelf_right_fillet(obj)
     right_end_fillet = right_end_fillet.translate(
@@ -977,7 +977,7 @@ def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
         w1 = Part.Wire(s1.Edges)
         sq1_1 = Part.Face(w1)
         sq1_1 = sq1_1.extrude(fc.Vector(0, 0, sqbr1_depth))
-        holes_interface_shape = Part.Solid.fuse(sq1_1, b1)
+        holes_interface_shape = sq1_1.fuse(b1)
 
         bottom_hole_shape = (
             holes_interface_shape
@@ -1481,7 +1481,7 @@ def make_complex_bin_base(
         obj.BinVerticalRadius,
     )
 
-    assembly = Part.Solid.multiFuse(bottom_chamfer, [vertical_section, top_chamfer])
+    assembly = bottom_chamfer.multiFuse([vertical_section, top_chamfer])
 
     parts = []
 
@@ -1505,7 +1505,7 @@ def make_complex_bin_base(
     fuse_total = (
         b1
         if obj.xMaxGrids < larger_than_single_grid and obj.yMaxGrids < larger_than_single_grid
-        else Part.Solid.multiFuse(b1, parts)
+        else b1.multiFuse(parts)
     )
 
     return fuse_total.translate(

@@ -352,7 +352,7 @@ class SimpleStorageBin(FoundationGridfinity):
         if obj.Scoop:
             fuse_total = fuse_total.fuse(Scoop.make(self, obj))
 
-        return Part.Solid.removeSplitter(fuse_total)
+        return fuse_total.removeSplitter()
 
 
 class EcoBin(FoundationGridfinity):
@@ -443,7 +443,7 @@ class EcoBin(FoundationGridfinity):
         if obj.LabelShelfStyle != "Off":
             fuse_total = fuse_total.fuse(LabelShelf.make(self, obj))
 
-        return Part.Solid.removeSplitter(fuse_total)
+        return fuse_total.removeSplitter()
 
 
 class PartsBin(FoundationGridfinity):
@@ -540,7 +540,7 @@ class PartsBin(FoundationGridfinity):
         if obj.Scoop:
             fuse_total = fuse_total.fuse(Scoop.make(self, obj))
 
-        return Part.Solid.removeSplitter(fuse_total)
+        return fuse_total.removeSplitter()
 
 
 class Baseplate(FoundationGridfinity):
