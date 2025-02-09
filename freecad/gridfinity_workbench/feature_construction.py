@@ -987,13 +987,6 @@ def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
     return bottom_hole_shape
 
 
-def _eco_bin_cut_fillet_edges_filter(obj: fc.DocumentObject, edge: Part.Edge) -> bool:
-    divfil = -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1 * unitmm
-    z0 = edge.Vertexes[0].Point.z
-    z1 = edge.Vertexes[1].Point.z
-    return z1 != z0 and (z1 >= divfil or z0 >= divfil)
-
-
 def _eco_bin_deviders(obj: fc.DocumentObject) -> Part.Shape:
     xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
         obj.xDividers + 1
@@ -1478,7 +1471,7 @@ def make_complex_bin_base(
         obj.BaseProfileVerticalSection,
         obj.BinVerticalRadius,
     )
-    assembly = Part.Shape.fuse(bottom_chamfer, vertical_section)
+    assembly = bottom_chamfer.fuse(vertical_section)
 
     top_chamfer = utils.rounded_rectangle_chamfer(
         x_vert_width,
