@@ -40,7 +40,10 @@ def _baseplate_magnet_hole_hex(
     p = fc.ActiveDocument.addObject("Part::RegularPolygon")
     p.Polygon = n_sides
     p.Circumradius = radius
-    p.Placement = fc.Placement(fc.Vector(x_hole_pos, -y_hole_pos), rot,)
+    p.Placement = fc.Placement(
+        fc.Vector(x_hole_pos, -y_hole_pos),
+        rot,
+    )
     p.recompute()
     f = Part.Face(Part.Wire(p.Shape.Edges))
     c2 = f.extrude(fc.Vector(0, 0, -obj.MagnetHoleDepth))
@@ -100,10 +103,7 @@ def _baseplate_magnet_hole_round(
         for pos in utils.corners(x_hole_pos, y_hole_pos, -obj.MagnetChamfer)
     ]
 
-    ch = [
-        Part.makeLoft([t, b], solid=True)
-        for t, b in zip(ct, cb)
-    ]
+    ch = [Part.makeLoft([t, b], solid=True) for t, b in zip(ct, cb)]
 
     return utils.multi_fuse(c + ch)
 
@@ -329,10 +329,7 @@ class BaseplateScrewBottomChamfer(utils.Feature):
             for pos in utils.corners(x_hole_pos, y_hole_pos, cb_z)
         ]
 
-        ch = [
-            Part.makeLoft([t, b], solid=True)
-            for t, b in zip(ct, cb)
-        ]
+        ch = [Part.makeLoft([t, b], solid=True) for t, b in zip(ct, cb)]
 
         xtranslate = zeromm
         ytranslate = zeromm

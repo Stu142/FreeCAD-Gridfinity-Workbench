@@ -161,7 +161,9 @@ def _label_shelf_right(
     right_end_fillet = _label_shelf_right_fillet(obj)
     right_end_fillet = right_end_fillet.translate(
         fc.Vector(
-            0, obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness, 0,
+            0,
+            obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness,
+            0,
         ),
     )
     right_end_fillet = right_end_fillet.extrude(
@@ -1237,7 +1239,10 @@ class EcoCompartments(utils.Feature):
 
         func_fuse = func_fuse.fuse(eco_base_cut)
 
-        trim_tanslation = fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance)
+        trim_tanslation = fc.Vector(
+            obj.xTotalWidth / 2 + obj.Clearance,
+            obj.yTotalWidth / 2 + obj.Clearance,
+        )
         outer_trim1 = utils.rounded_rectangle_extrude(
             obj.xTotalWidth - obj.WallThickness * 2,
             obj.yTotalWidth - obj.WallThickness * 2,
@@ -1622,7 +1627,8 @@ class BinBottomHoles(utils.Feature):
         y_hole_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
 
         hole_shape_sub_array = utils.copy_and_translate(
-            bottom_hole_shape, utils.corners(x_hole_pos, y_hole_pos, -obj.TotalHeight),
+            bottom_hole_shape,
+            utils.corners(x_hole_pos, y_hole_pos, -obj.TotalHeight),
         )
         vec_list = []
         xtranslate = 0
@@ -1735,7 +1741,7 @@ class StackingLip(utils.Feature):
                 obj.yGridSize / 2,
                 obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
             ),
-                fc.Vector(
+            fc.Vector(
                 obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
                 obj.yGridSize / 2,
                 obj.StackingLipBottomChamfer,

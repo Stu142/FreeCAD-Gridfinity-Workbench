@@ -339,14 +339,11 @@ def multi_fuse(lst: list[Part.Shape]) -> Part.Shape:
 
 def loop(lst: list[fc.Vector]) -> list[Part.LineSegment]:
     """Get a closed loop consisting of LineSegments from consecutive points."""
-    if len(lst) < 3:
+    if len(lst) < 3:  # noqa: PLR2004
         raise ValueError("List has to be of length at least 3")
     return [Part.LineSegment(p1, p2) for p1, p2 in zip(lst, lst[1:] + lst[:1])]
 
 
-def corners(x: float, y: float, z: float=0) -> list[fc.Vector]:
+def corners(x: float, y: float, z: float = 0) -> list[fc.Vector]:
     """Get a list of four points located at (±x, ±y, z)."""
-    return [
-        fc.Vector(x_pos, y_pos, z)
-        for x_pos, y_pos in ((-x, -y), (x, -y), (-x, y), (x, y))
-    ]
+    return [fc.Vector(x_pos, y_pos, z) for x_pos, y_pos in ((-x, -y), (x, -y), (-x, y), (x, y))]
