@@ -7,14 +7,17 @@ py-modules = []
 
 [project]
 name = "gridfinityworkbench"
-version = "0.9.1"
+version = "0.9.2"
 
 [project.optional-dependencies]
 dev = ["ruff", "freecad-stubs"]
 
 [tool.ruff]
-select = ["ALL"]
 line-length = 100
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["EM101", "EM102", "RET504", "TRY003"]
 
 [tool.ruff.lint.per-file-ignores]
 # Ignore folowing rules for tests:

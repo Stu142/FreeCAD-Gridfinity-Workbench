@@ -14,9 +14,7 @@ def _universal_properties(obj: fc.DocumentObject) -> None:
         "GenerationLocation",
         "Gridfinity",
         "Location of the bin. Change depending on how you want to customize",
-    )
-
-    obj.GenerationLocation = ["Positive from Origin", "Centered at Origin"]
+    ).GenerationLocation = ["Positive from Origin", "Centered at Origin"]
 
     obj.addProperty(
         "App::PropertyLength",
@@ -134,13 +132,11 @@ class RectangleLayout(utils.Feature):
         if obj.Baseplate:
             obj.xTotalWidth = obj.xGridUnits * obj.xGridSize
             obj.yTotalWidth = obj.yGridUnits * obj.yGridSize
-
         else:
             obj.xTotalWidth = obj.xGridUnits * obj.xGridSize - obj.Clearance * 2
             obj.yTotalWidth = obj.yGridUnits * obj.yGridSize - obj.Clearance * 2
 
         obj.xMaxGrids = obj.xGridUnits
-
         obj.yMaxGrids = obj.yGridUnits
 
         if obj.GenerationLocation == "Centered at Origin":
@@ -161,7 +157,7 @@ class LShapedLayout(utils.Feature):
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
-            baseplate_default (bool): is the object a baseplate
+            baseplate_default (bool): Whether the object is a baseplate or not.
 
         """
         _universal_properties(obj)
@@ -228,7 +224,6 @@ class LShapedLayout(utils.Feature):
             "Flags",
             "Is the Gridfinity Object a baseplate",
         ).Baseplate = baseplate_default
-
         obj.setEditorMode("Baseplate", 2)
 
     def make(self, obj: fc.DocumentObject) -> None:
@@ -246,7 +241,6 @@ class LShapedLayout(utils.Feature):
         if obj.x2GridUnits >= obj.x1GridUnits:
             obj.x2GridUnits = obj.x1GridUnits - 1
             fc.Console.PrintWarning("x2 Grid Units must be less than x1")
-
         if obj.y2GridUnits >= obj.y1GridUnits:
             obj.y2GridUnits = obj.y1GridUnits - 1
             fc.Console.PrintWarning("y2 Grid Units must be less than y1")
@@ -261,7 +255,6 @@ class LShapedLayout(utils.Feature):
 
             obj.xTotalWidth = obj.x1GridUnits * obj.xGridSize
             obj.yTotalWidth = obj.y1GridUnits * obj.yGridSize
-
         else:
             obj.x1TotalDimension = obj.x1GridUnits * obj.xGridSize - obj.Clearance * 2
             obj.y1TotalDimension = obj.y1GridUnits * obj.yGridSize - obj.Clearance * 2
@@ -272,7 +265,6 @@ class LShapedLayout(utils.Feature):
             obj.yTotalWidth = obj.y1GridUnits * obj.yGridSize - obj.Clearance * 2
 
         obj.xMaxGrids = obj.x1GridUnits
-
         obj.yMaxGrids = obj.y1GridUnits
 
         if obj.GenerationLocation == "Centered at Origin":
@@ -283,13 +275,7 @@ class LShapedLayout(utils.Feature):
             obj.yLocationOffset = 0
 
         ## L layout matrix creation
-        layout = [[False for y in range(obj.y1GridUnits)] for x in range(obj.x1GridUnits)]
-
-        for x in range(obj.x1GridUnits):
-            for y in range(obj.y1GridUnits):
-                if x < obj.x2GridUnits:
-                    layout[x][y] = True
-                if y < obj.y2GridUnits:
-                    layout[x][y] = True
-
-        return layout
+        return [
+            [x < obj.x2GridUnits or y < obj.y2GridUnits for y in range(obj.y1GridUnits)]
+            for x in range(obj.x1GridUnits)
+        ]
