@@ -41,24 +41,27 @@ class GridDialog(QDialog):
 
     def _recompute(self) -> None:
         self.pixmap.fill(self.palette().color(QPalette.Window))
-        with QPainter(self.pixmap) as painter:
-            for i in range(self.n):
-                for j in range(self.m):
-                    if self.grid_layout[i][j]:
-                        painter.fillRect(
-                            QRect(
-                                self._to_canvas_point(QPoint(i, j)),
-                                self._to_canvas_point(QPoint(i + 1, j + 1)),
-                            ),
-                            self.palette().highlight(),
-                        )
-            pen = QPen()
-            pen.setWidth(4)
-            pen.setColor(self.palette().color(QPalette.Text))
-            painter.setPen(pen)
-            for i in range(self.n):
-                for j in range(self.m):
-                    painter.drawPoint(self._to_canvas_point(QPoint(i, j)))
+
+        painter = QPainter(self.pixmap)
+        for i in range(self.n):
+            for j in range(self.m):
+                if self.grid_layout[i][j]:
+                    painter.fillRect(
+                        QRect(
+                            self._to_canvas_point(QPoint(i, j)),
+                            self._to_canvas_point(QPoint(i + 1, j + 1)),
+                        ),
+                        self.palette().highlight(),
+                    )
+        pen = QPen()
+        pen.setWidth(4)
+        pen.setColor(self.palette().color(QPalette.Text))
+        painter.setPen(pen)
+        for i in range(self.n):
+            for j in range(self.m):
+                painter.drawPoint(self._to_canvas_point(QPoint(i, j)))
+        painter.end()
+
         self.label.setPixmap(self.pixmap)
 
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(self._is_good())
