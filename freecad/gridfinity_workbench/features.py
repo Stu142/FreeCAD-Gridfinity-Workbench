@@ -87,8 +87,13 @@ class FoundationGridfinity:
 
     def loads(
         self,
+        state: tuple,  # noqa: ARG002
     ) -> None:
-        """Needed for JSON Serialization when saving a file containing gridfinity object."""
+        """Needed for JSON Serialization when saving a file containing gridfinity object.
+
+        state argument required for opening saved gridfinity object,
+        otherwise expecting argument error message
+        """
         return
 
 
