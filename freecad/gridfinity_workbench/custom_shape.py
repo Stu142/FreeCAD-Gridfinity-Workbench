@@ -102,7 +102,7 @@ class GridDialog(QDialog):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: D102, N802
         origin_pos = QPointF(self.offset + self.label.x(), self.offset + self.label.y())
-        pos = (event.position() - origin_pos) / self.spacing
+        pos = (event.localPos() - origin_pos) / self.spacing
         self.grid_layout[math.floor(pos.x())][math.floor(pos.y())] ^= True
         self._recompute()
 
