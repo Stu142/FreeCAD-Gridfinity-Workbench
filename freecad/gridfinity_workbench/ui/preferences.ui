@@ -319,7 +319,7 @@
    <item>
     <widget class="QGroupBox" name="BinDefaultGroupBox">
      <property name="title">
-      <string>Default Bin</string>
+      <string>All bins</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="1" column="0">

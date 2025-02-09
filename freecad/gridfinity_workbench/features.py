@@ -409,7 +409,7 @@ class EcoBin(FoundationGridfinity):
             BinSolidMidSection(
                 obj,
                 default_height_units=preferences.bin_height(),
-                default_wall_thickness=const.ECO_WALL_THICKNESS,
+                default_wall_thickness=preferences.eco_bin_wall_thickness(),
             ),
             StackingLip(obj, stacking_lip_default=preferences.stacking_lip()),
             BinBottomHoles(obj, magnet_holes_default=False),
@@ -521,9 +521,13 @@ class PartsBin(FoundationGridfinity):
             StackingLip(obj, stacking_lip_default=preferences.stacking_lip()),
             BinBottomHoles(obj, magnet_holes_default=preferences.bin_magnet_holes()),
             BinBaseValues(obj),
-            Compartments(obj, x_div_default=const.X_DIVIDERS, y_div_default=const.Y_DIVIDERS),
+            Compartments(
+                obj,
+                x_div_default=preferences.parts_bin_dividers_x(),
+                y_div_default=preferences.parts_bin_dividers_y(),
+            ),
             LabelShelf(obj, label_style_default="Standard"),
-            Scoop(obj, scoop_default=const.SCOOP),
+            Scoop(obj, scoop_default=preferences.parts_bin_scoop()),
         ]
         obj.Proxy = self
 
