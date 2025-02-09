@@ -1,20 +1,24 @@
 """Custom shape features for bin and baplate generation."""
 
-import FreeCAD as fc  # noqa: N813
 import Part
-from . import const, utils
+import Draft
+
+import FreeCAD as fc  # noqa: N813
+
+from . import utils
+
 GridfinityLayout = list[list[bool]]
 
 unitmm = fc.Units.Quantity("1 mm")
 zeromm = fc.Units.Quantity("0 mm")
 
-def custom_shape_solid(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.Shape:
+def custom_shape_solid(obj: fc.DocumentObject, layout: GridfinityLayout, height: float) -> Part.Shape:
 
     parts = []
     xtranslate = zeromm
     ytranslate = zeromm
 
-    grid_box = Part.makeBox( obj.xGridSize, obj.yGridSize, obj.TotalHeight, fc.Vector(0, 0, -obj.TotalHeight))
+    grid_box = Part.makeBox( obj.xGridSize, obj.yGridSize, height, fc.Vector(0, 0, -height))
 
     vec_list = []
     xtranslate = 0
@@ -60,6 +64,32 @@ def custom_shape_trim(obj: fc.DocumentObject, layout: GridfinityLayout, xtrim: f
     return fuse_total
 
 
-def vertical_edge_fillet(obj: fc.DocumentObject, layout: GridfinityLayout, xtrim: float, ytrim: float) -> Part.Shape:
+def vertical_edge_fillet(obj: fc.DocumentObject, solid_shape: Part.Shape, radius: float) -> Part.Shape:
+    """Fillet vertical Edges of input shape."""
 
-    return fuse_total
+    b_edges = []
+
+    for edge in solid_shape.Edges:
+        z0 = edge.Vertexes[0].Point.z
+        z1 = edge.Vertexes[1].Point.z
+
+        if z0 != z1:
+            b_edges.append(edge)
+
+    return solid_shape.makeFillet(radius, b_edges)
+
+def get_wire_shape(obj: fc.DocumentObject, solid_shape: Part.Shape,  zheight: float) -> Part.Wire:
+    """Fillet vertical Edges of input shape."""
+    solid_shape = solid_shape.translate(fc.Vector(0,0,zheight))
+    b_wires = []
+
+    for wire in solid_shape.Wires:
+        z0 = wire.Vertexes[0].Point.z
+        z1 = wire.Vertexes[1].Point.z
+        z2 = wire.Vertexes[2].Point.z
+
+        if z0 == zheight and z1 == zheight and z2 == zheight:
+            b_wires.append(wire)
+
+    return b_wires
+    return Part.Face(b_wires)

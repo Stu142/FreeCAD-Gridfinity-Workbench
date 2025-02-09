@@ -20,6 +20,8 @@ from .custom_shape import get_custom_shape
 from .custom_shape_features import (
     custom_shape_solid,
     custom_shape_trim,
+    vertical_edge_fillet,
+    get_wire_shape,
 )
 
 from .feature_construction import (
@@ -159,15 +161,57 @@ class CustomBin(FoundationGridfinity):
         else:
             obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
 
+        obj.BaseProfileHeight = (
+            obj.BaseProfileBottomChamfer
+            + obj.BaseProfileVerticalSection
+            + obj.BaseProfileTopChamfer
+        )
+
         obj.xMaxGrids = 10
         obj.yMaxGrids = 10
 
-        fuse_total = custom_shape_solid(obj, layout)
+        solid_shape = custom_shape_solid(obj, layout, obj.TotalHeight - obj.BaseProfileHeight)
 
         outside_trim = custom_shape_trim(obj, layout, obj.Clearance.Value, obj.Clearance.Value)
-        fuse_total = fuse_total.cut(outside_trim)
 
+        
+
+        fuse_total = solid_shape.cut(outside_trim)
         fuse_total = Part.Solid.removeSplitter(fuse_total)
+
+        fuse_total = vertical_edge_fillet(obj, fuse_total, obj.BinOuterRadius)
+
+        bin_outside_shape = get_wire_shape(obj, fuse_total,0)
+
+        inside_trim = custom_shape_trim(obj, layout, 2, 2)
+
+        inside_trim = solid_shape.cut(inside_trim)
+        inside_trim = Part.Solid.removeSplitter(inside_trim)
+        inside_trim = vertical_edge_fillet(obj, inside_trim, obj.BinOuterRadius)
+        bin_inside_shape = get_wire_shape(obj, inside_trim,5)
+
+        #bin_inside_shape = bin_inside_shape.translate(fc.Vector(0,0,5))
+
+        wires = bin_outside_shape + bin_inside_shape
+
+        fc.Console.PrintMessage(wires)
+
+        fuse_total = Part.makeLoft(wires, True)
+
+        #return inside_trim
+        return fuse_total
+
+
+        fuse_total = fuse_total.fuse(make_complex_bin_base(obj, layout))
+
+        
+
+        if obj.ScrewHoles or obj.MagnetHoles:
+            holes = BinBottomHoles.make(self, obj, layout)
+            fuse_total = Part.Shape.cut(fuse_total, holes)
+
+
+
         return fuse_total
 
 class BinBlank(FoundationGridfinity):

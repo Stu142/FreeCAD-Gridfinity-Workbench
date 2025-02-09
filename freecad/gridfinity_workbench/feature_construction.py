@@ -1555,8 +1555,8 @@ def make_complex_bin_base(
     )
 
     assembly = Part.Solid.multiFuse(bottom_chamfer, [vertical_section, top_chamfer])
-
     parts = []
+    feat_count = 0
 
     for x in range(obj.xMaxGrids):
         ytranslate = zeromm
@@ -1564,20 +1564,19 @@ def make_complex_bin_base(
             if layout[x][y]:
                 b = assembly.copy()
                 b.translate(fc.Vector(xtranslate, ytranslate, 0))
-
-            if x == 0 and y == 0:
-                b1 = b
-            else:
-                parts.append(b)
+                feat_count += 1
+                if feat_count == 1:
+                    b1 = b
+                else:
+                    parts.append(b)
 
             ytranslate += obj.yGridSize
 
         xtranslate += obj.xGridSize
 
-    larger_than_single_grid = 2
     fuse_total = (
         b1
-        if obj.xMaxGrids < larger_than_single_grid and obj.yMaxGrids < larger_than_single_grid
+        if feat_count==1
         else Part.Solid.multiFuse(b1, parts)
     )
 
