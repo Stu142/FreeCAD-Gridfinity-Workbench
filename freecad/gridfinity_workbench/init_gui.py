@@ -92,7 +92,8 @@ class GridfinityWorkbench(Workbench):
 
         fcg.addIconPath(str(ICONPATH))
         fcg.addPreferencePage(str(UIPATH / "preferences.ui"), "Gridfinity")
-        fcg.addPreferencePage(str(UIPATH / "preferences-extra.ui"), "Gridfinity")
+        fcg.addPreferencePage(str(UIPATH / "preferences-features.ui"), "Gridfinity")
+        fcg.addPreferencePage(str(UIPATH / "preferences-default.ui"), "Gridfinity")
 
 
 fcg.addWorkbench(GridfinityWorkbench())
