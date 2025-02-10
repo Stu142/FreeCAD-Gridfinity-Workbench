@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: ruudjhuu/freecad:v0.0.1
+    container: ruudjhuu/freecad:v1.0.0
     steps:
       - name: Check out code
         uses: actions/checkout@v3
