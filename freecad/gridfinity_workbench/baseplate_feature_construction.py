@@ -251,11 +251,10 @@ class BaseplateMagnetHoles(utils.Feature):
         hm2: Part.Shape | None = None
         hm3: Part.Shape | None = None
 
-        for x in range(obj.xMaxGrids):
+        for col in layout:
             ytranslate = zeromm
-
-            for y in range(obj.yMaxGrids):
-                if layout[x][y]:
+            for cell in col:
+                if cell:
                     hm1_copy = hm1.copy()
 
                     # Translate for next hole
@@ -338,10 +337,10 @@ class BaseplateScrewBottomChamfer(utils.Feature):
         hm2: Part.Shape | None = None
         hm3: Part.Shape | None = None
 
-        for x in range(obj.xMaxGrids):
+        for col in layout:
             ytranslate = zeromm
-            for y in range(obj.yMaxGrids):
-                if layout[x][y]:
+            for cell in col:
+                if cell:
                     hm1_copy = hm1.copy()
                     hm1_copy.translate(fc.Vector(xtranslate, ytranslate))
                 hm2 = hm1_copy if hm2 is None else hm2.fuse(hm1_copy)
@@ -419,30 +418,23 @@ class BaseplateConnectionHoles(utils.Feature):
             fc.Vector(1, 0, 0),
         )
 
-        xtranslate = zeromm
-        ytranslate = zeromm
         hx1 = c1.fuse(c2)
         hx2: Part.Shape | None = None
 
-        for _ in range(obj.xMaxGrids):
-            ytranslate = zeromm
-
+        xtranslate = zeromm
+        for _ in range(obj.xGridUnits):
             hx1 = hx1.copy()
-            hx1.translate(fc.Vector(xtranslate, ytranslate))
+            hx1.translate(fc.Vector(xtranslate, zeromm))
             hx2 = hx1 if hx2 is None else hx2.fuse(hx1)
-
             xtranslate += obj.xGridSize
 
-        xtranslate = zeromm
-        ytranslate = zeromm
         hy1 = c3.fuse(c4)
         hy2: Part.Shape | None = None
 
-        for _ in range(obj.yMaxGrids):
-            xtranslate = zeromm
-
+        ytranslate = zeromm
+        for _ in range(obj.yGridUnits):
             hy1_copy = hy1.copy()
-            hy1_copy.translate(fc.Vector(xtranslate, ytranslate))
+            hy1_copy.translate(fc.Vector(zeromm, ytranslate))
             hy2 = hy1_copy if hy2 is None else hy2.fuse(hy1_copy)
             ytranslate += obj.yGridSize
 
