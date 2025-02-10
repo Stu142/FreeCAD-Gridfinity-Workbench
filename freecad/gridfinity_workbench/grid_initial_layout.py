@@ -259,7 +259,7 @@ class LShapedLayout(utils.Feature):
             obj.x1TotalDimension = obj.x1GridUnits * obj.xGridSize - obj.Clearance * 2
             obj.y1TotalDimension = obj.y1GridUnits * obj.yGridSize - obj.Clearance * 2
             obj.x2TotalDimension = obj.x2GridUnits * obj.xGridSize - obj.Clearance * 2
-            obj.y2TotalDimension = obj.y2GridUnits * obj.yGridSize
+            obj.y2TotalDimension = obj.y2GridUnits * obj.yGridSize - obj.Clearance * 2
 
             obj.xTotalWidth = obj.x1GridUnits * obj.xGridSize - obj.Clearance * 2
             obj.yTotalWidth = obj.y1GridUnits * obj.yGridSize - obj.Clearance * 2
