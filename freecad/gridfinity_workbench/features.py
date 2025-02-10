@@ -170,7 +170,6 @@ class CustomBin(FoundationGridfinity):
 
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
 
-
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
 
