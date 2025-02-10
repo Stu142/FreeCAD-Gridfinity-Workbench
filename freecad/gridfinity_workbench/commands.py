@@ -256,6 +256,6 @@ class CreateCustomBin(BaseCommand):
 
     NAME = "CustomBin"
     GRIDFINITY_FUNCTION = CustomBin
-    Pixmap = ICONDIR / "BetaLBinBlank.svg"
+    Pixmap = ICONDIR / "CustomBlankBinBeta.svg"
     MenuText = "Gridfinity Custom Bin"
     ToolTip = "Draw a custom shaped bin"
