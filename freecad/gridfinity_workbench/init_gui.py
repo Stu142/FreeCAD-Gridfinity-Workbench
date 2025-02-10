@@ -23,6 +23,7 @@ except ImportError:
 
 
 ICONPATH = Path(__file__).parent / "icons"
+UIPATH = Path(__file__).parent / "ui"
 
 
 class GridfinityWorkbench(Workbench):
@@ -88,6 +89,9 @@ class GridfinityWorkbench(Workbench):
         fcg.addCommand("CreateMagnetBaseplate", CreateMagnetBaseplate())
         fcg.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
         fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
+
+        fcg.addIconPath(str(ICONPATH))
+        fcg.addPreferencePage(str(UIPATH / "preferences.ui"), "Gridfinity")
 
 
 fcg.addWorkbench(GridfinityWorkbench())
