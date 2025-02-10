@@ -248,3 +248,36 @@ class CreateLBinBlank(BaseCommand):
     Pixmap = ICONDIR / "BetaLBinBlank.svg"
     MenuText = "Gridfinity L Shaped Blank Bin"
     ToolTip = "Create a Gridfinity L Shaped Blank Bin"
+
+import Part
+
+class AddCommand(BaseCommand):
+
+    def __init__(self) -> None:
+        pass
+
+    def _get_top_points(self) -> list[fc.Vector]:
+        selection = fcg.Selection.getSelectionEx()
+        if len(selection) != 1 or len(selection[0].SubObjects) != 1:
+            return []
+        points = [v.Point for v in selection[0].SubObjects[0].Vertexes]
+        height = max([p.z for p in points])
+        return [p for p in points if p.z > height - 1e-4]
+
+    def IsActive(self) -> bool:  # noqa: N802
+        return len(self._get_top_points()) == 2
+
+    def Activated(self) -> None:  # noqa: N802
+        [p1, p2] = self._get_top_points()
+        e = Part.Edge(Part.Vertex(p1), Part.Vertex(p2))
+        bb = e.BoundBox
+        bb.enlarge(10)
+        box = Part.makeBox(bb.XLength, bb.YLength, bb.ZLength, fc.Vector(bb.XMin, bb.YMin, bb.ZMin))
+        Part.show(box)
+
+    def GetResources(self) -> dict[str, str]:  # noqa: N802
+        return {
+            "Pixmap": str(ICONDIR / "BinBlank.svg"),
+            "MenuText": "Add stuff menu text",
+            "ToolTip": "Add stuff tool tip",
+        }
