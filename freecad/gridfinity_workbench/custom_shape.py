@@ -38,16 +38,15 @@ class GridDialog(QDialog):
 
         self.origin_pos = QPoint(
             self.offset,
-            self.offset + self.y * self.spacing
+            self.offset + self.y * self.spacing,
         )
-        print(f"{self.origin_pos=}")
 
     def _to_canvas_point(self, point: QPoint) -> QPoint:
         point.setY(-point.y())
         return self.origin_pos + self.spacing * point
-    
+
     def _from_mouse_pos(self, point: QPoint) -> QPointF:
-        relative_pos = (point - (self.origin_pos + self.label.pos()))
+        relative_pos = point - (self.origin_pos + self.label.pos())
         return QPointF(relative_pos.x(), -relative_pos.y()) / self.spacing
 
     def _recompute(self) -> None:
@@ -89,6 +88,7 @@ class GridDialog(QDialog):
             return False
 
         visited = set()
+
         def dfs(x: int, y: int) -> None:
             if (
                 (x, y) in visited

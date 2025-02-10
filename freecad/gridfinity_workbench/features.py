@@ -15,15 +15,12 @@ from .baseplate_feature_construction import (
     BaseplateSolidShape,
 )
 from .custom_shape import get_custom_shape
-
 from .custom_shape_features import (
     custom_shape_solid,
+    custom_shape_stacking_lip,
     custom_shape_trim,
     vertical_edge_fillet,
-    get_wire_shape,
-    custom_shape_stacking_lip,
 )
-
 from .feature_construction import (
     BinBaseValues,
     BinBottomHoles,
@@ -113,7 +110,6 @@ class CustomBin(FoundationGridfinity):
     def __init__(self, obj: fc.DocumentObject) -> None:
         super().__init__(obj)
         self.layout = get_custom_shape()
-        #fc.Console.PrintMessage(self.layout)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -175,7 +171,6 @@ class CustomBin(FoundationGridfinity):
 
         fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
         fuse_total = fuse_total.fuse(make_complex_bin_base(obj, self.layout))
-
 
         if obj.ScrewHoles or obj.MagnetHoles:
             holes = BinBottomHoles.make(self, obj, self.layout)

@@ -1,9 +1,7 @@
 """Custom shape features for bin and baplate generation."""
 
-import Part
-import Draft
-
 import FreeCAD as fc  # noqa: N813
+import Part
 
 from . import utils
 
@@ -51,7 +49,10 @@ def custom_shape_trim(
         return x >= 0 and x < len(layout) and y >= 0 and y < len(layout[x]) and layout[x][y]
 
     x_trim_box = Part.makeBox(
-        xtrim, obj.yGridSize.Value + ytrim, obj.TotalHeight, fc.Vector(0, -ytrim, -obj.TotalHeight),
+        xtrim,
+        obj.yGridSize.Value + ytrim,
+        obj.TotalHeight,
+        fc.Vector(0, -ytrim, -obj.TotalHeight),
     )
     y_trim_box = Part.makeBox(
         obj.xGridSize.Value + xtrim * 2,
@@ -90,7 +91,8 @@ def custom_shape_trim(
 
 
 def vertical_edge_fillet(
-    solid_shape: Part.Shape, radius: float,
+    solid_shape: Part.Shape,
+    radius: float,
 ) -> Part.Shape:
     """Fillet vertical Edges of input shape."""
     b_edges = []
@@ -122,7 +124,9 @@ def get_wire_shape(solid_shape: Part.Shape, zheight: float) -> Part.Wire:
 
 
 def custom_shape_stacking_lip(
-    obj: fc.DocumentObject, solid_shape: Part.Shape, layout: GridfinityLayout
+    obj: fc.DocumentObject,
+    solid_shape: Part.Shape,
+    layout: GridfinityLayout,
 ) -> Part.Wire:
     """Fillet vertical Edges of input shape."""
     wires = []
@@ -161,7 +165,7 @@ def custom_shape_stacking_lip(
     )
     fuse_total = custom_shape_solid(obj, layout, stacking_lip_total_height)
     fuse_total = fuse_total.cut(
-        custom_shape_trim(obj, layout, obj.Clearance.Value, obj.Clearance.Value)
+        custom_shape_trim(obj, layout, obj.Clearance.Value, obj.Clearance.Value),
     ).translate(fc.Vector(0, 0, stacking_lip_total_height))
     fuse_total = fuse_total.removeSplitter()
     fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius.Value)

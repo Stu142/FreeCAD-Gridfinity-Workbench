@@ -1463,11 +1463,7 @@ def make_complex_bin_base(
 
         xtranslate += obj.xGridSize
 
-    fuse_total = (
-        b1
-        if feat_count == 1
-        else b1.multiFuse(parts)
-    )
+    fuse_total = b1 if feat_count == 1 else b1.multiFuse(parts)
 
     return fuse_total.translate(
         fc.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset),
