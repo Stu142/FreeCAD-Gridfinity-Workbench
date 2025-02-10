@@ -51,21 +51,6 @@ def _universal_properties(obj: fc.DocumentObject) -> None:
         1,
     )
 
-    obj.addProperty(
-        "App::PropertyInteger",
-        "xMaxGrids",
-        "ReferenceParameters",
-        "Overall number of grids in x direction",
-        1,
-    )
-
-    obj.addProperty(
-        "App::PropertyInteger",
-        "yMaxGrids",
-        "ReferenceParameters",
-        "Overall number of grids in y direction",
-        1,
-    )
     ## Expert Parameters
 
     obj.addProperty(
@@ -138,10 +123,6 @@ class RectangleLayout(utils.Feature):
         else:
             obj.xTotalWidth = obj.xGridUnits * obj.xGridSize - obj.Clearance * 2
             obj.yTotalWidth = obj.yGridUnits * obj.yGridSize - obj.Clearance * 2
-
-        obj.xMaxGrids = obj.xGridUnits
-
-        obj.yMaxGrids = obj.yGridUnits
 
         if obj.GenerationLocation == "Centered at Origin":
             obj.xLocationOffset = obj.xTotalWidth / 2
@@ -271,10 +252,6 @@ class LShapedLayout(utils.Feature):
             obj.xTotalWidth = obj.x1GridUnits * obj.xGridSize - obj.Clearance * 2
             obj.yTotalWidth = obj.y1GridUnits * obj.yGridSize - obj.Clearance * 2
 
-        obj.xMaxGrids = obj.x1GridUnits
-
-        obj.yMaxGrids = obj.y1GridUnits
-
         if obj.GenerationLocation == "Centered at Origin":
             obj.xLocationOffset = obj.xTotalWidth / 2
             obj.yLocationOffset = obj.yTotalWidth / 2
@@ -282,14 +259,7 @@ class LShapedLayout(utils.Feature):
             obj.xLocationOffset = 0
             obj.yLocationOffset = 0
 
-        ## L layout matrix creation
-        layout = [[False for y in range(obj.y1GridUnits)] for x in range(obj.x1GridUnits)]
-
-        for x in range(obj.x1GridUnits):
-            for y in range(obj.y1GridUnits):
-                if x < obj.x2GridUnits:
-                    layout[x][y] = True
-                if y < obj.y2GridUnits:
-                    layout[x][y] = True
-
-        return layout
+        return [
+            [True] * (obj.y1GridUnits if x < obj.x2GridUnits else obj.y2GridUnits)
+            for x in range(obj.x1GridUnits)
+        ]

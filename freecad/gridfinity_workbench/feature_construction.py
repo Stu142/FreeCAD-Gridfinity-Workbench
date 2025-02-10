@@ -1316,10 +1316,10 @@ class EcoCompartments(utils.Feature):
 
         xtranslate, ytranslate = zeromm, zeromm
         vec_list = []
-        for x in range(obj.xMaxGrids):
+        for col in layout:
             ytranslate = zeromm
-            for y in range(obj.yMaxGrids):
-                if layout[x][y]:
+            for cell in col:
+                if cell:
                     vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
                 ytranslate += obj.yGridSize
             xtranslate += obj.xGridSize
@@ -1559,10 +1559,10 @@ def make_complex_bin_base(
     parts = []
     feat_count = 0
 
-    for x in range(obj.xMaxGrids):
+    for col in layout:
         ytranslate = zeromm
-        for y in range(obj.yMaxGrids):
-            if layout[x][y]:
+        for cell in col:
+            if cell:
                 b = assembly.copy()
                 b.translate(fc.Vector(xtranslate, ytranslate, 0))
                 feat_count += 1
@@ -1575,7 +1575,6 @@ def make_complex_bin_base(
 
         xtranslate += obj.xGridSize
 
-    larger_than_single_grid = 2
     fuse_total = (
         b1
         if feat_count == 1
@@ -1761,10 +1760,10 @@ class BinBottomHoles(utils.Feature):
         )
         vec_list = []
         xtranslate = 0
-        for x in range(obj.xMaxGrids):
+        for col in layout:
             ytranslate = 0
-            for y in range(obj.yMaxGrids):
-                if layout[x][y]:
+            for cell in col:
+                if cell:
                     vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
                 ytranslate += obj.yGridSize.Value
             xtranslate += obj.xGridSize.Value

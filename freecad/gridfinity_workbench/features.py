@@ -162,8 +162,6 @@ class CustomBin(FoundationGridfinity):
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
 
-        obj.xMaxGrids = 10
-        obj.yMaxGrids = 10
         ## calculated values over
 
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)

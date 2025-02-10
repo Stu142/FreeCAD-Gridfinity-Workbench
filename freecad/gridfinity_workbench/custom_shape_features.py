@@ -26,10 +26,10 @@ def custom_shape_solid(
 
     vec_list = []
     xtranslate = 0
-    for x in range(obj.xMaxGrids):
+    for col in layout:
         ytranslate = 0
-        for y in range(obj.yMaxGrids):
-            if layout[x][y]:
+        for cell in col:
+            if cell:
                 vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
             ytranslate += obj.yGridSize.Value
         xtranslate += obj.xGridSize.Value
@@ -46,6 +46,10 @@ def custom_shape_trim(
     ytrim: float,
 ) -> Part.Shape:
     """Make outer edge solid to trim edges from custom shape solid."""
+
+    def is_set(x: int, y: int) -> bool:
+        return x >= 0 and x < len(layout) and y >= 0 and y < len(layout[x]) and layout[x][y]
+
     x_trim_box = Part.makeBox(
         xtrim, obj.yGridSize.Value + ytrim, obj.TotalHeight, fc.Vector(0, -ytrim, -obj.TotalHeight),
     )
@@ -59,19 +63,19 @@ def custom_shape_trim(
     x_vec_list = []
     y_vec_list = []
     xtranslate = 0
-    for x in range(obj.xMaxGrids):
+    for x in range(len(layout)):
         ytranslate = 0
-        for y in range(obj.yMaxGrids):
+        for y in range(len(layout[x])):
             if layout[x][y]:
-                if not layout[x - 1][y]:
+                if not is_set(x - 1, y):
                     x_vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
-                if not layout[x + 1][y]:
+                if not is_set(x + 1, y):
                     x_vec_list.append(
                         fc.Vector(xtranslate + obj.xGridSize.Value - xtrim, ytranslate, 0),
                     )
-                if not layout[x][y - 1]:
+                if not is_set(x, y - 1):
                     y_vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
-                if not layout[x][y + 1]:
+                if not is_set(x, y + 1):
                     y_vec_list.append(
                         fc.Vector(xtranslate, ytranslate + obj.yGridSize.Value - ytrim, 0),
                     )

@@ -339,11 +339,10 @@ class BaseplateMagnetHoles(utils.Feature):
         hm2: Part.Shape | None = None
         hm3: Part.Shape | None = None
 
-        for x in range(obj.xMaxGrids):
+        for col in layout:
             ytranslate = zeromm
-
-            for y in range(obj.yMaxGrids):
-                if layout[x][y]:
+            for cell in col:
+                if cell:
                     hm1_copy = hm1.copy()
 
                     # Translate for next hole
@@ -478,12 +477,11 @@ class BaseplateScrewBottomChamfer(utils.Feature):
         hm2: Part.Shape | None = None
         hm3: Part.Shape | None = None
 
-        for x in range(obj.xMaxGrids):
+        for col in layout:
             ytranslate = zeromm
-            for y in range(obj.yMaxGrids):
-                if layout[x][y]:
+            for cell in col:
+                if cell:
                     hm1_copy = hm1.copy()
-
                     hm1_copy.translate(fc.Vector(xtranslate, ytranslate, 0))
                 hm2 = hm1_copy if hm2 is None else hm2.fuse(hm1_copy)
                 ytranslate += obj.yGridSize
@@ -561,40 +559,32 @@ class BaseplateConnectionHoles(utils.Feature):
             fc.Vector(1, 0, 0),
         )
 
-        xtranslate = zeromm
-        ytranslate = zeromm
         hx1 = Part.Solid.fuse(c1, c2)
         hx2: Part.Shape | None = None
 
-        for _ in range(obj.xMaxGrids):
-            ytranslate = zeromm
-
+        xtranslate = zeromm
+        for _ in range(obj.xGridUnits):
             hx1 = hx1.copy()
-            hx1.translate(fc.Vector(xtranslate, ytranslate, 0))
+            hx1.translate(fc.Vector(xtranslate, zeromm, 0))
             hx2 = hx1 if hx2 is None else hx2.fuse(hx1)
-
             xtranslate += obj.xGridSize
 
-        xtranslate = zeromm
-        ytranslate = zeromm
         hy1 = Part.Solid.fuse(c3, c4)
         hy2: Part.Shape | None = None
 
-        for _ in range(obj.yMaxGrids):
-            xtranslate = zeromm
-
+        ytranslate = zeromm
+        for _ in range(obj.yGridUnits):
             hy1_copy = hy1.copy()
-            hy1_copy.translate(fc.Vector(xtranslate, ytranslate, 0))
+            hy1_copy.translate(fc.Vector(zeromm, ytranslate, 0))
             hy2 = hy1_copy if hy2 is None else hy2.fuse(hy1_copy)
             ytranslate += obj.yGridSize
 
-        fuse_total = Part.Solid.fuse(hx2, hy2)
+        fuse_total = hx2.fuse(hy2)
 
         return fuse_total.translate(
             fc.Vector(
                 obj.xGridSize / 2 - obj.xLocationOffset,
                 obj.yGridSize / 2 - obj.yLocationOffset,
-                0,
             ),
         )
 
