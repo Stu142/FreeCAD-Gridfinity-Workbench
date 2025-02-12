@@ -24,8 +24,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install .[dev]
-      - name: Run code generation
+      - name: Setup for code generation
         run: |
           mv ${FILE} ${FILE}.bak
+      - name: Run code generation
+        run: |
           python ${SCRIPT}
+      - name: Check for differences
+        run: |
           diff ${FILE}.bak ${FILE}
