@@ -3,11 +3,7 @@ import re
 from pathlib import Path
 import sys
 
-pattern = re.compile(r"(?<!^)(?=[A-Z])")
-def to_snake_case(name: str) -> str:
-    return pattern.sub("_", name).lower()
-
-classes = {
+_CLASSES = {
     "float": {
         "Gui::PrefDoubleSpinBox",
     },
@@ -19,89 +15,108 @@ classes = {
     },
 }
 
-getter_code = """
-def {snake_case}() -> {type}:
-    return _get_{type}("{pascal_case}")
-"""
-
-workbench_dir = Path(__file__).parent / "freecad" / "gridfinity_workbench"
-ui_dir = workbench_dir / "ui"
-output_file = workbench_dir / "preferences" / "auto.py"
-
-properties = dict()
+_WORKBENCH_DIR = Path(__file__).parent / "freecad" / "gridfinity_workbench"
+_UI_DIR = _WORKBENCH_DIR / "ui"
+_OUTPUT_FILE = _WORKBENCH_DIR / "preferences" / "auto.py"
 
 _EXPECTED_PATH = "Mod/Gridfinity"
-def check_path(widget) -> None:
-    path = widget.find("./property[@name='prefPath']/cstring").text
-    if path != _EXPECTED_PATH:
-        print(f"Preferences for {name} have path {path!r} instead of {expected_path!r}")
-        sys.exit(1)
+
+def get_value(widget,t ) -> str | None:
+    if t == 'float':
+        prop = widget.find("./property[@name='value']/double")
+    elif t == 'int':
+        prop = widget.find("./property[@name='value']/number")
+    elif t == 'bool':
+        prop = widget.find("./property[@name='checked']/bool")
+        return None if prop is None else prop.text.capitalize()
+    else:
+        assert False, f"Unrecognized type {t!r}"
+    return None if prop is None else prop.text
 
 preferences = {}
 
-for file in ui_dir.glob("*.ui"):
+for file in _UI_DIR.glob("*.ui"):
     for widget in ET.parse(file).getroot().findall(".//widget"):
         clazz = widget.attrib["class"]
         if not clazz.startswith("Gui::Pref"):
             continue
-        for t, clazzes in classes.items():
+
+        for t, clazzes in _CLASSES.items():
             if clazz in clazzes:
                 break
         else:
             print(f"Unrecognized class {clazz}")
             sys.exit(1)
 
-        check_path(widget)
-
-        name = widget.find("./property[@name='prefEntry']/cstring").text
-
-        if name in preferences:
-            print(f"Multiple preference widgets for entry {name}")
+        path = widget.find("./property[@name='prefPath']/cstring").text
+        if path != _EXPECTED_PATH:
+            print(f"Preferences for {name} have path {path!r} instead of {_EXPECTED_PATH!r}")
             sys.exit(1)
 
-        preferences[name] = t
+        name = widget.find("./property[@name='prefEntry']/cstring").text
+        if name in preferences:
+            print(f"Multiple preference widgets for entry {name}")
+            other_file = preferences[name][0]
+            if file == other_file:
+                print(f"Both defined in {file.relative_to(_WORKBENCH_DIR)}")
+            else:
+                print(f"Defined in {other_file.relative_to(_WORKBENCH_DIR)} and {file.relative_to(_WORKBENCH_DIR)}.")
+            sys.exit(1)
 
-def codegen(name, t) -> str:
-    return getter_code.format(type=t, pascal_case=name, snake_case=to_snake_case(name))
+        value = get_value(widget, t)
+        if value is None:
+            print(f"No default value for property {name!r} of type {t!r} in file {file.relative_to(_WORKBENCH_DIR)}")
+            print("Try changing it to something different, saving the file, changing it back to desired value and saving again.")
+            sys.exit(1)
 
-getters = [codegen(name, t) for name, t in preferences.items()]
+        preferences[name] = (file, t, value)
+
+
+_TO_SNAKE_CASE_PATERN = re.compile(r"(?<!^)(?=[A-Z])")
+def to_snake_case(name: str) -> str:
+    return _TO_SNAKE_CASE_PATERN.sub("_", name).lower()
+
+
+_GETTER_CODE = """
+def {snake_case}() -> {type}:
+    # from {file}
+    return _PARAMS.Get{Type}("{pascal_case}", {default})
+"""
+
+def codegen(name, file, t, default) -> str:
+    return _GETTER_CODE.format(
+        type=t,
+        Type=t.capitalize(),
+        pascal_case=name,
+        snake_case=to_snake_case(name),
+        default=default,
+        file=file.relative_to(_UI_DIR),
+    )
+
+getters = [codegen(name, *args) for name, args in preferences.items()]
 getters.sort()
 
-file_prefix = R'''"""This file was auto generated, do not edit it!
+_FILE_PREFIX = R'''"""This file was auto generated, do not edit it directly!
 
-If you want to change any function, override it in `__init__.py` in this directory.
+If you want to:
+- change a default value: do it in a `.ui` file.
+- change a paramter name: do it in a `.ui` file.
+- customize a function behaviour: override it in `__init__.py` in this directory
+
 If you make changes to the `.ui` files, run `codegen_preferences.py` again to update this file.
 """
 # fmt: off
 
 import FreeCAD
 
-# Helpers
-
 _PARAMS = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Mod/Gridfinity")
-_MAGIC = -987
-
-def _get_float(param: str) -> float:
-    res = _PARAMS.GetFloat(param, _MAGIC)
-    assert res != _MAGIC
-    return res
-
-def _get_int(param: str) -> int:
-    res = _PARAMS.GetInt(param, _MAGIC)
-    assert res != _MAGIC
-    return res
-
-def _get_bool(param: str) -> bool:
-    return _PARAMS.GetBool(param, False)
-
-# Preference getters
 '''
 
-file_suffix = R'''
+_FILE_SUFFIX = R'''
 # fmt: on
 '''
 
-with open(output_file, "w") as f:
-    f.write(file_prefix)
+with open(_OUTPUT_FILE, "w") as f:
+    f.write(_FILE_PREFIX)
     f.write(''.join(getters))
-    f.write(file_suffix)
+    f.write(_FILE_SUFFIX)

@@ -320,6 +320,9 @@
         <property name="maximum">
          <double>10000.000000000000000</double>
         </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
         <property name="prefEntry" stdset="0">
          <cstring>DividerCustomXHeight</cstring>
         </property>
@@ -339,6 +342,9 @@
         <property name="maximum">
          <double>10000.000000000000000</double>
         </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
         <property name="prefEntry" stdset="0">
          <cstring>DividerCustomYHeight</cstring>
         </property>
@@ -352,6 +358,9 @@
         <property name="text">
          <string>Custom height X</string>
         </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
         <property name="prefEntry" stdset="0">
          <cstring>DividerCustomX</cstring>
         </property>
@@ -364,6 +373,9 @@
        <widget class="Gui::PrefCheckBox" name="checkBox_2">
         <property name="text">
          <string>Custom height Y</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
         </property>
         <property name="prefEntry" stdset="0">
          <cstring>DividerCustomY</cstring>

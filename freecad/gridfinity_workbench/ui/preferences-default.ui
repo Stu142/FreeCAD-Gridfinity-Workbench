@@ -228,6 +228,9 @@
         <property name="singleStep">
          <double>0.100000000000000</double>
         </property>
+        <property name="value">
+         <double>0.200000000000000</double>
+        </property>
         <property name="prefEntry" stdset="0">
          <cstring>SequentialBridgingLayerHeight</cstring>
         </property>
@@ -262,6 +265,9 @@
         </property>
         <property name="singleStep">
          <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
         </property>
         <property name="prefEntry" stdset="0">
          <cstring>BlankBinRecessedTopDepth</cstring>
@@ -320,6 +326,9 @@
        <widget class="Gui::PrefSpinBox" name="PartsBinDividersXSpinbox">
         <property name="maximum">
          <number>10000</number>
+        </property>
+        <property name="value">
+         <number>0</number>
         </property>
         <property name="prefEntry" stdset="0">
          <cstring>PartsBinDividersX</cstring>
@@ -551,6 +560,9 @@
         <property name="maximum">
          <number>10000</number>
         </property>
+        <property name="value">
+         <number>0</number>
+        </property>
         <property name="prefEntry" stdset="0">
          <cstring>EcoBinDividersX</cstring>
         </property>
@@ -563,6 +575,9 @@
        <widget class="Gui::PrefSpinBox" name="spinBox_2">
         <property name="maximum">
          <number>10000</number>
+        </property>
+        <property name="value">
+         <number>0</number>
         </property>
         <property name="prefEntry" stdset="0">
          <cstring>EcoBinDividersY</cstring>

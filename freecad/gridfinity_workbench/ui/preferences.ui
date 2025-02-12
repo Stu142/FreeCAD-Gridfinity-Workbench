@@ -45,6 +45,9 @@
         <property name="text">
          <string>Independent grid size</string>
         </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
         <property name="prefEntry" stdset="0">
          <cstring>IndependentGridSize</cstring>
         </property>
@@ -353,6 +356,9 @@
        <widget class="Gui::PrefCheckBox" name="checkBox">
         <property name="text">
          <string>Screw holes</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
         </property>
         <property name="prefEntry" stdset="0">
          <cstring>BinScrewHoles</cstring>
