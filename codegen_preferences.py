@@ -10,7 +10,7 @@ It also runs some checks for the preferences:
   incorrect for the XML to ommit them - default ones are used then.
 """
 
-# ruff: noqa: D103, T201, TRY003, EM102, S314
+# ruff: noqa: D103, T201, S314
 
 from __future__ import annotations
 
@@ -37,6 +37,7 @@ _OUTPUT_FILE = _WORKBENCH_DIR / "preferences" / "auto.py"
 
 _EXPECTED_PATH = "Mod/Gridfinity"
 
+
 def get_value(widget: ET.Element, t: str) -> str | None:
     if t == "float":
         prop = widget.find("./property[@name='value']/double")
@@ -49,6 +50,7 @@ def get_value(widget: ET.Element, t: str) -> str | None:
         raise AssertionError(f"Unrecognized type {t!r}")
     return None if prop is None else prop.text
 
+
 preferences = {}
 
 for file in _UI_DIR.glob("*.ui"):
@@ -57,7 +59,7 @@ for file in _UI_DIR.glob("*.ui"):
         if not clazz.startswith("Gui::Pref"):
             continue
 
-        for t, clazzes in _CLASSES.items(): # noqa: B007
+        for t, clazzes in _CLASSES.items():  # noqa: B007
             if clazz in clazzes:
                 break
         else:
@@ -77,22 +79,30 @@ for file in _UI_DIR.glob("*.ui"):
             if file == other_file:
                 print(f"Both defined in {file.relative_to(_WORKBENCH_DIR)}")
             else:
-                print(f"Defined in {other_file.relative_to(_WORKBENCH_DIR)} and"
-                      f"{file.relative_to(_WORKBENCH_DIR)}.")
+                print(
+                    f"Defined in {other_file.relative_to(_WORKBENCH_DIR)} and"
+                    f"{file.relative_to(_WORKBENCH_DIR)}."
+                )
             sys.exit(1)
 
         value = get_value(widget, t)
         if value is None:
-            print(f"No default value for property {name!r} of type {t!r} in file "
-                  f"{file.relative_to(_WORKBENCH_DIR)}")
-            print("Try changing it to something different, saving the file, changing it back to"
-                  "desired value and saving again.")
+            print(
+                f"No default value for property {name!r} of type {t!r} in file "
+                f"{file.relative_to(_WORKBENCH_DIR)}"
+            )
+            print(
+                "Try changing it to something different, saving the file, changing it back to"
+                "desired value and saving again."
+            )
             sys.exit(1)
 
         preferences[name] = (file, t, value)
 
 
 _TO_SNAKE_CASE_PATERN = re.compile(r"(?<!^)(?=[A-Z])")
+
+
 def to_snake_case(name: str) -> str:
     return _TO_SNAKE_CASE_PATERN.sub("_", name).lower()
 
@@ -103,6 +113,7 @@ def {snake_case}() -> {type}:
     return _PARAMS.Get{Type}("{pascal_case}", {default})
 """
 
+
 def codegen(name: str, file: Path, t: str, default: str) -> str:
     return _GETTER_CODE.format(
         type=t,
@@ -112,6 +123,7 @@ def codegen(name: str, file: Path, t: str, default: str) -> str:
         default=default,
         file=file.relative_to(_UI_DIR),
     )
+
 
 getters = [codegen(name, *args) for name, args in preferences.items()]
 getters.sort()
@@ -138,5 +150,6 @@ _FILE_SUFFIX = R"""
 
 with Path.open(_OUTPUT_FILE, "w") as f:
     f.write(_FILE_PREFIX)
-    f.write("".join(getters))
+    for getter in getters:
+        f.write(getter)
     f.write(_FILE_SUFFIX)
