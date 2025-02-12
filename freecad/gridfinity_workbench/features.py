@@ -5,7 +5,7 @@ from abc import abstractmethod
 import FreeCAD as fc  # noqa: N813
 import Part
 
-from . import const, preferences, utils
+from . import preferences, utils
 from .baseplate_feature_construction import (
     BaseplateBaseValues,
     BaseplateCenterCut,

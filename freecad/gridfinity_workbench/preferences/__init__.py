@@ -1,5 +1,13 @@
+"""A module to get user preferences.
+
+Prefernces are customized in FreeCAD > Edit > Preferences > Gridfinity. Python bindings are auto
+generated from `.ui` files.
+"""
+
+from . import auto
 from .auto import *
-from .import auto
+
+# ruff: noqa: D103, F403, RET505
 
 # Overrides
 
