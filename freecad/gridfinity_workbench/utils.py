@@ -29,11 +29,11 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
 
     Args:
         shape (Part.Shape): Shape to copy.
-        vec_list (list[FreeCAD.Vector]): List of vectors wher the copies should be translated
+        vec_list (list[FreeCAD.Vector]): List of vectors where the copies should be translated
             to.
 
     Raises:
-        ValueError: List is empty
+        ValueError: List is empty.
         RuntimeError: Nothing copied.
 
     Returns:
@@ -41,8 +41,7 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
 
     """
     if not vec_list:
-        msg = "Vector list is empty"
-        raise ValueError(msg)
+        raise ValueError("Vector list is empty")
 
     final_shape: Part.Shape | None = None
     for vec in vec_list:
@@ -51,8 +50,7 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
         final_shape = tmp if final_shape is None else final_shape.fuse(tmp)
 
     if final_shape is None:
-        msg = "Nothing has been copied"
-        raise RuntimeError(msg)
+        raise RuntimeError("Nothing has been copied")
 
     return final_shape
 
@@ -67,12 +65,11 @@ def curve_to_wire(list_of_items: list[Part.LineSegment]) -> Part.Wire:
         list_of_items (list[Part.LineSegment]): List of items to convert in a wire.
 
     Returns:
-        Part.Wire: The created wire
+        Part.Wire: The created wire.
 
     """
     if not list_of_items:
-        msg = "List is empty"
-        raise ValueError(msg)
+        raise ValueError("List is empty")
 
     return Part.Wire([item.toShape() for item in list_of_items])
 
@@ -96,11 +93,9 @@ def create_rounded_rectangle(
 
     """
     if radius <= 0:
-        msg = "Radius should be > 0"
-        raise ValueError(msg)
+        raise ValueError("Radius should be > 0")
     if radius >= xwidth / 2 or radius >= ywidth / 2:
-        msg = "Radius should be smaller than xwidth /2 or ywidth / 2"
-        raise ValueError(msg)
+        raise ValueError("Radius should be smaller than xwidth/2 and ywidth/2")
 
     xfarv = xwidth / 2
     yfarv = ywidth / 2
@@ -171,8 +166,7 @@ def rounded_rectangle_chamfer(
         zsketchplane + height,
         radius + height,
     )
-    wires = [w1, w2]
-    return Part.makeLoft(wires, solid=True)
+    return Part.makeLoft([w1, w2], solid=True)
 
 
 def rounded_rectangle_extrude(
@@ -196,8 +190,7 @@ def rounded_rectangle_extrude(
 
     """
     w1 = create_rounded_rectangle(xwidth, ywidth, zsketchplane, radius)
-    face = Part.Face(w1)
-    return face.extrude(fc.Vector(0, 0, height))
+    return Part.Face(w1).extrude(fc.Vector(0, 0, height))
 
 
 @dataclass
@@ -205,13 +198,13 @@ class LShapeData:
     """Data class containing information regarding a L shape.
 
     L shape side names:
-      c
-    ┌───┐
-    │   │d
-    │   └──────┐
-    │          │b
-    └──────────┘
-         a
+        x2
+      ┌───┐
+      │   │
+    y1│   └──────┐
+      │          │ y2
+      └──────────┘
+           x1
     """
 
     x1: float
@@ -230,8 +223,8 @@ def create_rounded_l(
 
     Args:
         shape_data (LShapeData): Size data for the L shape.
-        xoffset (float): Offest in the X direction
-        yoffset (float): Offset in the Y direction
+        xoffset (float): Offest in the X direction.
+        yoffset (float): Offset in the Y direction.
         radius (float): Radius of the corners.
 
     Returns:
@@ -276,24 +269,24 @@ def create_rounded_l(
     arc6x = arc1x
     arc6y = yoffset + radius - radius * math.sin(math.pi / 4)
 
-    l1v1 = fc.Vector(l1x, l1y1, 0)
-    l1v2 = fc.Vector(l1x, l1y2, 0)
-    arc1v = fc.Vector(arc1x, arc1y, 0)
-    l2v1 = fc.Vector(l2x1, l2y, 0)
-    l2v2 = fc.Vector(l2x2, l2y, 0)
-    arc2v = fc.Vector(arc2x, arc2y, 0)
-    l3v1 = fc.Vector(l3x, l3y1, 0)
-    l3v2 = fc.Vector(l3x, l3y2, 0)
-    arc3v = fc.Vector(arc3x, arc3y, 0)
-    l4v1 = fc.Vector(l4x1, l4y, 0)
-    l4v2 = fc.Vector(l4x2, l4y, 0)
-    arc4v = fc.Vector(arc4x, arc4y, 0)
-    l5v1 = fc.Vector(l5x, lsy1, 0)
-    l5v2 = fc.Vector(l5x, l5y2, 0)
-    arc5v = fc.Vector(arc5x, arc5y, 0)
-    l6v1 = fc.Vector(l6x1, l6y, 0)
-    l6v2 = fc.Vector(l6x2, l6y, 0)
-    arc6v = fc.Vector(arc6x, arc6y, 0)
+    l1v1 = fc.Vector(l1x, l1y1)
+    l1v2 = fc.Vector(l1x, l1y2)
+    arc1v = fc.Vector(arc1x, arc1y)
+    l2v1 = fc.Vector(l2x1, l2y)
+    l2v2 = fc.Vector(l2x2, l2y)
+    arc2v = fc.Vector(arc2x, arc2y)
+    l3v1 = fc.Vector(l3x, l3y1)
+    l3v2 = fc.Vector(l3x, l3y2)
+    arc3v = fc.Vector(arc3x, arc3y)
+    l4v1 = fc.Vector(l4x1, l4y)
+    l4v2 = fc.Vector(l4x2, l4y)
+    arc4v = fc.Vector(arc4x, arc4y)
+    l5v1 = fc.Vector(l5x, lsy1)
+    l5v2 = fc.Vector(l5x, l5y2)
+    arc5v = fc.Vector(arc5x, arc5y)
+    l6v1 = fc.Vector(l6x1, l6y)
+    l6v2 = fc.Vector(l6x2, l6y)
+    arc6v = fc.Vector(arc6x, arc6y)
 
     lines = [
         Part.LineSegment(l1v1, l1v2),
@@ -334,5 +327,23 @@ def rounded_l_extrude(
 
     """
     w1 = create_rounded_l(shape_data, xoffset, yoffset, radius)
-    face = Part.Face(w1)
-    return face.extrude(fc.Vector(0, 0, height))
+    return Part.Face(w1).extrude(fc.Vector(0, 0, height))
+
+
+def multi_fuse(lst: list[Part.Shape]) -> Part.Shape:
+    """Fuses all shapes in the list into a single shape."""
+    if not lst:
+        raise ValueError("The list is empty")
+    return lst[0].multiFuse(lst[1:])
+
+
+def loop(lst: list[fc.Vector]) -> list[Part.LineSegment]:
+    """Get a closed loop consisting of LineSegments from consecutive points."""
+    if len(lst) < 3:  # noqa: PLR2004
+        raise ValueError("List has to be of length at least 3")
+    return [Part.LineSegment(p1, p2) for p1, p2 in zip(lst, lst[1:] + lst[:1])]
+
+
+def corners(x: float, y: float, z: float = 0) -> list[fc.Vector]:
+    """Get a list of four points located at (±x, ±y, z)."""
+    return [fc.Vector(x_pos, y_pos, z) for x_pos, y_pos in ((-x, -y), (x, -y), (-x, y), (x, y))]
