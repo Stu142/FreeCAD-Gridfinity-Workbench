@@ -81,7 +81,7 @@ for file in _UI_DIR.glob("*.ui"):
             else:
                 print(
                     f"Defined in {other_file.relative_to(_WORKBENCH_DIR)} and"
-                    f"{file.relative_to(_WORKBENCH_DIR)}."
+                    f"{file.relative_to(_WORKBENCH_DIR)}.",
                 )
             sys.exit(1)
 
@@ -89,11 +89,11 @@ for file in _UI_DIR.glob("*.ui"):
         if value is None:
             print(
                 f"No default value for property {name!r} of type {t!r} in file "
-                f"{file.relative_to(_WORKBENCH_DIR)}"
+                f"{file.relative_to(_WORKBENCH_DIR)}",
             )
             print(
                 "Try changing it to something different, saving the file, changing it back to"
-                "desired value and saving again."
+                "desired value and saving again.",
             )
             sys.exit(1)
 
