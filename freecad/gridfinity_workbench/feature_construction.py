@@ -10,6 +10,7 @@ from . import const, utils
 unitmm = fc.Units.Quantity("1 mm")
 zeromm = fc.Units.Quantity("0 mm")
 
+ECO_USABLE_HEIGHT = 14
 SMALL_NUMBER = 0.01
 
 GridfinityLayout = list[list[bool]]
@@ -32,37 +33,21 @@ def _multiply_in_grid(
 
 
 def _label_shelf_front_fillet(
-    obj: fc.DocumentObject,
     shape: Part.Shape,
-    stackingoffset: float,
+    thickness: fc.Units.Quantity,
+    tolabelend: float,
 ) -> Part.Shape:
-    tolabelend = (
-        obj.Clearance
-        + obj.StackingLipTopChamfer
-        + obj.StackingLipTopLedge
-        + obj.StackingLipBottomChamfer
-        + obj.LabelShelfWidth
-    )
+    def fillet_point(p: Part.Point) -> bool:
+        return p.z == -thickness and p.x == tolabelend
 
-    h_edges = []
-    for edge in shape.Edges:
-        z0 = edge.Vertexes[0].Point.z
-        z1 = edge.Vertexes[1].Point.z
-        x0 = edge.Vertexes[0].Point.x
-        x1 = edge.Vertexes[1].Point.x
+    h_edges = [
+        edge
+        for edge in shape.Edges
+        if fillet_point(edge.Vertexes[0].Point) and fillet_point(edge.Vertexes[1].Point)
+    ]
+    assert h_edges
 
-        if (
-            z0 == -obj.LabelShelfVerticalThickness + stackingoffset
-            and z1 == -obj.LabelShelfVerticalThickness + stackingoffset
-            and x0 == tolabelend
-            and x1 == tolabelend
-        ):
-            h_edges.append(edge)
-
-    return shape.makeFillet(
-        obj.LabelShelfVerticalThickness.Value - 0.01,
-        h_edges,
-    )
+    return shape.makeFillet(thickness.Value - 0.01, h_edges)
 
 
 def _label_shelf_fillet(radius: float) -> Part.Face:
@@ -83,7 +68,7 @@ def _label_shelf_fillet(radius: float) -> Part.Face:
     return Part.Face(utils.curve_to_wire(lines))
 
 
-def _label_shelf_make_outside_fillet(
+def _label_shelf_outside_fillet(
     shape: Part.Shape,
     *,
     offset: float,
@@ -107,6 +92,27 @@ def _label_shelf_make_outside_fillet(
         fc.Vector(0, 0, -height),
     )
     shape = shape.cut(left_end_fillet)
+
+    return shape
+
+
+def _label_shelf(
+    *,
+    length: fc.Units.Quantity,
+    width: fc.Units.Quantity,
+    height: fc.Units.Quantity,
+    thickness: fc.Units.Quantity,
+) -> Part.Shape:
+    v = [
+        fc.Vector(0, 0, 0),
+        fc.Vector(width, 0, 0),
+        fc.Vector(width, 0, -thickness),
+        fc.Vector(0, 0, -height),
+    ]
+
+    face = Part.Face(utils.curve_to_wire(utils.loop(v)))
+    shape = face.extrude(fc.Vector(0, length))
+    shape = _label_shelf_front_fillet(shape, thickness, width)
 
     return shape
 
@@ -191,25 +197,15 @@ class LabelShelf(utils.Feature):
             Part.Shape: Labelshelf 3D shape.
 
         """
-        eco_usable_height = 14
         if (
             self.bintype == "eco"
-            and obj.TotalHeight < eco_usable_height
+            and obj.TotalHeight < ECO_USABLE_HEIGHT
             and obj.LabelShelfStyle != "Overhang"
         ):
             obj.LabelShelfStyle = "Overhang"
             fc.Console.PrintWarning(
                 "Label shelf style set to Overhang due to low bin height\n",
             )
-
-        towall = obj.Clearance + obj.WallThickness
-        tolabelend = (
-            obj.Clearance
-            + obj.StackingLipTopChamfer
-            + obj.StackingLipTopLedge
-            + obj.StackingLipBottomChamfer
-            + obj.LabelShelfWidth
-        )
 
         xdiv = obj.xDividers + 1
         ydiv = obj.yDividers + 1
@@ -220,96 +216,78 @@ class LabelShelf(utils.Feature):
             obj.yTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.yDividers
         ) / (ydiv)
 
-        stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
-        shelf_angle = obj.LabelShelfAngle.Value
         shelf_placement = obj.LabelShelfPlacement
+        if obj.LabelShelfLength > ycompwidth:
+            shelf_placement = "Full Width"
+
+        length = obj.LabelShelfLength
+        if shelf_placement == "Full Width":
+            ydiv = 1
+            length = obj.yTotalWidth - obj.WallThickness * 2
+
+        shelf_angle = obj.LabelShelfAngle.Value
 
         if obj.LabelShelfStyle == "Overhang":
             shelf_angle = 0
             shelf_placement = "Full Width"
 
         # Calculate V4 Z coordinate by using an angle
-        side_a = abs(towall - tolabelend)
-        alpha = 90 - shelf_angle
-        side_c = side_a / math.sin(math.radians(alpha))
-        side_b = math.sqrt(-pow(side_a, 2) + pow(side_c, 2))
-        v4_z = -obj.LabelShelfVerticalThickness - side_b * unitmm
+        width = (
+            obj.StackingLipTopChamfer
+            + obj.StackingLipTopLedge
+            + obj.StackingLipBottomChamfer
+            + obj.LabelShelfWidth
+            - obj.WallThickness
+        )
+        assert width >= 0
 
-        v = [
-            fc.Vector(towall, 0, stackingoffset),
-            fc.Vector(tolabelend, 0, stackingoffset),
-            fc.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness + stackingoffset),
-            fc.Vector(towall, 0, v4_z + stackingoffset),
-        ]
+        side_a = width
+        side_c = side_a / math.sin(math.radians(90 - shelf_angle))
+        side_b = math.sqrt(side_c**2 - side_a**2)
+        thickness = obj.LabelShelfVerticalThickness
+        height = thickness + side_b * unitmm
 
-        face = Part.Face(utils.curve_to_wire(utils.loop(v)))
+        funcfuse = _label_shelf(length=length, width=width, height=height, thickness=thickness)
 
-        label_shelf_height = obj.LabelShelfVerticalThickness + side_b * unitmm
-
-        if obj.LabelShelfLength > ycompwidth:
-            shelf_placement = "Full Width"
-
-        # Label placement specific code
-        xdiv = obj.xDividers + 1
-        ydiv = obj.yDividers + 1
-        length = obj.LabelShelfLength
-        face.translate(fc.Vector(0, obj.Clearance + obj.WallThickness))
-        if shelf_placement == "Full Width":
-            ydiv = 1
-            length = obj.yTotalWidth - obj.WallThickness * 2
-        elif shelf_placement == "Center":
-            face.translate(fc.Vector(0, ycompwidth / 2 - obj.LabelShelfLength / 2))
-        elif shelf_placement == "Left":
-            pass
-        elif shelf_placement == "Right":
-            face.translate(fc.Vector(0, ycompwidth - obj.LabelShelfLength))
-        else:
-            raise AssertionError("Unknown shelf placement")
+        if height > obj.UsableHeight:
+            boundingbox = Part.makeBox(
+                width,
+                length,
+                height,
+                fc.Vector(0, 0, -obj.UsableHeight),
+            )
+            funcfuse = funcfuse.common(boundingbox)
 
         funcfuse = _multiply_in_grid(
-            face.extrude(fc.Vector(0, length)),
+            funcfuse,
             x_count=xdiv,
             y_count=ydiv,
             x_offset=xcompwidth + obj.DividerThickness,
             y_offset=ycompwidth + obj.DividerThickness,
         )
 
-        funcfuse = _label_shelf_make_outside_fillet(
+        if shelf_placement == "Center":
+            funcfuse.translate(fc.Vector(0, ycompwidth / 2 - obj.LabelShelfLength / 2))
+        elif shelf_placement == "Right":
+            funcfuse.translate(fc.Vector(0, ycompwidth - obj.LabelShelfLength))
+
+        funcfuse = _label_shelf_outside_fillet(
             funcfuse,
-            offset=obj.Clearance + obj.WallThickness,
+            offset=0,
             radius=obj.BinOuterRadius - obj.WallThickness,
-            height=label_shelf_height + obj.LabelShelfStackingOffset,
+            height=height,
             y_width=obj.Clearance + obj.yTotalWidth - obj.WallThickness,
         )
 
-        funcfuse = _label_shelf_front_fillet(obj, funcfuse, stackingoffset)
-
-        if label_shelf_height > obj.UsableHeight:
-            bottomcutbox = Part.makeBox(
-                label_shelf_height,
-                obj.StackingLipTopChamfer
-                + obj.StackingLipTopLedge
-                + obj.StackingLipBottomChamfer
-                + obj.LabelShelfWidth
-                - obj.WallThickness,
-                obj.yTotalWidth,
-                fc.Vector(
-                    towall,
-                    0,
-                    -obj.UsableHeight - label_shelf_height + stackingoffset,
-                ),
-                fc.Vector(0, 1, 0),
+        funcfuse.translate(
+            fc.Vector(
+                obj.Clearance + obj.WallThickness - obj.xLocationOffset,
+                obj.Clearance + obj.WallThickness - obj.yLocationOffset,
+                -obj.LabelShelfStackingOffset if obj.StackingLip else zeromm,
             )
+        )
 
-            ytranslate = obj.Clearance + obj.WallThickness
-            vec_list = [
-                fc.Vector(x * (xcompwidth + obj.DividerThickness) * unitmm, ytranslate)
-                for x in range(xdiv)
-            ]
-
-            funcfuse = funcfuse.cut(utils.copy_and_translate(bottomcutbox, vec_list))
-
-        return funcfuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
+        return funcfuse
 
 
 class Scoop(utils.Feature):
