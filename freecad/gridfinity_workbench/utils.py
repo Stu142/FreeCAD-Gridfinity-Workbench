@@ -34,7 +34,6 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
 
     Raises:
         ValueError: List is empty.
-        RuntimeError: Nothing copied.
 
     Returns:
         Part.Shape: Shape consting of the copies in the locations specified by vec_list.
@@ -42,17 +41,10 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
     """
     if not vec_list:
         raise ValueError("Vector list is empty")
-
-    final_shape: Part.Shape | None = None
-    for vec in vec_list:
-        tmp = shape.copy()
-        tmp = tmp.translate(vec)
-        final_shape = tmp if final_shape is None else final_shape.fuse(tmp)
-
-    if final_shape is None:
-        raise RuntimeError("Nothing has been copied")
-
-    return final_shape
+    return multi_fuse([
+        shape.translated(vec)
+        for vec in vec_list
+    ])
 
 
 def curve_to_wire(list_of_items: list[Part.LineSegment]) -> Part.Wire:
