@@ -113,16 +113,14 @@ class LabelShelf(utils.Feature):
             obj.LabelShelfPlacement if obj.LabelShelfLength <= ycompwidth else "Full Width"
         )
 
+        shelf_angle = obj.LabelShelfAngle.Value
+        if obj.LabelShelfStyle == "Overhang":
+            shelf_angle = 0
+
         length = obj.LabelShelfLength
         if shelf_placement == "Full Width":
             ydiv = 1
             length = obj.yTotalWidth - obj.WallThickness * 2
-
-        shelf_angle = obj.LabelShelfAngle.Value
-
-        if obj.LabelShelfStyle == "Overhang":
-            shelf_angle = 0
-            shelf_placement = "Full Width"
 
         width = (
             obj.StackingLipTopChamfer
