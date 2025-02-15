@@ -79,6 +79,7 @@ def label_shelf(
     # Front fillet
     def fillet_point(p: Part.Point) -> bool:
         return p.z == -thickness and p.x == width
+
     h_edges = [
         edge
         for edge in shape.Edges
