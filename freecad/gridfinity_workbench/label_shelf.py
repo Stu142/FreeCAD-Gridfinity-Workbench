@@ -10,24 +10,6 @@ from . import utils
 unitmm = fc.Units.Quantity("1 mm")
 
 
-def _front_fillet(
-    shape: Part.Shape,
-    thickness: fc.Units.Quantity,
-    width: float,
-) -> Part.Shape:
-    def fillet_point(p: Part.Point) -> bool:
-        return p.z == -thickness and p.x == width
-
-    h_edges = [
-        edge
-        for edge in shape.Edges
-        if fillet_point(edge.Vertexes[0].Point) and fillet_point(edge.Vertexes[1].Point)
-    ]
-    assert h_edges
-
-    return shape.makeFillet(thickness.Value - 0.01, h_edges)
-
-
 def _corner_fillet(radius: float) -> Part.Face:
     arc = radius - radius * math.sin(math.pi / 4)
 
@@ -93,6 +75,16 @@ def label_shelf(
 
     face = Part.Face(utils.curve_to_wire(utils.loop(v)))
     shape = face.extrude(fc.Vector(0, length))
-    shape = _front_fillet(shape, thickness, width)
+
+    # Front fillet
+    def fillet_point(p: Part.Point) -> bool:
+        return p.z == -thickness and p.x == width
+    h_edges = [
+        edge
+        for edge in shape.Edges
+        if fillet_point(edge.Vertexes[0].Point) and fillet_point(edge.Vertexes[1].Point)
+    ]
+    assert h_edges
+    shape = shape.makeFillet(thickness.Value - 0.01, h_edges)
 
     return shape
