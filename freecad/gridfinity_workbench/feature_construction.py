@@ -33,9 +33,7 @@ class LabelShelf(utils.Feature):
             "LabelShelfStyle",
             "Gridfinity",
             "Choose to have the label shelf Off or a Standard or Overhang style",
-        )
-
-        obj.LabelShelfStyle = ["Off", "Standard", "Overhang"]
+        ).LabelShelfStyle = ["Off", "Standard", "Overhang"]
         obj.LabelShelfStyle = label_style_default
 
         obj.addProperty(
@@ -43,9 +41,7 @@ class LabelShelf(utils.Feature):
             "LabelShelfPlacement",
             "Gridfinity",
             "Choose the Placement of the label shelf for each compartement",
-        )
-
-        obj.LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
+        ).LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
 
         ## Gridfinity Non Standard Parameters
         obj.addProperty(
@@ -102,22 +98,20 @@ class LabelShelf(utils.Feature):
             and obj.LabelShelfStyle != "Overhang"
         ):
             obj.LabelShelfStyle = "Overhang"
-            fc.Console.PrintWarning(
-                "Label shelf style set to Overhang due to low bin height\n",
-            )
+            fc.Console.PrintWarning("Label shelf style set to Overhang due to low bin height\n")
 
         xdiv = obj.xDividers + 1
         ydiv = obj.yDividers + 1
         xcompwidth = (
             obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers
-        ) / (xdiv)
+        ) / xdiv
         ycompwidth = (
             obj.yTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.yDividers
-        ) / (ydiv)
+        ) / ydiv
 
-        shelf_placement = obj.LabelShelfPlacement
-        if obj.LabelShelfLength > ycompwidth:
-            shelf_placement = "Full Width"
+        shelf_placement = (
+            obj.LabelShelfPlacement if obj.LabelShelfLength <= ycompwidth else "Full Width"
+        )
 
         length = obj.LabelShelfLength
         if shelf_placement == "Full Width":
@@ -153,12 +147,7 @@ class LabelShelf(utils.Feature):
         )
 
         if height > obj.UsableHeight:
-            boundingbox = Part.makeBox(
-                width,
-                length,
-                height,
-                fc.Vector(0, 0, -obj.UsableHeight),
-            )
+            boundingbox = Part.makeBox(width, length, height, fc.Vector(0, 0, -obj.UsableHeight))
             funcfuse = funcfuse.common(boundingbox)
 
         funcfuse = utils.copy_in_grid(

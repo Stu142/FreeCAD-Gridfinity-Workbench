@@ -13,10 +13,10 @@ unitmm = fc.Units.Quantity("1 mm")
 def _front_fillet(
     shape: Part.Shape,
     thickness: fc.Units.Quantity,
-    tolabelend: float,
+    width: float,
 ) -> Part.Shape:
     def fillet_point(p: Part.Point) -> bool:
-        return p.z == -thickness and p.x == tolabelend
+        return p.z == -thickness and p.x == width
 
     h_edges = [
         edge
@@ -29,18 +29,17 @@ def _front_fillet(
 
 
 def _corner_fillet(radius: float) -> Part.Face:
-    arc1 = radius - radius * math.sin(math.pi / 4)
+    arc = radius - radius * math.sin(math.pi / 4)
 
-    l1v1 = fc.Vector(0, 0)
-    l1v2 = fc.Vector(0, radius)
-    arc1v = fc.Vector(arc1, arc1)
-    l2v1 = fc.Vector(radius, 0)
-    l2v2 = fc.Vector(0, 0)
+    v1 = fc.Vector(0, 0)
+    v2 = fc.Vector(0, radius)
+    v_arc = fc.Vector(arc, arc)
+    v3 = fc.Vector(radius, 0)
 
     lines = [
-        Part.LineSegment(l1v1, l1v2),
-        Part.Arc(l1v2, arc1v, l2v1),
-        Part.LineSegment(l2v1, l2v2),
+        Part.LineSegment(v1, v2),
+        Part.Arc(v2, v_arc, v3),
+        Part.LineSegment(v3, v1),
     ]
 
     return Part.Face(utils.curve_to_wire(lines))
@@ -55,22 +54,16 @@ def outside_fillet(
     y_width: float,
 ) -> Part.Shape:
     """Fillets a label shelves corners that stick out from bins corners."""
-    right_end_fillet = _corner_fillet(radius)
-    right_end_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -90)
-    right_end_fillet.translate(
-        fc.Vector(offset, y_width),
-    )
-    right_end_fillet = right_end_fillet.extrude(
-        fc.Vector(0, 0, -height),
-    )
-    shape = shape.cut(right_end_fillet)
+    right_fillet = _corner_fillet(radius)
+    right_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -90)
+    right_fillet.translate(fc.Vector(offset, y_width))
+    right_fillet = right_fillet.extrude(fc.Vector(0, 0, -height))
+    shape = shape.cut(right_fillet)
 
-    left_end_fillet = _corner_fillet(radius)
-    left_end_fillet.translate(fc.Vector(offset, offset))
-    left_end_fillet = left_end_fillet.extrude(
-        fc.Vector(0, 0, -height),
-    )
-    shape = shape.cut(left_end_fillet)
+    left_fillet = _corner_fillet(radius)
+    left_fillet.translate(fc.Vector(offset, offset))
+    left_fillet = left_fillet.extrude(fc.Vector(0, 0, -height))
+    shape = shape.cut(left_fillet)
 
     return shape
 
