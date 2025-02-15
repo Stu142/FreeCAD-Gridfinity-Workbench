@@ -41,10 +41,7 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
     """
     if not vec_list:
         raise ValueError("Vector list is empty")
-    return multi_fuse([
-        shape.translated(vec)
-        for vec in vec_list
-    ])
+    return multi_fuse([shape.translated(vec) for vec in vec_list])
 
 
 def curve_to_wire(list_of_items: list[Part.LineSegment]) -> Part.Wire:
