@@ -11,6 +11,8 @@ from dataclasses import dataclass
 import FreeCAD as fc  # noqa:N813
 import Part
 
+unitmm = fc.Units.Quantity("1 mm")
+
 
 class Feature:
     """Gloabal feature class."""
@@ -42,6 +44,23 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
     if not vec_list:
         raise ValueError("Vector list is empty")
     return multi_fuse([shape.translated(vec) for vec in vec_list])
+
+
+def copy_in_grid(
+    shape: Part.Shape,
+    *,
+    x_count: int,
+    y_count: int,
+    x_offset: float,
+    y_offset: float,
+) -> Part.Shape:
+    """Copy a shape in a grid layout."""
+    shapes = [
+        shape.translated(fc.Vector(x * x_offset * unitmm, y * y_offset * unitmm))
+        for x in range(x_count)
+        for y in range(y_count)
+    ]
+    return multi_fuse(shapes)
 
 
 def curve_to_wire(list_of_items: list[Part.LineSegment]) -> Part.Wire:
