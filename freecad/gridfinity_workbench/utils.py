@@ -331,9 +331,16 @@ def rounded_l_extrude(
 
 
 def multi_fuse(lst: list[Part.Shape]) -> Part.Shape:
-    """Fuses all shapes in the list into a single shape."""
+    """Fuses all shapes in the list into a single shape.
+
+    Raises `ValueError` if the list is empty. If there is only one shape on the list, returns
+    a reference to that shape. Otherwise returns a new shape that is a fusion of all shapes from
+    the list.
+    """
     if not lst:
         raise ValueError("The list is empty")
+    if len(lst) == 1:
+        return lst[0]
     return lst[0].multiFuse(lst[1:])
 
 
