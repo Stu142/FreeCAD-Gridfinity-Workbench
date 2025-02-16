@@ -81,7 +81,7 @@ def _universal_properties(obj: fc.DocumentObject) -> None:
     ).yGridSize = const.Y_GRID_SIZE
 
 
-class RectangleLayout(utils.Feature):
+class RectangleLayout:
     """Create layout for rectanlge shaped Gridfinity object and add relevant properties."""
 
     def __init__(self, obj: fc.DocumentObject, *, baseplate_default: bool) -> None:
@@ -119,7 +119,7 @@ class RectangleLayout(utils.Feature):
 
         obj.setEditorMode("Baseplate", 2)
 
-    def make(self, obj: fc.DocumentObject) -> None:
+    def make(self, obj: fc.DocumentObject) -> list[list[bool]]:
         """Generate Rectanble layout and calculate relevant parameters.
 
         Args:
@@ -149,7 +149,7 @@ class RectangleLayout(utils.Feature):
         return [[True for y in range(obj.yGridUnits)] for x in range(obj.xGridUnits)]
 
 
-class LShapedLayout(utils.Feature):
+class LShapedLayout:
     """Creat layout matrix for L shaped Gridfinity object and add relevant properties."""
 
     def __init__(self, obj: fc.DocumentObject, *, baseplate_default: bool) -> None:
@@ -226,7 +226,7 @@ class LShapedLayout(utils.Feature):
         ).Baseplate = baseplate_default
         obj.setEditorMode("Baseplate", 2)
 
-    def make(self, obj: fc.DocumentObject) -> None:
+    def make(self, obj: fc.DocumentObject) -> list[list[bool]]:
         """Make L layout.
 
         Args:

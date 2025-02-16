@@ -4,9 +4,12 @@ The utility functions can be used throughout the Gridfinity
 workbench code.
 """
 
+from __future__ import annotations
+
 import math
 from abc import abstractmethod
 from dataclasses import dataclass
+from collections.abc import Sequence
 
 import FreeCAD as fc  # noqa:N813
 import Part
@@ -55,7 +58,7 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
     return final_shape
 
 
-def curve_to_wire(list_of_items: list[Part.LineSegment]) -> Part.Wire:
+def curve_to_wire(list_of_items: Sequence[Part.TrimmedCurve]) -> Part.Wire:
     """Make a wire from curves (line,linesegment,arc,ect).
 
     This function accepts all curves and makes it into a wire. Note that the wire should be
@@ -166,7 +169,7 @@ def rounded_rectangle_chamfer(
         zsketchplane + height,
         radius + height,
     )
-    return Part.makeLoft([w1, w2], solid=True)
+    return Part.makeLoft([w1, w2], solid=True)  # type: ignore[call-arg]
 
 
 def rounded_rectangle_extrude(
@@ -312,7 +315,7 @@ def rounded_l_extrude(
     yoffset: float,
     radius: float,
     height: float,
-) -> Part.Wire:
+) -> Part.Shape:
     """Create rounded L shaped Shape.
 
     Args:
