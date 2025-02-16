@@ -253,8 +253,8 @@ class CreateLBinBlank(BaseCommand):
     MenuText = "Gridfinity L Shaped Blank Bin"
     ToolTip = "Create a Gridfinity L Shaped Blank Bin"
 
-class AddCommand(BaseCommand):
 
+class AddCommand(BaseCommand):
     def __init__(self) -> None:
         pass
 
