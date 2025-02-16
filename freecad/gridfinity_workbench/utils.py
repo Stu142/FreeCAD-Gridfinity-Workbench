@@ -7,12 +7,14 @@ workbench code.
 from __future__ import annotations
 
 import math
-from abc import abstractmethod
 from dataclasses import dataclass
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import FreeCAD as fc  # noqa:N813
 import Part
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Shape:

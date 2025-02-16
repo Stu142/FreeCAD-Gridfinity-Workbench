@@ -2,7 +2,7 @@
 
 import FreeCAD as fc  # noqa: N813
 
-from . import const, utils
+from . import const
 
 
 def _universal_properties(obj: fc.DocumentObject) -> None:
