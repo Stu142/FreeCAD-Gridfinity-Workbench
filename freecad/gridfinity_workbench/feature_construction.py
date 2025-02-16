@@ -1280,7 +1280,7 @@ class EcoCompartments:
         return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-class BinBaseValues(utils.Feature):
+class BinBaseValues:
     """Add bin base properties and calculate values."""
 
     def __init__(self, obj: fc.DocumentObject) -> None:

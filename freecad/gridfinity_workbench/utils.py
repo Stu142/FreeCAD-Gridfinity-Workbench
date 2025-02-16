@@ -15,15 +15,6 @@ import FreeCAD as fc  # noqa:N813
 import Part
 
 
-class Feature:
-    """Gloabal feature class."""
-
-    @abstractmethod
-    def make(self, obj: fc.DocumentObject) -> None:
-        """Make a Gridfinity Feature."""
-        raise NotImplementedError
-
-
 def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Shape:
     """Copy a shape and translates.
 

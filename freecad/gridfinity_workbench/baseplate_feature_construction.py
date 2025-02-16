@@ -614,7 +614,7 @@ class BaseplateCenterCut:
         )
 
 
-class BaseplateBaseValues(utils.Feature):
+class BaseplateBaseValues:
     """Add bin base properties and calculate values."""
 
     def __init__(self, obj: fc.DocumentObject) -> None:
