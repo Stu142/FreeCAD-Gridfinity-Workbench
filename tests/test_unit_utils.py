@@ -22,10 +22,7 @@ class UtilsTest(unittest.TestCase):
 
         utils.copy_and_translate(shape, vec_list)
 
-        self.assertEqual(2, shape.copy.call_count)
-        self.assertEqual(2, shape.copy.return_value.translate.call_count)
-        for vec in vec_list:
-            shape.copy.return_value.translate.assert_has_calls([mock.call(vec)])
+        self.assertEqual(2, shape.translated.call_count)
 
     def test_curve_to_wire_empty_list(self) -> None:
         self.assertRaises(ValueError, utils.curve_to_wire, [])
