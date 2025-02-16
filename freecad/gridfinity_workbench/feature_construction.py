@@ -131,17 +131,14 @@ class LabelShelf(utils.Feature):
         )
         assert width >= 0
 
-        side_a = width
-        side_c = side_a / math.sin(math.radians(90 - shelf_angle))
-        side_b = math.sqrt(side_c**2 - side_a**2)
         thickness = obj.LabelShelfVerticalThickness
-        height = thickness + side_b * unitmm
+        height = thickness + math.tan(math.radians(shelf_angle)) * width
 
-        funcfuse = label_shelf.label_shelf(
+        funcfuse = label_shelf.from_dimensions(
             length=length,
             width=width,
-            height=height,
             thickness=thickness,
+            height=height,
         )
 
         if height > obj.UsableHeight:

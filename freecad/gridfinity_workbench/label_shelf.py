@@ -50,20 +50,20 @@ def outside_fillet(
     return shape
 
 
-def label_shelf(
+def from_dimensions(
     *,
     length: fc.Units.Quantity,
     width: fc.Units.Quantity,
-    height: fc.Units.Quantity,
     thickness: fc.Units.Quantity,
+    height: fc.Units.Quantity,
 ) -> Part.Shape:
     """Create a label shelf with given dimensions.
 
     Args:
         length: Total length of the shelf.
         width: Total width of the shelf.
-        height: Height of the back of the shelf.
         thickness: Height of the front of the shelf.
+        height: Height of the back of the shelf.
 
     """
     v = [
@@ -89,3 +89,27 @@ def label_shelf(
     shape = shape.makeFillet(thickness.Value - 0.01, h_edges)
 
     return shape
+
+
+def from_angle(
+    *,
+    length: fc.Units.Quantity,
+    width: fc.Units.Quantity,
+    thickness: fc.Units.Quantity,
+    angle: fc.Units.Angle,
+) -> Part.Shape:
+    """Create a label shelf with given width and angle.
+
+    Args:
+        length: Total length of the shelf.
+        width: Total width of the shelf.
+        thickness: Height of the front of the shelf.
+        angle: Angle of the shelf.
+
+    """
+    return from_dimensions(
+        length=length,
+        width=width,
+        thickness=thickness,
+        height=thickness + math.tan(angle.Value) * width,
+    )
