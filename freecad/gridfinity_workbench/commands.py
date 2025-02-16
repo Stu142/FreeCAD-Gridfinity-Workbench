@@ -293,7 +293,7 @@ class AddCommand(BaseCommand):
         [p1, p2] = [p for p in points if p.z > height - 1e-4]
         shape.translate((p1 + p2) / 2)
 
-        Part.show(shape)
+        Part.show(shape, "LabelShelf")
 
     def GetResources(self) -> dict[str, str]:  # noqa: N802
         return {
