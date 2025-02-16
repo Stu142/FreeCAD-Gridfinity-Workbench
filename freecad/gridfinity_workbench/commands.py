@@ -10,6 +10,7 @@ import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
 import Part
 
+from . import const, label_shelf
 from .features import (
     Baseplate,
     BinBase,
@@ -21,8 +22,6 @@ from .features import (
     ScrewTogetherBaseplate,
     SimpleStorageBin,
 )
-
-from . import label_shelf, const
 
 ICONDIR = Path(__file__).parent / "icons"
 
@@ -254,7 +253,7 @@ class CreateLBinBlank(BaseCommand):
     ToolTip = "Create a Gridfinity L Shaped Blank Bin"
 
 
-class AddCommand(BaseCommand):
+class AttachLabelShelf(BaseCommand):
     def __init__(self) -> None:
         pass
 
@@ -298,6 +297,6 @@ class AddCommand(BaseCommand):
     def GetResources(self) -> dict[str, str]:  # noqa: N802
         return {
             "Pixmap": str(ICONDIR / "BinBlank.svg"),
-            "MenuText": "Add stuff menu text",
-            "ToolTip": "Add stuff tool tip",
+            "MenuText": "Attach label shelf",
+            "ToolTip": "Attach label shelf to a face",
         }
