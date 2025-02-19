@@ -122,6 +122,9 @@ class BaseCommand:
             FreeCAD.DocumentObject: FreeCAD object containing gridfinity model and properties.
 
         """
+        if cls.GRIDFINITY_FUNCTION is None:
+            raise AssertionError(f"{cls.__name__} does not have GRIDFINITY_FUNCTION defined")
+
         if fc.GuiUp:
             # borrowed from threaded profiles
             body = fcg.ActiveDocument.ActiveView.getActiveObject("pdbody")
@@ -135,7 +138,7 @@ class BaseCommand:
             else:
                 obj = fc.ActiveDocument.addObject("Part::FeaturePython", cls.NAME)
             ViewProviderGridfinity(obj.ViewObject, cls.Pixmap)
-            cls.GRIDFINITY_FUNCTION(obj)  # type: ignore[misc]
+            cls.GRIDFINITY_FUNCTION(obj)
 
             if body:
                 body.addObject(obj)
@@ -143,7 +146,7 @@ class BaseCommand:
                 part.Group += [obj]
         else:
             obj = fc.ActiveDocument.addObject("Part::FeaturePython", cls.NAME)
-            cls.GRIDFINITY_FUNCTION(obj)  # type: ignore[misc]
+            cls.GRIDFINITY_FUNCTION(obj)
         return obj
 
     def GetResources(self) -> dict[str, str]:  # noqa: N802

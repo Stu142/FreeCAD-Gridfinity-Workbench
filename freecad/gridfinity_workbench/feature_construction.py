@@ -526,10 +526,7 @@ class Scoop:
         scooprad = min(obj.ScoopRadius, scooprad1, scooprad2, scooprad3)
 
         if scooprad <= 0:
-            fc.Console.PrintMessage(
-                "scooop could not be made due to bin selected parameters\n",
-            )
-            return None  # type: ignore[return-value]
+            raise RuntimeError("Scoop could not be made due to bin selected parameters")
 
         v1 = fc.Vector(
             obj.xTotalWidth + obj.Clearance - obj.WallThickness,
@@ -953,7 +950,11 @@ def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
             if bottom_hole_shape is None
             else bottom_hole_shape.fuse(holes_interface_shape)
         )
-    return bottom_hole_shape  # type: ignore[return-value]
+
+    if bottom_hole_shape is None:
+        raise RuntimeError("No bottom_hole_shape to return")
+
+    return bottom_hole_shape
 
 
 def _eco_bin_deviders(obj: fc.DocumentObject) -> Part.Shape:

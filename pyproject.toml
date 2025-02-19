@@ -10,7 +10,7 @@ name = "gridfinityworkbench"
 version = "0.9.4"
 
 [project.optional-dependencies]
-dev = ["mypy", "ruff", "freecad-stubs"]
+dev = ["mypy==1.15.0", "ruff", "freecad-stubs"]
 
 [tool.mypy]
 ignore_missing_imports = true
