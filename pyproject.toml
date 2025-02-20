@@ -10,7 +10,7 @@ name = "gridfinityworkbench"
 version = "0.9.4"
 
 [project.optional-dependencies]
-dev = ["mypy==1.15.0", "ruff", "freecad-stubs"]
+dev = ["mypy==1.15.0", "ruff", "freecad-stubs==1.0.20"]
 
 [tool.mypy]
 disable_error_code = "attr-defined, union-attr, assignment, call-overload"

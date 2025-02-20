@@ -162,7 +162,7 @@ def rounded_rectangle_chamfer(
         zsketchplane + height,
         radius + height,
     )
-    return Part.makeLoft([w1, w2], solid=True)  # type: ignore[call-arg]
+    return Part.makeLoft([w1, w2], solid=True)
 
 
 def rounded_rectangle_extrude(

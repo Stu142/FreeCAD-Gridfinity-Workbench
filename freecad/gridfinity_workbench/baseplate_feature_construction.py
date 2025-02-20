@@ -103,7 +103,7 @@ def _baseplate_magnet_hole_round(
         for pos in utils.corners(x_hole_pos, y_hole_pos, -obj.MagnetChamfer)
     ]
 
-    ch = [Part.makeLoft([t, b], solid=True) for t, b in zip(ct, cb)]  # type: ignore[call-arg]
+    ch = [Part.makeLoft([t, b], solid=True) for t, b in zip(ct, cb)]
 
     return utils.multi_fuse(c + ch)
 
@@ -329,7 +329,7 @@ class BaseplateScrewBottomChamfer:
             for pos in utils.corners(x_hole_pos, y_hole_pos, cb_z)
         ]
 
-        ch = [Part.makeLoft([t, b], solid=True) for t, b in zip(ct, cb)]  # type: ignore[call-arg]
+        ch = [Part.makeLoft([t, b], solid=True) for t, b in zip(ct, cb)]
 
         xtranslate = zeromm
         ytranslate = zeromm
