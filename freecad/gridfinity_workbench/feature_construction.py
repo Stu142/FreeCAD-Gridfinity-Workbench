@@ -1,6 +1,7 @@
 """Module containing gridfinity feature constructions."""
 
 import math
+from typing import Literal
 
 import FreeCAD as fc  # noqa: N813
 import Part
@@ -359,19 +360,11 @@ class LabelShelf:
             "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
         ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
 
-    def make(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Create label shelf.
-
-        Args:
-            obj (FreeCAD.DocumentObject): Document object.
-
-        Returns:
-            Part.Shape: Labelshelf 3D shape.
-
-        """
+    def make(self, obj: fc.DocumentObject, bintype: Literal["eco", "standard"]) -> Part.Shape:
+        """Create label shelf."""
         eco_usable_height = 14
         if (
-            self.bintype == "eco"
+            bintype == "eco"
             and obj.TotalHeight < eco_usable_height
             and obj.LabelShelfStyle != "Overhang"
         ):
