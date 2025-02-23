@@ -5,8 +5,9 @@ Contains command objects representing what should happen on a button press.
 
 from pathlib import Path
 
-import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
+
+import FreeCAD as fc  # noqa: N813
 
 from .features import (
     Baseplate,
@@ -18,6 +19,7 @@ from .features import (
     PartsBin,
     ScrewTogetherBaseplate,
     SimpleStorageBin,
+    TBinBlank,
 )
 
 ICONDIR = Path(__file__).parent / "icons"
@@ -248,3 +250,13 @@ class CreateLBinBlank(BaseCommand):
     Pixmap = ICONDIR / "BetaLBinBlank.svg"
     MenuText = "Gridfinity L Shaped Blank Bin"
     ToolTip = "Create a Gridfinity L Shaped Blank Bin"
+
+
+class CreateTBinBlank(BaseCommand):
+    """Create Blank L shaped bin command."""
+
+    NAME = "TBinBlank"
+    GRIDFINITY_FUNCTION = TBinBlank
+    Pixmap = ICONDIR / "TBinBlank.svg"
+    MenuText = "Gridfinity T Shaped Blank Bin"
+    ToolTip = "Create a Gridfinity T Shaped Blank Bin"

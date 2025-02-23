@@ -8,8 +8,9 @@ import math
 from abc import abstractmethod
 from dataclasses import dataclass
 
-import FreeCAD as fc  # noqa:N813
 import Part
+
+import FreeCAD as fc  # noqa:N813
 
 
 class Feature:
@@ -347,3 +348,145 @@ def loop(lst: list[fc.Vector]) -> list[Part.LineSegment]:
 def corners(x: float, y: float, z: float = 0) -> list[fc.Vector]:
     """Get a list of four points located at (±x, ±y, z)."""
     return [fc.Vector(x_pos, y_pos, z) for x_pos, y_pos in ((-x, -y), (x, -y), (-x, y), (x, y))]
+
+
+@dataclass
+class TShapeData:
+    """Data class containing information regarding a L shape.
+
+    T shape side names:
+        x2
+      ┌───┐
+      │   │
+      │   └──────┐
+    y1│          │ y3
+      │   ┌──────┘
+      │   │y2
+      └───┘
+           x1
+    """
+
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+    y3: float
+
+
+def create_rounded_t(
+    shape_data: TShapeData,
+    xoffset: float,
+    yoffset: float,
+    out_radius: float,
+    in_radius: float,
+) -> Part.Wire:
+    """Create rounded L shaped wire.
+
+    Args:
+        shape_data (LShapeData): Size data for the L shape.
+        xoffset (float): Offest in the X direction.
+        yoffset (float): Offset in the Y direction.
+        out_radius (float): Radius of the corners outside corners.
+        in_radius (float): Radius of the inside corners.
+
+    Returns:
+        Part.Wire: L shaped wire.
+
+    """
+    # Starting with bottom rigth corner vertex going around L shape clockwise
+
+    l1x = xoffset
+    l1y1 = yoffset + out_radius
+    l1y2 = yoffset + shape_data.y1 - out_radius
+    arc1x = xoffset + out_radius - out_radius * math.sin(math.pi / 4)
+    arc1y = yoffset + shape_data.y1 - out_radius + out_radius * math.sin(math.pi / 4)
+
+    l2x1 = xoffset + out_radius
+    l2x2 = xoffset + shape_data.x2 - out_radius
+    l2y = yoffset + shape_data.y1
+    arc2x = xoffset + shape_data.x2 - out_radius + out_radius * math.sin(math.pi / 4)
+    arc2y = arc1y
+
+    l3x = xoffset + shape_data.x2
+    l3y1 = l1y2
+    l3y2 = yoffset + shape_data.y2 + shape_data.y3 + in_radius
+    arc3x = xoffset + shape_data.x2 + in_radius - in_radius * math.sin(math.pi / 4)
+    arc3y = xoffset + shape_data.y2 + shape_data.y3 + in_radius - in_radius * math.sin(math.pi / 4)
+
+    l4x1 = xoffset + shape_data.x2 + in_radius
+    l4x2 = xoffset + shape_data.x1 - out_radius
+    l4y = yoffset + shape_data.y2 + shape_data.y3
+    arc4x = xoffset + shape_data.x1 - out_radius + out_radius * math.sin(math.pi / 4)
+    arc4y = (
+        yoffset + shape_data.y2 + shape_data.y3 - out_radius + out_radius * math.sin(math.pi / 4)
+    )
+
+    l5x = xoffset + shape_data.x1
+    lsy1 = yoffset + shape_data.y2 + shape_data.y3 - out_radius
+    l5y2 = yoffset + shape_data.y2 + out_radius
+    arc5x = arc4x
+    arc5y = yoffset + shape_data.y2 + out_radius - out_radius * math.sin(math.pi / 4)
+
+    l6y = yoffset + shape_data.y2
+    l6x1 = l4x2
+    l6x2 = l4x1
+    arc6x = arc3x
+    arc6y = yoffset + shape_data.y2 - in_radius + in_radius * math.sin(math.pi / 4)
+
+    l7x = xoffset + shape_data.x2
+    l7y1 = yoffset + shape_data.y2 - in_radius
+    l7y2 = yoffset + out_radius
+    arc7x = arc2x
+    arc7y = yoffset + out_radius - out_radius * math.sin(math.pi / 4)
+
+    l8x1 = xoffset + shape_data.x2 - out_radius
+    l8x2 = xoffset + out_radius
+    l8y = yoffset
+    arc8x = xoffset + out_radius - out_radius * math.sin(math.pi / 4)
+    arc8y = yoffset + out_radius - out_radius * math.sin(math.pi / 4)
+
+    l1v1 = fc.Vector(l1x, l1y1)
+    l1v2 = fc.Vector(l1x, l1y2)
+    arc1v = fc.Vector(arc1x, arc1y)
+    l2v1 = fc.Vector(l2x1, l2y)
+    l2v2 = fc.Vector(l2x2, l2y)
+    arc2v = fc.Vector(arc2x, arc2y)
+    l3v1 = fc.Vector(l3x, l3y1)
+    l3v2 = fc.Vector(l3x, l3y2)
+    arc3v = fc.Vector(arc3x, arc3y)
+    l4v1 = fc.Vector(l4x1, l4y)
+    l4v2 = fc.Vector(l4x2, l4y)
+    arc4v = fc.Vector(arc4x, arc4y)
+    l5v1 = fc.Vector(l5x, lsy1)
+    l5v2 = fc.Vector(l5x, l5y2)
+    arc5v = fc.Vector(arc5x, arc5y)
+    l6v1 = fc.Vector(l6x1, l6y)
+    l6v2 = fc.Vector(l6x2, l6y)
+    arc6v = fc.Vector(arc6x, arc6y)
+    l7v1 = fc.Vector(l7x, l7y1)
+    l7v2 = fc.Vector(l7x, l7y2)
+    arc7v = fc.Vector(arc7x, arc7y)
+    l8v1 = fc.Vector(l8x1, l8y)
+    l8v2 = fc.Vector(l8x2, l8y)
+    arc8v = fc.Vector(arc8x, arc8y)
+
+    lines = [
+        Part.LineSegment(l1v1, l1v2),
+        Part.Arc(l1v2, arc1v, l2v1),
+        Part.LineSegment(l2v1, l2v2),
+        Part.Arc(l2v2, arc2v, l3v1),
+        Part.LineSegment(l3v1, l3v2),
+        Part.Arc(l3v2, arc3v, l4v1),
+        Part.LineSegment(l4v1, l4v2),
+        Part.Arc(l4v2, arc4v, l5v1),
+        Part.LineSegment(l5v1, l5v2),
+        Part.Arc(l5v2, arc5v, l6v1),
+        Part.LineSegment(l6v1, l6v2),
+        Part.Arc(l6v2, arc6v, l7v1),
+        Part.LineSegment(l7v1, l7v2),
+        Part.Arc(l7v2, arc7v, l8v1),
+        Part.LineSegment(l8v1, l8v2),
+        Part.Arc(l8v2, arc8v, l1v1),
+    ]
+
+    return curve_to_wire(lines)

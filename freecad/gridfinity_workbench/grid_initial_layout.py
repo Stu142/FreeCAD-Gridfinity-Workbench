@@ -150,7 +150,7 @@ class RectangleLayout(utils.Feature):
 
 
 class LShapedLayout(utils.Feature):
-    """Creat layout matrix for L shaped Gridfinity object and add relevant properties."""
+    """Create layout matrix for L shaped Gridfinity object and add relevant properties."""
 
     def __init__(self, obj: fc.DocumentObject, *, baseplate_default: bool) -> None:
         """Make L layout.
@@ -277,5 +277,154 @@ class LShapedLayout(utils.Feature):
         ## L layout matrix creation
         return [
             [x < obj.x2GridUnits or y < obj.y2GridUnits for y in range(obj.y1GridUnits)]
+            for x in range(obj.x1GridUnits)
+        ]
+
+
+class TShapedLayout(utils.Feature):
+    """Create layout matrix for T shaped Gridfinity object and add relevant properties."""
+
+    def __init__(self, obj: fc.DocumentObject, *, baseplate_default: bool) -> None:
+        """Make T layout.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+            baseplate_default (bool): Whether the object is a baseplate or not.
+
+        """
+        _universal_properties(obj)
+        ## Gridfinity Parameters
+
+        obj.addProperty(
+            "App::PropertyInteger",
+            "x1GridUnits",
+            "Gridfinity",
+            "Overall grid units in the x direction",
+        ).x1GridUnits = 3
+        obj.addProperty(
+            "App::PropertyInteger",
+            "y1GridUnits",
+            "Gridfinity",
+            "Overall grid units in the y direction",
+        ).y1GridUnits = 3
+        obj.addProperty(
+            "App::PropertyInteger",
+            "x2GridUnits",
+            "Gridfinity",
+            "Grid units of L part in the x direction",
+        ).x2GridUnits = 1
+        obj.addProperty(
+            "App::PropertyInteger",
+            "y2GridUnits",
+            "Gridfinity",
+            "Grid units of L part in the y direction",
+        ).y2GridUnits = 1
+        obj.addProperty(
+            "App::PropertyInteger",
+            "y3GridUnits",
+            "Gridfinity",
+            "Grid units of L part in the y direction",
+        ).y3GridUnits = 1
+
+        ## Reference Parameters
+        obj.addProperty(
+            "App::PropertyLength",
+            "x1TotalDimension",
+            "ReferenceDimensions",
+            "total dimension of the gridfintiy object in the x direction",
+            1,
+        )
+        obj.addProperty(
+            "App::PropertyLength",
+            "y1TotalDimension",
+            "ReferenceDimensions",
+            "total dimension of the gridfintiy object in the y direction",
+            1,
+        )
+        obj.addProperty(
+            "App::PropertyLength",
+            "x2TotalDimension",
+            "ReferenceDimensions",
+            "total width of the L part in the x direction",
+            1,
+        )
+        obj.addProperty(
+            "App::PropertyLength",
+            "y2TotalDimension",
+            "ReferenceDimensions",
+            "total width of the L part in the y direction",
+            1,
+        )
+        obj.addProperty(
+            "App::PropertyLength",
+            "y3TotalDimension",
+            "ReferenceDimensions",
+            "total width of the L part in the y direction",
+            1,
+        )
+        ## Hidden Properties
+        obj.addProperty(
+            "App::PropertyBool",
+            "Baseplate",
+            "Flags",
+            "Is the Gridfinity Object a baseplate",
+        ).Baseplate = baseplate_default
+        obj.setEditorMode("Baseplate", 2)
+
+    def make(self, obj: fc.DocumentObject) -> None:
+        """Make L layout.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+
+        Returns:
+            Part.Shape: Extruded part to cut out inside of bin.
+
+        """
+        ## Error Checking
+
+        if obj.x2GridUnits >= obj.x1GridUnits:
+            obj.x2GridUnits = obj.x1GridUnits - 1
+            fc.Console.PrintWarning("x2 Grid Units must be less than x1")
+        if (obj.y2GridUnits + obj.y3GridUnits) >= obj.y1GridUnits:
+            obj.y2GridUnits = obj.y1GridUnits - obj.y3Gridunits - 1
+            fc.Console.PrintWarning("y2 + y3 Grid Units must be less than y1")
+
+        ## Calculated Parameters
+
+        if obj.Baseplate:
+            obj.x1TotalDimension = obj.x1GridUnits * obj.xGridSize
+            obj.y1TotalDimension = obj.y1GridUnits * obj.yGridSize
+            obj.x2TotalDimension = obj.x2GridUnits * obj.xGridSize
+            obj.y2TotalDimension = obj.y2GridUnits * obj.yGridSize
+            obj.y3TotalDimension = obj.y3GridUnits * obj.yGridSize
+            obj.xTotalWidth = obj.x1GridUnits * obj.xGridSize
+            obj.yTotalWidth = obj.y1GridUnits * obj.yGridSize
+        else:
+            obj.x1TotalDimension = obj.x1GridUnits * obj.xGridSize - obj.Clearance * 2
+            obj.y1TotalDimension = obj.y1GridUnits * obj.yGridSize - obj.Clearance * 2
+            obj.x2TotalDimension = obj.x2GridUnits * obj.xGridSize - obj.Clearance * 2
+            obj.y2TotalDimension = obj.y2GridUnits * obj.yGridSize
+            obj.y3TotalDimension = obj.y3GridUnits * obj.yGridSize - obj.Clearance * 2
+            obj.xTotalWidth = obj.x1GridUnits * obj.xGridSize - obj.Clearance * 2
+            obj.yTotalWidth = obj.y1GridUnits * obj.yGridSize - obj.Clearance * 2
+
+        obj.xMaxGrids = obj.x1GridUnits
+        obj.yMaxGrids = obj.y1GridUnits
+
+        if obj.GenerationLocation == "Centered at Origin":
+            obj.xLocationOffset = obj.xTotalWidth / 2
+            obj.yLocationOffset = obj.yTotalWidth / 2
+        else:
+            obj.xLocationOffset = 0
+            obj.yLocationOffset = 0
+
+        ## T layout matrix creation
+        return [
+            [
+                x < obj.x2GridUnits
+                or (y >= obj.y2GridUnits and y < obj.y2GridUnits + obj.y3GridUnits)
+                for y in range(obj.y1GridUnits)
+            ]
             for x in range(obj.x1GridUnits)
         ]

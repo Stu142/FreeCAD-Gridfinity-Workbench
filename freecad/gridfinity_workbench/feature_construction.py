@@ -2,8 +2,9 @@
 
 import math
 
-import FreeCAD as fc  # noqa: N813
 import Part
+
+import FreeCAD as fc  # noqa: N813
 
 from . import const, utils
 
@@ -1331,6 +1332,12 @@ class BinBaseValues(utils.Feature):
             "Outer radius of the bin",
             1,
         ).BinOuterRadius = const.BIN_OUTER_RADIUS
+        obj.addProperty(
+            "App::PropertyLength",
+            "BinOuterInsideCornerRadius",
+            "zzExpertOnly",
+            "Outer radius of the bin",
+        ).BinOuterInsideCornerRadius = const.BIN_OUTER_INSIDE_CORNER_RADIUS
 
         obj.addProperty(
             "App::PropertyLength",

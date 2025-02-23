@@ -6,8 +6,9 @@ The file name is given by FreeCAD. FreeCAD uses this file to initialize GUI comp
 from pathlib import Path
 from typing import ClassVar
 
-import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
+
+import FreeCAD as fc  # noqa: N813
 
 try:
     from FreeCADGui import Workbench
@@ -44,6 +45,7 @@ class GridfinityWorkbench(Workbench):
         "CreateMagnetBaseplate",
         "CreateScrewTogetherBaseplate",
         "CreateLBinBlank",
+        "CreateTBinBlank",
     ]
 
     def GetClassName(self) -> str:  # noqa: N802
@@ -71,6 +73,7 @@ class GridfinityWorkbench(Workbench):
             CreatePartsBin,
             CreateScrewTogetherBaseplate,
             CreateSimpleStorageBin,
+            CreateTBinBlank,
         )
 
         fc.Console.PrintMessage("switching to Gridfinity Workbench\n")
@@ -88,6 +91,7 @@ class GridfinityWorkbench(Workbench):
         fcg.addCommand("CreateMagnetBaseplate", CreateMagnetBaseplate())
         fcg.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
         fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
+        fcg.addCommand("CreateTBinBlank", CreateTBinBlank())
 
 
 fcg.addWorkbench(GridfinityWorkbench())

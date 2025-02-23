@@ -2,8 +2,9 @@
 
 from abc import abstractmethod
 
-import FreeCAD as fc  # noqa: N813
 import Part
+
+import FreeCAD as fc  # noqa: N813
 
 from . import const, utils
 from .baseplate_feature_construction import (
@@ -29,6 +30,7 @@ from .feature_construction import (
 from .grid_initial_layout import (
     LShapedLayout,
     RectangleLayout,
+    TShapedLayout,
 )
 from .version import __version__
 
@@ -794,11 +796,98 @@ class LBinBlank(FoundationGridfinity):
                 obj.x1TotalDimension - obj.WallThickness * 2,
                 obj.y1TotalDimension - obj.WallThickness * 2,
                 obj.x2TotalDimension - obj.WallThickness * 2,
-                obj.y2TotalDimension,
+                obj.y2TotalDimension - obj.WallThickness * 2,
             ),
             obj.Clearance + obj.WallThickness,
             obj.Clearance + obj.WallThickness,
             obj.BinOuterRadius - obj.WallThickness,
+        )
+
+        fuse_total = BinSolidMidSection.make(self, obj, bin_outside_shape)
+        fuse_total = fuse_total.fuse(make_complex_bin_base(obj, layout))
+
+        if obj.RecessedTopDepth > 0:
+            fuse_total = fuse_total.cut(BlankBinRecessedTop.make(self, obj, bin_inside_shape))
+
+        if obj.StackingLip:
+            fuse_total = fuse_total.fuse(StackingLip.make(self, obj, bin_outside_shape))
+
+        if obj.ScrewHoles or obj.MagnetHoles:
+            fuse_total = fuse_total.cut(BinBottomHoles.make(self, obj, layout))
+
+        return fuse_total
+
+
+class TBinBlank(FoundationGridfinity):
+    """T shaped blank bin object."""
+
+    def __init__(self, obj: fc.DocumentObject) -> None:
+        """Initialize T shaped blank bin properties.
+
+        Args:
+            obj (FreeCAD.DocumentObject): DocumentObject
+
+        """
+        super().__init__(obj)
+
+        obj.addProperty("App::PropertyPythonObject", "Bin", "base", "python gridfinity object")
+
+        self.bintype = "standard"
+
+        self.features = [
+            TShapedLayout(obj, baseplate_default=False),
+            BinSolidMidSection(
+                obj,
+                default_height_units=const.HEIGHT_UNITS,
+                default_wall_thickness=const.WALL_THICKNESS,
+            ),
+            BlankBinRecessedTop(obj),
+            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
+            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
+            BinBaseValues(obj),
+        ]
+
+        obj.Proxy = self
+
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        """Generate gridfinity T shaped bin.
+
+        Args:
+            obj (FreeCAD.DocumentObject): DocumentObject
+
+        Returns:
+            Part.Shape: T shaped bin shape.
+
+        """
+        BinBaseValues.make(self, obj)
+
+        layout = TShapedLayout.make(self, obj)
+        bin_outside_shape = utils.create_rounded_t(
+            utils.TShapeData(
+                obj.x1TotalDimension,
+                obj.y1TotalDimension,
+                obj.x2TotalDimension,
+                obj.y2TotalDimension,
+                obj.y3TotalDimension,
+            ),
+            obj.Clearance,
+            obj.Clearance,
+            obj.BinOuterRadius,
+            obj.BinOuterInsideCornerRadius,
+        )
+
+        bin_inside_shape = utils.create_rounded_t(
+            utils.TShapeData(
+                obj.x1TotalDimension - obj.WallThickness * 2,
+                obj.y1TotalDimension - obj.WallThickness * 2,
+                obj.x2TotalDimension - obj.WallThickness * 2,
+                obj.y2TotalDimension + obj.WallThickness * 2,
+                obj.y3TotalDimension - obj.WallThickness * 2,
+            ),
+            obj.Clearance + obj.WallThickness,
+            obj.Clearance + obj.WallThickness,
+            obj.BinOuterRadius - obj.WallThickness,
+            obj.BinOuterInsideCornerRadius - obj.WallThickness,
         )
 
         fuse_total = BinSolidMidSection.make(self, obj, bin_outside_shape)
