@@ -116,6 +116,7 @@ class LabelShelf(utils.Feature):
         shelf_angle = obj.LabelShelfAngle.Value
         if obj.LabelShelfStyle == "Overhang":
             shelf_angle = 0
+            shelf_placement = "Full Width"
 
         length = obj.LabelShelfLength
         if shelf_placement == "Full Width":
