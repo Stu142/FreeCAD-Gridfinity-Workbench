@@ -36,6 +36,7 @@ from .feature_construction import (
 from .grid_initial_layout import (
     LShapedLayout,
     RectangleLayout,
+    CustomShapeLayout,
 )
 from .version import __version__
 
@@ -119,7 +120,7 @@ class CustomBin(FoundationGridfinity):
         )
         self.bintype = "standard"
         self.features = [
-            RectangleLayout(obj, baseplate_default=False),
+            CustomShapeLayout(obj, baseplate_default=False),
             BinSolidMidSection(
                 obj,
                 default_height_units=const.HEIGHT_UNITS,
@@ -143,7 +144,7 @@ class CustomBin(FoundationGridfinity):
             Part.Shape: Bin Blank shape
 
         """
-        ## Temporary values calculated here
+        ## calculated here
         if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
 
@@ -159,25 +160,35 @@ class CustomBin(FoundationGridfinity):
         obj.StackingLipTopChamfer = (
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
-
         ## calculated values over
-
+        CustomShapeLayout.calc(self, obj)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
-
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
-
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
-
         fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
         fuse_total = fuse_total.fuse(make_complex_bin_base(obj, self.layout))
 
+        if obj.RecessedTopDepth > 0:
+            recessed_solid = custom_shape_solid(obj,
+                                                self.layout,
+                                                obj.RecessedTopDepth)
+            recessed_outside_trim = custom_shape_trim(obj, self.layout,
+                                             obj.Clearance.Value + obj.WallThickness.Value,
+                                             obj.Clearance.Value + obj.WallThickness.Value)
+            recessed_solid = recessed_solid.cut(recessed_outside_trim)
+            recessed_solid = recessed_solid.removeSplitter()
+            recessed_solid = vertical_edge_fillet(recessed_solid, obj.BinOuterRadius - obj.WallThickness)
+            fuse_total = fuse_total.cut(recessed_solid)
         if obj.ScrewHoles or obj.MagnetHoles:
             holes = BinBottomHoles.make(self, obj, self.layout)
             fuse_total = Part.Shape.cut(fuse_total, holes)
-
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(custom_shape_stacking_lip(self, obj, solid_shape, self.layout))
+            fuse_total = fuse_total.fuse(custom_shape_stacking_lip(self,
+                                                                   obj,
+                                                                   solid_shape,
+                                                                   self.layout))
+
 
         return fuse_total
 

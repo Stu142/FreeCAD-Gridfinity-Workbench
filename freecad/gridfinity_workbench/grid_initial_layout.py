@@ -5,10 +5,8 @@ import FreeCAD as fc  # noqa: N813
 from . import const, utils
 
 
-def _universal_properties(obj: fc.DocumentObject) -> None:
+def _location_properties(obj: fc.DocumentObject) -> None:
     """Properties used by all gridfinity objects."""
-    ## Generation Location Property
-
     obj.addProperty(
         "App::PropertyEnumeration",
         "GenerationLocation",
@@ -32,7 +30,8 @@ def _universal_properties(obj: fc.DocumentObject) -> None:
     )
     obj.setEditorMode("yLocationOffset", 2)
 
-    ## Reference Parameters
+def _total_width_properties(obj: fc.DocumentObject) -> None:
+    """Total Width Properties."""
     obj.addProperty(
         "App::PropertyLength",
         "xTotalWidth",
@@ -49,8 +48,8 @@ def _universal_properties(obj: fc.DocumentObject) -> None:
         1,
     )
 
-    ## Expert Parameters
-
+def _grid_size_properties(obj: fc.DocumentObject) -> None:
+    """Grid Size Properties."""
     obj.addProperty(
         "App::PropertyLength",
         "xGridSize",
@@ -77,7 +76,9 @@ class RectangleLayout(utils.Feature):
             baseplate_default (Bool): is Gridfinity Object baseplate
 
         """
-        _universal_properties(obj)
+        _location_properties(obj)
+        _total_width_properties(obj)
+        _grid_size_properties(obj)
 
         ## Standard Gridfinity Parameters
         obj.addProperty(
@@ -142,7 +143,9 @@ class LShapedLayout(utils.Feature):
             baseplate_default (bool): Whether the object is a baseplate or not.
 
         """
-        _universal_properties(obj)
+        _location_properties(obj)
+        _total_width_properties(obj)
+        _grid_size_properties(obj)
         ## Gridfinity Parameters
 
         obj.addProperty(
@@ -257,3 +260,62 @@ class LShapedLayout(utils.Feature):
             [True] * (obj.y1GridUnits if x < obj.x2GridUnits else obj.y2GridUnits)
             for x in range(obj.x1GridUnits)
         ]
+
+
+class CustomShapeLayout:
+    """Add relevant properties for a custom shape gridfinity object."""
+
+    def __init__(self, obj: fc.DocumentObject, *, baseplate_default: bool) -> None:
+        """Add relevant properties for a custom shape gridfinity object.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object
+            baseplate_default (Bool): is Gridfinity Object baseplate
+
+        """
+        _total_width_properties(obj)
+        _grid_size_properties(obj)
+
+        _location_properties(obj)
+        obj.setEditorMode("GenerationLocation", 2)
+
+        ## Standard Gridfinity Parameters
+
+        ## Hidden Properties
+        obj.addProperty(
+            "App::PropertyBool",
+            "Baseplate",
+            "ShouldBeHidden",
+            "Is the Gridfinity Object a baseplate",
+        ).Baseplate = baseplate_default
+        obj.setEditorMode("Baseplate", 2)
+
+    def calc(self, obj: fc.DocumentObject) -> None:
+        """Calculate values for custom shape.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object
+
+        """
+        x_grid_pos = []
+        y_max_pos = []
+        y_min_pos = []
+
+        for i, col in enumerate(self.layout):
+            y_grid_pos = [i for i, y in enumerate(col) if y]
+            if y_grid_pos:
+                y_min_pos.append(min(y_grid_pos))
+                y_max_pos.append(max(y_grid_pos))
+                x_grid_pos.append(i)
+
+        x_min_grid = min(x_grid_pos) + 1
+        x_max_grid = max(x_grid_pos) + 1
+        y_min_grid = min(y_min_pos) + 1
+        y_max_grid = max(y_max_pos) + 1
+
+        if obj.Baseplate:
+            obj.xTotalWidth = (x_max_grid + 1 - x_min_grid) * obj.xGridSize
+            obj.yTotalWidth = (y_max_grid + 1 - y_min_grid) * obj.yGridSize
+        else:
+            obj.xTotalWidth = (x_max_grid + 1 - x_min_grid) * obj.xGridSize - obj.Clearance * 2
+            obj.yTotalWidth = (y_max_grid + 1 - y_min_grid) * obj.yGridSize - obj.Clearance * 2

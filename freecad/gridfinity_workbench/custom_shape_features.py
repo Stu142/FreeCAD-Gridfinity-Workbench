@@ -138,7 +138,7 @@ def custom_shape_stacking_lip(
     trim = custom_shape_trim(obj, layout, obj.Clearance.Value, obj.Clearance.Value)
     solid_cut = solid_shape.cut(trim)
     solid_cut = solid_cut.removeSplitter()
-    solid_rounded = vertical_edge_fillet(solid_cut, obj.BinOuterRadius.Value - obj.Clearance.Value)
+    solid_rounded = vertical_edge_fillet(solid_cut, obj.BinOuterRadius.Value)
     bin_outside_shape = get_largest_top_wire(solid_rounded, obj.Clearance.Value)
 
     for x in range(len(layout)):
