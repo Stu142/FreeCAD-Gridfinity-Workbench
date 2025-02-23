@@ -4,21 +4,17 @@ The utility functions can be used throughout the Gridfinity
 workbench code.
 """
 
+from __future__ import annotations
+
 import math
-from abc import abstractmethod
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import FreeCAD as fc  # noqa:N813
 import Part
 
-
-class Feature:
-    """Gloabal feature class."""
-
-    @abstractmethod
-    def make(self, obj: fc.DocumentObject) -> None:
-        """Make a Gridfinity Feature."""
-        raise NotImplementedError
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Shape:
@@ -55,7 +51,7 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
     return final_shape
 
 
-def curve_to_wire(list_of_items: list[Part.LineSegment]) -> Part.Wire:
+def curve_to_wire(list_of_items: Sequence[Part.TrimmedCurve]) -> Part.Wire:
     """Make a wire from curves (line,linesegment,arc,ect).
 
     This function accepts all curves and makes it into a wire. Note that the wire should be
@@ -312,7 +308,7 @@ def rounded_l_extrude(
     yoffset: float,
     radius: float,
     height: float,
-) -> Part.Wire:
+) -> Part.Shape:
     """Create rounded L shaped Shape.
 
     Args:

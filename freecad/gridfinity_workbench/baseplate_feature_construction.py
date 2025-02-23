@@ -108,7 +108,7 @@ def _baseplate_magnet_hole_round(
     return utils.multi_fuse(c + ch)
 
 
-class BaseplateMagnetHoles(utils.Feature):
+class BaseplateMagnetHoles:
     """Create baseplate magnet holes."""
 
     def __init__(self, obj: fc.DocumentObject) -> None:
@@ -269,7 +269,7 @@ class BaseplateMagnetHoles(utils.Feature):
         return hm3.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-class BaseplateScrewBottomChamfer(utils.Feature):
+class BaseplateScrewBottomChamfer:
     """Create Baseplate Connection Holes."""
 
     def __init__(self, obj: fc.DocumentObject) -> None:
@@ -357,7 +357,7 @@ class BaseplateScrewBottomChamfer(utils.Feature):
         )
 
 
-class BaseplateConnectionHoles(utils.Feature):
+class BaseplateConnectionHoles:
     """Create Baseplate Connection Holes."""
 
     def __init__(self, obj: fc.DocumentObject) -> None:
@@ -457,7 +457,7 @@ class BaseplateConnectionHoles(utils.Feature):
         return fuse_total
 
 
-def _center_cut_wire(obj: fc.DocumentObject) -> None:
+def _center_cut_wire(obj: fc.DocumentObject) -> Part.Wire:
     """Create wire for the baseplate center cut."""
     x_inframedis = (
         obj.xGridSize / 2
@@ -555,7 +555,7 @@ def _center_cut_wire(obj: fc.DocumentObject) -> None:
     return utils.curve_to_wire([l1, ar1, l2, ar2, l3, ar3, l4, l5, l6])
 
 
-class BaseplateCenterCut(utils.Feature):
+class BaseplateCenterCut:
     """Cut out the center section of each baseplate grid."""
 
     def __init__(self, obj: fc.DocumentObject) -> None:
@@ -614,7 +614,7 @@ class BaseplateCenterCut(utils.Feature):
         )
 
 
-class BaseplateBaseValues(utils.Feature):
+class BaseplateBaseValues:
     """Add bin base properties and calculate values."""
 
     def __init__(self, obj: fc.DocumentObject) -> None:
@@ -711,7 +711,7 @@ class BaseplateBaseValues(utils.Feature):
         )
 
 
-class BaseplateSolidShape(utils.Feature):
+class BaseplateSolidShape:
     """Create Solid which the baseplate is cut from."""
 
     def __init__(

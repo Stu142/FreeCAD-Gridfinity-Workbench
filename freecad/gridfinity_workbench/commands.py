@@ -64,11 +64,11 @@ class ViewProviderGridfinity:
         """
         # required to set icon_path when reopening a gridfinity object after saving
         self._check_attr()
-        return self.icon_path
+        return str(self.icon_path)
 
     def dumps(
         self,
-    ) -> None:
+    ) -> dict:
         """Needed for JSON Serialization when saving a file containing gridfinity object."""
         self._check_attr()  # set icon_path when reopening a gridfinity object after saving
         return {"icon_path": self.icon_path}  # ^^
@@ -122,6 +122,9 @@ class BaseCommand:
             FreeCAD.DocumentObject: FreeCAD object containing gridfinity model and properties.
 
         """
+        if cls.GRIDFINITY_FUNCTION is None:
+            raise AssertionError(f"{cls.__name__} does not have GRIDFINITY_FUNCTION defined")
+
         if fc.GuiUp:
             # borrowed from threaded profiles
             body = fcg.ActiveDocument.ActiveView.getActiveObject("pdbody")
@@ -134,7 +137,7 @@ class BaseCommand:
                 )
             else:
                 obj = fc.ActiveDocument.addObject("Part::FeaturePython", cls.NAME)
-            ViewProviderGridfinity(obj.ViewObject, str(cls.Pixmap))
+            ViewProviderGridfinity(obj.ViewObject, cls.Pixmap)
             cls.GRIDFINITY_FUNCTION(obj)
 
             if body:

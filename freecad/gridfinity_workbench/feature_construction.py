@@ -1,6 +1,7 @@
 """Module containing gridfinity feature constructions."""
 
 import math
+from typing import Literal
 
 import FreeCAD as fc  # noqa: N813
 import Part
@@ -289,7 +290,7 @@ def _label_shelf_profile(
     """
 
 
-class LabelShelf(utils.Feature):
+class LabelShelf:
     """Create Label shelf for bins."""
 
     def __init__(self, obj: fc.DocumentObject, *, label_style_default: str) -> None:
@@ -359,19 +360,11 @@ class LabelShelf(utils.Feature):
             "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
         ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
 
-    def make(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Create label shelf.
-
-        Args:
-            obj (FreeCAD.DocumentObject): Document object.
-
-        Returns:
-            Part.Shape: Labelshelf 3D shape.
-
-        """
+    def make(self, obj: fc.DocumentObject, bintype: Literal["eco", "standard"]) -> Part.Shape:
+        """Create label shelf."""
         eco_usable_height = 14
         if (
-            self.bintype == "eco"
+            bintype == "eco"
             and obj.TotalHeight < eco_usable_height
             and obj.LabelShelfStyle != "Overhang"
         ):
@@ -471,7 +464,7 @@ class LabelShelf(utils.Feature):
         return funcfuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-class Scoop(utils.Feature):
+class Scoop:
     """Create Negative for Bin Compartments."""
 
     def __init__(self, obj: fc.DocumentObject, *, scoop_default: bool) -> None:
@@ -526,10 +519,7 @@ class Scoop(utils.Feature):
         scooprad = min(obj.ScoopRadius, scooprad1, scooprad2, scooprad3)
 
         if scooprad <= 0:
-            fc.Console.PrintMessage(
-                "scooop could not be made due to bin selected parameters\n",
-            )
-            return None
+            raise RuntimeError("Scoop could not be made due to bin selected parameters")
 
         v1 = fc.Vector(
             obj.xTotalWidth + obj.Clearance - obj.WallThickness,
@@ -725,7 +715,7 @@ def _make_compartments_with_deviders(
     return func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
 
 
-class Compartments(utils.Feature):
+class Compartments:
     """Create Negative for Bin Compartments."""
 
     def __init__(
@@ -953,6 +943,10 @@ def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
             if bottom_hole_shape is None
             else bottom_hole_shape.fuse(holes_interface_shape)
         )
+
+    if bottom_hole_shape is None:
+        raise RuntimeError("No bottom_hole_shape to return")
+
     return bottom_hole_shape
 
 
@@ -1036,7 +1030,7 @@ def _eco_error_check(obj: fc.DocumentObject) -> None:
         )
 
 
-class EcoCompartments(utils.Feature):
+class EcoCompartments:
     """Create Eco bin main cut and dividers."""
 
     def __init__(self, obj: fc.DocumentObject) -> None:
@@ -1280,7 +1274,7 @@ class EcoCompartments(utils.Feature):
         return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-class BinBaseValues(utils.Feature):
+class BinBaseValues:
     """Add bin base properties and calculate values."""
 
     def __init__(self, obj: fc.DocumentObject) -> None:
@@ -1474,7 +1468,7 @@ def make_complex_bin_base(
     )
 
 
-class BlankBinRecessedTop(utils.Feature):
+class BlankBinRecessedTop:
     """Cut into blank bin to create recessed bin top."""
 
     def __init__(self, obj: fc.DocumentObject) -> None:
@@ -1509,7 +1503,7 @@ class BlankBinRecessedTop(utils.Feature):
         return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-class BinBottomHoles(utils.Feature):
+class BinBottomHoles:
     """Cut into blank bin to create recessed bin top."""
 
     def __init__(
@@ -1646,7 +1640,7 @@ class BinBottomHoles(utils.Feature):
         return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-class StackingLip(utils.Feature):
+class StackingLip:
     """Create bin stacking lip."""
 
     def __init__(
@@ -1787,14 +1781,14 @@ class StackingLip(utils.Feature):
         return stacking_lip
 
 
-class BinSolidMidSection(utils.Feature):
+class BinSolidMidSection:
     """Generate bin mid section and add relevant properties."""
 
     def __init__(
         self,
         obj: fc.DocumentObject,
         default_height_units: int,
-        default_wall_thickness: int,
+        default_wall_thickness: float,
     ) -> None:
         """Create bin solid mid section and add properties.
 
