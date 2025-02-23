@@ -10,7 +10,7 @@ name = "gridfinityworkbench"
 version = "0.9.6"
 
 [project.optional-dependencies]
-dev = ["ruff", "freecad-stubs"]
+dev = ["ruff==0.9.5", "freecad-stubs==1.0.18"]
 
 [tool.ruff]
 line-length = 100
