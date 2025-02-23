@@ -80,6 +80,40 @@ def _universal_properties(obj: fc.DocumentObject) -> None:
         "Size of each grid in y direction <br> <br> default = 42 mm",
     ).yGridSize = const.Y_GRID_SIZE
 
+    ## Padding
+    obj.addProperty(
+        "App::PropertyLength",
+        "xNegativePadding",
+        "Padding",
+        "Add a partial grid to a gridfinity object in the negative x direction"
+        "<br> <br> default = 0 mm = OFF"
+        "Example: 0.5 grid = 21 mm <br> 0.25 grid = 10.5 mm <br> 0.75 grid = 31.5 mm",
+    ).xNegativePadding = 0
+    obj.addProperty(
+        "App::PropertyLength",
+        "yNegativePadding",
+        "Padding",
+        "Add a partial grid to a gridfinity object in the negative y direction"
+        "<br> <br> default = 0 mm = OFF"
+        "Example: 0.5 grid = 21 mm <br> 0.25 grid = 10.5 mm <br> 0.75 grid = 31.5 mm",
+    ).yNegativePadding = 0
+    obj.addProperty(
+        "App::PropertyLength",
+        "xPositivePadding",
+        "Padding",
+        "Add a partial grid to a gridfinity object in the positive x direction"
+        "<br> <br> default = 0 mm = OFF"
+        "Example: 0.5 grid = 21 mm <br> 0.25 grid = 10.5 mm <br> 0.75 grid = 31.5 mm",
+    ).xPositivePadding = 0
+    obj.addProperty(
+        "App::PropertyLength",
+        "yPositivePadding",
+        "Padding",
+        "Add a partial grid to a gridfinity object in the positive y direction"
+        "<br> <br> default = 0 mm = OFF"
+        "Example: 0.5 grid = 21 mm <br> 0.25 grid = 10.5 mm <br> 0.75 grid = 31.5 mm",
+    ).yPositivePadding = 0
+
 
 class RectangleLayout(utils.Feature):
     """Create layout for rectanlge shaped Gridfinity object and add relevant properties."""
@@ -130,11 +164,25 @@ class RectangleLayout(utils.Feature):
 
         """
         if obj.Baseplate:
-            obj.xTotalWidth = obj.xGridUnits * obj.xGridSize
-            obj.yTotalWidth = obj.yGridUnits * obj.yGridSize
+            obj.xTotalWidth = (
+                obj.xGridUnits * obj.xGridSize + obj.xNegativePadding + obj.xPositivePadding
+            )
+            obj.yTotalWidth = (
+                obj.yGridUnits * obj.yGridSize + obj.yNegativePadding + obj.yPositivePadding
+            )
         else:
-            obj.xTotalWidth = obj.xGridUnits * obj.xGridSize - obj.Clearance * 2
-            obj.yTotalWidth = obj.yGridUnits * obj.yGridSize - obj.Clearance * 2
+            obj.xTotalWidth = (
+                obj.xGridUnits * obj.xGridSize
+                - obj.Clearance * 2
+                + obj.xNegativePadding
+                + obj.xPositivePadding
+            )
+            obj.yTotalWidth = (
+                obj.yGridUnits * obj.yGridSize
+                - obj.Clearance * 2
+                + obj.yNegativePadding
+                + obj.yPositivePadding
+            )
 
         obj.xMaxGrids = obj.xGridUnits
         obj.yMaxGrids = obj.yGridUnits

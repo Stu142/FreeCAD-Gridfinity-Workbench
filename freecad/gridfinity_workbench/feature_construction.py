@@ -2,8 +2,9 @@
 
 import math
 
-import FreeCAD as fc  # noqa: N813
 import Part
+
+import FreeCAD as fc  # noqa: N813
 
 from . import const, utils
 
@@ -1470,7 +1471,10 @@ def make_complex_bin_base(
     )
 
     return fuse_total.translate(
-        fc.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset),
+        fc.Vector(
+            obj.xGridSize / 2 - obj.xLocationOffset + obj.xNegativePadding,
+            obj.yGridSize / 2 - obj.yLocationOffset + obj.yNegativePadding,
+        ),
     )
 
 
@@ -1641,7 +1645,9 @@ class BinBottomHoles(utils.Feature):
             xtranslate += obj.xGridSize.Value
 
         fuse_total = utils.copy_and_translate(hole_shape_sub_array, vec_list).translate(
-            fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2),
+            fc.Vector(
+                obj.xGridSize / 2 + obj.xNegativePadding, obj.yGridSize / 2 + obj.yNegativePadding
+            ),
         )
         return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
