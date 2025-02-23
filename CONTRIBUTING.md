@@ -30,7 +30,7 @@ Luckely there is a python package available which provides FreeCAD python API st
 FreeCAD provides some support to debug workbenches and macros. We use VsCode in this example for debugging. We can attach our vscode debugger to FreeCAD:
 
 * Clone the workbench somewhere where FreeCAD can find it:  
-  Windos: `TODO`  
+  Windos: `C:\Users\<YourUserName>\AppData\Roaming\FreeCAD\Mod\`  
   Linux: `~/.local/share/FreeCAD/Mod/` you can also create a symbolic link to keep it up to date with the repository.  
   MacOS: `TODO`  
 * Open the workbench folder in VsCode. Make sure the following plugin is installed in VsCode: ms-python.debugpy.  
