@@ -12,6 +12,7 @@ from .features import (
     Baseplate,
     BinBase,
     BinBlank,
+    CustomBin,
     EcoBin,
     LBinBlank,
     MagnetBaseplate,
@@ -248,3 +249,13 @@ class CreateLBinBlank(BaseCommand):
     Pixmap = ICONDIR / "BetaLBinBlank.svg"
     MenuText = "Gridfinity L Shaped Blank Bin"
     ToolTip = "Create a Gridfinity L Shaped Blank Bin"
+
+
+class CreateCustomBin(BaseCommand):
+    """Create a custom bin."""
+
+    NAME = "CustomBin"
+    GRIDFINITY_FUNCTION = CustomBin
+    Pixmap = ICONDIR / "CustomBlankBinBeta.svg"
+    MenuText = "Gridfinity Custom Bin"
+    ToolTip = "Draw a custom shaped bin"
