@@ -5,288 +5,15 @@ import math
 import FreeCAD as fc  # noqa: N813
 import Part
 
-from . import const, utils
+from . import const, label_shelf, utils
 
 unitmm = fc.Units.Quantity("1 mm")
 zeromm = fc.Units.Quantity("0 mm")
 
+ECO_USABLE_HEIGHT = 14
 SMALL_NUMBER = 0.01
 
 GridfinityLayout = list[list[bool]]
-
-
-def _label_shelf_full_width(
-    obj: fc.DocumentObject,
-    face: Part.Face,
-    xcompwidth: float,
-    label_shelf_height: float,
-) -> Part.Shape:
-    xdiv = obj.xDividers + 1
-    fw = obj.yTotalWidth - obj.WallThickness * 2
-    ytranslate = obj.Clearance + obj.WallThickness
-    xtranslate = zeromm
-    parts = []
-    for x in range(xdiv):
-        ls = face.extrude(fc.Vector(0, fw))
-
-        ls.translate(fc.Vector(xtranslate, ytranslate))
-
-        if x == 0:
-            firstls = ls
-        else:
-            parts.append(ls)
-
-        xtranslate += xcompwidth + obj.DividerThickness
-
-    funcfuse = ls if xdiv == 1 else firstls.multiFuse(parts)
-
-    right_end_fillet = _label_shelf_right_fillet(obj)
-    right_end_fillet = right_end_fillet.translate(
-        fc.Vector(
-            0,
-            obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness,
-        ),
-    )
-    right_end_fillet = right_end_fillet.extrude(
-        fc.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
-    )
-    funcfuse = funcfuse.cut(right_end_fillet)
-
-    left_end_fillet = _label_shelf_left_fillet(obj)
-    left_end_fillet = left_end_fillet.extrude(
-        fc.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
-    )
-    return funcfuse.cut(left_end_fillet)
-
-
-def _label_shelf_center(
-    obj: fc.DocumentObject,
-    xcompwidth: float,
-    ycompwidth: float,
-    face: Part.Face,
-) -> Part.Shape:
-    xdiv = obj.xDividers + 1
-    ydiv = obj.yDividers + 1
-    xtranslate = zeromm
-    ysp = obj.Clearance + obj.WallThickness + ycompwidth / 2 - obj.LabelShelfLength / 2
-    ytranslate = ysp
-    parts = []
-    for x in range(xdiv):
-        ytranslate = ysp
-        for y in range(ydiv):
-            ls = face.extrude(fc.Vector(0, obj.LabelShelfLength))
-            ls.translate(fc.Vector(xtranslate, ytranslate))
-
-            if x == 0 and y == 0:
-                firstls = ls
-            else:
-                parts.append(ls)
-
-            ytranslate += ycompwidth + obj.DividerThickness
-
-        xtranslate += xcompwidth + obj.DividerThickness
-
-    return ls if xdiv == 1 and ydiv == 1 else firstls.multiFuse(parts)
-
-
-def _label_shelf_left(
-    obj: fc.DocumentObject,
-    xcompwidth: float,
-    ycompwidth: float,
-    face: Part.Face,
-    label_shelf_height: float,
-) -> Part.Shape:
-    xdiv = obj.xDividers + 1
-    ydiv = obj.yDividers + 1
-    xtranslate = zeromm
-    ysp = obj.Clearance + obj.WallThickness
-    ytranslate = ysp
-    parts = []
-    for x in range(xdiv):
-        ytranslate = ysp
-        for y in range(ydiv):
-            ls = face.extrude(fc.Vector(0, obj.LabelShelfLength))
-
-            ls.translate(fc.Vector(xtranslate, ytranslate))
-
-            if x == 0 and y == 0:
-                firstls = ls
-            else:
-                parts.append(ls)
-
-            ytranslate += ycompwidth + obj.DividerThickness
-
-        xtranslate += xcompwidth + obj.DividerThickness
-
-    funcfuse = ls if xdiv == 1 and ydiv == 1 else firstls.multiFuse(parts)
-
-    left_end_fillet = _label_shelf_left_fillet(obj)
-    left_end_fillet = left_end_fillet.extrude(
-        fc.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
-    )
-    return funcfuse.cut(left_end_fillet)
-
-
-def _label_shelf_right(
-    obj: fc.DocumentObject,
-    xcompwidth: float,
-    ycompwidth: float,
-    face: Part.Face,
-    label_shelf_height: float,
-) -> Part.Shape:
-    xdiv = obj.xDividers + 1
-    ydiv = obj.yDividers + 1
-    xtranslate = zeromm
-    ysp = obj.Clearance + obj.WallThickness + ycompwidth - obj.LabelShelfLength
-    ytranslate = ysp
-    parts = []
-    for x in range(xdiv):
-        ytranslate = ysp
-        for y in range(ydiv):
-            ls = face.extrude(fc.Vector(0, obj.LabelShelfLength))
-
-            ls.translate(fc.Vector(xtranslate, ytranslate))
-
-            if x == 0 and y == 0:
-                firstls = ls
-            else:
-                parts.append(ls)
-
-            ytranslate += ycompwidth + obj.DividerThickness
-
-        xtranslate += xcompwidth + obj.DividerThickness
-
-    funcfuse = ls if xdiv == 1 and ydiv == 1 else firstls.multiFuse(parts)
-
-    right_end_fillet = _label_shelf_right_fillet(obj)
-    right_end_fillet = right_end_fillet.translate(
-        fc.Vector(
-            0,
-            obj.yTotalWidth - obj.WallThickness * 2 - obj.BinOuterRadius + obj.WallThickness,
-            0,
-        ),
-    )
-    right_end_fillet = right_end_fillet.extrude(
-        fc.Vector(0, 0, -label_shelf_height - obj.LabelShelfStackingOffset),
-    )
-    return funcfuse.cut(right_end_fillet)
-
-
-def _label_shelf_front_fillet(
-    obj: fc.DocumentObject,
-    shape: Part.Shape,
-    stackingoffset: float,
-) -> Part.Shape:
-    tolabelend = (
-        obj.Clearance
-        + obj.StackingLipTopChamfer
-        + obj.StackingLipTopLedge
-        + obj.StackingLipBottomChamfer
-        + obj.LabelShelfWidth
-    )
-
-    h_edges = []
-    for edge in shape.Edges:
-        z0 = edge.Vertexes[0].Point.z
-        z1 = edge.Vertexes[1].Point.z
-        x0 = edge.Vertexes[0].Point.x
-        x1 = edge.Vertexes[1].Point.x
-
-        if (
-            z0 == -obj.LabelShelfVerticalThickness + stackingoffset
-            and z1 == -obj.LabelShelfVerticalThickness + stackingoffset
-            and x0 == tolabelend
-            and x1 == tolabelend
-        ):
-            h_edges.append(edge)
-
-    return shape.makeFillet(
-        obj.LabelShelfVerticalThickness.Value - 0.01,
-        h_edges,
-    )
-
-
-def _label_shelf_left_fillet(
-    obj: fc.DocumentObject,
-) -> Part.Shape:
-    fillet_radius = obj.BinOuterRadius - obj.WallThickness
-
-    # Drawing fillet shape starting bottom left corner and going clockwise
-    l1x = obj.Clearance + obj.WallThickness
-    l1y1 = obj.Clearance + obj.WallThickness
-    l1y2 = obj.Clearance + obj.WallThickness + fillet_radius
-
-    arc1x = (
-        obj.Clearance + obj.WallThickness + fillet_radius - fillet_radius * math.sin(math.pi / 4)
-    )
-    arc1y = arc1x
-
-    l2x1 = l1y2
-    l2x2 = l1x
-    l2y = l1y1
-
-    l1v1 = fc.Vector(l1x, l1y1)
-    l1v2 = fc.Vector(l1x, l1y2)
-    arc1v = fc.Vector(arc1x, arc1y)
-    l2v1 = fc.Vector(l2x1, l2y)
-    l2v2 = fc.Vector(l2x2, l2y)
-
-    lines = [
-        Part.LineSegment(l1v1, l1v2),
-        Part.Arc(l1v2, arc1v, l2v1),
-        Part.LineSegment(l2v1, l2v2),
-    ]
-
-    left_fillet_wire = utils.curve_to_wire(lines)
-
-    return Part.Face(left_fillet_wire)
-
-
-def _label_shelf_right_fillet(
-    obj: fc.DocumentObject,
-) -> Part.Shape:
-    fillet_radius = obj.BinOuterRadius - obj.WallThickness
-
-    # Drawing fillet shape starting bottom left corner and going clockwise
-
-    l1x = obj.Clearance + obj.WallThickness
-    l1y1 = obj.Clearance + obj.WallThickness
-    l1y2 = obj.Clearance + obj.WallThickness + fillet_radius
-
-    l2x1 = l1x
-    l2x2 = l1y2
-    l2y = l1y2
-
-    arc1x = (
-        obj.Clearance + obj.WallThickness + fillet_radius - fillet_radius * math.sin(math.pi / 4)
-    )
-    arc1y = obj.Clearance + obj.WallThickness + fillet_radius * math.sin(math.pi / 4)
-
-    l1v1 = fc.Vector(l1x, l1y1)
-    l1v2 = fc.Vector(l1x, l1y2)
-    l2v1 = fc.Vector(l2x1, l2y)
-    l2v2 = fc.Vector(l2x2, l2y)
-    arc1v = fc.Vector(arc1x, arc1y)
-
-    lines = [
-        Part.LineSegment(l1v1, l1v2),
-        Part.LineSegment(l2v1, l2v2),
-        Part.Arc(l2v2, arc1v, l1v1),
-    ]
-
-    right_fillet_wire = utils.curve_to_wire(lines)
-    return Part.Face(right_fillet_wire)
-
-
-"""
-def _label_shelf_profile(
-    obj: FreeCAD.DocumentObject,
-    v4_z: float,
-    ) -> Part.Wire:
-
-
-    return utils.curve_to_wire(lines)
-    """
 
 
 class LabelShelf(utils.Feature):
@@ -306,9 +33,7 @@ class LabelShelf(utils.Feature):
             "LabelShelfStyle",
             "Gridfinity",
             "Choose to have the label shelf Off or a Standard or Overhang style",
-        )
-
-        obj.LabelShelfStyle = ["Off", "Standard", "Overhang"]
+        ).LabelShelfStyle = ["Off", "Standard", "Overhang"]
         obj.LabelShelfStyle = label_style_default
 
         obj.addProperty(
@@ -316,9 +41,7 @@ class LabelShelf(utils.Feature):
             "LabelShelfPlacement",
             "Gridfinity",
             "Choose the Placement of the label shelf for each compartement",
-        )
-
-        obj.LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
+        ).LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
 
         ## Gridfinity Non Standard Parameters
         obj.addProperty(
@@ -369,106 +92,90 @@ class LabelShelf(utils.Feature):
             Part.Shape: Labelshelf 3D shape.
 
         """
-        eco_usable_height = 14
         if (
             self.bintype == "eco"
-            and obj.TotalHeight < eco_usable_height
+            and obj.TotalHeight < ECO_USABLE_HEIGHT
             and obj.LabelShelfStyle != "Overhang"
         ):
             obj.LabelShelfStyle = "Overhang"
-            fc.Console.PrintWarning("\n")
-            fc.Console.PrintWarning(
-                "Label shelf style set to Overhand due to low bin height",
-            )
-
-        towall = obj.Clearance + obj.WallThickness
-        tolabelend = (
-            obj.Clearance
-            + obj.StackingLipTopChamfer
-            + obj.StackingLipTopLedge
-            + obj.StackingLipBottomChamfer
-            + obj.LabelShelfWidth
-        )
+            fc.Console.PrintWarning("Label shelf style set to Overhang due to low bin height\n")
 
         xdiv = obj.xDividers + 1
         ydiv = obj.yDividers + 1
         xcompwidth = (
             obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers
-        ) / (xdiv)
+        ) / xdiv
         ycompwidth = (
             obj.yTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.yDividers
-        ) / (ydiv)
+        ) / ydiv
 
-        stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
+        shelf_placement = (
+            obj.LabelShelfPlacement if obj.LabelShelfLength <= ycompwidth else "Full Width"
+        )
+
         shelf_angle = obj.LabelShelfAngle.Value
-        shelf_placement = obj.LabelShelfPlacement
-
         if obj.LabelShelfStyle == "Overhang":
             shelf_angle = 0
             shelf_placement = "Full Width"
 
-        # Calculate V4 Z coordinate by using an angle
-        side_a = abs(towall - tolabelend)
-        alpha = 90 - shelf_angle
-        side_c = side_a / math.sin(math.radians(alpha))
-        side_b = math.sqrt(-pow(side_a, 2) + pow(side_c, 2))
-        v4_z = -obj.LabelShelfVerticalThickness - side_b * unitmm
-
-        v = [
-            fc.Vector(towall, 0, stackingoffset),
-            fc.Vector(tolabelend, 0, stackingoffset),
-            fc.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness + stackingoffset),
-            fc.Vector(towall, 0, v4_z + stackingoffset),
-        ]
-
-        wire = utils.curve_to_wire(utils.loop(v))
-
-        face = Part.Face(wire)
-
-        label_shelf_height = obj.LabelShelfVerticalThickness + side_b * unitmm
-
-        if obj.LabelShelfLength > ycompwidth:
-            shelf_placement = "Full Width"
-
-        # Label placement specific code
+        length = obj.LabelShelfLength
         if shelf_placement == "Full Width":
-            funcfuse = _label_shelf_full_width(obj, face, xcompwidth, label_shelf_height)
+            ydiv = 1
+            length = obj.yTotalWidth - obj.WallThickness * 2
+
+        width = (
+            obj.StackingLipTopChamfer
+            + obj.StackingLipTopLedge
+            + obj.StackingLipBottomChamfer
+            + obj.LabelShelfWidth
+            - obj.WallThickness
+        )
+        assert width >= 0
+
+        thickness = obj.LabelShelfVerticalThickness
+        height = thickness + math.tan(math.radians(shelf_angle)) * width
+
+        funcfuse = label_shelf.from_dimensions(
+            length=length,
+            width=width,
+            thickness=thickness,
+            height=height,
+        )
+
+        if height > obj.UsableHeight:
+            boundingbox = Part.makeBox(width, length, height, fc.Vector(0, 0, -obj.UsableHeight))
+            funcfuse = funcfuse.common(boundingbox)
+
+        funcfuse = utils.copy_in_grid(
+            funcfuse,
+            x_count=xdiv,
+            y_count=ydiv,
+            x_offset=xcompwidth + obj.DividerThickness,
+            y_offset=ycompwidth + obj.DividerThickness,
+        )
+
         if shelf_placement == "Center":
-            funcfuse = _label_shelf_center(obj, xcompwidth, ycompwidth, face)
-        if shelf_placement == "Left":
-            funcfuse = _label_shelf_left(obj, xcompwidth, ycompwidth, face, label_shelf_height)
-        if shelf_placement == "Right":
-            funcfuse = _label_shelf_right(obj, xcompwidth, ycompwidth, face, label_shelf_height)
+            funcfuse.translate(fc.Vector(0, ycompwidth / 2 - obj.LabelShelfLength / 2))
+        elif shelf_placement == "Right":
+            funcfuse.translate(fc.Vector(0, ycompwidth - obj.LabelShelfLength))
 
-        funcfuse = _label_shelf_front_fillet(obj, funcfuse, stackingoffset)
+        funcfuse = label_shelf.outside_fillet(
+            funcfuse,
+            offset=0,
+            radius=obj.BinOuterRadius - obj.WallThickness,
+            height=height,
+            y_width=obj.Clearance + obj.yTotalWidth - obj.WallThickness,
+        )
 
-        if label_shelf_height > obj.UsableHeight:
-            ytranslate = obj.Clearance + obj.WallThickness
-            xtranslate = zeromm
-            bottomcutbox = Part.makeBox(
-                label_shelf_height,
-                obj.StackingLipTopChamfer
-                + obj.StackingLipTopLedge
-                + obj.StackingLipBottomChamfer
-                + obj.LabelShelfWidth
-                - obj.WallThickness,
-                obj.yTotalWidth,
-                fc.Vector(
-                    towall,
-                    0,
-                    -obj.UsableHeight - label_shelf_height + stackingoffset,
-                ),
-                fc.Vector(0, 1, 0),
-            )
+        funcfuse.translate(
+            fc.Vector(
+                obj.Clearance + obj.WallThickness - obj.xLocationOffset,
+                obj.Clearance + obj.WallThickness - obj.yLocationOffset,
+                -obj.LabelShelfStackingOffset if obj.StackingLip else zeromm,
+            ),
+        )
 
-            vec_list = []
-            for _ in range(xdiv):
-                vec_list.append(fc.Vector(xtranslate, ytranslate))
-                xtranslate += xcompwidth + obj.DividerThickness
-
-            funcfuse = funcfuse.cut(utils.copy_and_translate(bottomcutbox, vec_list))
-
-        return funcfuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
+        return funcfuse
 
 
 class Scoop(utils.Feature):
@@ -844,7 +551,7 @@ class Compartments(utils.Feature):
         ):
             obj.LabelShelfStyle = "Off"
             fc.Console.PrintWarning(
-                "Label Shelf turned off for less than full height x dividers",
+                "Label Shelf turned off for less than full height x dividers\n",
             )
         ## Compartment Generation
         face = Part.Face(bin_inside_shape)
