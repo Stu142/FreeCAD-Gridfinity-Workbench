@@ -177,7 +177,7 @@ class CustomBin(FoundationGridfinity):
             fuse_total = Part.Shape.cut(fuse_total, holes)
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(custom_shape_stacking_lip(obj, solid_shape, self.layout))
+            fuse_total = fuse_total.fuse(custom_shape_stacking_lip(self, obj, solid_shape, self.layout))
 
         return fuse_total
 

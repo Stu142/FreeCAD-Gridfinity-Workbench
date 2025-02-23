@@ -1641,6 +1641,73 @@ class BinBottomHoles(utils.Feature):
         )
         return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
+def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:
+    """Create stacking lip profile wire."""
+        ## Calculated Values
+    obj.StackingLipTopChamfer = (
+        obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
+    )
+
+    ## Stacking Lip Generation
+    st = [
+        fc.Vector(obj.Clearance, obj.yGridSize / 2, 0),
+        fc.Vector(
+            obj.Clearance,
+            obj.yGridSize / 2,
+            obj.StackingLipBottomChamfer
+            + obj.StackingLipVerticalSection
+            + obj.StackingLipTopChamfer,
+        ),
+        fc.Vector(
+            obj.Clearance + obj.StackingLipTopLedge,
+            obj.yGridSize / 2,
+            obj.StackingLipBottomChamfer
+            + obj.StackingLipVerticalSection
+            + obj.StackingLipTopChamfer,
+        ),
+        fc.Vector(
+            obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
+            obj.yGridSize / 2,
+            obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
+        ),
+        fc.Vector(
+            obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
+            obj.yGridSize / 2,
+            obj.StackingLipBottomChamfer,
+        ),
+        fc.Vector(
+            obj.Clearance
+            + obj.StackingLipTopLedge
+            + obj.StackingLipTopChamfer
+            + obj.StackingLipBottomChamfer,
+            obj.yGridSize / 2,
+            0,
+        ),
+        fc.Vector(
+            obj.Clearance
+            + obj.StackingLipTopLedge
+            + obj.StackingLipTopChamfer
+            + obj.StackingLipBottomChamfer,
+            obj.yGridSize / 2,
+            -obj.StackingLipVerticalSection,
+        ),
+        fc.Vector(
+            obj.Clearance + obj.WallThickness,
+            obj.yGridSize / 2,
+            -obj.StackingLipVerticalSection
+            - (
+                obj.StackingLipTopLedge
+                + obj.StackingLipTopChamfer
+                + obj.StackingLipBottomChamfer
+                - obj.WallThickness
+            ),
+        ),
+        fc.Vector(obj.Clearance + obj.WallThickness, obj.yGridSize / 2, 0),
+    ]
+
+    stacking_lip_profile = Part.Wire(Part.Shape(utils.loop(st)).Edges)
+
+    return stacking_lip_profile
 
 class StackingLip(utils.Feature):
     """Create bin stacking lip."""
@@ -1710,70 +1777,7 @@ class StackingLip(utils.Feature):
             Part.Shape: Stacking lip shape.
 
         """
-        ## Calculated Values
-        obj.StackingLipTopChamfer = (
-            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
-        )
-
-        ## Stacking Lip Generation
-        st = [
-            fc.Vector(obj.Clearance, obj.yGridSize / 2, 0),
-            fc.Vector(
-                obj.Clearance,
-                obj.yGridSize / 2,
-                obj.StackingLipBottomChamfer
-                + obj.StackingLipVerticalSection
-                + obj.StackingLipTopChamfer,
-            ),
-            fc.Vector(
-                obj.Clearance + obj.StackingLipTopLedge,
-                obj.yGridSize / 2,
-                obj.StackingLipBottomChamfer
-                + obj.StackingLipVerticalSection
-                + obj.StackingLipTopChamfer,
-            ),
-            fc.Vector(
-                obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
-                obj.yGridSize / 2,
-                obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
-            ),
-            fc.Vector(
-                obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
-                obj.yGridSize / 2,
-                obj.StackingLipBottomChamfer,
-            ),
-            fc.Vector(
-                obj.Clearance
-                + obj.StackingLipTopLedge
-                + obj.StackingLipTopChamfer
-                + obj.StackingLipBottomChamfer,
-                obj.yGridSize / 2,
-                0,
-            ),
-            fc.Vector(
-                obj.Clearance
-                + obj.StackingLipTopLedge
-                + obj.StackingLipTopChamfer
-                + obj.StackingLipBottomChamfer,
-                obj.yGridSize / 2,
-                -obj.StackingLipVerticalSection,
-            ),
-            fc.Vector(
-                obj.Clearance + obj.WallThickness,
-                obj.yGridSize / 2,
-                -obj.StackingLipVerticalSection
-                - (
-                    obj.StackingLipTopLedge
-                    + obj.StackingLipTopChamfer
-                    + obj.StackingLipBottomChamfer
-                    - obj.WallThickness
-                ),
-            ),
-            fc.Vector(obj.Clearance + obj.WallThickness, obj.yGridSize / 2, 0),
-        ]
-
-        wire = Part.Wire(Part.Shape(utils.loop(st)).Edges)
-
+        wire = _stacking_lip_profile(obj)
         stacking_lip = Part.Wire(bin_outside_shape).makePipe(wire)
         stacking_lip = Part.makeSolid(stacking_lip)
         stacking_lip = stacking_lip.translate(

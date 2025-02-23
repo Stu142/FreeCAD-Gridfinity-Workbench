@@ -5,6 +5,8 @@ import Part
 
 from . import utils
 
+from .feature_construction import _stacking_lip_profile
+
 GridfinityLayout = list[list[bool]]
 
 unitmm = fc.Units.Quantity("1 mm")
@@ -107,10 +109,11 @@ def vertical_edge_fillet(
     return solid_shape.makeFillet(radius, b_edges)
 
 
-def get_wire_shape(solid_shape: Part.Shape, zheight: float) -> Part.Wire:
+def get_largest_top_wire(solid_shape: Part.Shape, zheight: float) -> Part.Wire:
     """Fillet vertical Edges of input shape."""
     solid_shape = solid_shape.translate(fc.Vector(0, 0, zheight))
     b_wires = []
+    b_wire_size = []
 
     for wire in solid_shape.Wires:
         z0 = wire.Vertexes[0].Point.z
@@ -118,57 +121,41 @@ def get_wire_shape(solid_shape: Part.Shape, zheight: float) -> Part.Wire:
         z2 = wire.Vertexes[2].Point.z
 
         if z0 == zheight and z1 == zheight and z2 == zheight:
+            b_wire_size.append(len(wire.Vertexes))
             b_wires.append(wire)
+    i = b_wire_size.index(max(b_wire_size))
 
-    return Part.Face(b_wires)
+    return b_wires[i]
 
 
 def custom_shape_stacking_lip(
+    self: "custom_shape_stacking_lip",
     obj: fc.DocumentObject,
     solid_shape: Part.Shape,
     layout: GridfinityLayout,
 ) -> Part.Wire:
     """Fillet vertical Edges of input shape."""
-    wires = []
-    offsets = [
-        obj.Clearance.Value
-        + obj.StackingLipTopLedge.Value
-        + obj.StackingLipTopChamfer.Value
-        + obj.StackingLipBottomChamfer.Value,
-        obj.Clearance.Value + obj.StackingLipTopLedge.Value + obj.StackingLipTopChamfer.Value,
-        obj.Clearance.Value + obj.StackingLipTopLedge.Value + obj.StackingLipTopChamfer.Value,
-        obj.Clearance.Value + obj.StackingLipTopLedge.Value,
-    ]
-    z_offsets = [
-        0,
-        obj.StackingLipBottomChamfer.Value,
-        obj.StackingLipBottomChamfer.Value + obj.StackingLipVerticalSection.Value,
-        obj.StackingLipBottomChamfer.Value
-        + obj.StackingLipVerticalSection.Value
-        + obj.StackingLipTopChamfer.Value,
-    ]
-    fc.Console.PrintMessage(f"{offsets}\n")
-    fc.Console.PrintMessage(f"{z_offsets}\n")
-    for i in range(len(offsets)):
-        trim = custom_shape_trim(obj, layout, offsets[i], offsets[i])
-        solid_cut = solid_shape.cut(trim)
-        solid_cut = solid_cut.removeSplitter()
-        solid_rounded = vertical_edge_fillet(solid_cut, obj.BinOuterRadius.Value - offsets[i])
-        wires.append(get_wire_shape(solid_rounded, z_offsets[i]))
+    trim = custom_shape_trim(obj, layout, obj.Clearance.Value, obj.Clearance.Value)
+    solid_cut = solid_shape.cut(trim)
+    solid_cut = solid_cut.removeSplitter()
+    solid_rounded = vertical_edge_fillet(solid_cut, obj.BinOuterRadius.Value - obj.Clearance.Value)
+    bin_outside_shape = get_largest_top_wire(solid_rounded, obj.Clearance.Value)
 
-    stacking_lip_negative = Part.makeLoft(wires, solid=True, ruled=True)
+    for x in range(len(layout)):
+        for y in range(len(layout[x])):
+            if layout[x][y]:
+                break
 
-    stacking_lip_total_height = (
-        obj.StackingLipBottomChamfer.Value
-        + obj.StackingLipVerticalSection.Value
-        + obj.StackingLipTopChamfer.Value
+        else:
+            continue
+        break
+
+    wire = _stacking_lip_profile(obj).translate(fc.Vector(
+        x * obj.xGridSize.Value,
+        y * obj.yGridSize.Value,
+        ),
     )
-    fuse_total = custom_shape_solid(obj, layout, stacking_lip_total_height)
-    fuse_total = fuse_total.cut(
-        custom_shape_trim(obj, layout, obj.Clearance.Value, obj.Clearance.Value),
-    ).translate(fc.Vector(0, 0, stacking_lip_total_height))
-    fuse_total = fuse_total.removeSplitter()
-    fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius.Value)
-    fuse_total = fuse_total.cut(stacking_lip_negative)
+    stacking_lip = Part.Wire(bin_outside_shape).makePipe(wire)
+    stacking_lip = Part.makeSolid(stacking_lip)
 
-    return fuse_total
+    return stacking_lip
