@@ -3,11 +3,14 @@
 Contains command objects representing what should happen on a button press.
 """
 
+import math
 from pathlib import Path
 
 import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
+import Part
 
+from . import const, label_shelf
 from .features import (
     Baseplate,
     BinBase,
@@ -248,3 +251,52 @@ class CreateLBinBlank(BaseCommand):
     Pixmap = ICONDIR / "BetaLBinBlank.svg"
     MenuText = "Gridfinity L Shaped Blank Bin"
     ToolTip = "Create a Gridfinity L Shaped Blank Bin"
+
+
+class AttachLabelShelf(BaseCommand):
+    def __init__(self) -> None:
+        pass
+
+    def _get_top_points(self) -> list[fc.Vector]:
+        selection = fcg.Selection.getSelectionEx()
+        if len(selection) != 1 or len(selection[0].SubObjects) != 1:
+            return []
+        points = [v.Point for v in selection[0].SubObjects[0].Vertexes]
+        height = max([p.z for p in points])
+        return [p for p in points if p.z > height - 1e-4]
+
+    def IsActive(self) -> bool:  # noqa: N802
+        return len(self._get_top_points()) == 2
+
+    def Activated(self) -> None:  # noqa: N802
+        selection = fcg.Selection.getSelectionEx()
+        face: Part.Face = selection[0].SubObjects[0]
+
+        # Construction
+        shape = label_shelf.from_angle(
+            length=fc.Units.Quantity(const.LABEL_SHELF_LENGTH),
+            width=fc.Units.Quantity(const.LABEL_SHELF_WIDTH),
+            thickness=fc.Units.Quantity(const.LABEL_SHELF_VERTICAL_THICKNESS),
+            angle=fc.Units.Quantity(const.LABEL_SHELF_ANGLE),
+        )
+        shape.translate(fc.Vector(0, -const.LABEL_SHELF_LENGTH / 2))
+
+        # Rotation
+        normal = face.normalAt(*face.Surface.parameter(face.CenterOfMass))
+        rotation = fc.Rotation(fc.Vector(1, 0, 0), normal)
+        shape.rotate(fc.Vector(0, 0, 0), rotation.Axis, math.degrees(rotation.Angle))
+
+        # Translation
+        points = [v.Point for v in face.Vertexes]
+        height = max([p.z for p in points])
+        [p1, p2] = [p for p in points if p.z > height - 1e-4]
+        shape.translate((p1 + p2) / 2)
+
+        Part.show(shape, "LabelShelf")
+
+    def GetResources(self) -> dict[str, str]:  # noqa: N802
+        return {
+            "Pixmap": str(ICONDIR / "BinBlank.svg"),
+            "MenuText": "Attach label shelf",
+            "ToolTip": "Attach label shelf to a face",
+        }
