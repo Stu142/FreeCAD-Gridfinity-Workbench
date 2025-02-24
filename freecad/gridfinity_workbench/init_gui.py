@@ -91,9 +91,10 @@ class GridfinityWorkbench(Workbench):
         fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
 
         fcg.addIconPath(str(ICONPATH))
-        fcg.addPreferencePage(str(UIPATH / "preferences.ui"), "Gridfinity")
+        fcg.addPreferencePage(str(UIPATH / "preferences-objects.ui"), "Gridfinity")
         fcg.addPreferencePage(str(UIPATH / "preferences-features.ui"), "Gridfinity")
-        fcg.addPreferencePage(str(UIPATH / "preferences-default.ui"), "Gridfinity")
+        fcg.addPreferencePage(str(UIPATH / "preferences-misc.ui"), "Gridfinity")
+        fcg.addPreferencePage(str(UIPATH / "preferences-standard.ui"), "Gridfinity")
 
 
 fcg.addWorkbench(GridfinityWorkbench())
