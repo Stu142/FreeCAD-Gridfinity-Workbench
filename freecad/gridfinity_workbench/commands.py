@@ -237,7 +237,7 @@ class CreateCustomBin(BaseCommand):
         )
 
     def Activated(self) -> None:  # noqa: N802, D102
-        layout = custom_shape.get_custom_shape()
+        layout = custom_shape.get_layout()
         if layout is None:
             return
 

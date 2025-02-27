@@ -1,14 +1,29 @@
 """A module to interact with the user."""
 
-# ruff: noqa: F403, F405
-
 from __future__ import annotations
 
 import math
 
-from PySide.QtCore import *
-from PySide.QtGui import *
-from PySide.QtWidgets import *
+from PySide.QtCore import (
+    QPoint,
+    QPointF,
+    QRect,
+    QSize,
+)
+from PySide.QtGui import (
+    QMouseEvent,
+    QPainter,
+    QPalette,
+    QPen,
+    QPixmap,
+    QShowEvent,
+)
+from PySide.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
+    QLabel,
+    QVBoxLayout,
+)
 
 
 class GridDialog(QDialog):
@@ -113,12 +128,19 @@ class GridDialog(QDialog):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: D102, N802
         pos = self._from_mouse_pos(event.localPos())
-        self.grid_layout[math.floor(pos.x())][math.floor(pos.y())] ^= True
-        self._recompute()
+        x = math.floor(pos.x())
+        y = math.floor(pos.y())
+        if x >= 0 and x < self.x and y >= 0 and y < self.y:
+            self.grid_layout[x][y] ^= True
+            self._recompute()
 
 
-def get_custom_shape() -> list[list[bool]] | None:
-    """Get a custom shape from the user. Returns None if the user aborted the operation."""
+def get_layout() -> list[list[bool]] | None:
+    """Get a custom layout from the user.
+
+    Returns None if the user aborted the operation.
+
+    """
     dialog = GridDialog(10, 10, 40, 50)
     if not dialog.exec():
         return None
