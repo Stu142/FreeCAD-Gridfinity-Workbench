@@ -30,6 +30,7 @@ def _location_properties(obj: fc.DocumentObject) -> None:
     )
     obj.setEditorMode("yLocationOffset", 2)
 
+
 def _total_width_properties(obj: fc.DocumentObject) -> None:
     """Total Width Properties."""
     obj.addProperty(
@@ -47,6 +48,7 @@ def _total_width_properties(obj: fc.DocumentObject) -> None:
         "total width of Gridfinity object in y direction",
         1,
     )
+
 
 def _grid_size_properties(obj: fc.DocumentObject) -> None:
     """Grid Size Properties."""

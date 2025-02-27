@@ -1348,12 +1348,11 @@ class BinBottomHoles(utils.Feature):
         )
         return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
+
 def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:
     """Create stacking lip profile wire."""
-        ## Calculated Values
-    obj.StackingLipTopChamfer = (
-        obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
-    )
+    ## Calculated Values
+    obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
 
     ## Stacking Lip Generation
     st = [
@@ -1415,6 +1414,7 @@ def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:
     stacking_lip_profile = Part.Wire(Part.Shape(utils.loop(st)).Edges)
 
     return stacking_lip_profile
+
 
 class StackingLip(utils.Feature):
     """Create bin stacking lip."""

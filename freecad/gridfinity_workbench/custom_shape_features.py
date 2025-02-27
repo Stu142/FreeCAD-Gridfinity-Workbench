@@ -4,7 +4,6 @@ import FreeCAD as fc  # noqa: N813
 import Part
 
 from . import utils
-
 from .feature_construction import _stacking_lip_profile
 
 GridfinityLayout = list[list[bool]]
@@ -129,7 +128,6 @@ def get_largest_top_wire(solid_shape: Part.Shape, zheight: float) -> Part.Wire:
 
 
 def custom_shape_stacking_lip(
-    self: "custom_shape_stacking_lip",
     obj: fc.DocumentObject,
     solid_shape: Part.Shape,
     layout: GridfinityLayout,
@@ -150,9 +148,10 @@ def custom_shape_stacking_lip(
             continue
         break
 
-    wire = _stacking_lip_profile(obj).translate(fc.Vector(
-        x * obj.xGridSize.Value,
-        y * obj.yGridSize.Value,
+    wire = _stacking_lip_profile(obj).translate(
+        fc.Vector(
+            x * obj.xGridSize.Value,
+            y * obj.yGridSize.Value,
         ),
     )
     stacking_lip = Part.Wire(bin_outside_shape).makePipe(wire)

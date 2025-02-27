@@ -9,6 +9,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 
 import FreeCAD as fc  # noqa:N813
+import FreeCADGui as fcg  # noqa: N813
 import Part
 
 unitmm = fc.Units.Quantity("1 mm")
@@ -21,6 +22,30 @@ class Feature:
     def make(self, obj: fc.DocumentObject) -> None:
         """Make a Gridfinity Feature."""
         raise NotImplementedError
+
+
+def new_object(name: str) -> fc.DocumentObject:
+    """Create a new FreeCAD object.
+
+    The object is attached to PartDesign body or Part group, if they are present.
+
+    """
+    if not fc.GuiUp:
+        return fc.ActiveDocument.addObject("Part::FeaturePython", name)
+
+    # borrowed from threaded profiles
+    body = fcg.ActiveDocument.ActiveView.getActiveObject("pdbody")
+    part = fcg.ActiveDocument.ActiveView.getActiveObject("part")
+
+    obj_type = "PartDesign::FeaturePython" if body else "Part::FeaturePython"
+    obj = fc.ActiveDocument.addObject(obj_type, name)
+
+    if body:
+        body.addObject(obj)
+    elif part:
+        part.Group += [obj]
+
+    return obj
 
 
 def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Shape:
