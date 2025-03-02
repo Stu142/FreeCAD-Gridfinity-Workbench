@@ -126,19 +126,17 @@ class BinBlank(FoundationGridfinity):
             "base",
             "python gridfinity object",
         )
-        self.bintype = "standard"
-        self.features = [
-            RectangleLayout(obj, baseplate_default=False),
-            BinSolidMidSection(
-                obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
-            ),
-            BlankBinRecessedTop(obj),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
-            BinBaseValues(obj),
-        ]
+
+        self.rectangle_layout = RectangleLayout(obj, baseplate_default=False)
+        self.bin_solid_mid_section = BinSolidMidSection(
+            obj,
+            default_height_units=const.HEIGHT_UNITS,
+            default_wall_thickness=const.WALL_THICKNESS,
+        )
+        self.blank_bin_recessed_top = BlankBinRecessedTop(obj)
+        self.stacking_lip = StackingLip(obj, stacking_lip_default=const.STACKING_LIP)
+        self.bin_bottom_holes = BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES)
+        self.bin_base_values = BinBaseValues(obj)
 
         obj.Proxy = self
 
@@ -152,9 +150,9 @@ class BinBlank(FoundationGridfinity):
             Part.Shape: Bin Blank shape
 
         """
-        BinBaseValues.make(self, obj)
+        self.bin_base_values.make(obj)
 
-        layout = RectangleLayout.make(self, obj)
+        layout = self.rectangle_layout.make(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
@@ -176,17 +174,17 @@ class BinBlank(FoundationGridfinity):
             fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
         )
 
-        fuse_total = BinSolidMidSection.make(self, obj, bin_outside_shape)
+        fuse_total = self.bin_solid_mid_section.make(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(make_complex_bin_base(obj, layout))
 
         if obj.RecessedTopDepth > 0:
-            fuse_total = fuse_total.cut(BlankBinRecessedTop.make(self, obj, bin_inside_shape))
+            fuse_total = fuse_total.cut(self.blank_bin_recessed_top.make(obj, bin_inside_shape))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(StackingLip.make(self, obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(self.stacking_lip.make(obj, bin_outside_shape))
 
         if obj.ScrewHoles or obj.MagnetHoles:
-            fuse_total = fuse_total.cut(BinBottomHoles.make(self, obj, layout))
+            fuse_total = fuse_total.cut(self.bin_bottom_holes.make(obj, layout))
 
         return fuse_total
 
@@ -202,26 +200,23 @@ class BinBase(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self.bintype = "standard"
-        self.features = [
-            RectangleLayout(obj, baseplate_default=False),
-            BinSolidMidSection(
-                obj,
-                default_height_units=1,
-                default_wall_thickness=const.WALL_THICKNESS,
-            ),
-            BlankBinRecessedTop(obj),
-            StackingLip(obj, stacking_lip_default=False),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
-            BinBaseValues(obj),
-        ]
+        self.rectangle_layout = RectangleLayout(obj, baseplate_default=False)
+        self.bin_solid_mid_section = BinSolidMidSection(
+            obj,
+            default_height_units=1,
+            default_wall_thickness=const.WALL_THICKNESS,
+        )
+        self.blank_bin_recessed_top = BlankBinRecessedTop(obj)
+        self.stacking_lip = StackingLip(obj, stacking_lip_default=False)
+        self.bin_bottom_holes = BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES)
+        self.bin_base_values = BinBaseValues(obj)
 
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        BinBaseValues.make(self, obj)
+        self.bin_base_values.make(obj)
 
-        layout = RectangleLayout.make(self, obj)
+        layout = self.rectangle_layout.make(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
@@ -251,17 +246,17 @@ class BinBase(FoundationGridfinity):
             ),
         )
 
-        fuse_total = BinSolidMidSection.make(self, obj, bin_outside_shape)
+        fuse_total = self.bin_solid_mid_section.make(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(make_complex_bin_base(obj, layout))
 
         if obj.RecessedTopDepth > 0:
-            fuse_total = fuse_total.cut(BlankBinRecessedTop.make(self, obj, bin_inside_shape))
+            fuse_total = fuse_total.cut(self.blank_bin_recessed_top.make(obj, bin_inside_shape))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(StackingLip.make(self, obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(self.stacking_lip.make(obj, bin_outside_shape))
 
         if obj.ScrewHoles or obj.MagnetHoles:
-            fuse_total = fuse_total.cut(BinBottomHoles.make(self, obj, layout))
+            fuse_total = fuse_total.cut(self.bin_bottom_holes.make(obj, layout))
 
         return fuse_total
 
@@ -284,21 +279,20 @@ class SimpleStorageBin(FoundationGridfinity):
             "base",
             "python gridfinity object",
         )
-        self.bintype = "standard"
-        self.features = [
-            RectangleLayout(obj, baseplate_default=False),
-            BinSolidMidSection(
-                obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
-            ),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
-            BinBaseValues(obj),
-            Compartments(obj, x_div_default=0, y_div_default=0),
-            LabelShelf(obj, label_style_default="Off"),
-            Scoop(obj, scoop_default=False),
-        ]
+
+        self.rectangle_layout = RectangleLayout(obj, baseplate_default=False)
+        self.bin_solid_mid_section = BinSolidMidSection(
+            obj,
+            default_height_units=const.HEIGHT_UNITS,
+            default_wall_thickness=const.WALL_THICKNESS,
+        )
+        self.stacking_lip = StackingLip(obj, stacking_lip_default=const.STACKING_LIP)
+        self.bin_bottom_holes = BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES)
+        self.bin_base_values = BinBaseValues(obj)
+        self.compartments = Compartments(obj, x_div_default=0, y_div_default=0)
+        self.label_shelf = LabelShelf(obj, label_style_default="Off")
+        self.scoop = Scoop(obj, scoop_default=False)
+
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
@@ -311,9 +305,9 @@ class SimpleStorageBin(FoundationGridfinity):
             Part.Shape: Storage bin shape.
 
         """
-        BinBaseValues.make(self, obj)
+        self.bin_base_values.make(obj)
 
-        layout = RectangleLayout.make(self, obj)
+        layout = self.rectangle_layout.make(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
@@ -343,21 +337,21 @@ class SimpleStorageBin(FoundationGridfinity):
             ),
         )
 
-        fuse_total = BinSolidMidSection.make(self, obj, bin_outside_shape)
+        fuse_total = self.bin_solid_mid_section.make(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(make_complex_bin_base(obj, layout))
-        fuse_total = fuse_total.cut(Compartments.make(self, obj, bin_inside_shape))
+        fuse_total = fuse_total.cut(self.compartments.make(obj, bin_inside_shape))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(StackingLip.make(self, obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(self.stacking_lip.make(obj, bin_outside_shape))
 
         if obj.ScrewHoles or obj.MagnetHoles:
-            fuse_total = fuse_total.cut(BinBottomHoles.make(self, obj, layout))
+            fuse_total = fuse_total.cut(self.bin_bottom_holes.make(obj, layout))
 
         if obj.LabelShelfStyle != "Off":
-            fuse_total = fuse_total.fuse(LabelShelf.make(self, obj))
+            fuse_total = fuse_total.fuse(self.label_shelf.make(obj, "standard"))
 
         if obj.Scoop:
-            fuse_total = fuse_total.fuse(Scoop.make(self, obj))
+            fuse_total = fuse_total.fuse(self.scoop.make(obj))
 
         return fuse_total.removeSplitter()
 
@@ -376,20 +370,17 @@ class EcoBin(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self.bintype = "eco"
-        self.features = [
-            RectangleLayout(obj, baseplate_default=False),
-            BinSolidMidSection(
-                obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.ECO_WALL_THICKNESS,
-            ),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=False),
-            BinBaseValues(obj),
-            LabelShelf(obj, label_style_default="Standard"),
-            EcoCompartments(obj),
-        ]
+        self.rectangle_layout = RectangleLayout(obj, baseplate_default=False)
+        self.bin_solid_mid_section = BinSolidMidSection(
+            obj,
+            default_height_units=const.HEIGHT_UNITS,
+            default_wall_thickness=const.ECO_WALL_THICKNESS,
+        )
+        self.stacking_lip = StackingLip(obj, stacking_lip_default=const.STACKING_LIP)
+        self.bin_bottom_holes = BinBottomHoles(obj, magnet_holes_default=False)
+        self.bin_base_values = BinBaseValues(obj)
+        self.label_shelf = LabelShelf(obj, label_style_default="Standard")
+        self.eco_compartments = EcoCompartments(obj)
 
         obj.Proxy = self
 
@@ -405,9 +396,9 @@ class EcoBin(FoundationGridfinity):
         """
         ## Bin Construction
 
-        BinBaseValues.make(self, obj)
+        self.bin_base_values.make(obj)
 
-        layout = RectangleLayout.make(self, obj)
+        layout = self.rectangle_layout.make(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
@@ -437,18 +428,18 @@ class EcoBin(FoundationGridfinity):
             ),
         )
 
-        fuse_total = BinSolidMidSection.make(self, obj, bin_outside_shape)
+        fuse_total = self.bin_solid_mid_section.make(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(make_complex_bin_base(obj, layout))
-        fuse_total = fuse_total.cut(EcoCompartments.make(self, obj, layout, bin_inside_shape))
+        fuse_total = fuse_total.cut(self.eco_compartments.make(obj, layout, bin_inside_shape))
 
         if obj.ScrewHoles or obj.MagnetHoles:
-            fuse_total = fuse_total.cut(BinBottomHoles.make(self, obj, layout))
+            fuse_total = fuse_total.cut(self.bin_bottom_holes.make(obj, layout))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(StackingLip.make(self, obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(self.stacking_lip.make(obj, bin_outside_shape))
 
         if obj.LabelShelfStyle != "Off":
-            fuse_total = fuse_total.fuse(LabelShelf.make(self, obj))
+            fuse_total = fuse_total.fuse(self.label_shelf.make(obj, "eco"))
 
         return fuse_total.removeSplitter()
 
@@ -472,21 +463,23 @@ class PartsBin(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self.bintype = "standard"
-        self.features = [
-            RectangleLayout(obj, baseplate_default=False),
-            BinSolidMidSection(
-                obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
-            ),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
-            BinBaseValues(obj),
-            Compartments(obj, x_div_default=const.X_DIVIDERS, y_div_default=const.Y_DIVIDERS),
-            LabelShelf(obj, label_style_default="Standard"),
-            Scoop(obj, scoop_default=const.SCOOP),
-        ]
+        self.rectangle_layout = RectangleLayout(obj, baseplate_default=False)
+        self.bin_solid_mid_section = BinSolidMidSection(
+            obj,
+            default_height_units=const.HEIGHT_UNITS,
+            default_wall_thickness=const.WALL_THICKNESS,
+        )
+        self.stacking_lip = StackingLip(obj, stacking_lip_default=const.STACKING_LIP)
+        self.bin_bottom_holes = BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES)
+        self.bin_base_values = BinBaseValues(obj)
+        self.compartments = Compartments(
+            obj,
+            x_div_default=const.X_DIVIDERS,
+            y_div_default=const.Y_DIVIDERS,
+        )
+        self.label_shelf = LabelShelf(obj, label_style_default="Standard")
+        self.scoop = Scoop(obj, scoop_default=const.SCOOP)
+
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
@@ -499,9 +492,9 @@ class PartsBin(FoundationGridfinity):
             Part.Shape: Parts bin shape.
 
         """
-        BinBaseValues.make(self, obj)
+        self.bin_base_values.make(obj)
 
-        layout = RectangleLayout.make(self, obj)
+        layout = self.rectangle_layout.make(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
@@ -523,21 +516,21 @@ class PartsBin(FoundationGridfinity):
             fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance, 0),
         )
 
-        fuse_total = BinSolidMidSection.make(self, obj, bin_outside_shape)
+        fuse_total = self.bin_solid_mid_section.make(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(make_complex_bin_base(obj, layout))
-        fuse_total = fuse_total.cut(Compartments.make(self, obj, bin_inside_shape))
+        fuse_total = fuse_total.cut(self.compartments.make(obj, bin_inside_shape))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(StackingLip.make(self, obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(self.stacking_lip.make(obj, bin_outside_shape))
 
         if obj.ScrewHoles or obj.MagnetHoles:
-            fuse_total = fuse_total.cut(BinBottomHoles.make(self, obj, layout))
+            fuse_total = fuse_total.cut(self.bin_bottom_holes.make(obj, layout))
 
         if obj.LabelShelfStyle != "Off":
-            fuse_total = fuse_total.fuse(LabelShelf.make(self, obj))
+            fuse_total = fuse_total.fuse(self.label_shelf.make(obj, "standard"))
 
         if obj.Scoop:
-            fuse_total = fuse_total.fuse(Scoop.make(self, obj))
+            fuse_total = fuse_total.fuse(self.scoop.make(obj))
 
         return fuse_total.removeSplitter()
 
@@ -561,11 +554,9 @@ class Baseplate(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self.features = [
-            RectangleLayout(obj, baseplate_default=True),
-            BaseplateSolidShape(obj),
-            BaseplateBaseValues(obj),
-        ]
+        self.rectangle_layout = RectangleLayout(obj, baseplate_default=True)
+        self.baseplate_solid_shape = BaseplateSolidShape(obj)
+        self.baseplate_base_values = BaseplateBaseValues(obj)
 
         obj.Proxy = self
 
@@ -579,9 +570,9 @@ class Baseplate(FoundationGridfinity):
             Part.Shape: Baseplate shape.
 
         """
-        BaseplateBaseValues.make(self, obj)
+        self.baseplate_base_values.make(obj)
 
-        layout = RectangleLayout.make(self, obj)
+        layout = self.rectangle_layout.make(obj)
 
         baseplate_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
@@ -591,8 +582,7 @@ class Baseplate(FoundationGridfinity):
         )
         baseplate_outside_shape.translate(fc.Vector(obj.xTotalWidth / 2, obj.yTotalWidth / 2, 0))
 
-        solid_shape = BaseplateSolidShape.make(
-            self,
+        solid_shape = self.baseplate_solid_shape.make(
             obj,
             baseplate_outside_shape,
             baseplate_type="standard",
@@ -624,13 +614,11 @@ class MagnetBaseplate(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        self.features = [
-            RectangleLayout(obj, baseplate_default=True),
-            BaseplateSolidShape(obj),
-            BaseplateBaseValues(obj),
-            BaseplateMagnetHoles(obj),
-            BaseplateCenterCut(obj),
-        ]
+        self.rectangle_layout = RectangleLayout(obj, baseplate_default=True)
+        self.baseplate_solid_shape = BaseplateSolidShape(obj)
+        self.baseplate_base_values = BaseplateBaseValues(obj)
+        self.baseplate_magnet_holes = BaseplateMagnetHoles(obj)
+        self.baseplate_center_cut = BaseplateCenterCut(obj)
 
         obj.Proxy = self
 
@@ -644,9 +632,9 @@ class MagnetBaseplate(FoundationGridfinity):
             Part.Shape: PartsBin Shape.
 
         """
-        BaseplateBaseValues.make(self, obj)
+        self.baseplate_base_values.make(obj)
 
-        layout = RectangleLayout.make(self, obj)
+        layout = self.rectangle_layout.make(obj)
 
         baseplate_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
@@ -656,8 +644,7 @@ class MagnetBaseplate(FoundationGridfinity):
         )
         baseplate_outside_shape.translate(fc.Vector(obj.xTotalWidth / 2, obj.yTotalWidth / 2, 0))
 
-        solid_shape = BaseplateSolidShape.make(
-            self,
+        solid_shape = self.baseplate_solid_shape.make(
             obj,
             baseplate_outside_shape,
             baseplate_type="magnet",
@@ -666,8 +653,8 @@ class MagnetBaseplate(FoundationGridfinity):
         fuse_total = make_complex_bin_base(obj, layout)
         fuse_total.translate(fc.Vector(0, 0, obj.TotalHeight))
         fuse_total = solid_shape.cut(fuse_total)
-        fuse_total = fuse_total.cut(BaseplateMagnetHoles.make(self, obj, layout))
-        fuse_total = fuse_total.cut(BaseplateCenterCut.make(self, obj, layout))
+        fuse_total = fuse_total.cut(self.baseplate_magnet_holes.make(obj, layout))
+        fuse_total = fuse_total.cut(self.baseplate_center_cut.make(obj, layout))
 
         return fuse_total
 
@@ -692,15 +679,13 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         )
         obj.Proxy = self
 
-        self.features = [
-            RectangleLayout(obj, baseplate_default=True),
-            BaseplateSolidShape(obj),
-            BaseplateBaseValues(obj),
-            BaseplateMagnetHoles(obj),
-            BaseplateCenterCut(obj),
-            BaseplateScrewBottomChamfer(obj),
-            BaseplateConnectionHoles(obj),
-        ]
+        self.rectangle_layout = RectangleLayout(obj, baseplate_default=True)
+        self.baseplate_solid_shape = BaseplateSolidShape(obj)
+        self.baseplate_base_values = BaseplateBaseValues(obj)
+        self.baseplate_magnet_holes = BaseplateMagnetHoles(obj)
+        self.baseplate_center_cut = BaseplateCenterCut(obj)
+        self.baseplate_screw_bottom_chamfer = BaseplateScrewBottomChamfer(obj)
+        self.baseplate_connection_holes = BaseplateConnectionHoles(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate Parts Bin shape.
@@ -712,9 +697,9 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             Part.Shape: ParstBin Shape.
 
         """
-        BaseplateBaseValues.make(self, obj)
+        self.baseplate_base_values.make(obj)
 
-        layout = RectangleLayout.make(self, obj)
+        layout = self.rectangle_layout.make(obj)
 
         baseplate_outside_shape = utils.create_rounded_rectangle(
             obj.xTotalWidth,
@@ -724,8 +709,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         )
         baseplate_outside_shape.translate(fc.Vector(obj.xTotalWidth / 2, obj.yTotalWidth / 2, 0))
 
-        solid_shape = BaseplateSolidShape.make(
-            self,
+        solid_shape = self.baseplate_solid_shape.make(
             obj,
             baseplate_outside_shape,
             baseplate_type="screw_together",
@@ -734,10 +718,10 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         fuse_total = make_complex_bin_base(obj, layout)
         fuse_total.translate(fc.Vector(0, 0, obj.TotalHeight))
         fuse_total = solid_shape.cut(fuse_total)
-        fuse_total = fuse_total.cut(BaseplateMagnetHoles.make(self, obj, layout))
-        fuse_total = fuse_total.cut(BaseplateCenterCut.make(self, obj, layout))
-        fuse_total = fuse_total.cut(BaseplateScrewBottomChamfer.make(self, obj, layout))
-        fuse_total = fuse_total.cut(BaseplateConnectionHoles.make(self, obj))
+        fuse_total = fuse_total.cut(self.baseplate_magnet_holes.make(obj, layout))
+        fuse_total = fuse_total.cut(self.baseplate_center_cut.make(obj, layout))
+        fuse_total = fuse_total.cut(self.baseplate_screw_bottom_chamfer.make(obj, layout))
+        fuse_total = fuse_total.cut(self.baseplate_connection_holes.make(obj))
 
         return fuse_total
 
@@ -756,20 +740,16 @@ class LBinBlank(FoundationGridfinity):
 
         obj.addProperty("App::PropertyPythonObject", "Bin", "base", "python gridfinity object")
 
-        self.bintype = "standard"
-
-        self.features = [
-            LShapedLayout(obj, baseplate_default=False),
-            BinSolidMidSection(
-                obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
-            ),
-            BlankBinRecessedTop(obj),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
-            BinBaseValues(obj),
-        ]
+        self.l_shaped_layout = LShapedLayout(obj, baseplate_default=False)
+        self.bin_solid_mid_section = BinSolidMidSection(
+            obj,
+            default_height_units=const.HEIGHT_UNITS,
+            default_wall_thickness=const.WALL_THICKNESS,
+        )
+        self.blank_bin_recessed_top = BlankBinRecessedTop(obj)
+        self.stacking_lip = StackingLip(obj, stacking_lip_default=const.STACKING_LIP)
+        self.bin_bottom_holes = BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES)
+        self.bin_base_values = BinBaseValues(obj)
 
         obj.Proxy = self
 
@@ -783,9 +763,9 @@ class LBinBlank(FoundationGridfinity):
             Part.Shape: L shaped bin shape.
 
         """
-        BinBaseValues.make(self, obj)
+        self.bin_base_values.make(obj)
 
-        layout = LShapedLayout.make(self, obj)
+        layout = self.l_shaped_layout.make(obj)
 
         bin_outside_shape = utils.create_rounded_l(
             utils.LShapeData(
@@ -811,17 +791,17 @@ class LBinBlank(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
 
-        fuse_total = BinSolidMidSection.make(self, obj, bin_outside_shape)
+        fuse_total = self.bin_solid_mid_section.make(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(make_complex_bin_base(obj, layout))
 
         if obj.RecessedTopDepth > 0:
-            fuse_total = fuse_total.cut(BlankBinRecessedTop.make(self, obj, bin_inside_shape))
+            fuse_total = fuse_total.cut(self.blank_bin_recessed_top.make(obj, bin_inside_shape))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(StackingLip.make(self, obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(self.stacking_lip.make(obj, bin_outside_shape))
 
         if obj.ScrewHoles or obj.MagnetHoles:
-            fuse_total = fuse_total.cut(BinBottomHoles.make(self, obj, layout))
+            fuse_total = fuse_total.cut(self.bin_bottom_holes.make(obj, layout))
 
         return fuse_total
 
