@@ -122,12 +122,12 @@ class CustomBin(FoundationGridfinity):
             CustomShapeLayout(obj, baseplate_default=False),
             BinSolidMidSection(
                 obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
+                default_height_units=preferences.bin_height(),
+                default_wall_thickness=preferences.bin_wall_thickness(),
             ),
             BlankBinRecessedTop(obj),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
+            StackingLip(obj, stacking_lip_default=preferences.stacking_lip()),
+            BinBottomHoles(obj, magnet_holes_default=preferences.bin_magnet_holes()),
             BinBaseValues(obj),
         ]
 
