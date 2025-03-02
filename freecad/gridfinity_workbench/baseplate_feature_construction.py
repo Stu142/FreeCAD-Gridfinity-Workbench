@@ -422,7 +422,7 @@ class BaseplateConnectionHoles:
         hx2: Part.Shape | None = None
 
         xtranslate = zeromm
-        for _ in range(obj.xGridUnits):
+        for _ in range(int(obj.xTotalWidth.Value / obj.xGridSize.Value)):
             hx1 = hx1.copy()
             hx1.translate(fc.Vector(xtranslate, zeromm))
             hx2 = hx1 if hx2 is None else hx2.fuse(hx1)
@@ -432,7 +432,7 @@ class BaseplateConnectionHoles:
         hy2: Part.Shape | None = None
 
         ytranslate = zeromm
-        for _ in range(obj.yGridUnits):
+        for _ in range(int(obj.yTotalWidth.Value / obj.yGridSize.Value)):
             hy1_copy = hy1.copy()
             hy1_copy.translate(fc.Vector(zeromm, ytranslate))
             hy2 = hy1_copy if hy2 is None else hy2.fuse(hy1_copy)
@@ -588,10 +588,10 @@ class BaseplateCenterCut:
         xtranslate = 0
         ytranslate = 0
 
-        for x in range(obj.xGridUnits):
+        for col in layout:
             ytranslate = 0
-            for y in range(obj.yGridUnits):
-                if layout[x][y]:
+            for cell in col:
+                if cell:
                     vec_list.append(fc.Vector(xtranslate, ytranslate))
                 ytranslate += obj.yGridSize.Value
             xtranslate += obj.xGridSize.Value
