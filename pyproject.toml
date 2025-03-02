@@ -14,6 +14,7 @@ dev = ["ruff==0.9.5", "freecad-stubs==1.0.18"]
 
 [tool.ruff]
 line-length = 100
+extend-exclude = ["freecad/gridfinity_workbench/preferences/auto.py"]
 
 [tool.ruff.lint]
 select = ["ALL"]

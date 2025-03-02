@@ -2,7 +2,7 @@
 
 import FreeCAD as fc  # noqa: N813
 
-from . import const, utils
+from . import preferences, utils
 
 
 def _location_properties(obj: fc.DocumentObject) -> None:
@@ -57,14 +57,14 @@ def _grid_size_properties(obj: fc.DocumentObject) -> None:
         "xGridSize",
         "zzExpertOnly",
         "Size of each grid in x direction <br> <br> default = 42 mm",
-    ).xGridSize = const.X_GRID_SIZE
+    ).xGridSize = preferences.grid_size_x()
 
     obj.addProperty(
         "App::PropertyLength",
         "yGridSize",
         "zzExpertOnly",
         "Size of each grid in y direction <br> <br> default = 42 mm",
-    ).yGridSize = const.Y_GRID_SIZE
+    ).yGridSize = preferences.grid_size_y()
 
 
 class RectangleLayout(utils.Feature):
@@ -88,14 +88,14 @@ class RectangleLayout(utils.Feature):
             "xGridUnits",
             "Gridfinity",
             "Number of grid units in the x direction <br> <br> default = 2",
-        ).xGridUnits = const.X_GRID_UNITS
+        ).xGridUnits = preferences.bin_width_x()
 
         obj.addProperty(
             "App::PropertyInteger",
             "yGridUnits",
             "Gridfinity",
             "Number of grid units in the y direction <br> <br> default = 2",
-        ).yGridUnits = const.Y_GRID_UNITS
+        ).yGridUnits = preferences.bin_width_y()
 
         ## Hidden Properties
         obj.addProperty(

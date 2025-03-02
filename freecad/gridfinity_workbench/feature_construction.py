@@ -5,7 +5,7 @@ import math
 import FreeCAD as fc  # noqa: N813
 import Part
 
-from . import const, label_shelf, utils
+from . import const, label_shelf, preferences, utils
 
 unitmm = fc.Units.Quantity("1 mm")
 zeromm = fc.Units.Quantity("0 mm")
@@ -50,21 +50,21 @@ class LabelShelf(utils.Feature):
             "GridfinityNonStandard",
             "Width of the Label Shelf, how far it sticks out from the wall"
             " <br> <br> default = 12 mm",
-        ).LabelShelfWidth = const.LABEL_SHELF_WIDTH
+        ).LabelShelfWidth = preferences.label_shelf_width()
 
         obj.addProperty(
             "App::PropertyLength",
             "LabelShelfLength",
             "GridfinityNonStandard",
             "Length of the Label Shelf, how long it is <br> <br> default = 42 mm",
-        ).LabelShelfLength = const.LABEL_SHELF_LENGTH
+        ).LabelShelfLength = preferences.label_shelf_length()
 
         obj.addProperty(
             "App::PropertyAngle",
             "LabelShelfAngle",
             "GridfinityNonStandard",
             "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
-        ).LabelShelfAngle = const.LABEL_SHELF_ANGLE
+        ).LabelShelfAngle = preferences.label_shelf_angle()
 
         ## Expert Only Parameters
         obj.addProperty(
@@ -73,14 +73,14 @@ class LabelShelf(utils.Feature):
             "zzExpertOnly",
             "label shelf height decreased when stacking lip is enabled so bin above does not sit"
             "uneven with one end on the label shelf <br> <br> default = 0.4 mm",
-        ).LabelShelfStackingOffset = const.LABEL_SHELF_STACKING_OFFSET
+        ).LabelShelfStackingOffset = preferences.label_shelf_stacking_offset()
 
         obj.addProperty(
             "App::PropertyLength",
             "LabelShelfVerticalThickness",
             "zzExpertOnly",
             "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
-        ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
+        ).LabelShelfVerticalThickness = preferences.label_shelf_vertical_thickness()
 
     def make(self, obj: fc.DocumentObject) -> Part.Shape:
         """Create label shelf.
@@ -194,7 +194,7 @@ class Scoop(utils.Feature):
             "ScoopRadius",
             "GridfinityNonStandard",
             "Radius of the Scoop <br> <br> default = 21 mm",
-        ).ScoopRadius = const.SCOOP_RADIUS
+        ).ScoopRadius = preferences.scoop_radius()
 
         obj.addProperty(
             "App::PropertyBool",
@@ -471,7 +471,7 @@ class Compartments(utils.Feature):
             "InsideFilletRadius",
             "GridfinityNonStandard",
             "inside fillet at the bottom of the bin <br> <br> default = 1.85 mm",
-        ).InsideFilletRadius = const.INSIDE_FILLET_RADIUS
+        ).InsideFilletRadius = preferences.divider_fillet_radius()
 
         obj.addProperty(
             "App::PropertyLength",
@@ -481,21 +481,21 @@ class Compartments(utils.Feature):
                 "Thickness of the dividers, ideally an even multiple of printer layer width"
                 "<br> <br> default = 1.2 mm"
             ),
-        ).DividerThickness = const.DIVIDER_THICKNESS
+        ).DividerThickness = preferences.divider_thickness()
 
         obj.addProperty(
             "App::PropertyLength",
             "xDividerHeight",
             "GridfinityNonStandard",
             "Custom Height of x dividers <br> <br> default = 0 mm = full height",
-        ).xDividerHeight = const.CUSTOM_X_DIVIDER_HEIGHT
+        ).xDividerHeight = preferences.divider_custom_x_height()
 
         obj.addProperty(
             "App::PropertyLength",
             "yDividerHeight",
             "GridfinityNonStandard",
             "Custom Height of y dividers <br> <br> default = 0 mm = full height",
-        ).yDividerHeight = const.CUSTOM_Y_DIVIDER_HEIGHT
+        ).yDividerHeight = preferences.divider_custom_y_height()
 
         ## Referance Parameters
         obj.addProperty(
@@ -759,21 +759,21 @@ class EcoCompartments(utils.Feature):
             "BaseWallThickness",
             "Gridfinity",
             "Wall thickness of the bin base",
-        ).BaseWallThickness = const.BASE_WALL_THICKNESS
+        ).BaseWallThickness = preferences.eco_bin_base_wall_thickness()
 
         obj.addProperty(
             "App::PropertyInteger",
             "xDividers",
             "Gridfinity",
             "Number of Dividers in the x direction",
-        ).xDividers = const.ECO_X_DIVIDERS
+        ).xDividers = preferences.eco_bin_dividers_x()
 
         obj.addProperty(
             "App::PropertyInteger",
             "yDividers",
             "Gridfinity",
             "Number of Dividers in the y direction",
-        ).yDividers = const.ECO_Y_DIVIDERS
+        ).yDividers = preferences.eco_bin_dividers_y()
 
         ## Gridfinity Non Standard Parameters
         obj.addProperty(
@@ -781,7 +781,7 @@ class EcoCompartments(utils.Feature):
             "InsideFilletRadius",
             "GridfinityNonStandard",
             "inside fillet at the bottom of the bin <br> <br> default = 1.5 mm",
-        ).InsideFilletRadius = const.ECO_INSIDE_FILLET_RADIUS
+        ).InsideFilletRadius = preferences.eco_bin_inside_fillet_radius()
 
         obj.addProperty(
             "App::PropertyLength",
@@ -791,21 +791,21 @@ class EcoCompartments(utils.Feature):
                 "Thickness of the dividers, ideally an even multiple of layer width <br> <br> "
                 "default = 0.8 mm"
             ),
-        ).DividerThickness = const.ECO_DIVIDER_THICKNESS
+        ).DividerThickness = preferences.eco_bin_divider_thickness()
 
         obj.addProperty(
             "App::PropertyLength",
             "xDividerHeight",
             "GridfinityNonStandard",
             "Custom Height of x dividers <br> <br> default = 0 mm = full height",
-        ).xDividerHeight = const.CUSTOM_X_DIVIDER_HEIGHT
+        ).xDividerHeight = preferences.divider_custom_x_height()
 
         obj.addProperty(
             "App::PropertyLength",
             "yDividerHeight",
             "GridfinityNonStandard",
             "Custom Height of y dividers <br> <br> default = 0 mm = full height",
-        ).yDividerHeight = const.CUSTOM_Y_DIVIDER_HEIGHT
+        ).yDividerHeight = preferences.divider_custom_y_height()
 
         ## Reference Parameters
         obj.addProperty(
@@ -1013,7 +1013,7 @@ class BinBaseValues(utils.Feature):
             "zzExpertOnly",
             "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
             1,
-        ).BaseProfileBottomChamfer = const.BIN_BASE_BOTTOM_CHAMFER
+        ).BaseProfileBottomChamfer = preferences.bin_base_bottom_chamfer()
 
         obj.addProperty(
             "App::PropertyLength",
@@ -1021,7 +1021,7 @@ class BinBaseValues(utils.Feature):
             "zzExpertOnly",
             "Height of the vertical section in bin base profile",
             1,
-        ).BaseProfileVerticalSection = const.BIN_BASE_VERTICAL_SECTION
+        ).BaseProfileVerticalSection = preferences.bin_base_vertical_section()
 
         obj.addProperty(
             "App::PropertyLength",
@@ -1029,7 +1029,7 @@ class BinBaseValues(utils.Feature):
             "zzExpertOnly",
             "Height of the top chamfer in the bin base profile",
             1,
-        ).BaseProfileTopChamfer = const.BIN_BASE_TOP_CHAMFER
+        ).BaseProfileTopChamfer = preferences.bin_base_top_chamfer()
 
         obj.addProperty(
             "App::PropertyLength",
@@ -1037,7 +1037,7 @@ class BinBaseValues(utils.Feature):
             "zzExpertOnly",
             "Outer radius of the bin",
             1,
-        ).BinOuterRadius = const.BIN_OUTER_RADIUS
+        ).BinOuterRadius = preferences.bin_outer_radius()
 
         obj.addProperty(
             "App::PropertyLength",
@@ -1045,7 +1045,7 @@ class BinBaseValues(utils.Feature):
             "zzExpertOnly",
             "Radius of the base profile Vertical section",
             1,
-        ).BinVerticalRadius = const.BIN_BASE_VERTICAL_RADIUS
+        ).BinVerticalRadius = preferences.bin_base_vertical_radius()
 
         obj.addProperty(
             "App::PropertyLength",
@@ -1053,7 +1053,7 @@ class BinBaseValues(utils.Feature):
             "zzExpertOnly",
             "bottom of bin corner radius",
             1,
-        ).BinBottomRadius = const.BIN_BASE_BOTTOM_RADIUS
+        ).BinBottomRadius = preferences.bin_base_bottom_radius()
 
         obj.addProperty(
             "App::PropertyLength",
@@ -1064,7 +1064,7 @@ class BinBaseValues(utils.Feature):
                 "gives some clearance between bins <br> <br>"
                 "default = 0.25 mm"
             ),
-        ).Clearance = const.CLEARANCE
+        ).Clearance = preferences.clearance()
 
     def make(self, obj: fc.DocumentObject) -> None:
         """Generate Rectanble layout and calculate relevant parameters.
@@ -1193,7 +1193,7 @@ class BlankBinRecessedTop(utils.Feature):
             "RecessedTopDepth",
             "GridfinityNonStandard",
             "height per unit <br> <br> default = 0 mm",
-        ).RecessedTopDepth = const.RECESSED_TOP_DEPTH
+        ).RecessedTopDepth = preferences.blank_bin_recessed_top_depth()
 
     def make(self, obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
         """Generate Rectanble layout and calculate relevant parameters.
@@ -1241,7 +1241,7 @@ class BinBottomHoles(utils.Feature):
             "ScrewHoles",
             "Gridfinity",
             "Toggle the screw holes on or off",
-        ).ScrewHoles = const.SCREW_HOLES
+        ).ScrewHoles = preferences.bin_screw_holes()
 
         ## Gridfinity Non Standard Parameters
         obj.addProperty(
@@ -1249,8 +1249,8 @@ class BinBottomHoles(utils.Feature):
             "SequentialBridgingLayerHeight",
             "GridfinityNonStandard",
             "Layer Height that you print in for optimal print results,"
-            "used for  screw holes bridging with magnet holes also on",
-        ).SequentialBridgingLayerHeight = const.SEQUENTIAL_BRIDGING_LAYER_HEIGHT
+            "used for screw holes bridging with magnet holes also on",
+        ).SequentialBridgingLayerHeight = preferences.sequential_bridging_layer_height()
 
         obj.addProperty(
             "App::PropertyEnumeration",
@@ -1276,14 +1276,14 @@ class BinBottomHoles(utils.Feature):
                 "<br> <br> Hex is alternative press fit style, inscribed diameter<br> <br>"
                 "<br> <br> default = 6.2 mm"
             ),
-        ).MagnetHoleDiameter = const.MAGNET_HOLE_DIAMETER
+        ).MagnetHoleDiameter = preferences.magnet_hole_diameter()
 
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleDepth",
             "GridfinityNonStandard",
             "Depth of Magnet Holes <br> <br> default = 2.4 mm",
-        ).MagnetHoleDepth = const.MAGNET_HOLE_DEPTH
+        ).MagnetHoleDepth = preferences.magnet_hole_depth()
 
         obj.addProperty(
             "App::PropertyLength",
@@ -1291,14 +1291,14 @@ class BinBottomHoles(utils.Feature):
             "GridfinityNonStandard",
             "Diameter of Screw Holes, used to put screws in bin to secure in place"
             "<br> <br> default = 3.0 mm",
-        ).ScrewHoleDiameter = const.SCREW_HOLE_DIAMETER
+        ).ScrewHoleDiameter = preferences.screw_hole_diameter()
 
         obj.addProperty(
             "App::PropertyLength",
             "ScrewHoleDepth",
             "GridfinityNonStandard",
             "Depth of Screw Holes <br> <br> default = 6.0 mm",
-        ).ScrewHoleDepth = const.SCREW_HOLE_DEPTH
+        ).ScrewHoleDepth = preferences.screw_hole_depth()
 
         ## Expert Only Parameters
         obj.addProperty(
@@ -1307,7 +1307,7 @@ class BinBottomHoles(utils.Feature):
             "zzExpertOnly",
             "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
             1,
-        ).MagnetHoleDistanceFromEdge = const.MAGNET_HOLE_DISTANCE_FROM_EDGE
+        ).MagnetHoleDistanceFromEdge = preferences.magnet_hole_distance_from_edge()
 
     def make(
         self,
@@ -1447,7 +1447,7 @@ class StackingLip(utils.Feature):
             "zzExpertOnly",
             "Top Ledge of the stacking lip <br> <br> default = 0.4 mm",
             1,
-        ).StackingLipTopLedge = const.STACKING_LIP_TOP_LEDGE
+        ).StackingLipTopLedge = preferences.stacking_lip_top_ledge()
 
         obj.addProperty(
             "App::PropertyLength",
@@ -1463,7 +1463,7 @@ class StackingLip(utils.Feature):
             "zzExpertOnly",
             "Bottom Chamfer of the Stacking lip<br> <br> default = 0.7 mm",
             1,
-        ).StackingLipBottomChamfer = const.STACKING_LIP_BOTTOM_CHAMFER
+        ).StackingLipBottomChamfer = preferences.stacking_lip_bottom_chamfer()
 
         obj.addProperty(
             "App::PropertyLength",
@@ -1471,7 +1471,7 @@ class StackingLip(utils.Feature):
             "zzExpertOnly",
             "vertical section of the Stacking lip<br> <br> default = 1.8 mm",
             1,
-        ).StackingLipVerticalSection = const.STACKING_LIP_VERTICAL_SECTION
+        ).StackingLipVerticalSection = preferences.stacking_lip_vertical_section()
 
     def make(self, obj: fc.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
         """Create stacking lip based on input bin shape.
@@ -1556,7 +1556,7 @@ class BinSolidMidSection(utils.Feature):
             "zzExpertOnly",
             "height per unit, default is 7mm",
             1,
-        ).HeightUnitValue = const.HEIGHT_UNIT_VALUE
+        ).HeightUnitValue = preferences.grid_height()
 
     def make(self, obj: fc.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
         """Generate bin solid mid section.
