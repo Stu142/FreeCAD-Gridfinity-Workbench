@@ -14,6 +14,12 @@ from .baseplate_feature_construction import (
     BaseplateScrewBottomChamfer,
     BaseplateSolidShape,
 )
+from .custom_shape_features import (
+    custom_shape_solid,
+    custom_shape_stacking_lip,
+    custom_shape_trim,
+    vertical_edge_fillet,
+)
 from .feature_construction import (
     BinBaseValues,
     BinBottomHoles,
@@ -27,6 +33,7 @@ from .feature_construction import (
     make_complex_bin_base,
 )
 from .grid_initial_layout import (
+    CustomShapeLayout,
     LShapedLayout,
     RectangleLayout,
 )
@@ -95,6 +102,96 @@ class FoundationGridfinity:
         otherwise expecting argument error message
         """
         return
+
+
+class CustomBin(FoundationGridfinity):
+    """Gridfinity CustomBin object."""
+
+    def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
+        super().__init__(obj)
+        self.layout = layout
+
+        obj.addProperty(
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
+        )
+        self.bintype = "standard"
+        self.features = [
+            CustomShapeLayout(obj, baseplate_default=False),
+            BinSolidMidSection(
+                obj,
+                default_height_units=const.HEIGHT_UNITS,
+                default_wall_thickness=const.WALL_THICKNESS,
+            ),
+            BlankBinRecessedTop(obj),
+            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
+            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
+            BinBaseValues(obj),
+        ]
+
+        obj.Proxy = self
+
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        """Generate BinBlanek Shape.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+
+        Returns:
+            Part.Shape: Bin Blank shape
+
+        """
+        ## calculated here
+        if obj.NonStandardHeight:
+            obj.TotalHeight = obj.CustomHeight
+
+        else:
+            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
+
+        obj.BaseProfileHeight = (
+            obj.BaseProfileBottomChamfer
+            + obj.BaseProfileVerticalSection
+            + obj.BaseProfileTopChamfer
+        )
+
+        obj.StackingLipTopChamfer = (
+            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
+        )
+        ## calculated values over
+        CustomShapeLayout.calc(self, obj)
+        solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
+        outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
+        fuse_total = solid_shape.cut(outside_trim)
+        fuse_total = fuse_total.removeSplitter()
+        fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
+        fuse_total = fuse_total.fuse(make_complex_bin_base(obj, self.layout))
+
+        if obj.RecessedTopDepth > 0:
+            recessed_solid = custom_shape_solid(obj, self.layout, obj.RecessedTopDepth)
+            recessed_outside_trim = custom_shape_trim(
+                obj,
+                self.layout,
+                obj.Clearance.Value + obj.WallThickness.Value,
+                obj.Clearance.Value + obj.WallThickness.Value,
+            )
+            recessed_solid = recessed_solid.cut(recessed_outside_trim)
+            recessed_solid = recessed_solid.removeSplitter()
+            recessed_solid = vertical_edge_fillet(
+                recessed_solid,
+                obj.BinOuterRadius - obj.WallThickness,
+            )
+            fuse_total = fuse_total.cut(recessed_solid)
+        if obj.ScrewHoles or obj.MagnetHoles:
+            holes = BinBottomHoles.make(self, obj, self.layout)
+            fuse_total = Part.Shape.cut(fuse_total, holes)
+        if obj.StackingLip:
+            fuse_total = fuse_total.fuse(
+                custom_shape_stacking_lip(obj, solid_shape, self.layout),
+            )
+
+        return fuse_total
 
 
 class BinBlank(FoundationGridfinity):
