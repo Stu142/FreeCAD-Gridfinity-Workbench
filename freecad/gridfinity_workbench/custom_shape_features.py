@@ -131,7 +131,7 @@ def custom_shape_stacking_lip(
     obj: fc.DocumentObject,
     solid_shape: Part.Shape,
     layout: GridfinityLayout,
-) -> Part.Wire:
+) -> Part.Shape:
     """Fillet vertical Edges of input shape."""
     trim = custom_shape_trim(obj, layout, obj.Clearance.Value, obj.Clearance.Value)
     solid_cut = solid_shape.cut(trim)

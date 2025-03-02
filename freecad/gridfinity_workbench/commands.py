@@ -34,7 +34,7 @@ PASCAL_CASE_REGEX = re.compile(r"(?<!^)(?=[A-Z])")
 class ViewProviderGridfinity:
     """Gridfinity workbench viewprovider."""
 
-    def __init__(self, obj: fc.DocumentObject, icon_path: Path) -> None:
+    def __init__(self, obj: fcg.ViewProviderDocumentObject, icon_path: Path) -> None:
         # Set this object to the proxy object of the actual view provider
         obj.Proxy = self
         self._check_attr()
@@ -55,7 +55,7 @@ class ViewProviderGridfinity:
     def getIcon(self) -> str:  # noqa: N802
         """Get icons path."""
         self._check_attr()
-        return self.icon_path
+        return str(self.icon_path)
 
     def dumps(self) -> dict:
         """Needed for JSON Serialization when saving a file containing gridfinity object."""
@@ -138,7 +138,8 @@ class CreateCommand(BaseCommand):
         """Execute when command is activated."""
         obj = utils.new_object(self.name)
         if fc.GuiUp:
-            ViewProviderGridfinity(obj.ViewObject, str(self.pixmap))
+            view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
+            ViewProviderGridfinity(view_object, self.pixmap)
 
         self.gridfinity_function(obj)
 
@@ -243,7 +244,8 @@ class CreateCustomBin(BaseCommand):
 
         obj = utils.new_object(self.name)
         if fc.GuiUp:
-            ViewProviderGridfinity(obj.ViewObject, str(self.pixmap))
+            view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
+            ViewProviderGridfinity(view_object, self.pixmap)
 
         CustomBin(obj, layout)
 

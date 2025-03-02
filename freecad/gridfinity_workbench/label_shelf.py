@@ -77,7 +77,7 @@ def from_dimensions(
     shape = face.extrude(fc.Vector(0, length))
 
     # Front fillet
-    def fillet_point(p: Part.Point) -> bool:
+    def fillet_point(p: fc.PyObjectBase) -> bool:
         return p.z == -thickness and p.x == width
 
     h_edges = [
@@ -96,7 +96,7 @@ def from_angle(
     length: fc.Units.Quantity,
     width: fc.Units.Quantity,
     thickness: fc.Units.Quantity,
-    angle: fc.Units.Angle,
+    angle: fc.Units.Unit,
 ) -> Part.Shape:
     """Create a label shelf with given width and angle.
 

@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import math
 
+# The PySide library is provided by FreeCAD and it's path is platform dependent,
+# so it cannot be analyzed by mypy.
+# mypy: disable-error-code="import-not-found"
 from PySide.QtCore import (
     QPoint,
     QPointF,
@@ -101,6 +104,7 @@ class GridDialog(QDialog):
                     starting_cell = (x, y)
         if cell_count == 0:
             return False
+        assert starting_cell is not None
 
         visited = set()
 
