@@ -2,7 +2,7 @@
 
 import FreeCAD as fc  # noqa: N813
 
-from . import const, utils
+from . import const
 
 
 def _location_properties(obj: fc.DocumentObject) -> None:
@@ -67,7 +67,7 @@ def _grid_size_properties(obj: fc.DocumentObject) -> None:
     ).yGridSize = const.Y_GRID_SIZE
 
 
-class RectangleLayout(utils.Feature):
+class RectangleLayout:
     """Create layout for rectanlge shaped Gridfinity object and add relevant properties."""
 
     def __init__(self, obj: fc.DocumentObject, *, baseplate_default: bool) -> None:
@@ -107,7 +107,7 @@ class RectangleLayout(utils.Feature):
 
         obj.setEditorMode("Baseplate", 2)
 
-    def make(self, obj: fc.DocumentObject) -> None:
+    def make(self, obj: fc.DocumentObject) -> list[list[bool]]:
         """Generate Rectanble layout and calculate relevant parameters.
 
         Args:
@@ -134,7 +134,7 @@ class RectangleLayout(utils.Feature):
         return [[True for y in range(obj.yGridUnits)] for x in range(obj.xGridUnits)]
 
 
-class LShapedLayout(utils.Feature):
+class LShapedLayout:
     """Creat layout matrix for L shaped Gridfinity object and add relevant properties."""
 
     def __init__(self, obj: fc.DocumentObject, *, baseplate_default: bool) -> None:
@@ -213,7 +213,7 @@ class LShapedLayout(utils.Feature):
         ).Baseplate = baseplate_default
         obj.setEditorMode("Baseplate", 2)
 
-    def make(self, obj: fc.DocumentObject) -> None:
+    def make(self, obj: fc.DocumentObject) -> list[list[bool]]:
         """Make L layout.
 
         Args:
@@ -292,18 +292,19 @@ class CustomShapeLayout:
         ).Baseplate = baseplate_default
         obj.setEditorMode("Baseplate", 2)
 
-    def calc(self, obj: fc.DocumentObject) -> None:
+    def calc(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
         """Calculate values for custom shape.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object
+            layout (list[list[bool]]): Layout of the gridfinity grid.
 
         """
         x_grid_pos = []
         y_max_pos = []
         y_min_pos = []
 
-        for i, col in enumerate(self.layout):
+        for i, col in enumerate(layout):
             y_grid_pos = [i for i, y in enumerate(col) if y]
             if y_grid_pos:
                 y_min_pos.append(min(y_grid_pos))

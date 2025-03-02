@@ -77,13 +77,13 @@ def from_dimensions(
     shape = face.extrude(fc.Vector(0, length))
 
     # Front fillet
-    def fillet_point(p: Part.Point) -> bool:
-        return p.z == -thickness and p.x == width
+    def fillet_point(p: Part.Vertex) -> bool:
+        return p.Z == -thickness and p.X == width
 
     h_edges = [
         edge
         for edge in shape.Edges
-        if fillet_point(edge.Vertexes[0].Point) and fillet_point(edge.Vertexes[1].Point)
+        if fillet_point(edge.Vertexes[0]) and fillet_point(edge.Vertexes[1])
     ]
     assert h_edges
     shape = shape.makeFillet(thickness.Value - 0.01, h_edges)
@@ -96,7 +96,7 @@ def from_angle(
     length: fc.Units.Quantity,
     width: fc.Units.Quantity,
     thickness: fc.Units.Quantity,
-    angle: fc.Units.Angle,
+    angle: fc.Units.Unit,
 ) -> Part.Shape:
     """Create a label shelf with given width and angle.
 
