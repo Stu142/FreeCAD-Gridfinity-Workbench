@@ -438,7 +438,7 @@ class LabelShelf:
             fc.Vector(
                 obj.Clearance + obj.WallThickness - obj.xLocationOffset,
                 obj.Clearance + obj.WallThickness - obj.yLocationOffset,
-                -obj.LabelShelfStackingOffset if obj.StackingLip else zeromm,
+                -obj.LabelShelfStackingOffset if obj.StackingLip else 0,
             ),
         )
 

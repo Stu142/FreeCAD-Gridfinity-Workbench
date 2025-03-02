@@ -18,6 +18,9 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 
+unitmm = fc.Units.Quantity("1 mm")
+
+
 def new_object(name: str) -> fc.DocumentObject:
     """Create a new FreeCAD object.
 

@@ -118,18 +118,16 @@ class CustomBin(FoundationGridfinity):
             "python gridfinity object",
         )
         self.bintype = "standard"
-        self.features = [
-            CustomShapeLayout(obj, baseplate_default=False),
-            BinSolidMidSection(
-                obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
-            ),
-            BlankBinRecessedTop(obj),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
-            BinBaseValues(obj),
-        ]
+        self.custom_shape_layout = CustomShapeLayout(obj, baseplate_default=False)
+        self.bin_solid_mid_section = BinSolidMidSection(
+            obj,
+            default_height_units=const.HEIGHT_UNITS,
+            default_wall_thickness=const.WALL_THICKNESS,
+        )
+        self.blank_bin_recessed_top = BlankBinRecessedTop(obj)
+        self.stacking_lip = StackingLip(obj, stacking_lip_default=const.STACKING_LIP)
+        self.bin_bottom_holes = BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES)
+        self.bin_base_values = BinBaseValues(obj)
 
         obj.Proxy = self
 
@@ -160,7 +158,7 @@ class CustomBin(FoundationGridfinity):
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
         ## calculated values over
-        CustomShapeLayout.calc(self, obj)
+        self.custom_shape_layout.calc(obj)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
         fuse_total = solid_shape.cut(outside_trim)
@@ -184,12 +182,10 @@ class CustomBin(FoundationGridfinity):
             )
             fuse_total = fuse_total.cut(recessed_solid)
         if obj.ScrewHoles or obj.MagnetHoles:
-            holes = BinBottomHoles.make(self, obj, self.layout)
+            holes = self.bin_bottom_holes.make(obj, self.layout)
             fuse_total = Part.Shape.cut(fuse_total, holes)
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(
-                custom_shape_stacking_lip(obj, solid_shape, self.layout),
-            )
+            fuse_total = fuse_total.fuse(custom_shape_stacking_lip(obj, solid_shape, self.layout))
 
         return fuse_total
 
