@@ -6,11 +6,12 @@ from typing import Literal
 import FreeCAD as fc  # noqa: N813
 import Part
 
-from . import const, utils
+from . import const, label_shelf, utils
 
 unitmm = fc.Units.Quantity("1 mm")
 zeromm = fc.Units.Quantity("0 mm")
 
+ECO_USABLE_HEIGHT = 14
 SMALL_NUMBER = 0.01
 
 GridfinityLayout = list[list[bool]]
@@ -307,9 +308,7 @@ class LabelShelf:
             "LabelShelfStyle",
             "Gridfinity",
             "Choose to have the label shelf Off or a Standard or Overhang style",
-        )
-
-        obj.LabelShelfStyle = ["Off", "Standard", "Overhang"]
+        ).LabelShelfStyle = ["Off", "Standard", "Overhang"]
         obj.LabelShelfStyle = label_style_default
 
         obj.addProperty(
@@ -317,9 +316,7 @@ class LabelShelf:
             "LabelShelfPlacement",
             "Gridfinity",
             "Choose the Placement of the label shelf for each compartement",
-        )
-
-        obj.LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
+        ).LabelShelfPlacement = ["Center", "Full Width", "Left", "Right"]
 
         ## Gridfinity Non Standard Parameters
         obj.addProperty(
@@ -362,106 +359,90 @@ class LabelShelf:
 
     def make(self, obj: fc.DocumentObject, bintype: Literal["eco", "standard"]) -> Part.Shape:
         """Create label shelf."""
-        eco_usable_height = 14
         if (
             bintype == "eco"
-            and obj.TotalHeight < eco_usable_height
+            and obj.TotalHeight < ECO_USABLE_HEIGHT
             and obj.LabelShelfStyle != "Overhang"
         ):
             obj.LabelShelfStyle = "Overhang"
-            fc.Console.PrintWarning("\n")
-            fc.Console.PrintWarning(
-                "Label shelf style set to Overhand due to low bin height",
-            )
-
-        towall = obj.Clearance + obj.WallThickness
-        tolabelend = (
-            obj.Clearance
-            + obj.StackingLipTopChamfer
-            + obj.StackingLipTopLedge
-            + obj.StackingLipBottomChamfer
-            + obj.LabelShelfWidth
-        )
+            fc.Console.PrintWarning("Label shelf style set to Overhang due to low bin height\n")
 
         xdiv = obj.xDividers + 1
         ydiv = obj.yDividers + 1
         xcompwidth = (
             obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers
-        ) / (xdiv)
+        ) / xdiv
         ycompwidth = (
             obj.yTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.yDividers
-        ) / (ydiv)
+        ) / ydiv
 
-        stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
+        shelf_placement = (
+            obj.LabelShelfPlacement if obj.LabelShelfLength <= ycompwidth else "Full Width"
+        )
+
         shelf_angle = obj.LabelShelfAngle.Value
-        shelf_placement = obj.LabelShelfPlacement
-
         if obj.LabelShelfStyle == "Overhang":
             shelf_angle = 0
             shelf_placement = "Full Width"
 
-        # Calculate V4 Z coordinate by using an angle
-        side_a = abs(towall - tolabelend)
-        alpha = 90 - shelf_angle
-        side_c = side_a / math.sin(math.radians(alpha))
-        side_b = math.sqrt(-pow(side_a, 2) + pow(side_c, 2))
-        v4_z = -obj.LabelShelfVerticalThickness - side_b * unitmm
-
-        v = [
-            fc.Vector(towall, 0, stackingoffset),
-            fc.Vector(tolabelend, 0, stackingoffset),
-            fc.Vector(tolabelend, 0, -obj.LabelShelfVerticalThickness + stackingoffset),
-            fc.Vector(towall, 0, v4_z + stackingoffset),
-        ]
-
-        wire = utils.curve_to_wire(utils.loop(v))
-
-        face = Part.Face(wire)
-
-        label_shelf_height = obj.LabelShelfVerticalThickness + side_b * unitmm
-
-        if obj.LabelShelfLength > ycompwidth:
-            shelf_placement = "Full Width"
-
-        # Label placement specific code
+        length = obj.LabelShelfLength
         if shelf_placement == "Full Width":
-            funcfuse = _label_shelf_full_width(obj, face, xcompwidth, label_shelf_height)
+            ydiv = 1
+            length = obj.yTotalWidth - obj.WallThickness * 2
+
+        width = (
+            obj.StackingLipTopChamfer
+            + obj.StackingLipTopLedge
+            + obj.StackingLipBottomChamfer
+            + obj.LabelShelfWidth
+            - obj.WallThickness
+        )
+        assert width >= 0
+
+        thickness = obj.LabelShelfVerticalThickness
+        height = thickness + math.tan(math.radians(shelf_angle)) * width
+
+        funcfuse = label_shelf.from_dimensions(
+            length=length,
+            width=width,
+            thickness=thickness,
+            height=height,
+        )
+
+        if height > obj.UsableHeight:
+            boundingbox = Part.makeBox(width, length, height, fc.Vector(0, 0, -obj.UsableHeight))
+            funcfuse = funcfuse.common(boundingbox)
+
+        funcfuse = utils.copy_in_grid(
+            funcfuse,
+            x_count=xdiv,
+            y_count=ydiv,
+            x_offset=xcompwidth + obj.DividerThickness,
+            y_offset=ycompwidth + obj.DividerThickness,
+        )
+
         if shelf_placement == "Center":
-            funcfuse = _label_shelf_center(obj, xcompwidth, ycompwidth, face)
-        if shelf_placement == "Left":
-            funcfuse = _label_shelf_left(obj, xcompwidth, ycompwidth, face, label_shelf_height)
-        if shelf_placement == "Right":
-            funcfuse = _label_shelf_right(obj, xcompwidth, ycompwidth, face, label_shelf_height)
+            funcfuse.translate(fc.Vector(0, ycompwidth / 2 - obj.LabelShelfLength / 2))
+        elif shelf_placement == "Right":
+            funcfuse.translate(fc.Vector(0, ycompwidth - obj.LabelShelfLength))
 
-        funcfuse = _label_shelf_front_fillet(obj, funcfuse, stackingoffset)
+        funcfuse = label_shelf.outside_fillet(
+            funcfuse,
+            offset=0,
+            radius=obj.BinOuterRadius - obj.WallThickness,
+            height=height,
+            y_width=obj.Clearance + obj.yTotalWidth - obj.WallThickness,
+        )
 
-        if label_shelf_height > obj.UsableHeight:
-            ytranslate = obj.Clearance + obj.WallThickness
-            xtranslate = zeromm
-            bottomcutbox = Part.makeBox(
-                label_shelf_height,
-                obj.StackingLipTopChamfer
-                + obj.StackingLipTopLedge
-                + obj.StackingLipBottomChamfer
-                + obj.LabelShelfWidth
-                - obj.WallThickness,
-                obj.yTotalWidth,
-                fc.Vector(
-                    towall,
-                    0,
-                    -obj.UsableHeight - label_shelf_height + stackingoffset,
-                ),
-                fc.Vector(0, 1, 0),
-            )
+        funcfuse.translate(
+            fc.Vector(
+                obj.Clearance + obj.WallThickness - obj.xLocationOffset,
+                obj.Clearance + obj.WallThickness - obj.yLocationOffset,
+                -obj.LabelShelfStackingOffset if obj.StackingLip else zeromm,
+            ),
+        )
 
-            vec_list = []
-            for _ in range(xdiv):
-                vec_list.append(fc.Vector(xtranslate, ytranslate))
-                xtranslate += xcompwidth + obj.DividerThickness
-
-            funcfuse = funcfuse.cut(utils.copy_and_translate(bottomcutbox, vec_list))
-
-        return funcfuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
+        return funcfuse
 
 
 class Scoop:
@@ -834,7 +815,7 @@ class Compartments:
         ):
             obj.LabelShelfStyle = "Off"
             fc.Console.PrintWarning(
-                "Label Shelf turned off for less than full height x dividers",
+                "Label Shelf turned off for less than full height x dividers\n",
             )
         ## Compartment Generation
         face = Part.Face(bin_inside_shape)
@@ -1220,10 +1201,10 @@ class EcoCompartments:
 
         xtranslate, ytranslate = zeromm, zeromm
         vec_list = []
-        for x in range(obj.xMaxGrids):
+        for col in layout:
             ytranslate = zeromm
-            for y in range(obj.yMaxGrids):
-                if layout[x][y]:
+            for cell in col:
+                if cell:
                     vec_list.append(fc.Vector(xtranslate, ytranslate))
                 ytranslate += obj.yGridSize
             xtranslate += obj.xGridSize
@@ -1439,29 +1420,25 @@ def make_complex_bin_base(
     assembly = bottom_chamfer.multiFuse([vertical_section, top_chamfer])
 
     parts = []
+    feat_count = 0
 
-    for x in range(obj.xMaxGrids):
+    for col in layout:
         ytranslate = zeromm
-        for y in range(obj.yMaxGrids):
-            if layout[x][y]:
+        for cell in col:
+            if cell:
                 b = assembly.copy()
                 b.translate(fc.Vector(xtranslate, ytranslate))
-
-            if x == 0 and y == 0:
-                b1 = b
-            else:
-                parts.append(b)
+                feat_count += 1
+                if feat_count == 1:
+                    b1 = b
+                else:
+                    parts.append(b)
 
             ytranslate += obj.yGridSize
 
         xtranslate += obj.xGridSize
 
-    larger_than_single_grid = 2
-    fuse_total = (
-        b1
-        if obj.xMaxGrids < larger_than_single_grid and obj.yMaxGrids < larger_than_single_grid
-        else b1.multiFuse(parts)
-    )
+    fuse_total = b1 if feat_count == 1 else b1.multiFuse(parts)
 
     return fuse_total.translate(
         fc.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset),
@@ -1626,10 +1603,10 @@ class BinBottomHoles:
         )
         vec_list = []
         xtranslate = 0
-        for x in range(obj.xMaxGrids):
+        for col in layout:
             ytranslate = 0
-            for y in range(obj.yMaxGrids):
-                if layout[x][y]:
+            for cell in col:
+                if cell:
                     vec_list.append(fc.Vector(xtranslate, ytranslate))
                 ytranslate += obj.yGridSize.Value
             xtranslate += obj.xGridSize.Value
@@ -1638,6 +1615,73 @@ class BinBottomHoles:
             fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2),
         )
         return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
+
+
+def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:
+    """Create stacking lip profile wire."""
+    ## Calculated Values
+    obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
+
+    ## Stacking Lip Generation
+    st = [
+        fc.Vector(obj.Clearance, obj.yGridSize / 2, 0),
+        fc.Vector(
+            obj.Clearance,
+            obj.yGridSize / 2,
+            obj.StackingLipBottomChamfer
+            + obj.StackingLipVerticalSection
+            + obj.StackingLipTopChamfer,
+        ),
+        fc.Vector(
+            obj.Clearance + obj.StackingLipTopLedge,
+            obj.yGridSize / 2,
+            obj.StackingLipBottomChamfer
+            + obj.StackingLipVerticalSection
+            + obj.StackingLipTopChamfer,
+        ),
+        fc.Vector(
+            obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
+            obj.yGridSize / 2,
+            obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
+        ),
+        fc.Vector(
+            obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
+            obj.yGridSize / 2,
+            obj.StackingLipBottomChamfer,
+        ),
+        fc.Vector(
+            obj.Clearance
+            + obj.StackingLipTopLedge
+            + obj.StackingLipTopChamfer
+            + obj.StackingLipBottomChamfer,
+            obj.yGridSize / 2,
+            0,
+        ),
+        fc.Vector(
+            obj.Clearance
+            + obj.StackingLipTopLedge
+            + obj.StackingLipTopChamfer
+            + obj.StackingLipBottomChamfer,
+            obj.yGridSize / 2,
+            -obj.StackingLipVerticalSection,
+        ),
+        fc.Vector(
+            obj.Clearance + obj.WallThickness,
+            obj.yGridSize / 2,
+            -obj.StackingLipVerticalSection
+            - (
+                obj.StackingLipTopLedge
+                + obj.StackingLipTopChamfer
+                + obj.StackingLipBottomChamfer
+                - obj.WallThickness
+            ),
+        ),
+        fc.Vector(obj.Clearance + obj.WallThickness, obj.yGridSize / 2, 0),
+    ]
+
+    stacking_lip_profile = Part.Wire(Part.Shape(utils.loop(st)).Edges)
+
+    return stacking_lip_profile
 
 
 class StackingLip:
@@ -1708,70 +1752,7 @@ class StackingLip:
             Part.Shape: Stacking lip shape.
 
         """
-        ## Calculated Values
-        obj.StackingLipTopChamfer = (
-            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
-        )
-
-        ## Stacking Lip Generation
-        st = [
-            fc.Vector(obj.Clearance, obj.yGridSize / 2, 0),
-            fc.Vector(
-                obj.Clearance,
-                obj.yGridSize / 2,
-                obj.StackingLipBottomChamfer
-                + obj.StackingLipVerticalSection
-                + obj.StackingLipTopChamfer,
-            ),
-            fc.Vector(
-                obj.Clearance + obj.StackingLipTopLedge,
-                obj.yGridSize / 2,
-                obj.StackingLipBottomChamfer
-                + obj.StackingLipVerticalSection
-                + obj.StackingLipTopChamfer,
-            ),
-            fc.Vector(
-                obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
-                obj.yGridSize / 2,
-                obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
-            ),
-            fc.Vector(
-                obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
-                obj.yGridSize / 2,
-                obj.StackingLipBottomChamfer,
-            ),
-            fc.Vector(
-                obj.Clearance
-                + obj.StackingLipTopLedge
-                + obj.StackingLipTopChamfer
-                + obj.StackingLipBottomChamfer,
-                obj.yGridSize / 2,
-                0,
-            ),
-            fc.Vector(
-                obj.Clearance
-                + obj.StackingLipTopLedge
-                + obj.StackingLipTopChamfer
-                + obj.StackingLipBottomChamfer,
-                obj.yGridSize / 2,
-                -obj.StackingLipVerticalSection,
-            ),
-            fc.Vector(
-                obj.Clearance + obj.WallThickness,
-                obj.yGridSize / 2,
-                -obj.StackingLipVerticalSection
-                - (
-                    obj.StackingLipTopLedge
-                    + obj.StackingLipTopChamfer
-                    + obj.StackingLipBottomChamfer
-                    - obj.WallThickness
-                ),
-            ),
-            fc.Vector(obj.Clearance + obj.WallThickness, obj.yGridSize / 2, 0),
-        ]
-
-        wire = Part.Wire(Part.Shape(utils.loop(st)).Edges)
-
+        wire = _stacking_lip_profile(obj)
         stacking_lip = Part.Wire(bin_outside_shape).makePipe(wire)
         stacking_lip = Part.makeSolid(stacking_lip)
         stacking_lip = stacking_lip.translate(

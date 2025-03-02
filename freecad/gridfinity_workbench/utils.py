@@ -11,10 +11,35 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import FreeCAD as fc  # noqa:N813
+import FreeCADGui as fcg  # noqa: N813
 import Part
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+
+def new_object(name: str) -> fc.DocumentObject:
+    """Create a new FreeCAD object.
+
+    The object is attached to PartDesign body or Part group, if they are present.
+
+    """
+    if not fc.GuiUp:
+        return fc.ActiveDocument.addObject("Part::FeaturePython", name)
+
+    # borrowed from threaded profiles
+    body = fcg.ActiveDocument.ActiveView.getActiveObject("pdbody")
+    part = fcg.ActiveDocument.ActiveView.getActiveObject("part")
+
+    obj_type = "PartDesign::FeaturePython" if body else "Part::FeaturePython"
+    obj = fc.ActiveDocument.addObject(obj_type, name)
+
+    if body:
+        body.addObject(obj)
+    elif part:
+        part.Group += [obj]
+
+    return obj
 
 
 def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Shape:
@@ -30,7 +55,6 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
 
     Raises:
         ValueError: List is empty.
-        RuntimeError: Nothing copied.
 
     Returns:
         Part.Shape: Shape consting of the copies in the locations specified by vec_list.
@@ -38,17 +62,24 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
     """
     if not vec_list:
         raise ValueError("Vector list is empty")
+    return multi_fuse([shape.translated(vec) for vec in vec_list])
 
-    final_shape: Part.Shape | None = None
-    for vec in vec_list:
-        tmp = shape.copy()
-        tmp = tmp.translate(vec)
-        final_shape = tmp if final_shape is None else final_shape.fuse(tmp)
 
-    if final_shape is None:
-        raise RuntimeError("Nothing has been copied")
-
-    return final_shape
+def copy_in_grid(
+    shape: Part.Shape,
+    *,
+    x_count: int,
+    y_count: int,
+    x_offset: float,
+    y_offset: float,
+) -> Part.Shape:
+    """Copy a shape in a grid layout."""
+    shapes = [
+        shape.translated(fc.Vector(x * x_offset * unitmm, y * y_offset * unitmm))
+        for x in range(x_count)
+        for y in range(y_count)
+    ]
+    return multi_fuse(shapes)
 
 
 def curve_to_wire(list_of_items: Sequence[Part.TrimmedCurve]) -> Part.Wire:
@@ -327,9 +358,16 @@ def rounded_l_extrude(
 
 
 def multi_fuse(lst: list[Part.Shape]) -> Part.Shape:
-    """Fuses all shapes in the list into a single shape."""
+    """Fuses all shapes in the list into a single shape.
+
+    Raises `ValueError` if the list is empty. If there is only one shape on the list, returns
+    a reference to that shape. Otherwise returns a new shape that is a fusion of all shapes from
+    the list.
+    """
     if not lst:
         raise ValueError("The list is empty")
+    if len(lst) == 1:
+        return lst[0]
     return lst[0].multiFuse(lst[1:])
 
 
