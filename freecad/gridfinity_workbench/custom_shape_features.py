@@ -109,7 +109,7 @@ def vertical_edge_fillet(
 
 
 def get_largest_top_wire(solid_shape: Part.Shape, zheight: float) -> Part.Wire:
-    """Fillet vertical Edges of input shape."""
+    """Return the largest wire of the top face of a solid shape."""
     solid_shape = solid_shape.translate(fc.Vector(0, 0, zheight))
     b_wires = []
     b_wire_size = []
@@ -132,12 +132,14 @@ def custom_shape_stacking_lip(
     solid_shape: Part.Shape,
     layout: GridfinityLayout,
 ) -> Part.Wire:
-    """Fillet vertical Edges of input shape."""
-    trim = custom_shape_trim(obj, layout, obj.Clearance.Value, obj.Clearance.Value)
-    solid_cut = solid_shape.cut(trim)
-    solid_cut = solid_cut.removeSplitter()
-    solid_rounded = vertical_edge_fillet(solid_cut, obj.BinOuterRadius.Value)
-    bin_outside_shape = get_largest_top_wire(solid_rounded, obj.Clearance.Value)
+    """Create Custom Stacking Lip."""
+    bin_outside_shape = get_object_shape(
+        obj,
+        solid_shape,
+        layout,
+        obj.Clearance.Value,
+        obj.Clearance.Value,
+        )
 
     for x in range(len(layout)):
         for y in range(len(layout[x])):
@@ -158,3 +160,49 @@ def custom_shape_stacking_lip(
     stacking_lip = Part.makeSolid(stacking_lip)
 
     return stacking_lip
+
+def get_object_shape(
+    obj: fc.DocumentObject,
+    solid_shape: Part.Shape,
+    layout: GridfinityLayout,
+    xoffset: float,
+    yoffset: float,
+    ) -> Part.Wire:
+    """Return wire of object shape."""
+    trim = custom_shape_trim(obj, layout, xoffset, yoffset)
+    solid_cut = solid_shape.cut(trim)
+    solid_cut = solid_cut.removeSplitter()
+    solid_rounded = vertical_edge_fillet(solid_cut, obj.BinOuterRadius.Value)
+    object_shape_wire = get_largest_top_wire(solid_rounded, 0)
+
+    return object_shape_wire
+
+def clean_up_layout(layout: GridfinityLayout)-> None:
+    """Remove empty rows and colums from the layout."""
+    layout = [row for row in layout if not all(not a for a in row)]
+    layout = [list(i) for i in zip(*layout)]
+    layout = [row for row in layout if not all(not a for a in row)]
+    layout = [list(i) for i in zip(*layout)]
+
+    return layout
+
+def cut_outside_shape(
+    obj: fc.DocumentObject,
+    bin_outside_shape: Part.Wire,
+    )-> Part.Solid:
+    """Return solid outer boundry of shape to cut away objects protruding from bin."""
+    overall_rectangle = utils.rounded_rectangle_extrude(
+        obj.xTotalWidth.Value + obj.Clearance.Value *2,
+        obj.yTotalWidth.Value + obj.Clearance.Value *2,
+        -obj.TotalHeight,
+        obj.TotalHeight,
+        0.01).translate(fc.Vector(
+            obj.xTotalWidth / 2 + obj.Clearance,
+            obj.yTotalWidth / 2 + obj.Clearance,
+            ))
+    face = Part.Face(bin_outside_shape)
+    object_shape_extrude = face.extrude(fc.Vector(0, 0, -obj.TotalHeight))
+    perimeter_negative = overall_rectangle.cut(object_shape_extrude)
+
+    return perimeter_negative
+

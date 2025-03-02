@@ -19,6 +19,9 @@ from .custom_shape_features import (
     custom_shape_stacking_lip,
     custom_shape_trim,
     vertical_edge_fillet,
+    get_object_shape,
+    clean_up_layout,
+    cut_outside_shape,
 )
 from .feature_construction import (
     BinBaseValues,
@@ -827,7 +830,7 @@ class CustomBlankBin(FoundationGridfinity):
 
     def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
         super().__init__(obj)
-        self.layout = layout
+        self.layout = clean_up_layout(layout)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -916,7 +919,7 @@ class CustomBinBase(FoundationGridfinity):
 
     def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
         super().__init__(obj)
-        self.layout = layout
+        self.layout = clean_up_layout(layout)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -1005,7 +1008,7 @@ class CustomEcoBin(FoundationGridfinity):
 
     def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
         super().__init__(obj)
-        self.layout = layout
+        self.layout = clean_up_layout(layout)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -1094,7 +1097,7 @@ class CustomStorageBin(FoundationGridfinity):
 
     def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
         super().__init__(obj)
-        self.layout = layout
+        self.layout = clean_up_layout(layout)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -1114,6 +1117,9 @@ class CustomStorageBin(FoundationGridfinity):
             StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
             BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
             BinBaseValues(obj),
+            Compartments(obj, x_div_default=0, y_div_default=0),
+            LabelShelf(obj, label_style_default="Off"),
+            Scoop(obj, scoop_default=False),
         ]
 
         obj.Proxy = self
@@ -1145,29 +1151,33 @@ class CustomStorageBin(FoundationGridfinity):
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
         ## calculated values over
+
         CustomShapeLayout.calc(self, obj)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
+
+        bin_outside_shape = get_object_shape(
+            obj,
+            solid_shape,
+            self.layout,
+            obj.Clearance.Value,
+            obj.Clearance.Value,
+            )
+
+        bin_inside_shape = get_object_shape(
+            obj,
+            solid_shape,
+            self.layout,
+            obj.WallThickness.Value,
+            obj.WallThickness.Value,
+            )
+
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
         fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
         fuse_total = fuse_total.fuse(make_complex_bin_base(obj, self.layout))
+        fuse_total = fuse_total.cut(Compartments.make(self, obj, bin_inside_shape))
 
-        if obj.RecessedTopDepth > 0:
-            recessed_solid = custom_shape_solid(obj, self.layout, obj.RecessedTopDepth)
-            recessed_outside_trim = custom_shape_trim(
-                obj,
-                self.layout,
-                obj.Clearance.Value + obj.WallThickness.Value,
-                obj.Clearance.Value + obj.WallThickness.Value,
-            )
-            recessed_solid = recessed_solid.cut(recessed_outside_trim)
-            recessed_solid = recessed_solid.removeSplitter()
-            recessed_solid = vertical_edge_fillet(
-                recessed_solid,
-                obj.BinOuterRadius - obj.WallThickness,
-            )
-            fuse_total = fuse_total.cut(recessed_solid)
         if obj.ScrewHoles or obj.MagnetHoles:
             holes = BinBottomHoles.make(self, obj, self.layout)
             fuse_total = Part.Shape.cut(fuse_total, holes)
@@ -1175,15 +1185,26 @@ class CustomStorageBin(FoundationGridfinity):
             fuse_total = fuse_total.fuse(
                 custom_shape_stacking_lip(obj, solid_shape, self.layout),
             )
+        outside_bin_solid = cut_outside_shape(obj, bin_outside_shape)
 
-        return fuse_total
+        if obj.LabelShelfStyle != "Off":
+            label_shelf = LabelShelf.make(self, obj)
+            label_shelf = label_shelf.cut(outside_bin_solid)
+            fuse_total = fuse_total.fuse(label_shelf)
+
+        if obj.Scoop:
+            scoop = Scoop.make(self, obj)
+            scoop = scoop.cut(outside_bin_solid)
+            fuse_total = fuse_total.fuse(scoop)
+
+        return fuse_total.removeSplitter()
 
 class CustomBaseplate(FoundationGridfinity):
     """Gridfinity CustomBaseplate object."""
 
     def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
         super().__init__(obj)
-        self.layout = layout
+        self.layout = clean_up_layout(layout)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -1271,7 +1292,7 @@ class CustomMagnetBaseplate(FoundationGridfinity):
 
     def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
         super().__init__(obj)
-        self.layout = layout
+        self.layout = clean_up_layout(layout)
 
         obj.addProperty(
             "App::PropertyPythonObject",
@@ -1359,7 +1380,7 @@ class CustomScrewTogetherBaseplate(FoundationGridfinity):
 
     def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
         super().__init__(obj)
-        self.layout = layout
+        self.layout = clean_up_layout(layout)
 
         obj.addProperty(
             "App::PropertyPythonObject",
