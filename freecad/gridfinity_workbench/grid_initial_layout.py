@@ -292,18 +292,19 @@ class CustomShapeLayout:
         ).Baseplate = baseplate_default
         obj.setEditorMode("Baseplate", 2)
 
-    def calc(self, obj: fc.DocumentObject) -> None:
+    def calc(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
         """Calculate values for custom shape.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object
+            layout (list[list[bool]]): Layout of the gridfinity grid.
 
         """
         x_grid_pos = []
         y_max_pos = []
         y_min_pos = []
 
-        for i, col in enumerate(self.layout):
+        for i, col in enumerate(layout):
             y_grid_pos = [i for i, y in enumerate(col) if y]
             if y_grid_pos:
                 y_min_pos.append(min(y_grid_pos))

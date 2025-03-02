@@ -158,7 +158,7 @@ class CustomBin(FoundationGridfinity):
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
         ## calculated values over
-        self.custom_shape_layout.calc(obj)
+        self.custom_shape_layout.calc(obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
         fuse_total = solid_shape.cut(outside_trim)
