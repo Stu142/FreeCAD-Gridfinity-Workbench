@@ -5,16 +5,15 @@ Contains command objects representing what should happen on a button press.
 
 # ruff: noqa: D101, D107
 
-import re
 import math
+import re
 from pathlib import Path
 
 import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
 import Part
 
-from . import const, label_shelf
-from . import custom_shape, utils
+from . import const, custom_shape, label_shelf, utils
 from .features import (
     Baseplate,
     BinBase,
@@ -266,10 +265,10 @@ class AttachLabelShelf(BaseCommand):
         height = max([p.z for p in points])
         return [p for p in points if p.z > height - 1e-4]
 
-    def IsActive(self) -> bool:  # noqa: N802
-        return len(self._get_top_points()) == 2
+    def IsActive(self) -> bool:  # noqa: D102, N802
+        return len(self._get_top_points()) == 2  # noqa: PLR2004
 
-    def Activated(self) -> None:  # noqa: N802
+    def Activated(self) -> None:  # noqa: D102, N802
         selection = fcg.Selection.getSelectionEx()
         face: Part.Face = selection[0].SubObjects[0]
 
@@ -295,7 +294,7 @@ class AttachLabelShelf(BaseCommand):
 
         Part.show(shape, "LabelShelf")
 
-    def GetResources(self) -> dict[str, str]:  # noqa: N802
+    def GetResources(self) -> dict[str, str]:  # noqa: D102, N802
         return {
             "Pixmap": str(ICONDIR / "BinBlank.svg"),
             "MenuText": "Attach label shelf",
