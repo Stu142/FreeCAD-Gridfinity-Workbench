@@ -499,21 +499,8 @@ class Compartments:
             1,
         )
 
-    def make(self, obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
-        """Create compartment cutout objects.
-
-        Args:
-            obj (FreeCAD.DocumentObject): Document object.
-            bin_inside_shape (Part.Wire): Profile of bin inside wall
-
-        Returns:
-            Part.Shape: Compartments cutout shape.
-
-        """
-        ## Calculated Parameters
-        obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
-
-        ## Error Checks
+    def error_check(self, obj: fc.DocumentObject)-> None:
+        """Check object perameters to ensure possible divider generation."""
         divmin = (
             obj.HeightUnitValue
             + obj.InsideFilletRadius
@@ -543,6 +530,22 @@ class Compartments:
             fc.Console.PrintWarning(
                 "Label Shelf turned off for less than full height x dividers\n",
             )
+
+    def make(self, obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
+        """Create compartment cutout objects.
+
+        Args:
+            obj (FreeCAD.DocumentObject): Document object.
+            bin_inside_shape (Part.Wire): Profile of bin inside wall
+
+        Returns:
+            Part.Shape: Compartments cutout shape.
+
+        """
+        ## Calculated Parameters
+        obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
+
+        Compartments.error_check(self, obj)
         ## Compartment Generation
         face = Part.Face(bin_inside_shape)
 
@@ -819,14 +822,14 @@ class EcoCompartments:
         self,
         obj: fc.DocumentObject,
         layout: GridfinityLayout,
-        bin_inside_shape: Part.Wire,
+        bin_inside_solid: Part.Solid,
     ) -> Part.Shape:
         """Create eco bin cutouts.
 
         Args:
             obj (FreeCAD.DocumentObject): Document object.
             layout (GridfinityLayout): 2 dimentional list of feature locations.
-            bin_inside_shape (Part.Wire): Profile of bin inside wall
+            bin_inside_solid (Part.Solid): Profile of bin inside wall
 
         Returns:
             Part.Shape: Eco bin cutout shape.
@@ -840,12 +843,12 @@ class EcoCompartments:
         _eco_error_check(obj)
 
         ## Eco Compartement Generation
-        face = Part.Face(bin_inside_shape)
+        #face = Part.Face(bin_inside_shape)
 
-        func_fuse = face.extrude(
-            fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness),
-        )
-
+        #func_fuse = face.extrude(
+            #fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness),
+        #)
+        func_fuse = bin_inside_solid
         base_offset = obj.BaseWallThickness * math.tan(math.pi / 8)
 
         x_bt_cmf_width = (

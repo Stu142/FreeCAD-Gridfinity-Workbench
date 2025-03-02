@@ -188,7 +188,7 @@ def clean_up_layout(layout: GridfinityLayout)-> None:
 
 def cut_outside_shape(
     obj: fc.DocumentObject,
-    bin_outside_shape: Part.Wire,
+    bin_outside_solid: Part.Solid,
     )-> Part.Solid:
     """Return solid outer boundry of shape to cut away objects protruding from bin."""
     overall_rectangle = utils.rounded_rectangle_extrude(
@@ -200,9 +200,7 @@ def cut_outside_shape(
             obj.xTotalWidth / 2 + obj.Clearance,
             obj.yTotalWidth / 2 + obj.Clearance,
             ))
-    face = Part.Face(bin_outside_shape)
-    object_shape_extrude = face.extrude(fc.Vector(0, 0, -obj.TotalHeight))
-    perimeter_negative = overall_rectangle.cut(object_shape_extrude)
+    perimeter_negative = overall_rectangle.cut(bin_outside_solid)
 
     return perimeter_negative
 

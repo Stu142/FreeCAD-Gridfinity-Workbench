@@ -34,6 +34,9 @@ from .feature_construction import (
     Scoop,
     StackingLip,
     make_complex_bin_base,
+    _make_compartments_no_deviders,
+    _make_compartments_with_deviders,
+    _eco_error_check,
 )
 from .grid_initial_layout import (
     CustomShapeLayout,
@@ -430,7 +433,12 @@ class EcoBin(FoundationGridfinity):
 
         fuse_total = self.bin_solid_mid_section.make(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(make_complex_bin_base(obj, layout))
-        fuse_total = fuse_total.cut(self.eco_compartments.make(obj, layout, bin_inside_shape))
+
+        inside_solid_face = Part.Face(bin_inside_shape)
+        inside_solid = inside_solid_face.extrude(
+            fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness),
+        )
+        fuse_total = fuse_total.cut(self.eco_compartments.make(obj, layout, inside_solid))
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(self.bin_bottom_holes.make(obj, layout))
@@ -861,7 +869,7 @@ class CustomBlankBin(FoundationGridfinity):
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
         ## calculated values over
-        CustomShapeLayout.calc(self, obj)
+        CustomShapeLayout.calc(self, obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
         fuse_total = solid_shape.cut(outside_trim)
@@ -950,7 +958,7 @@ class CustomBinBase(FoundationGridfinity):
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
         ## calculated values over
-        CustomShapeLayout.calc(self, obj)
+        CustomShapeLayout.calc(self, obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
         fuse_total = solid_shape.cut(outside_trim)
@@ -996,19 +1004,20 @@ class CustomEcoBin(FoundationGridfinity):
             "base",
             "python gridfinity object",
         )
-        self.bintype = "standard"
-        self.features = [
-            CustomShapeLayout(obj, baseplate_default=False),
-            BinSolidMidSection(
-                obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
-            ),
-            BlankBinRecessedTop(obj),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
-            BinBaseValues(obj),
-        ]
+        self.bintype = "eco"
+
+        self.custom_shape_layout = CustomShapeLayout(obj, baseplate_default=False)
+        self.bin_solid_mid_section = BinSolidMidSection(
+            obj,
+            default_height_units=const.HEIGHT_UNITS,
+            default_wall_thickness=const.WALL_THICKNESS,
+        )
+        self.blank_bin_recessed_top = BlankBinRecessedTop(obj)
+        self.stacking_lip = StackingLip(obj, stacking_lip_default=const.STACKING_LIP)
+        self.bin_bottom_holes = BinBottomHoles(obj, magnet_holes_default=False)
+        self.bin_base_values = BinBaseValues(obj)
+        self.label_shelf = LabelShelf(obj, label_style_default="Standard")
+        self.eco_compartments = EcoCompartments(obj)
 
         obj.Proxy = self
 
@@ -1025,7 +1034,6 @@ class CustomEcoBin(FoundationGridfinity):
         ## calculated here
         if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
-
         else:
             obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
 
@@ -1039,7 +1047,7 @@ class CustomEcoBin(FoundationGridfinity):
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
         ## calculated values over
-        CustomShapeLayout.calc(self, obj)
+        self.custom_shape_layout.calc(obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
         fuse_total = solid_shape.cut(outside_trim)
@@ -1047,30 +1055,54 @@ class CustomEcoBin(FoundationGridfinity):
         fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
         fuse_total = fuse_total.fuse(make_complex_bin_base(obj, self.layout))
 
-        if obj.RecessedTopDepth > 0:
-            recessed_solid = custom_shape_solid(obj, self.layout, obj.RecessedTopDepth)
-            recessed_outside_trim = custom_shape_trim(
-                obj,
-                self.layout,
-                obj.Clearance.Value + obj.WallThickness.Value,
-                obj.Clearance.Value + obj.WallThickness.Value,
+        _eco_error_check(obj)
+        compartments_solid = custom_shape_solid(
+            obj,
+            self.layout,
+            obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness,
             )
-            recessed_solid = recessed_solid.cut(recessed_outside_trim)
-            recessed_solid = recessed_solid.removeSplitter()
-            recessed_solid = vertical_edge_fillet(
-                recessed_solid,
-                obj.BinOuterRadius - obj.WallThickness,
+        compartment_trim = custom_shape_trim(
+            obj,
+            self.layout,
+            obj.Clearance.Value + obj.WallThickness.Value,
+            obj.Clearance.Value + obj.WallThickness.Value,
             )
-            fuse_total = fuse_total.cut(recessed_solid)
+        compartments_solid = compartments_solid.cut(compartment_trim)
+        compartments_solid = compartments_solid.removeSplitter()
+        compartments_solid = vertical_edge_fillet(
+            compartments_solid,
+            obj.BinOuterRadius - obj.WallThickness,
+            )
+        inside_wall_solid_full_height = custom_shape_solid(
+            obj,
+            self.layout,
+            obj.TotalHeight,
+            )
+        inside_wall_solid_full_height = inside_wall_solid_full_height.cut(compartment_trim)
+        inside_wall_solid_full_height = inside_wall_solid_full_height.removeSplitter()
+        inside_wall_solid_full_height = vertical_edge_fillet(
+            inside_wall_solid_full_height,
+            obj.BinOuterRadius - obj.WallThickness,
+            )
+        compartments = self.eco_compartments.make(obj, self.layout, compartments_solid)
+        inside_wall_negative = cut_outside_shape(obj, inside_wall_solid_full_height)
+        compartments = compartments.cut(inside_wall_negative)
+        fuse_total = fuse_total.cut(compartments)
+
+        if obj.LabelShelfStyle != "Off":
+            label_shelf = LabelShelf.make(self, obj, "eco")
+            label_shelf = label_shelf.cut(inside_wall_negative)
+            fuse_total = fuse_total.fuse(label_shelf)
+
         if obj.ScrewHoles or obj.MagnetHoles:
-            holes = BinBottomHoles.make(self, obj, self.layout)
+            holes = self.bin_bottom_holes.make(obj, self.layout)
             fuse_total = Part.Shape.cut(fuse_total, holes)
         if obj.StackingLip:
             fuse_total = fuse_total.fuse(
                 custom_shape_stacking_lip(obj, solid_shape, self.layout),
             )
 
-        return fuse_total
+        return fuse_total.removeSplitter()
 
 class CustomStorageBin(FoundationGridfinity):
     """Gridfinity CustomStorageBin object."""
@@ -1130,33 +1162,36 @@ class CustomStorageBin(FoundationGridfinity):
         obj.StackingLipTopChamfer = (
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
+        obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
         ## calculated values over
 
-        CustomShapeLayout.calc(self, obj)
+        CustomShapeLayout.calc(self, obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
-
-        bin_outside_shape = get_object_shape(
-            obj,
-            solid_shape,
-            self.layout,
-            obj.Clearance.Value,
-            obj.Clearance.Value,
-            )
-
-        bin_inside_shape = get_object_shape(
-            obj,
-            solid_shape,
-            self.layout,
-            obj.WallThickness.Value,
-            obj.WallThickness.Value,
-            )
-
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
         fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
         fuse_total = fuse_total.fuse(make_complex_bin_base(obj, self.layout))
-        fuse_total = fuse_total.cut(Compartments.make(self, obj, bin_inside_shape))
+
+        Compartments.error_check(self, obj)
+        compartments_solid = custom_shape_solid(obj, self.layout, obj.UsableHeight)
+        compartment_trim = custom_shape_trim(
+            obj,
+            self.layout,
+            obj.Clearance.Value + obj.WallThickness.Value,
+            obj.Clearance.Value + obj.WallThickness.Value,
+            )
+        compartments_solid = compartments_solid.cut(compartment_trim)
+        compartments_solid = compartments_solid.removeSplitter()
+        compartments_solid = vertical_edge_fillet(
+            compartments_solid,
+            obj.BinOuterRadius - obj.WallThickness,
+            )
+        if obj.xDividers == 0 and obj.yDividers == 0:
+            compartments = _make_compartments_no_deviders(obj, compartments_solid)
+        else:
+            compartments = _make_compartments_with_deviders(obj, compartments_solid)
+        fuse_total = fuse_total.cut(compartments)
 
         if obj.ScrewHoles or obj.MagnetHoles:
             holes = BinBottomHoles.make(self, obj, self.layout)
@@ -1165,10 +1200,10 @@ class CustomStorageBin(FoundationGridfinity):
             fuse_total = fuse_total.fuse(
                 custom_shape_stacking_lip(obj, solid_shape, self.layout),
             )
-        outside_bin_solid = cut_outside_shape(obj, bin_outside_shape)
+        outside_bin_solid = cut_outside_shape(obj, compartments_solid)
 
         if obj.LabelShelfStyle != "Off":
-            label_shelf = LabelShelf.make(self, obj)
+            label_shelf = LabelShelf.make(self, obj, "standard")
             label_shelf = label_shelf.cut(outside_bin_solid)
             fuse_total = fuse_total.fuse(label_shelf)
 
@@ -1193,18 +1228,10 @@ class CustomBaseplate(FoundationGridfinity):
             "python gridfinity object",
         )
         self.bintype = "standard"
-        self.features = [
-            CustomShapeLayout(obj, baseplate_default=False),
-            BinSolidMidSection(
-                obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
-            ),
-            BlankBinRecessedTop(obj),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
-            BinBaseValues(obj),
-        ]
+
+        self.custom_shape_layout = CustomShapeLayout(obj, baseplate_default=True)
+        self.baseplate_solid_shape = BaseplateSolidShape(obj)
+        self.baseplate_base_values = BaseplateBaseValues(obj)
 
         obj.Proxy = self
 
@@ -1219,54 +1246,22 @@ class CustomBaseplate(FoundationGridfinity):
 
         """
         ## calculated here
-        if obj.NonStandardHeight:
-            obj.TotalHeight = obj.CustomHeight
+        self.baseplate_base_values.make(obj)
+        obj.TotalHeight = obj.BaseProfileHeight
 
-        else:
-            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
-
-        obj.BaseProfileHeight = (
-            obj.BaseProfileBottomChamfer
-            + obj.BaseProfileVerticalSection
-            + obj.BaseProfileTopChamfer
-        )
-
-        obj.StackingLipTopChamfer = (
-            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
-        )
         ## calculated values over
-        CustomShapeLayout.calc(self, obj)
-        solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
-        outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
-        fuse_total = solid_shape.cut(outside_trim)
-        fuse_total = fuse_total.removeSplitter()
-        fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
-        fuse_total = fuse_total.fuse(make_complex_bin_base(obj, self.layout))
+        CustomShapeLayout.calc(self, obj, self.layout)
+        solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight,
+                                         ).translate(fc.Vector(0, 0, obj.TotalHeight))
+        solid_shape = solid_shape.removeSplitter()
+        solid_shape = vertical_edge_fillet(solid_shape, obj.BinOuterRadius)
 
-        if obj.RecessedTopDepth > 0:
-            recessed_solid = custom_shape_solid(obj, self.layout, obj.RecessedTopDepth)
-            recessed_outside_trim = custom_shape_trim(
-                obj,
-                self.layout,
-                obj.Clearance.Value + obj.WallThickness.Value,
-                obj.Clearance.Value + obj.WallThickness.Value,
-            )
-            recessed_solid = recessed_solid.cut(recessed_outside_trim)
-            recessed_solid = recessed_solid.removeSplitter()
-            recessed_solid = vertical_edge_fillet(
-                recessed_solid,
-                obj.BinOuterRadius - obj.WallThickness,
-            )
-            fuse_total = fuse_total.cut(recessed_solid)
-        if obj.ScrewHoles or obj.MagnetHoles:
-            holes = BinBottomHoles.make(self, obj, self.layout)
-            fuse_total = Part.Shape.cut(fuse_total, holes)
-        if obj.StackingLip:
-            fuse_total = fuse_total.fuse(
-                custom_shape_stacking_lip(obj, solid_shape, self.layout),
-            )
+        fuse_total = make_complex_bin_base(obj, self.layout)
+        fuse_total.translate(fc.Vector(0, 0, obj.TotalHeight))
+        fuse_total = solid_shape.cut(fuse_total)
 
         return fuse_total
+
 class CustomMagnetBaseplate(FoundationGridfinity):
     """Gridfinity CustomMagnetBaseplate object."""
 
@@ -1323,7 +1318,7 @@ class CustomMagnetBaseplate(FoundationGridfinity):
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
         ## calculated values over
-        CustomShapeLayout.calc(self, obj)
+        CustomShapeLayout.calc(self, obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
         fuse_total = solid_shape.cut(outside_trim)
@@ -1411,7 +1406,7 @@ class CustomScrewTogetherBaseplate(FoundationGridfinity):
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
         ## calculated values over
-        CustomShapeLayout.calc(self, obj)
+        CustomShapeLayout.calc(self, obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
         fuse_total = solid_shape.cut(outside_trim)
