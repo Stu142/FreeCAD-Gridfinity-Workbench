@@ -1,11 +1,12 @@
 """Feature modules contain bins an baseplate objects."""
 
+import math
 from abc import abstractmethod
 
 import FreeCAD as fc  # noqa: N813
 import Part
 
-from . import const, utils
+from . import const, label_shelf, utils
 from .baseplate_feature_construction import (
     BaseplateBaseValues,
     BaseplateCenterCut,
@@ -911,3 +912,66 @@ class LBinBlank(FoundationGridfinity):
             fuse_total = fuse_total.cut(BinBottomHoles.make(self, obj, layout))
 
         return fuse_total
+
+
+class StandaloneLabelShelf:
+    def __init__(self, obj: fc.DocumentObject, face: Part.Face) -> None:
+        obj.addProperty(
+            "App::PropertyString",
+            "version",
+            "version",
+            "Gridfinity Workbench Version",
+            1,
+        ).version = __version__
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "Width",
+            "GridfinityNonStandard",
+            "Width of the Label Shelf, how far it sticks out from the wall"
+            " <br> <br> default = 12 mm",
+        ).Width = const.LABEL_SHELF_WIDTH
+        obj.addProperty(
+            "App::PropertyLength",
+            "Length",
+            "GridfinityNonStandard",
+            "Length of the Label Shelf, how long it is <br> <br> default = 42 mm",
+        ).Length = const.LABEL_SHELF_LENGTH
+        obj.addProperty(
+            "App::PropertyAngle",
+            "Angle",
+            "GridfinityNonStandard",
+            "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
+        ).Angle = const.LABEL_SHELF_ANGLE
+
+        self.face = face
+
+        normal = self.face.normalAt(*self.face.Surface.parameter(self.face.CenterOfMass))
+        self.rotation = fc.Rotation(fc.Vector(1, 0, 0), normal)
+
+        points = [v.Point for v in self.face.Vertexes]
+        height = max([p.z for p in points])
+        [p1, p2] = [p for p in points if p.z > height - 1e-4]
+        self.translation = (p1 + p2) / 2
+
+        obj.Proxy = self
+
+    def execute(self, obj: Part.Feature) -> None:
+        shape = label_shelf.from_angle(
+            length=fc.Units.Quantity(obj.Length),
+            width=fc.Units.Quantity(obj.Width),
+            thickness=fc.Units.Quantity(const.LABEL_SHELF_VERTICAL_THICKNESS),
+            angle=fc.Units.Quantity(obj.Angle),
+            center=True,
+        )
+        shape.rotate(fc.Vector(0, 0, 0), self.rotation.Axis, math.degrees(self.rotation.Angle))
+        shape.translate(self.translation)
+        shape = shape.removeSplitter()  # hack to incorporate placement into the shape
+
+        obj.Shape = shape
+
+    def dumps(self) -> None:
+        return
+
+    def loads(self, state: tuple) -> None:  # noqa: ARG002
+        return

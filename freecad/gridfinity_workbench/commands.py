@@ -5,7 +5,6 @@ Contains command objects representing what should happen on a button press.
 
 # ruff: noqa: D101, D107
 
-import math
 import re
 from pathlib import Path
 
@@ -13,7 +12,7 @@ import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
 import Part
 
-from . import const, custom_shape, label_shelf, utils
+from . import custom_shape, utils
 from .features import (
     Baseplate,
     BinBase,
@@ -26,6 +25,7 @@ from .features import (
     PartsBin,
     ScrewTogetherBaseplate,
     SimpleStorageBin,
+    StandaloneLabelShelf,
 )
 
 ICONDIR = Path(__file__).parent / "icons"
@@ -269,30 +269,16 @@ class AttachLabelShelf(BaseCommand):
         return len(self._get_top_points()) == 2  # noqa: PLR2004
 
     def Activated(self) -> None:  # noqa: D102, N802
+        obj = utils.new_object("LabelShelf")
+        if fc.GuiUp:
+            ViewProviderGridfinity(obj.ViewObject, str(ICONDIR / "BinBlank.svg"))
+
         selection = fcg.Selection.getSelectionEx()
         face: Part.Face = selection[0].SubObjects[0]
 
-        # Construction
-        shape = label_shelf.from_angle(
-            length=fc.Units.Quantity(const.LABEL_SHELF_LENGTH),
-            width=fc.Units.Quantity(const.LABEL_SHELF_WIDTH),
-            thickness=fc.Units.Quantity(const.LABEL_SHELF_VERTICAL_THICKNESS),
-            angle=fc.Units.Quantity(const.LABEL_SHELF_ANGLE),
-        )
-        shape.translate(fc.Vector(0, -const.LABEL_SHELF_LENGTH / 2))
+        StandaloneLabelShelf(obj, face)
 
-        # Rotation
-        normal = face.normalAt(*face.Surface.parameter(face.CenterOfMass))
-        rotation = fc.Rotation(fc.Vector(1, 0, 0), normal)
-        shape.rotate(fc.Vector(0, 0, 0), rotation.Axis, math.degrees(rotation.Angle))
-
-        # Translation
-        points = [v.Point for v in face.Vertexes]
-        height = max([p.z for p in points])
-        [p1, p2] = [p for p in points if p.z > height - 1e-4]
-        shape.translate((p1 + p2) / 2)
-
-        Part.show(shape, "LabelShelf")
+        fc.ActiveDocument.recompute()
 
     def GetResources(self) -> dict[str, str]:  # noqa: D102, N802
         return {
