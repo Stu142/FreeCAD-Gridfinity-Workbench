@@ -34,11 +34,11 @@ PASCAL_CASE_REGEX = re.compile(r"(?<!^)(?=[A-Z])")
 class ViewProviderGridfinity:
     """Gridfinity workbench viewprovider."""
 
-    def __init__(self, obj: fcg.ViewProviderDocumentObject, icon_path: Path) -> None:
+    def __init__(self, obj: fcg.ViewProviderDocumentObject, icon_path: str) -> None:
         # Set this object to the proxy object of the actual view provider
         obj.Proxy = self
         self._check_attr()
-        self.icon_path = icon_path or ICONDIR / "gridfinity_workbench_icon.svg"
+        self.icon_path = icon_path or str(ICONDIR / "gridfinity_workbench_icon.svg")
 
     def _check_attr(self) -> None:
         """Check for missing attributes.
@@ -46,7 +46,7 @@ class ViewProviderGridfinity:
         Required to set icon_path when reopening after saving.
         """
         if not hasattr(self, "icon_path"):
-            self.icon_path = ICONDIR / "gridfinity_workbench_icon.svg"
+            self.icon_path = str(ICONDIR / "gridfinity_workbench_icon.svg")
 
     def attach(self, vobj: fcg.ViewProviderDocumentObject) -> None:
         """Attach viewproviderdocument object to self."""
@@ -55,7 +55,7 @@ class ViewProviderGridfinity:
     def getIcon(self) -> str:  # noqa: N802
         """Get icons path."""
         self._check_attr()
-        return str(self.icon_path)
+        return self.icon_path
 
     def dumps(self) -> dict:
         """Needed for JSON Serialization when saving a file containing gridfinity object."""
@@ -139,7 +139,7 @@ class CreateCommand(BaseCommand):
         obj = utils.new_object(self.name)
         if fc.GuiUp:
             view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
-            ViewProviderGridfinity(view_object, self.pixmap)
+            ViewProviderGridfinity(view_object, str(self.pixmap))
 
         self.gridfinity_function(obj)
 
@@ -245,7 +245,7 @@ class CreateCustomBin(BaseCommand):
         obj = utils.new_object(self.name)
         if fc.GuiUp:
             view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
-            ViewProviderGridfinity(view_object, self.pixmap)
+            ViewProviderGridfinity(view_object, str(self.pixmap))
 
         CustomBin(obj, layout)
 
