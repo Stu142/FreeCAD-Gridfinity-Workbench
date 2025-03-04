@@ -94,3 +94,5 @@ class GridfinityWorkbench(Workbench):
 
 
 fcg.addWorkbench(GridfinityWorkbench())
+
+fc.__unit_test__ += ["freecad.gridfinity_workbench.test_gridfinity"]
