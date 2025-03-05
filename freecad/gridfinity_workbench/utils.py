@@ -77,6 +77,11 @@ def copy_in_grid(
     y_offset: float,
 ) -> Part.Shape:
     """Copy a shape in a grid layout."""
+    if x_count <= 0:
+        raise ValueError("x_count should be > 0")
+    if y_count <= 0:
+        raise ValueError("y_count should be > 0")
+
     shapes = [
         shape.translated(fc.Vector(x * x_offset * unitmm, y * y_offset * unitmm))
         for x in range(x_count)
