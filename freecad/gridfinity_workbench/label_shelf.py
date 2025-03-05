@@ -68,7 +68,7 @@ def from_dimensions(
         center: If the origin should be placed in the center of top-back edge, or on its left end.
 
     """
-    yoffset = -length / 2 if center else 0
+    yoffset: fc.Units.Quantity = -length / 2 if center else 0 * unitmm
     v = [
         fc.Vector(0, yoffset, 0),
         fc.Vector(width, yoffset, 0),

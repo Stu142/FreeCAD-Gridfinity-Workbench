@@ -7,10 +7,10 @@ Contains command objects representing what should happen on a button press.
 
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
-import Part
 
 from . import custom_shape, utils
 from .features import (
@@ -27,6 +27,9 @@ from .features import (
     SimpleStorageBin,
     StandaloneLabelShelf,
 )
+
+if TYPE_CHECKING:
+    import Part
 
 ICONDIR = Path(__file__).parent / "icons"
 
@@ -273,12 +276,14 @@ class AttachLabelShelf(BaseCommand):
     def Activated(self) -> None:  # noqa: D102, N802
         obj = utils.new_object("LabelShelf")
         if fc.GuiUp:
-            ViewProviderGridfinity(obj.ViewObject, str(ICONDIR / "BinBlank.svg"))
+            view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
+            ViewProviderGridfinity(view_object, str(ICONDIR / "BinBlank.svg"))
 
         selection = fcg.Selection.getSelectionEx()
+        target_obj: fc.DocumentObject = selection[0].Object
         face: Part.Face = selection[0].SubObjects[0]
 
-        StandaloneLabelShelf(obj, face)
+        StandaloneLabelShelf(obj, target_obj, face)
 
         fc.ActiveDocument.recompute()
 

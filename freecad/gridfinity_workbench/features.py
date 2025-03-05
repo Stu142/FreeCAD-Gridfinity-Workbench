@@ -1,6 +1,5 @@
 """Feature modules contain bins an baseplate objects."""
 
-import math
 from abc import abstractmethod
 
 import FreeCAD as fc  # noqa: N813
@@ -797,7 +796,12 @@ class LBinBlank(FoundationGridfinity):
 
 
 class StandaloneLabelShelf:
-    def __init__(self, obj: fc.DocumentObject, face: Part.Face) -> None:
+    def __init__(
+        self,
+        obj: fc.DocumentObject,
+        target_obj: fc.DocumentObject,
+        face: Part.Face,
+    ) -> None:
         obj.addProperty(
             "App::PropertyString",
             "version",
@@ -826,17 +830,20 @@ class StandaloneLabelShelf:
             "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
         ).Angle = const.LABEL_SHELF_ANGLE
 
-        self.face = face
+        normal = face.normalAt(*face.Surface.parameter(face.CenterOfMass))
+        rotation = fc.Rotation(fc.Vector(1, 0, 0), normal)
 
-        normal = self.face.normalAt(*self.face.Surface.parameter(self.face.CenterOfMass))
-        self.rotation = fc.Rotation(fc.Vector(1, 0, 0), normal)
-
-        points = [v.Point for v in self.face.Vertexes]
+        points = [v.Point for v in face.Vertexes]
         height = max([p.z for p in points])
         [p1, p2] = [p for p in points if p.z > height - 1e-4]
-        self.translation = (p1 + p2) / 2
+        translation = (p1 + p2) / 2  # type: ignore[operator]
 
         obj.Proxy = self
+
+        obj.addExtension("Part::AttachExtensionPython")
+        obj.AttachmentSupport = target_obj
+        obj.MapMode = "ObjectXY"
+        obj.AttachmentOffset = fc.Placement(translation, rotation)
 
     def execute(self, obj: Part.Feature) -> None:
         shape = label_shelf.from_angle(
@@ -846,10 +853,8 @@ class StandaloneLabelShelf:
             angle=fc.Units.Quantity(obj.Angle),
             center=True,
         )
-        shape.rotate(fc.Vector(0, 0, 0), self.rotation.Axis, math.degrees(self.rotation.Angle))
-        shape.translate(self.translation)
-        shape = shape.removeSplitter()  # hack to incorporate placement into the shape
 
+        obj.positionBySupport()
         obj.Shape = shape
 
     def dumps(self) -> None:
