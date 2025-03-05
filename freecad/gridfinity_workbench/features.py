@@ -809,18 +809,17 @@ class CustomBlankBin(FoundationGridfinity):
             "python gridfinity object",
         )
         self.bintype = "standard"
-        self.features = [
-            CustomShapeLayout(obj, baseplate_default=False),
-            BinSolidMidSection(
-                obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
-            ),
-            BlankBinRecessedTop(obj),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
-            BinBaseValues(obj),
-        ]
+
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
+        feat.bin_solid_mid_section_properties(
+            obj,
+            default_height_units=const.HEIGHT_UNITS,
+            default_wall_thickness=const.WALL_THICKNESS,
+        )
+        feat.blank_bin_recessed_top_properties(obj)
+        feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP)
+        feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
+        feat.bin_base_values_properties(obj)
 
         obj.Proxy = self
 
@@ -851,13 +850,13 @@ class CustomBlankBin(FoundationGridfinity):
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
         ## calculated values over
-        CustomShapeLayout.calc(self, obj, self.layout)
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
         fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
-        fuse_total = fuse_total.fuse(make_complex_bin_base(obj, self.layout))
+        fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, self.layout))
 
         if obj.RecessedTopDepth > 0:
             recessed_solid = custom_shape_solid(obj, self.layout, obj.RecessedTopDepth)
@@ -875,7 +874,7 @@ class CustomBlankBin(FoundationGridfinity):
             )
             fuse_total = fuse_total.cut(recessed_solid)
         if obj.ScrewHoles or obj.MagnetHoles:
-            holes = BinBottomHoles.make(self, obj, self.layout)
+            holes = feat.make_bin_bottom_holes(obj, self.layout)
             fuse_total = Part.Shape.cut(fuse_total, holes)
         if obj.StackingLip:
             fuse_total = fuse_total.fuse(
@@ -898,18 +897,17 @@ class CustomBinBase(FoundationGridfinity):
             "python gridfinity object",
         )
         self.bintype = "standard"
-        self.features = [
-            CustomShapeLayout(obj, baseplate_default=False),
-            BinSolidMidSection(
-                obj,
-                default_height_units=1,
-                default_wall_thickness=const.WALL_THICKNESS,
-            ),
-            BlankBinRecessedTop(obj),
-            StackingLip(obj, stacking_lip_default=False),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
-            BinBaseValues(obj),
-        ]
+
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
+        feat.bin_solid_mid_section_properties(
+            obj,
+            default_height_units=1,
+            default_wall_thickness=const.WALL_THICKNESS,
+        )
+        feat.blank_bin_recessed_top_properties(obj)
+        feat.stacking_lip_properties(obj, stacking_lip_default=False)
+        feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
+        feat.bin_base_values_properties(obj)
 
         obj.Proxy = self
 
@@ -940,13 +938,13 @@ class CustomBinBase(FoundationGridfinity):
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
         ## calculated values over
-        CustomShapeLayout.calc(self, obj, self.layout)
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
         fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
-        fuse_total = fuse_total.fuse(make_complex_bin_base(obj, self.layout))
+        fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, self.layout))
 
         if obj.RecessedTopDepth > 0:
             recessed_solid = custom_shape_solid(obj, self.layout, obj.RecessedTopDepth)
@@ -964,7 +962,7 @@ class CustomBinBase(FoundationGridfinity):
             )
             fuse_total = fuse_total.cut(recessed_solid)
         if obj.ScrewHoles or obj.MagnetHoles:
-            holes = BinBottomHoles.make(self, obj, self.layout)
+            holes = feat.make_bin_bottom_holes(obj, self.layout)
             fuse_total = Part.Shape.cut(fuse_total, holes)
         if obj.StackingLip:
             fuse_total = fuse_total.fuse(
@@ -988,18 +986,17 @@ class CustomEcoBin(FoundationGridfinity):
         )
         self.bintype = "eco"
 
-        self.custom_shape_layout = CustomShapeLayout(obj, baseplate_default=False)
-        self.bin_solid_mid_section = BinSolidMidSection(
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
+        feat.bin_solid_mid_section_properties(
             obj,
             default_height_units=const.HEIGHT_UNITS,
             default_wall_thickness=const.WALL_THICKNESS,
         )
-        self.blank_bin_recessed_top = BlankBinRecessedTop(obj)
-        self.stacking_lip = StackingLip(obj, stacking_lip_default=const.STACKING_LIP)
-        self.bin_bottom_holes = BinBottomHoles(obj, magnet_holes_default=False)
-        self.bin_base_values = BinBaseValues(obj)
-        self.label_shelf = LabelShelf(obj, label_style_default="Standard")
-        self.eco_compartments = EcoCompartments(obj)
+        feat.make_stacking_lip(obj, stacking_lip_default=const.STACKING_LIP)
+        feat.make_bin_bottom_holes(obj, magnet_holes_default=False)
+        feat.make_bin_base_values(obj)
+        feat.make_label_shelf(obj, label_style_default="Standard")
+        feat.make_eco_compartments(obj)
 
         obj.Proxy = self
 
@@ -1035,9 +1032,9 @@ class CustomEcoBin(FoundationGridfinity):
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
         fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
-        fuse_total = fuse_total.fuse(make_complex_bin_base(obj, self.layout))
+        fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, self.layout))
 
-        _eco_error_check(obj)
+        feat.eco_error_check(obj)
         compartments_solid = custom_shape_solid(
             obj,
             self.layout,
@@ -1072,7 +1069,7 @@ class CustomEcoBin(FoundationGridfinity):
         fuse_total = fuse_total.cut(compartments)
 
         if obj.LabelShelfStyle != "Off":
-            label_shelf = LabelShelf.make(self, obj, "eco")
+            label_shelf = feat.make_label_shelf(self, obj, "eco")
             label_shelf = label_shelf.cut(inside_wall_negative)
             fuse_total = fuse_total.fuse(label_shelf)
 
@@ -1100,21 +1097,21 @@ class CustomStorageBin(FoundationGridfinity):
             "python gridfinity object",
         )
         self.bintype = "standard"
-        self.features = [
-            CustomShapeLayout(obj, baseplate_default=False),
-            BinSolidMidSection(
-                obj,
-                default_height_units=const.HEIGHT_UNITS,
-                default_wall_thickness=const.WALL_THICKNESS,
-            ),
-            BlankBinRecessedTop(obj),
-            StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-            BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
-            BinBaseValues(obj),
-            Compartments(obj, x_div_default=0, y_div_default=0),
-            LabelShelf(obj, label_style_default="Off"),
-            Scoop(obj, scoop_default=False),
-        ]
+
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False),
+        feat.bin_solid_mid_section_properties(
+            obj,
+            default_height_units=const.HEIGHT_UNITS,
+            default_wall_thickness=const.WALL_THICKNESS,
+        ),
+        BlankBinRecessedTop(obj),
+        StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
+        BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
+        BinBaseValues(obj),
+        Compartments(obj, x_div_default=0, y_div_default=0),
+        LabelShelf(obj, label_style_default="Off"),
+        Scoop(obj, scoop_default=False),
+
 
         obj.Proxy = self
 
@@ -1211,7 +1208,7 @@ class CustomBaseplate(FoundationGridfinity):
         )
         self.bintype = "standard"
 
-        self.custom_shape_layout = CustomShapeLayout(obj, baseplate_default=True)
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=True)
         self.baseplate_solid_shape = BaseplateSolidShape(obj)
         self.baseplate_base_values = BaseplateBaseValues(obj)
 
@@ -1259,7 +1256,7 @@ class CustomMagnetBaseplate(FoundationGridfinity):
         )
         self.bintype = "standard"
 
-        self.custom_shape_layout = CustomShapeLayout(obj, baseplate_default=True)
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=True)
         self.baseplate_solid_shape = BaseplateSolidShape(obj)
         self.baseplate_base_values = BaseplateBaseValues(obj)
         self.baseplate_magnet_holes = BaseplateMagnetHoles(obj)
@@ -1311,7 +1308,7 @@ class CustomScrewTogetherBaseplate(FoundationGridfinity):
         )
         self.bintype = "standard"
 
-        self.custom_shape_layout = CustomShapeLayout(obj, baseplate_default=True)
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=True)
         self.baseplate_solid_shape = BaseplateSolidShape(obj)
         self.baseplate_base_values = BaseplateBaseValues(obj)
         self.baseplate_magnet_holes = BaseplateMagnetHoles(obj)

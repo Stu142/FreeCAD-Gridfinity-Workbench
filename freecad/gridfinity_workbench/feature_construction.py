@@ -684,7 +684,7 @@ def _eco_bin_deviders(obj: fc.DocumentObject) -> Part.Shape:
     return assembly.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
 
-def _eco_error_check(obj: fc.DocumentObject) -> None:
+def eco_error_check(obj: fc.DocumentObject) -> None:
     # Divider Minimum Height
 
     divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
@@ -800,7 +800,7 @@ def make_eco_compartments(
     obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
     ## Error Checking
 
-    _eco_error_check(obj)
+    eco_error_check(obj)
 
     ## Eco Compartement Generation
     face = Part.Face(bin_inside_shape)

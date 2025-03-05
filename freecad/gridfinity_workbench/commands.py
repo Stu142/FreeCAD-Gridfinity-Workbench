@@ -152,6 +152,42 @@ class CreateCommand(BaseCommand):
         fc.ActiveDocument.recompute()
         fcg.SendMsgToActiveView("ViewFit")
 
+class DrawCommand(BaseCommand):
+    """Base for gridfinity workbench command.
+
+    Used for commands where an object is drawn.
+
+    """
+
+    def __init__(
+        self,
+        *,
+        name: str,
+        gridfinity_function: type[FoundationGridfinity],
+        pixmap: Path,
+    ) -> None:
+        super().__init__(
+            name=name,
+            pixmap=pixmap,
+            menu_text=f"Gridfinity {PASCAL_CASE_REGEX.sub(' ', name)}",
+            tooltip=f"Create a Gridfinty {PASCAL_CASE_REGEX.sub(' ', name)}.",
+        )
+        self.gridfinity_function = gridfinity_function
+
+    def Activated(self) -> None:  # noqa: N802, D102
+        layout = custom_shape.get_layout()
+        if layout is None:
+            return
+
+        obj = utils.new_object(self.name)
+        if fc.GuiUp:
+            view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
+            ViewProviderGridfinity(view_object, str(self.pixmap))
+
+        CustomBlankBin(obj, layout)
+
+        fc.ActiveDocument.recompute()
+        fcg.SendMsgToActiveView("ViewFit")
 
 class CreateBinBlank(CreateCommand):
     def __init__(self) -> None:
@@ -234,170 +270,64 @@ class CreateLBinBlank(CreateCommand):
         )
 
 
-class CreateCustomBlankBin(BaseCommand):
+class CreateCustomBlankBin(DrawCommand):
     def __init__(self) -> None:
         super().__init__(
             name="CustomBlankBin",
+            gridfinity_function=CustomBlankBin,
             pixmap=ICONDIR / "CustomBlankBin.svg",
-            menu_text="Gridfinity Custom Blank Bin",
-            tooltip="Draw a custom shaped blank bin.",
         )
 
-    def Activated(self) -> None:  # noqa: N802, D102
-        layout = custom_shape.get_layout()
-        if layout is None:
-            return
 
-        obj = utils.new_object(self.name)
-        if fc.GuiUp:
-            view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
-            ViewProviderGridfinity(view_object, str(self.pixmap))
-
-        CustomBlankBin(obj, layout)
-
-        fc.ActiveDocument.recompute()
-        fcg.SendMsgToActiveView("ViewFit")
-
-
-class CreateCustomBinBase(BaseCommand):
+class CreateCustomBinBase(DrawCommand):
     def __init__(self) -> None:
         super().__init__(
             name="CustomBinBase",
+            gridfinity_function=CustomBinBase,
             pixmap=ICONDIR / "CustomBinBase.svg",
-            menu_text="Gridfinity Custom Shaped Bin Base",
-            tooltip="Draw a custom shaped blank bin base.",
         )
 
-    def Activated(self) -> None:  # noqa: N802, D102
-        layout = custom_shape.get_layout()
-        if layout is None:
-            return
 
-        obj = utils.new_object(self.name)
-        if fc.GuiUp:
-            ViewProviderGridfinity(obj.ViewObject, str(self.pixmap))
-
-        CustomBinBase(obj, layout)
-
-        fc.ActiveDocument.recompute()
-        fcg.SendMsgToActiveView("ViewFit")
-
-
-class CreateCustomEcoBin(BaseCommand):
+class CreateCustomEcoBin(DrawCommand):
     def __init__(self) -> None:
         super().__init__(
             name="CustomEcoBin",
+            gridfinity_function=CustomEcoBin,
             pixmap=ICONDIR / "CustomEcoBin.svg",
-            menu_text="Gridfinity Custom Eco Bin",
-            tooltip="Draw a custom shaped eco bin.",
         )
 
-    def Activated(self) -> None:  # noqa: N802, D102
-        layout = custom_shape.get_layout()
-        if layout is None:
-            return
 
-        obj = utils.new_object(self.name)
-        if fc.GuiUp:
-            ViewProviderGridfinity(obj.ViewObject, str(self.pixmap))
-
-        CustomEcoBin(obj, layout)
-
-        fc.ActiveDocument.recompute()
-        fcg.SendMsgToActiveView("ViewFit")
-
-
-class CreateCustomStorageBin(BaseCommand):
+class CreateCustomStorageBin(DrawCommand):
     def __init__(self) -> None:
         super().__init__(
             name="CustomStorageBin",
+            gridfinity_function=CustomStorageBin,
             pixmap=ICONDIR / "CustomStorageBin.svg",
-            menu_text="Gridfinity Custom Storage Bin",
-            tooltip="Draw a custom shaped Storage bin.",
         )
 
-    def Activated(self) -> None:  # noqa: N802, D102
-        layout = custom_shape.get_layout()
-        if layout is None:
-            return
 
-        obj = utils.new_object(self.name)
-        if fc.GuiUp:
-            ViewProviderGridfinity(obj.ViewObject, str(self.pixmap))
-
-        CustomStorageBin(obj, layout)
-
-        fc.ActiveDocument.recompute()
-        fcg.SendMsgToActiveView("ViewFit")
-
-
-class CreateCustomBaseplate(BaseCommand):
+class CreateCustomBaseplate(DrawCommand):
     def __init__(self) -> None:
         super().__init__(
             name="CustomBaseplate",
+            gridfinity_function=CustomBaseplate,
             pixmap=ICONDIR / "CustomBaseplate.svg",
-            menu_text="Gridfinity Custom Baseplate",
-            tooltip="Draw a custom shaped baseplate.",
         )
 
-    def Activated(self) -> None:  # noqa: N802, D102
-        layout = custom_shape.get_layout()
-        if layout is None:
-            return
 
-        obj = utils.new_object(self.name)
-        if fc.GuiUp:
-            ViewProviderGridfinity(obj.ViewObject, str(self.pixmap))
-
-        CustomBaseplate(obj, layout)
-
-        fc.ActiveDocument.recompute()
-        fcg.SendMsgToActiveView("ViewFit")
-
-
-class CreateCustomMagnetBaseplate(BaseCommand):
+class CreateCustomMagnetBaseplate(DrawCommand):
     def __init__(self) -> None:
         super().__init__(
             name="CustomMagnetBaseplate",
+            gridfinity_function=CustomMagnetBaseplate,
             pixmap=ICONDIR / "CustomMagnetBaseplate.svg",
-            menu_text="Gridfinity Custom Magnet Baseplate",
-            tooltip="Draw a custom shaped magnet baseplate.",
         )
 
-    def Activated(self) -> None:  # noqa: N802, D102
-        layout = custom_shape.get_layout()
-        if layout is None:
-            return
 
-        obj = utils.new_object(self.name)
-        if fc.GuiUp:
-            ViewProviderGridfinity(obj.ViewObject, str(self.pixmap))
-
-        CustomMagnetBaseplate(obj, layout)
-
-        fc.ActiveDocument.recompute()
-        fcg.SendMsgToActiveView("ViewFit")
-
-
-class CreateCustomScrewTogetherBaseplate(BaseCommand):
+class CreateCustomScrewTogetherBaseplate(DrawCommand):
     def __init__(self) -> None:
         super().__init__(
             name="CustomScrewTogetherBaseplate",
+            gridfinity_function=CustomScrewTogetherBaseplate,
             pixmap=ICONDIR / "CustomScrewTogetherBaseplate.svg",
-            menu_text="Gridfinity Custom Screw Together Baseplate",
-            tooltip="Draw a custom shaped screw together baseplate.",
         )
-
-    def Activated(self) -> None:  # noqa: N802, D102
-        layout = custom_shape.get_layout()
-        if layout is None:
-            return
-
-        obj = utils.new_object(self.name)
-        if fc.GuiUp:
-            ViewProviderGridfinity(obj.ViewObject, str(self.pixmap))
-
-        CustomScrewTogetherBaseplate(obj, layout)
-
-        fc.ActiveDocument.recompute()
-        fcg.SendMsgToActiveView("ViewFit")
