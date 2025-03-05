@@ -8,7 +8,7 @@
    version="1.1"
    id="svg1"
    inkscape:version="1.4 (86a8ad7, 2024-10-11)"
-   sodipodi:docname="CustomBlankBinBeta.svg"
+   sodipodi:docname="CustomBinBase.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -40,47 +40,36 @@
      id="layer1">
     <text
        xml:space="preserve"
-       style="font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#dfdd00;stroke-width:0.264583"
-       x="4.048327"
-       y="3.3122675"
-       id="text1"><tspan
-         sodipodi:role="line"
-         id="tspan1"
-         style="stroke-width:0.264583"
-         x="4.048327"
-         y="3.3122675">Beta</tspan></text>
-    <text
-       xml:space="preserve"
        style="font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#ff01f1;fill-opacity:1;stroke-width:0.264583"
-       x="0.64405227"
-       y="7.3605947"
+       x="0.50604111"
+       y="5.2444239"
        id="text2"><tspan
          sodipodi:role="line"
          id="tspan2"
          style="fill:#ff01f1;fill-opacity:1;stroke-width:0.264583"
-         x="0.64405227"
-         y="7.3605947">Custom</tspan></text>
+         x="0.50604111"
+         y="5.2444239">Custom</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#ff01f1;fill-opacity:1;stroke-width:0.264583"
-       x="3.2662644"
-       y="11.776953"
+       x="5.336432"
+       y="9.7987928"
        id="text3"><tspan
          sodipodi:role="line"
          style="stroke-width:0.264583"
-         x="3.2662644"
-         y="11.776953"
-         id="tspan4">Blank</tspan></text>
+         x="5.336432"
+         y="9.7987928"
+         id="tspan4">Bin</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#ff01f1;fill-opacity:1;stroke-width:0.264583"
-       x="5.5204463"
-       y="16.285315"
+       x="3.6342938"
+       y="13.75511"
        id="text5"><tspan
          sodipodi:role="line"
          id="tspan5"
          style="stroke-width:0.264583"
-         x="5.5204463"
-         y="16.285315">Bin</tspan></text>
+         x="3.6342938"
+         y="13.75511">Base</tspan></text>
   </g>
 </svg>
