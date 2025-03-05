@@ -45,6 +45,7 @@ class GridfinityWorkbench(Workbench):
         "CreateScrewTogetherBaseplate",
         "CreateLBinBlank",
         "CreateCustomBin",
+        "AttachLabelShelf",
     ]
 
     def GetClassName(self) -> str:  # noqa: N802
@@ -63,6 +64,7 @@ class GridfinityWorkbench(Workbench):
         here is the place to import all the commands.
         """
         from .commands import (
+            AttachLabelShelf,
             CreateBaseplate,
             CreateBinBase,
             CreateBinBlank,
@@ -91,6 +93,7 @@ class GridfinityWorkbench(Workbench):
         fcg.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
         fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
         fcg.addCommand("CreateCustomBin", CreateCustomBin())
+        fcg.addCommand("AttachLabelShelf", AttachLabelShelf())
 
 
 fcg.addWorkbench(GridfinityWorkbench())

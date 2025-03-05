@@ -6,7 +6,7 @@ import FreeCAD as fc  # noqa: N813
 import Part
 
 from . import baseplate_feature_construction as baseplate_feat
-from . import const, grid_initial_layout, utils
+from . import const, grid_initial_layout, label_shelf, utils
 from . import feature_construction as feat
 from .custom_shape_features import (
     custom_shape_solid,
@@ -793,3 +793,72 @@ class LBinBlank(FoundationGridfinity):
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
 
         return fuse_total
+
+
+class StandaloneLabelShelf:
+    def __init__(
+        self,
+        obj: fc.DocumentObject,
+        target_obj: fc.DocumentObject,
+        face: Part.Face,
+    ) -> None:
+        obj.addProperty(
+            "App::PropertyString",
+            "version",
+            "version",
+            "Gridfinity Workbench Version",
+            1,
+        ).version = __version__
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "Width",
+            "GridfinityNonStandard",
+            "Width of the Label Shelf, how far it sticks out from the wall"
+            " <br> <br> default = 12 mm",
+        ).Width = const.LABEL_SHELF_WIDTH
+        obj.addProperty(
+            "App::PropertyLength",
+            "Length",
+            "GridfinityNonStandard",
+            "Length of the Label Shelf, how long it is <br> <br> default = 42 mm",
+        ).Length = const.LABEL_SHELF_LENGTH
+        obj.addProperty(
+            "App::PropertyAngle",
+            "Angle",
+            "GridfinityNonStandard",
+            "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
+        ).Angle = const.LABEL_SHELF_ANGLE
+
+        normal = face.normalAt(*face.Surface.parameter(face.CenterOfMass))
+        rotation = fc.Rotation(fc.Vector(1, 0, 0), normal)
+
+        points = [v.Point for v in face.Vertexes]
+        height = max([p.z for p in points])
+        [p1, p2] = [p for p in points if p.z > height - 1e-4]
+        translation = (p1 + p2) / 2  # type: ignore[operator]
+
+        obj.Proxy = self
+
+        obj.addExtension("Part::AttachExtensionPython")
+        obj.AttachmentSupport = target_obj
+        obj.MapMode = "ObjectXY"
+        obj.AttachmentOffset = fc.Placement(translation, rotation)
+
+    def execute(self, obj: Part.Feature) -> None:
+        shape = label_shelf.from_angle(
+            length=fc.Units.Quantity(obj.Length),
+            width=fc.Units.Quantity(obj.Width),
+            thickness=fc.Units.Quantity(const.LABEL_SHELF_VERTICAL_THICKNESS),
+            angle=fc.Units.Quantity(obj.Angle),
+            center=True,
+        )
+
+        obj.positionBySupport()
+        obj.Shape = shape
+
+    def dumps(self) -> None:
+        return
+
+    def loads(self, state: tuple) -> None:  # noqa: ARG002
+        return

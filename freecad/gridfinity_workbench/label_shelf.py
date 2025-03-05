@@ -56,6 +56,7 @@ def from_dimensions(
     width: fc.Units.Quantity,
     thickness: fc.Units.Quantity,
     height: fc.Units.Quantity,
+    center: bool = False,
 ) -> Part.Shape:
     """Create a label shelf with given dimensions.
 
@@ -64,13 +65,15 @@ def from_dimensions(
         width: Total width of the shelf.
         thickness: Height of the front of the shelf.
         height: Height of the back of the shelf.
+        center: If the origin should be placed in the center of top-back edge, or on its left end.
 
     """
+    yoffset: fc.Units.Quantity = -length / 2 if center else 0 * unitmm
     v = [
-        fc.Vector(0, 0, 0),
-        fc.Vector(width, 0, 0),
-        fc.Vector(width, 0, -thickness),
-        fc.Vector(0, 0, -height),
+        fc.Vector(0, yoffset, 0),
+        fc.Vector(width, yoffset, 0),
+        fc.Vector(width, yoffset, -thickness),
+        fc.Vector(0, yoffset, -height),
     ]
 
     face = Part.Face(utils.curve_to_wire(utils.loop(v)))
@@ -85,7 +88,7 @@ def from_dimensions(
         for edge in shape.Edges
         if fillet_point(edge.Vertexes[0]) and fillet_point(edge.Vertexes[1])
     ]
-    assert h_edges
+    assert len(h_edges) == 1
     shape = shape.makeFillet(thickness.Value - 0.01, h_edges)
 
     return shape
@@ -96,7 +99,8 @@ def from_angle(
     length: fc.Units.Quantity,
     width: fc.Units.Quantity,
     thickness: fc.Units.Quantity,
-    angle: fc.Units.Unit,
+    angle: fc.Units.Quantity,
+    center: bool = False,
 ) -> Part.Shape:
     """Create a label shelf with given width and angle.
 
@@ -105,11 +109,13 @@ def from_angle(
         width: Total width of the shelf.
         thickness: Height of the front of the shelf.
         angle: Angle of the shelf.
+        center: If the origin should be placed in the center of top-back edge, or on its left end.
 
     """
     return from_dimensions(
         length=length,
         width=width,
         thickness=thickness,
-        height=thickness + math.tan(angle.Value) * width,
+        height=thickness + math.tan(angle.Value) * width.Value,
+        center=center,
     )
