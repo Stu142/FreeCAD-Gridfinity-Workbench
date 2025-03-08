@@ -1092,15 +1092,7 @@ class CustomStorageBin(FoundationGridfinity):
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Generate BinBlanek Shape.
-
-        Args:
-            obj (FreeCAD.DocumentObject): Document object.
-
-        Returns:
-            Part.Shape: Bin Blank shape
-
-        """
+        """Generate StorageBin Shape."""
         ## calculated here
         if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
