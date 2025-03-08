@@ -179,7 +179,7 @@ def get_object_shape(
 
 def clean_up_layout(layout: GridfinityLayout)-> None:
     """Remove empty rows and colums from the layout."""
-    layout = [row for row in layout if not all(not a for a in row)]
+    layout = [row for row in layout if any(row)]
     layout = [list(i) for i in zip(*layout)]
     layout = [row for row in layout if not all(not a for a in row)]
     layout = [list(i) for i in zip(*layout)]
