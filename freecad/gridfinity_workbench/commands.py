@@ -170,7 +170,8 @@ class DrawCommand(BaseCommand):
             name=name,
             pixmap=pixmap,
             menu_text=f"Gridfinity {PASCAL_CASE_REGEX.sub(' ', name)}",
-            tooltip=f"Create a Gridfinty {PASCAL_CASE_REGEX.sub(' ', name)}.",
+            tooltip=f"Draw a Gridfinty {PASCAL_CASE_REGEX.sub(' ', name)}.",
+
         )
         self.gridfinity_function = gridfinity_function
 
