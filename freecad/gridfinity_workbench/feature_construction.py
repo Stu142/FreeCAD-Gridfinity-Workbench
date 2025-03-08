@@ -480,12 +480,12 @@ def compartments_properties(obj: fc.DocumentObject, x_div_default: int, y_div_de
     )
 
 
-def make_compartments(obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
+def make_compartments(obj: fc.DocumentObject, bin_inside_solid: Part.Solid) -> Part.Shape:
     """Create compartment cutout objects.
 
     Args:
         obj (FreeCAD.DocumentObject): Document object.
-        bin_inside_shape (Part.Wire): Profile of bin inside wall
+        bin_inside_solid (Part.Wire): solid negative of inside bin walls
 
     Returns:
         Part.Shape: Compartments cutout shape.
@@ -522,14 +522,11 @@ def make_compartments(obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Pa
             "Label Shelf turned off for less than full height x dividers\n",
         )
     ## Compartment Generation
-    face = Part.Face(bin_inside_shape)
-
-    func_fuse = face.extrude(fc.Vector(0, 0, -obj.UsableHeight))
 
     if obj.xDividers == 0 and obj.yDividers == 0:
-        func_fuse = _make_compartments_no_deviders(obj, func_fuse)
+        func_fuse = _make_compartments_no_deviders(obj, bin_inside_solid)
     else:
-        func_fuse = _make_compartments_with_deviders(obj, func_fuse)
+        func_fuse = _make_compartments_with_deviders(obj, bin_inside_solid)
 
     return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
@@ -684,7 +681,8 @@ def _eco_bin_deviders(obj: fc.DocumentObject) -> Part.Shape:
     return assembly.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
 
-def _eco_error_check(obj: fc.DocumentObject) -> None:
+def eco_error_check(obj: fc.DocumentObject) -> None:
+    """Check if eco dividers are possible with current parameters."""
     # Divider Minimum Height
 
     divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
@@ -782,7 +780,7 @@ def eco_compartments_properties(obj: fc.DocumentObject) -> None:
 def make_eco_compartments(
     obj: fc.DocumentObject,
     layout: GridfinityLayout,
-    bin_inside_shape: Part.Wire,
+    bin_inside_solid: Part.Solid,
 ) -> Part.Shape:
     """Create eco bin cutouts.
 
@@ -800,14 +798,9 @@ def make_eco_compartments(
     obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
     ## Error Checking
 
-    _eco_error_check(obj)
+    eco_error_check(obj)
 
     ## Eco Compartement Generation
-    face = Part.Face(bin_inside_shape)
-
-    func_fuse = face.extrude(
-        fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness),
-    )
 
     base_offset = obj.BaseWallThickness * math.tan(math.pi / 8)
 
@@ -901,7 +894,7 @@ def make_eco_compartments(
     eco_base_cut = utils.copy_and_translate(assembly, vec_list)
     eco_base_cut.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
-    func_fuse = func_fuse.fuse(eco_base_cut)
+    func_fuse = bin_inside_solid.fuse(eco_base_cut)
 
     trim_tanslation = fc.Vector(
         obj.xTotalWidth / 2 + obj.Clearance,
