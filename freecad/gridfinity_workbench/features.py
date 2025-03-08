@@ -808,7 +808,6 @@ class CustomBlankBin(FoundationGridfinity):
             "base",
             "python gridfinity object",
         )
-        self.bintype = "standard"
 
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
         feat.bin_solid_mid_section_properties(
