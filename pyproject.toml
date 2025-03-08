@@ -7,7 +7,7 @@ py-modules = []
 
 [project]
 name = "gridfinityworkbench"
-version = "0.10.3"
+version = "0.10.4"
 
 [project.optional-dependencies]
 dev = ["mypy==1.15.0", "ruff==0.9.5", "freecad-stubs==1.0.20"]
