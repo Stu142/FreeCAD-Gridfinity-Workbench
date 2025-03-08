@@ -480,12 +480,12 @@ def compartments_properties(obj: fc.DocumentObject, x_div_default: int, y_div_de
     )
 
 
-def make_compartments(obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
+def make_compartments(obj: fc.DocumentObject, bin_inside_solid: Part.Solid) -> Part.Shape:
     """Create compartment cutout objects.
 
     Args:
         obj (FreeCAD.DocumentObject): Document object.
-        bin_inside_shape (Part.Wire): Profile of bin inside wall
+        bin_inside_solid (Part.Wire): solid negative of inside bin walls
 
     Returns:
         Part.Shape: Compartments cutout shape.
@@ -522,14 +522,11 @@ def make_compartments(obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Pa
             "Label Shelf turned off for less than full height x dividers\n",
         )
     ## Compartment Generation
-    face = Part.Face(bin_inside_shape)
-
-    func_fuse = face.extrude(fc.Vector(0, 0, -obj.UsableHeight))
 
     if obj.xDividers == 0 and obj.yDividers == 0:
-        func_fuse = _make_compartments_no_deviders(obj, func_fuse)
+        func_fuse = _make_compartments_no_deviders(obj, bin_inside_solid)
     else:
-        func_fuse = _make_compartments_with_deviders(obj, func_fuse)
+        func_fuse = _make_compartments_with_deviders(obj, bin_inside_solid)
 
     return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
@@ -685,6 +682,7 @@ def _eco_bin_deviders(obj: fc.DocumentObject) -> Part.Shape:
 
 
 def eco_error_check(obj: fc.DocumentObject) -> None:
+    """Check if eco dividers are possible with current parameters."""
     # Divider Minimum Height
 
     divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm

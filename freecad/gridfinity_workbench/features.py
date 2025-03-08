@@ -2,20 +2,20 @@
 
 from abc import abstractmethod
 
-import FreeCAD as fc  # noqa: N813
 import Part
+
+import FreeCAD as fc  # noqa: N813
 
 from . import baseplate_feature_construction as baseplate_feat
 from . import const, grid_initial_layout, utils
 from . import feature_construction as feat
 from .custom_shape_features import (
+    clean_up_layout,
     custom_shape_solid,
     custom_shape_stacking_lip,
     custom_shape_trim,
-    vertical_edge_fillet,
-    get_object_shape,
-    clean_up_layout,
     cut_outside_shape,
+    vertical_edge_fillet,
 )
 from .version import __version__
 
@@ -386,7 +386,9 @@ class SimpleStorageBin(FoundationGridfinity):
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
-        fuse_total = fuse_total.cut(feat.make_compartments(obj, bin_inside_shape))
+        face = Part.Face(bin_inside_shape)
+        compartments = face.extrude(fc.Vector(0, 0, -obj.UsableHeight))
+        fuse_total = fuse_total.cut(feat.make_compartments(obj, compartments))
 
         if obj.StackingLip:
             fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
@@ -552,7 +554,9 @@ class PartsBin(FoundationGridfinity):
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
-        fuse_total = fuse_total.cut(feat.make_compartments(obj, bin_inside_shape))
+        face = Part.Face(bin_inside_shape)
+        compartments = face.extrude(fc.Vector(0, 0, -obj.UsableHeight))
+        fuse_total = fuse_total.cut(feat.make_compartments(obj, compartments))
 
         if obj.StackingLip:
             fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
@@ -808,7 +812,7 @@ class CustomBlankBin(FoundationGridfinity):
             "base",
             "python gridfinity object",
         )
-
+        fc.Console.PrintMessage(self.layout)
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
         feat.bin_solid_mid_section_properties(
             obj,
@@ -1071,7 +1075,6 @@ class CustomStorageBin(FoundationGridfinity):
             "base",
             "python gridfinity object",
         )
-        self.bintype = "standard"
 
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False),
         feat.bin_solid_mid_section_properties(
@@ -1079,13 +1082,12 @@ class CustomStorageBin(FoundationGridfinity):
             default_height_units=const.HEIGHT_UNITS,
             default_wall_thickness=const.WALL_THICKNESS,
         ),
-        BlankBinRecessedTop(obj),
-        StackingLip(obj, stacking_lip_default=const.STACKING_LIP),
-        BinBottomHoles(obj, magnet_holes_default=const.MAGNET_HOLES),
-        BinBaseValues(obj),
-        Compartments(obj, x_div_default=0, y_div_default=0),
-        LabelShelf(obj, label_style_default="Off"),
-        Scoop(obj, scoop_default=False),
+        feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP),
+        feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES),
+        feat.bin_base_values_properties(obj),
+        feat.compartments_properties(obj, x_div_default=0, y_div_default=0),
+        feat.label_shelf_properties(obj, label_style_default="Off"),
+        feat.scoop_properties(obj, scoop_default=False),
 
 
         obj.Proxy = self
@@ -1111,15 +1113,14 @@ class CustomStorageBin(FoundationGridfinity):
         obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
         ## calculated values over
 
-        CustomShapeLayout.calc(self, obj, self.layout)
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
         fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
-        fuse_total = fuse_total.fuse(make_complex_bin_base(obj, self.layout))
+        fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, self.layout))
 
-        Compartments.error_check(self, obj)
         compartments_solid = custom_shape_solid(obj, self.layout, obj.UsableHeight)
         compartment_trim = custom_shape_trim(
             obj,
@@ -1133,14 +1134,12 @@ class CustomStorageBin(FoundationGridfinity):
             compartments_solid,
             obj.BinOuterRadius - obj.WallThickness,
             )
-        if obj.xDividers == 0 and obj.yDividers == 0:
-            compartments = _make_compartments_no_deviders(obj, compartments_solid)
-        else:
-            compartments = _make_compartments_with_deviders(obj, compartments_solid)
+        compartments = feat.make_compartments(obj, compartments_solid)
+
         fuse_total = fuse_total.cut(compartments)
 
         if obj.ScrewHoles or obj.MagnetHoles:
-            holes = BinBottomHoles.make(self, obj, self.layout)
+            holes = feat.make_bin_bottom_holes(obj, self.layout)
             fuse_total = Part.Shape.cut(fuse_total, holes)
         if obj.StackingLip:
             fuse_total = fuse_total.fuse(
@@ -1149,12 +1148,12 @@ class CustomStorageBin(FoundationGridfinity):
         outside_bin_solid = cut_outside_shape(obj, compartments_solid)
 
         if obj.LabelShelfStyle != "Off":
-            label_shelf = LabelShelf.make(self, obj, "standard")
+            label_shelf = feat.make_label_shelf(obj, "standard")
             label_shelf = label_shelf.cut(outside_bin_solid)
             fuse_total = fuse_total.fuse(label_shelf)
 
         if obj.Scoop:
-            scoop = Scoop.make(self, obj)
+            scoop = feat.make_scoop(self, obj)
             scoop = scoop.cut(outside_bin_solid)
             fuse_total = fuse_total.fuse(scoop)
 
@@ -1176,25 +1175,25 @@ class CustomBaseplate(FoundationGridfinity):
         self.bintype = "standard"
 
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=True)
-        self.baseplate_solid_shape = BaseplateSolidShape(obj)
-        self.baseplate_base_values = BaseplateBaseValues(obj)
+        baseplate_feat.solid_shape_properties(obj)
+        baseplate_feat.base_values_properties(obj)
 
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate Baseplate Shape."""
         ## calculated here
-        self.baseplate_base_values.make(obj)
+        baseplate_feat.make_base_values(obj)
         obj.TotalHeight = obj.BaseProfileHeight
 
         ## calculated values over
-        CustomShapeLayout.calc(self, obj, self.layout)
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight,
                                          ).translate(fc.Vector(0, 0, obj.TotalHeight))
         solid_shape = solid_shape.removeSplitter()
         solid_shape = vertical_edge_fillet(solid_shape, obj.BinOuterRadius)
 
-        fuse_total = make_complex_bin_base(obj, self.layout)
+        fuse_total = feat.make_complex_bin_base(obj, self.layout)
         fuse_total.translate(fc.Vector(0, 0, obj.TotalHeight))
         fuse_total = solid_shape.cut(fuse_total)
 
@@ -1216,31 +1215,31 @@ class CustomMagnetBaseplate(FoundationGridfinity):
         self.bintype = "standard"
 
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=True)
-        self.baseplate_solid_shape = BaseplateSolidShape(obj)
-        self.baseplate_base_values = BaseplateBaseValues(obj)
-        self.baseplate_magnet_holes = BaseplateMagnetHoles(obj)
-        self.baseplate_center_cut = BaseplateCenterCut(obj)
+        baseplate_feat.solid_shape_properties(obj)
+        baseplate_feat.base_values_properties(obj)
+        baseplate_feat.magnet_holes_properties(obj)
+        baseplate_feat.center_cut_properties(obj)
 
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate MagnetBaseplate Shape."""
         ## calculated here
-        self.baseplate_base_values.make(obj)
+        baseplate_feat.make_base_values(obj)
         obj.TotalHeight = obj.BaseProfileHeight + obj.MagnetHoleDepth + obj.MagnetBase
 
         ## calculated values over
-        CustomShapeLayout.calc(self, obj, self.layout)
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight,
                                          ).translate(fc.Vector(0, 0, obj.BaseProfileHeight))
         solid_shape = solid_shape.removeSplitter()
         solid_shape = vertical_edge_fillet(solid_shape, obj.BinOuterRadius)
 
-        fuse_total = make_complex_bin_base(obj, self.layout)
+        fuse_total = feat.make_complex_bin_base(obj, self.layout)
         fuse_total.translate(fc.Vector(0, 0, obj.TotalHeight))
         fuse_total = solid_shape.cut(fuse_total)
-        fuse_total = fuse_total.cut(self.baseplate_magnet_holes.make(obj, self.layout))
-        fuse_total = fuse_total.cut(self.baseplate_center_cut.make(obj, self.layout))
+        fuse_total = fuse_total.cut(baseplate_feat.make_magnet_holes(obj, self.layout))
+        fuse_total = fuse_total.cut(baseplate_feat.make_center_cut(obj, self.layout))
 
         return fuse_total
 
@@ -1260,35 +1259,35 @@ class CustomScrewTogetherBaseplate(FoundationGridfinity):
         self.bintype = "standard"
 
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=True)
-        self.baseplate_solid_shape = BaseplateSolidShape(obj)
-        self.baseplate_base_values = BaseplateBaseValues(obj)
-        self.baseplate_magnet_holes = BaseplateMagnetHoles(obj)
-        self.baseplate_center_cut = BaseplateCenterCut(obj)
-        self.baseplate_screw_bottom_chamfer = BaseplateScrewBottomChamfer(obj)
-        self.baseplate_connection_holes = BaseplateConnectionHoles(obj)
+        baseplate_feat.solid_shape_properties(obj)
+        baseplate_feat.base_values_properties(obj)
+        baseplate_feat.magnet_holes_properties(obj)
+        baseplate_feat.center_cut_properties(obj)
+        baseplate_feat.screw_bottom_chamfer_properties(obj)
+        baseplate_feat.connection_holes_properties(obj)
 
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate Screw Together Baseplate Shape."""
         ## calculated here
-        self.baseplate_base_values.make(obj)
+        baseplate_feat.make_base_values(obj)
         obj.TotalHeight = obj.BaseProfileHeight + obj.BaseThickness
 
         ## calculated values over
-        CustomShapeLayout.calc(self, obj, self.layout)
+        grid_initial_layout.make_custom_shape_layout(self, obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight,
                                          ).translate(fc.Vector(0, 0, obj.BaseProfileHeight))
         solid_shape = solid_shape.removeSplitter()
         solid_shape = vertical_edge_fillet(solid_shape, obj.BinOuterRadius)
 
-        fuse_total = make_complex_bin_base(obj, self.layout)
+        fuse_total = feat.make_complex_bin_base(obj, self.layout)
         fuse_total.translate(fc.Vector(0, 0, obj.TotalHeight))
         fuse_total = solid_shape.cut(fuse_total)
-        fuse_total = fuse_total.cut(self.baseplate_magnet_holes.make(obj, self.layout))
-        fuse_total = fuse_total.cut(self.baseplate_center_cut.make(obj, self.layout))
-        fuse_total = fuse_total.cut(self.baseplate_screw_bottom_chamfer.make(obj, self.layout))
-        fuse_total = fuse_total.cut(self.baseplate_connection_holes.make(obj))
+        fuse_total = fuse_total.cut(baseplate_feat.make_magnet_holes(obj, self.layout))
+        fuse_total = fuse_total.cut(baseplate_feat.make_center_cut(obj, self.layout))
+        fuse_total = fuse_total.cut(baseplate_feat.make_screw_bottom_chamfer(obj, self.layout))
+        fuse_total = fuse_total.cut(baseplate_feat.make_connection_holes(obj))
 
         return fuse_total
 
