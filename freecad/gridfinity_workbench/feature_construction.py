@@ -780,7 +780,7 @@ def eco_compartments_properties(obj: fc.DocumentObject) -> None:
 def make_eco_compartments(
     obj: fc.DocumentObject,
     layout: GridfinityLayout,
-    bin_inside_shape: Part.Wire,
+    bin_inside_solid: Part.Solid,
 ) -> Part.Shape:
     """Create eco bin cutouts.
 
@@ -801,11 +801,6 @@ def make_eco_compartments(
     eco_error_check(obj)
 
     ## Eco Compartement Generation
-    face = Part.Face(bin_inside_shape)
-
-    func_fuse = face.extrude(
-        fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness),
-    )
 
     base_offset = obj.BaseWallThickness * math.tan(math.pi / 8)
 
@@ -899,7 +894,7 @@ def make_eco_compartments(
     eco_base_cut = utils.copy_and_translate(assembly, vec_list)
     eco_base_cut.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
-    func_fuse = func_fuse.fuse(eco_base_cut)
+    func_fuse = bin_inside_solid.fuse(eco_base_cut)
 
     trim_tanslation = fc.Vector(
         obj.xTotalWidth / 2 + obj.Clearance,

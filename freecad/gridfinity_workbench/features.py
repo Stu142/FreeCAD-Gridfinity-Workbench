@@ -471,7 +471,12 @@ class EcoBin(FoundationGridfinity):
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
-        fuse_total = fuse_total.cut(feat.make_eco_compartments(obj, layout, bin_inside_shape))
+        face = Part.Face(bin_inside_shape)
+
+        compartment_solid = face.extrude(
+        fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness),
+    )
+        fuse_total = fuse_total.cut(feat.make_eco_compartments(obj, layout, compartment_solid))
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -812,7 +817,6 @@ class CustomBlankBin(FoundationGridfinity):
             "base",
             "python gridfinity object",
         )
-        fc.Console.PrintMessage(self.layout)
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
         feat.bin_solid_mid_section_properties(
             obj,
@@ -979,11 +983,11 @@ class CustomEcoBin(FoundationGridfinity):
             default_height_units=const.HEIGHT_UNITS,
             default_wall_thickness=const.WALL_THICKNESS,
         )
-        feat.make_stacking_lip(obj, stacking_lip_default=const.STACKING_LIP)
-        feat.make_bin_bottom_holes(obj, magnet_holes_default=False)
-        feat.make_bin_base_values(obj)
-        feat.make_label_shelf(obj, label_style_default="Standard")
-        feat.make_eco_compartments(obj)
+        feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP)
+        feat.bin_bottom_holes_properties(obj, magnet_holes_default=False)
+        feat.bin_base_values_properties(obj)
+        feat.label_shelf_properties(obj, label_style_default="Standard")
+        feat.eco_compartments_properties(obj)
 
         obj.Proxy = self
 
@@ -1005,7 +1009,7 @@ class CustomEcoBin(FoundationGridfinity):
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
         ## calculated values over
-        self.custom_shape_layout.calc(obj, self.layout)
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
         outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
         fuse_total = solid_shape.cut(outside_trim)
@@ -1042,13 +1046,13 @@ class CustomEcoBin(FoundationGridfinity):
             inside_wall_solid_full_height,
             obj.BinOuterRadius - obj.WallThickness,
             )
-        compartments = self.eco_compartments.make(obj, self.layout, compartments_solid)
+        compartments = feat.make_eco_compartments(obj, self.layout, compartments_solid)
         inside_wall_negative = cut_outside_shape(obj, inside_wall_solid_full_height)
         compartments = compartments.cut(inside_wall_negative)
         fuse_total = fuse_total.cut(compartments)
 
         if obj.LabelShelfStyle != "Off":
-            label_shelf = feat.make_label_shelf(self, obj, "eco")
+            label_shelf = feat.make_label_shelf(obj, "eco")
             label_shelf = label_shelf.cut(inside_wall_negative)
             fuse_total = fuse_total.fuse(label_shelf)
 
@@ -1076,18 +1080,18 @@ class CustomStorageBin(FoundationGridfinity):
             "python gridfinity object",
         )
 
-        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False),
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
         feat.bin_solid_mid_section_properties(
             obj,
             default_height_units=const.HEIGHT_UNITS,
             default_wall_thickness=const.WALL_THICKNESS,
-        ),
-        feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP),
-        feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES),
-        feat.bin_base_values_properties(obj),
-        feat.compartments_properties(obj, x_div_default=0, y_div_default=0),
-        feat.label_shelf_properties(obj, label_style_default="Off"),
-        feat.scoop_properties(obj, scoop_default=False),
+        )
+        feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP)
+        feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
+        feat.bin_base_values_properties(obj)
+        feat.compartments_properties(obj, x_div_default=0, y_div_default=0)
+        feat.label_shelf_properties(obj, label_style_default="Off")
+        feat.scoop_properties(obj, scoop_default=False)
 
 
         obj.Proxy = self
@@ -1275,7 +1279,7 @@ class CustomScrewTogetherBaseplate(FoundationGridfinity):
         obj.TotalHeight = obj.BaseProfileHeight + obj.BaseThickness
 
         ## calculated values over
-        grid_initial_layout.make_custom_shape_layout(self, obj, self.layout)
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight,
                                          ).translate(fc.Vector(0, 0, obj.BaseProfileHeight))
         solid_shape = solid_shape.removeSplitter()
@@ -1287,7 +1291,7 @@ class CustomScrewTogetherBaseplate(FoundationGridfinity):
         fuse_total = fuse_total.cut(baseplate_feat.make_magnet_holes(obj, self.layout))
         fuse_total = fuse_total.cut(baseplate_feat.make_center_cut(obj, self.layout))
         fuse_total = fuse_total.cut(baseplate_feat.make_screw_bottom_chamfer(obj, self.layout))
-        fuse_total = fuse_total.cut(baseplate_feat.make_connection_holes(obj))
+        fuse_total = fuse_total.cut(baseplate_feat.make_connection_holes(obj, self.layout))
 
         return fuse_total
 
