@@ -1182,15 +1182,7 @@ class CustomBaseplate(FoundationGridfinity):
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Generate BinBlanek Shape.
-
-        Args:
-            obj (FreeCAD.DocumentObject): Document object.
-
-        Returns:
-            Part.Shape: Bin Blank shape
-
-        """
+        """Generate Baseplate Shape."""
         ## calculated here
         self.baseplate_base_values.make(obj)
         obj.TotalHeight = obj.BaseProfileHeight
