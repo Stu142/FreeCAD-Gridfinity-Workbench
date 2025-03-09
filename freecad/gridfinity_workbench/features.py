@@ -261,16 +261,21 @@ class BinBase(FullBin):
         )
 
 
-class SimpleStorageBin(FoundationGridfinity):
-    """Simple Storage Bin."""
+class StorageBin(FoundationGridfinity):
+    """Gridfinity abstract StorageBin object.
 
-    def __init__(self, obj: fc.DocumentObject) -> None:
-        """Initialize Simple storage bin properties.
+    This is not a standalone command, but is used as a base for for SimpleStorageBin and PartsBin.
+    """
 
-        Args:
-            obj (FreeCAD.DocumentObject): Document object.
-
-        """
+    def __init__(
+        self,
+        obj: fc.DocumentObject,
+        *,
+        x_div_default: int,
+        y_div_default: int,
+        label_style_default: str,
+        scoop_default: bool,
+    ) -> None:
         super().__init__(obj)
 
         obj.addProperty(
@@ -289,22 +294,13 @@ class SimpleStorageBin(FoundationGridfinity):
         feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP)
         feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
         feat.bin_base_values_properties(obj)
-        feat.compartments_properties(obj, x_div_default=0, y_div_default=0)
-        feat.label_shelf_properties(obj, label_style_default="Off")
-        feat.scoop_properties(obj, scoop_default=False)
+        feat.compartments_properties(obj, x_div_default=x_div_default, y_div_default=y_div_default)
+        feat.label_shelf_properties(obj, label_style_default=label_style_default)
+        feat.scoop_properties(obj, scoop_default=scoop_default)
 
         obj.Proxy = self
-
+    
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Generate simple storage bin.
-
-        Args:
-            obj (FreeCAD.DocumentObject): Document object.
-
-        Returns:
-            Part.Shape: Storage bin shape.
-
-        """
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -314,11 +310,7 @@ class SimpleStorageBin(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         bin_outside_shape.translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-                0,
-            ),
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
         )
 
         bin_inside_shape = utils.create_rounded_rectangle(
@@ -328,11 +320,7 @@ class SimpleStorageBin(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
         bin_inside_shape.translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-                0,
-            ),
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
         )
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
@@ -352,6 +340,28 @@ class SimpleStorageBin(FoundationGridfinity):
             fuse_total = fuse_total.fuse(feat.make_scoop(obj))
 
         return fuse_total.removeSplitter()
+
+
+class SimpleStorageBin(StorageBin):
+    def __init__(self, obj: fc.DocumentObject) -> None:
+        super().__init__(
+            obj,
+            x_div_default=0,
+            y_div_default=0,
+            label_style_default="Off",
+            scoop_default=False,
+        )
+
+
+class PartsBin(StorageBin):
+    def __init__(self, obj: fc.DocumentObject) -> None:
+        super().__init__(
+            obj,
+            x_div_default=const.X_DIVIDERS,
+            y_div_default=const.Y_DIVIDERS,
+            label_style_default="Standard",
+            scoop_default=const.SCOOP,
+        )
 
 
 class EcoBin(FoundationGridfinity):
@@ -432,90 +442,6 @@ class EcoBin(FoundationGridfinity):
         return fuse_total.removeSplitter()
 
 
-class PartsBin(FoundationGridfinity):
-    """PartsBin object."""
-
-    def __init__(self, obj: fc.DocumentObject) -> None:
-        """Initialize Partsbin properties."""
-        super().__init__(obj)
-
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
-
-        grid_initial_layout.rectangle_layout_properties(obj, baseplate_default=False)
-        feat.bin_solid_mid_section_properties(
-            obj,
-            default_height_units=const.HEIGHT_UNITS,
-            default_wall_thickness=const.WALL_THICKNESS,
-        )
-        feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP)
-        feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
-        feat.bin_base_values_properties(obj)
-        feat.compartments_properties(
-            obj,
-            x_div_default=const.X_DIVIDERS,
-            y_div_default=const.Y_DIVIDERS,
-        )
-        feat.label_shelf_properties(obj, label_style_default="Standard")
-        feat.scoop_properties(obj, scoop_default=const.SCOOP)
-
-        obj.Proxy = self
-
-    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Generate Parts bin.
-
-        Args:
-            obj (FreeCAD.DocumentObject): Document object.
-
-        Returns:
-            Part.Shape: Parts bin shape.
-
-        """
-        layout = grid_initial_layout.make_rectangle_layout(obj)
-
-        bin_outside_shape = utils.create_rounded_rectangle(
-            obj.xTotalWidth,
-            obj.yTotalWidth,
-            0,
-            obj.BinOuterRadius,
-        )
-        bin_outside_shape.translate(
-            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance, 0),
-        )
-
-        bin_inside_shape = utils.create_rounded_rectangle(
-            obj.xTotalWidth - obj.WallThickness * 2,
-            obj.yTotalWidth - obj.WallThickness * 2,
-            0,
-            obj.BinOuterRadius - obj.WallThickness,
-        )
-        bin_inside_shape.translate(
-            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance, 0),
-        )
-
-        fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
-        fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
-        fuse_total = fuse_total.cut(feat.make_compartments(obj, bin_inside_shape))
-
-        if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
-
-        if obj.ScrewHoles or obj.MagnetHoles:
-            fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
-
-        if obj.LabelShelfStyle != "Off":
-            fuse_total = fuse_total.fuse(feat.make_label_shelf(obj, "standard"))
-
-        if obj.Scoop:
-            fuse_total = fuse_total.fuse(feat.make_scoop(obj))
-
-        return fuse_total.removeSplitter()
-
-
 class Baseplate(FoundationGridfinity):
     """BasePlate object."""
 
@@ -537,15 +463,7 @@ class Baseplate(FoundationGridfinity):
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Generate Baseplate.
-
-        Args:
-            obj (FreeCAD.DocumentObject): Document object.
-
-        Returns:
-            Part.Shape: Baseplate shape.
-
-        """
+        """Generate Baseplate."""
         baseplate_feat.make_base_values(obj)
 
         layout = grid_initial_layout.make_rectangle_layout(obj)
@@ -575,7 +493,7 @@ class MagnetBaseplate(FoundationGridfinity):
     """Magnet baseplate object."""
 
     def __init__(self, obj: fc.DocumentObject) -> None:
-        """Initialize magnet baseplate properties."""
+        """Initialize MagnetBaseplate properties."""
         super().__init__(obj)
 
         obj.addProperty(
@@ -594,7 +512,7 @@ class MagnetBaseplate(FoundationGridfinity):
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Generate partsbin shape."""
+        """Generate MagnetBaseplate shape."""
         baseplate_feat.make_base_values(obj)
 
         layout = grid_initial_layout.make_rectangle_layout(obj)
@@ -626,7 +544,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
     """Screw together baseplate object."""
 
     def __init__(self, obj: fc.DocumentObject) -> None:
-        """Initialize screw together baseplate properties."""
+        """Initialize ScrewTogetherBaseplate properties."""
         super().__init__(obj)
 
         obj.addProperty(
@@ -646,7 +564,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         baseplate_feat.connection_holes_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Generate Parts Bin shape."""
+        """Generate ScrewTogetherBaseplate shape."""
         baseplate_feat.make_base_values(obj)
 
         layout = grid_initial_layout.make_rectangle_layout(obj)
