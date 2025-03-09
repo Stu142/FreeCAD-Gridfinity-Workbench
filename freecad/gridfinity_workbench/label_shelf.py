@@ -116,6 +116,6 @@ def from_angle(
         length=length,
         width=width,
         thickness=thickness,
-        height=thickness + math.tan(angle.Value) * width.Value,
+        height=thickness + math.tan(math.radians(angle.Value)) * width,
         center=center,
     )

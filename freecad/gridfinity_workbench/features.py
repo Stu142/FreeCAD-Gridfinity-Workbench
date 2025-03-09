@@ -829,6 +829,12 @@ class StandaloneLabelShelf:
             "GridfinityNonStandard",
             "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
         ).Angle = const.LABEL_SHELF_ANGLE
+        obj.addProperty(
+            "App::PropertyLength",
+            "LabelShelfVerticalThickness",
+            "zzExpertOnly",
+            "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
+        ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
 
         normal = face.normalAt(*face.Surface.parameter(face.CenterOfMass))
         rotation = fc.Rotation(fc.Vector(1, 0, 0), normal)
@@ -838,18 +844,22 @@ class StandaloneLabelShelf:
         [p1, p2] = [p for p in points if p.z > height - 1e-4]
         translation = (p1 + p2) / 2  # type: ignore[operator]
 
+        placement = fc.Placement(translation, rotation)
+
         obj.Proxy = self
+
+        obj.Placement = placement
 
         obj.addExtension("Part::AttachExtensionPython")
         obj.AttachmentSupport = target_obj
+        obj.AttachmentOffset = placement
         obj.MapMode = "ObjectXY"
-        obj.AttachmentOffset = fc.Placement(translation, rotation)
 
     def execute(self, obj: Part.Feature) -> None:
         shape = label_shelf.from_angle(
             length=fc.Units.Quantity(obj.Length),
             width=fc.Units.Quantity(obj.Width),
-            thickness=fc.Units.Quantity(const.LABEL_SHELF_VERTICAL_THICKNESS),
+            thickness=fc.Units.Quantity(obj.LabelShelfVerticalThickness),
             angle=fc.Units.Quantity(obj.Angle),
             center=True,
         )
