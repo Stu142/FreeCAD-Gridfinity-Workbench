@@ -1,5 +1,7 @@
 """Feature modules contain bins an baseplate objects."""
 
+# ruff: noqa: D101, D107
+
 from abc import abstractmethod
 
 import FreeCAD as fc  # noqa: N813
@@ -75,8 +77,6 @@ class FoundationGridfinity:
 
 
 class CustomBin(FoundationGridfinity):
-    """Gridfinity CustomBin object."""
-
     def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
         super().__init__(obj)
         self.layout = layout
@@ -101,15 +101,6 @@ class CustomBin(FoundationGridfinity):
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Generate BinBlanek Shape.
-
-        Args:
-            obj (FreeCAD.DocumentObject): Document object.
-
-        Returns:
-            Part.Shape: Bin Blank shape
-
-        """
         ## calculated here
         if obj.NonStandardHeight:
             obj.TotalHeight = obj.CustomHeight
@@ -241,10 +232,7 @@ class FullBin(FoundationGridfinity):
 
 
 class BinBlank(FullBin):
-    """Gridfinity BinBlank object."""
-
     def __init__(self, obj: fc.DocumentObject) -> None:
-        """Create BinBlank object."""
         super().__init__(
             obj,
             height_units_default=const.HEIGHT_UNITS,
@@ -299,7 +287,7 @@ class StorageBin(FoundationGridfinity):
         feat.scoop_properties(obj, scoop_default=scoop_default)
 
         obj.Proxy = self
-    
+
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
@@ -365,10 +353,7 @@ class PartsBin(StorageBin):
 
 
 class EcoBin(FoundationGridfinity):
-    """Eco Bin."""
-
     def __init__(self, obj: fc.DocumentObject) -> None:
-        """Initialize Eco bin properties."""
         super().__init__(obj)
 
         obj.addProperty(
@@ -393,9 +378,6 @@ class EcoBin(FoundationGridfinity):
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Create gridfinity EcoBin shape."""
-        ## Bin Construction
-
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -443,10 +425,7 @@ class EcoBin(FoundationGridfinity):
 
 
 class Baseplate(FoundationGridfinity):
-    """BasePlate object."""
-
     def __init__(self, obj: fc.DocumentObject) -> None:
-        """Initialize Baseplate properties."""
         super().__init__(obj)
 
         obj.addProperty(
@@ -463,7 +442,6 @@ class Baseplate(FoundationGridfinity):
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Generate Baseplate."""
         baseplate_feat.make_base_values(obj)
 
         layout = grid_initial_layout.make_rectangle_layout(obj)
@@ -490,10 +468,7 @@ class Baseplate(FoundationGridfinity):
 
 
 class MagnetBaseplate(FoundationGridfinity):
-    """Magnet baseplate object."""
-
     def __init__(self, obj: fc.DocumentObject) -> None:
-        """Initialize MagnetBaseplate properties."""
         super().__init__(obj)
 
         obj.addProperty(
@@ -512,7 +487,6 @@ class MagnetBaseplate(FoundationGridfinity):
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Generate MagnetBaseplate shape."""
         baseplate_feat.make_base_values(obj)
 
         layout = grid_initial_layout.make_rectangle_layout(obj)
@@ -541,10 +515,7 @@ class MagnetBaseplate(FoundationGridfinity):
 
 
 class ScrewTogetherBaseplate(FoundationGridfinity):
-    """Screw together baseplate object."""
-
     def __init__(self, obj: fc.DocumentObject) -> None:
-        """Initialize ScrewTogetherBaseplate properties."""
         super().__init__(obj)
 
         obj.addProperty(
@@ -564,7 +535,6 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         baseplate_feat.connection_holes_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Generate ScrewTogetherBaseplate shape."""
         baseplate_feat.make_base_values(obj)
 
         layout = grid_initial_layout.make_rectangle_layout(obj)
@@ -595,10 +565,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
 
 
 class LBinBlank(FoundationGridfinity):
-    """L shaped blank bin object."""
-
     def __init__(self, obj: fc.DocumentObject) -> None:
-        """Initialize L shaped blank bin properties."""
         super().__init__(obj)
 
         obj.addProperty("App::PropertyPythonObject", "Bin", "base", "python gridfinity object")
@@ -617,7 +584,6 @@ class LBinBlank(FoundationGridfinity):
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        """Generate gridfinity L shaped bin."""
         layout = grid_initial_layout.make_l_shaped_layout(obj)
 
         bin_outside_shape = utils.create_rounded_l(
