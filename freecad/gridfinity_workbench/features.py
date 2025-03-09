@@ -1,6 +1,6 @@
 """Feature modules contain bins an baseplate objects."""
 
-# ruff: noqa: D101, D107
+# ruff: noqa: D101, D102, D107
 
 from abc import abstractmethod
 
