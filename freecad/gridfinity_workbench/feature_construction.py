@@ -951,15 +951,6 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
         obj (FreeCAD.DocumentObject): Document object
 
     """
-    ## Reference Parameters
-    obj.addProperty(
-        "App::PropertyLength",
-        "BaseProfileHeight",
-        "ReferenceParameters",
-        "Height of the Gridfinity Base Profile, bottom of the bin",
-        1,
-    )
-
     ## Expert Only Parameters
     obj.addProperty(
         "App::PropertyLength",
@@ -1020,16 +1011,17 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
         ),
     ).Clearance = const.CLEARANCE
 
-
-def make_bin_base_values(obj: fc.DocumentObject) -> None:
-    """Generate Rectanble layout and calculate relevant parameters.
-
-    Args:
-        obj (FreeCAD.DocumentObject): Document object.
-
-    """
-    obj.BaseProfileHeight = (
-        obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection + obj.BaseProfileTopChamfer
+    ## Reference Parameters
+    obj.addProperty(
+        "App::PropertyLength",
+        "BaseProfileHeight",
+        "ReferenceParameters",
+        "Height of the Gridfinity Base Profile, bottom of the bin",
+        1,
+    )
+    obj.setExpression(
+        "BaseProfileHeight",
+        "BaseProfileBottomChamfer + BaseProfileVerticalSection + BaseProfileTopChamfer"
     )
 
 

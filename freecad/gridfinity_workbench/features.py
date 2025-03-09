@@ -196,8 +196,6 @@ class BinBlank(FoundationGridfinity):
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate BinBlanek Shape."""
-        feat.make_bin_base_values(obj)
-
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -260,8 +258,6 @@ class BinBase(FoundationGridfinity):
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        feat.make_bin_base_values(obj)
-
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -351,8 +347,6 @@ class SimpleStorageBin(FoundationGridfinity):
             Part.Shape: Storage bin shape.
 
         """
-        feat.make_bin_base_values(obj)
-
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -433,8 +427,6 @@ class EcoBin(FoundationGridfinity):
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Create gridfinity EcoBin shape."""
         ## Bin Construction
-
-        feat.make_bin_base_values(obj)
 
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
@@ -525,8 +517,6 @@ class PartsBin(FoundationGridfinity):
             Part.Shape: Parts bin shape.
 
         """
-        feat.make_bin_base_values(obj)
-
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -752,8 +742,6 @@ class LBinBlank(FoundationGridfinity):
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate gridfinity L shaped bin."""
-        feat.make_bin_base_values(obj)
-
         layout = grid_initial_layout.make_l_shaped_layout(obj)
 
         bin_outside_shape = utils.create_rounded_l(
