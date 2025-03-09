@@ -245,6 +245,9 @@ class BinBase(FullBin):
             height_units_default=1,
             stacking_lip_default=False,
         )
+        obj.setEditorMode("StackingLip", 2)
+        obj.setEditorMode("RecessedTopDepth", 2)
+        obj.setEditorMode("WallThickness", 2)
 
 
 class StorageBin(FoundationGridfinity):
