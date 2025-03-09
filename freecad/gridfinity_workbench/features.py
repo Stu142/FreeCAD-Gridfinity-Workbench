@@ -43,6 +43,8 @@ class FoundationGridfinity:
             1,
         ).version = __version__
 
+        obj.Proxy = self
+
     def execute(self, fp: Part.Feature) -> None:
         gridfinity_shape = self.generate_gridfinity_shape(fp)
 
@@ -97,8 +99,6 @@ class CustomBin(FoundationGridfinity):
         feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP)
         feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
         feat.bin_base_values_properties(obj)
-
-        obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         ## calculated here
@@ -190,8 +190,6 @@ class FullBin(FoundationGridfinity):
         feat.stacking_lip_properties(obj, stacking_lip_default=stacking_lip_default)
         feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
         feat.bin_base_values_properties(obj)
-
-        obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         layout = grid_initial_layout.make_rectangle_layout(obj)
@@ -286,8 +284,6 @@ class StorageBin(FoundationGridfinity):
         feat.label_shelf_properties(obj, label_style_default=label_style_default)
         feat.scoop_properties(obj, scoop_default=scoop_default)
 
-        obj.Proxy = self
-
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
@@ -375,8 +371,6 @@ class EcoBin(FoundationGridfinity):
         feat.label_shelf_properties(obj, label_style_default="Standard")
         feat.eco_compartments_properties(obj)
 
-        obj.Proxy = self
-
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
@@ -439,8 +433,6 @@ class Baseplate(FoundationGridfinity):
         baseplate_feat.solid_shape_properties(obj)
         baseplate_feat.base_values_properties(obj)
 
-        obj.Proxy = self
-
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         baseplate_feat.make_base_values(obj)
 
@@ -484,8 +476,6 @@ class MagnetBaseplate(FoundationGridfinity):
         baseplate_feat.magnet_holes_properties(obj)
         baseplate_feat.center_cut_properties(obj)
 
-        obj.Proxy = self
-
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         baseplate_feat.make_base_values(obj)
 
@@ -524,7 +514,6 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             "base",
             "python gridfinity object",
         )
-        obj.Proxy = self
 
         grid_initial_layout.rectangle_layout_properties(obj, baseplate_default=True)
         baseplate_feat.solid_shape_properties(obj)
@@ -580,8 +569,6 @@ class LBinBlank(FoundationGridfinity):
         feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP)
         feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
         feat.bin_base_values_properties(obj)
-
-        obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         layout = grid_initial_layout.make_l_shaped_layout(obj)
