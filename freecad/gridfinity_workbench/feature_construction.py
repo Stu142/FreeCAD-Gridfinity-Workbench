@@ -1021,7 +1021,7 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
     )
     obj.setExpression(
         "BaseProfileHeight",
-        "BaseProfileBottomChamfer + BaseProfileVerticalSection + BaseProfileTopChamfer"
+        "BaseProfileBottomChamfer + BaseProfileVerticalSection + BaseProfileTopChamfer",
     )
 
 
