@@ -7,6 +7,7 @@ Contains command objects representing what should happen on a button press.
 
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
@@ -24,7 +25,11 @@ from .features import (
     PartsBin,
     ScrewTogetherBaseplate,
     SimpleStorageBin,
+    StandaloneLabelShelf,
 )
+
+if TYPE_CHECKING:
+    import Part
 
 ICONDIR = Path(__file__).parent / "icons"
 
@@ -251,3 +256,40 @@ class CreateCustomBin(BaseCommand):
 
         fc.ActiveDocument.recompute()
         fcg.SendMsgToActiveView("ViewFit")
+
+
+class AttachLabelShelf(BaseCommand):
+    def __init__(self) -> None:
+        pass
+
+    def _get_top_points(self) -> list[fc.Vector]:
+        selection = fcg.Selection.getSelectionEx()
+        if len(selection) != 1 or len(selection[0].SubObjects) != 1:
+            return []
+        points = [v.Point for v in selection[0].SubObjects[0].Vertexes]
+        height = max([p.z for p in points])
+        return [p for p in points if p.z > height - 1e-4]
+
+    def IsActive(self) -> bool:  # noqa: D102, N802
+        return len(self._get_top_points()) == 2  # noqa: PLR2004
+
+    def Activated(self) -> None:  # noqa: D102, N802
+        obj = utils.new_object("LabelShelf")
+        if fc.GuiUp:
+            view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
+            ViewProviderGridfinity(view_object, str(ICONDIR / "BinBlank.svg"))
+
+        selection = fcg.Selection.getSelectionEx()
+        target_obj: fc.DocumentObject = selection[0].Object
+        face: Part.Face = selection[0].SubObjects[0]
+
+        StandaloneLabelShelf(obj, target_obj, face)
+
+        fc.ActiveDocument.recompute()
+
+    def GetResources(self) -> dict[str, str]:  # noqa: D102, N802
+        return {
+            "Pixmap": str(ICONDIR / "BinBlank.svg"),
+            "MenuText": "Attach label shelf",
+            "ToolTip": "Attach label shelf to a face",
+        }
