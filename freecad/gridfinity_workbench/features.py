@@ -386,8 +386,10 @@ class SimpleStorageBin(FoundationGridfinity):
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
-        face = Part.Face(bin_inside_shape)
-        compartments = face.extrude(fc.Vector(0, 0, -obj.UsableHeight))
+        obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
+        face = Part.Face(bin_inside_shape).translate(fc.Vector(0, 0, -obj.UsableHeight))
+        compartments = face.extrude(fc.Vector(0, 0, obj.UsableHeight))
+
         fuse_total = fuse_total.cut(feat.make_compartments(obj, compartments))
 
         if obj.StackingLip:
@@ -471,10 +473,14 @@ class EcoBin(FoundationGridfinity):
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
-        face = Part.Face(bin_inside_shape)
+        face = Part.Face(bin_inside_shape).translate(fc.Vector(0, 0,
+                                                               -obj.TotalHeight
+                                                               + obj.BaseProfileHeight
+                                                               + obj.BaseWallThickness,
+                                                               ))
 
         compartment_solid = face.extrude(
-        fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness),
+        fc.Vector(0, 0, obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness),
     )
         fuse_total = fuse_total.cut(feat.make_eco_compartments(obj, layout, compartment_solid))
 
@@ -559,8 +565,10 @@ class PartsBin(FoundationGridfinity):
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
+        obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
         face = Part.Face(bin_inside_shape)
         compartments = face.extrude(fc.Vector(0, 0, -obj.UsableHeight))
+
         fuse_total = fuse_total.cut(feat.make_compartments(obj, compartments))
 
         if obj.StackingLip:

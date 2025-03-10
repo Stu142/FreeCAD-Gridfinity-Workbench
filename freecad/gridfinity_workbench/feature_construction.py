@@ -395,19 +395,54 @@ def _make_compartments_with_deviders(
     if ydiv:
         func_fuse = func_fuse.cut(ydiv)
 
-    b_edges = []
+    fillets = []
+    bottom_right_fillet = utils.corner_fillet(obj.InsideFilletRadius)
+    bottom_right_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -270)
+    bottom_right_fillet.translate(fc.Vector(obj.Clearance + obj.WallThickness + xcomp_w,
+                                            obj.Clearance + obj.WallThickness,
+                                            -obj.LabelShelfStackingOffset,
+                                            ))
+    bottom_right_fillet = bottom_right_fillet.extrude(fc.Vector(0, 0, -obj.UsableHeight))
+    fillets.append(bottom_right_fillet)
 
-    for edge in func_fuse.Edges:
-        z0 = edge.Vertexes[0].Point.z
-        z1 = edge.Vertexes[1].Point.z
+    top_right_fillet = utils.corner_fillet(obj.InsideFilletRadius)
+    top_right_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -180)
+    top_right_fillet.translate(fc.Vector(obj.Clearance + obj.WallThickness + xcomp_w,
+                                         obj.Clearance + obj.WallThickness + ycomp_w,
+                                         -obj.LabelShelfStackingOffset,
+                                         ))
+    top_right_fillet = top_right_fillet.extrude(fc.Vector(0, 0, -obj.UsableHeight))
+    fillets.append(top_right_fillet)
 
-        if z0 != z1:
-            b_edges.append(edge)
+    top_left_fillet = utils.corner_fillet(obj.InsideFilletRadius)
+    top_left_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -90)
+    top_left_fillet.translate(fc.Vector(obj.Clearance + obj.WallThickness,
+                                        obj.Clearance + obj.WallThickness + ycomp_w,
+                                        -obj.LabelShelfStackingOffset,
+                                        ))
+    top_left_fillet = top_left_fillet.extrude(fc.Vector(0, 0, -obj.UsableHeight))
+    fillets.append(top_left_fillet)
 
-        if z0 <= -obj.UsableHeight and z1 <= -obj.UsableHeight:
-            b_edges.append(edge)
+    bottom_left_fillet = utils.corner_fillet(obj.InsideFilletRadius)
+    bottom_left_fillet.translate(fc.Vector(obj.Clearance + obj.WallThickness,
+                                           obj.Clearance + obj.WallThickness,
+                                           -obj.LabelShelfStackingOffset,
+                                           ))
+    bottom_left_fillet = bottom_left_fillet.extrude(fc.Vector(0, 0, -obj.UsableHeight))
+    fillets.append(bottom_left_fillet)
 
-    return func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
+    fillets =  utils.multi_fuse(fillets)
+    vec_list = []
+    xtranslate = 0
+    for _ in range(obj.xDividers + 1):
+        ytranslate = 0
+        for _ in range(obj.yDividers + 1):
+            vec_list.append(fc.Vector(xtranslate, ytranslate))
+            ytranslate += ycomp_w.Value + obj.DividerThickness.Value
+        xtranslate += xcomp_w.Value + obj.DividerThickness.Value
+    fillets = utils.copy_and_translate(fillets, vec_list)
+
+    return func_fuse.cut(fillets)
 
 
 def compartments_properties(obj: fc.DocumentObject, x_div_default: int, y_div_default: int) -> None:
@@ -491,9 +526,6 @@ def make_compartments(obj: fc.DocumentObject, bin_inside_solid: Part.Solid) -> P
         Part.Shape: Compartments cutout shape.
 
     """
-    ## Calculated Parameters
-    obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
-
     ## Error Checks
     divmin = (
         obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm + obj.LabelShelfStackingOffset
@@ -625,13 +657,7 @@ def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
     return bottom_hole_shape
 
 
-def _eco_bin_deviders(obj: fc.DocumentObject) -> Part.Shape:
-    xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
-        obj.xDividers + 1
-    )
-    ycomp_w = (obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness) / (
-        obj.yDividers + 1
-    )
+def _eco_bin_deviders(obj: fc.DocumentObject, xcomp_w: float, ycomp_w: float) -> Part.Shape:
 
     stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
 
@@ -787,7 +813,7 @@ def make_eco_compartments(
     Args:
         obj (FreeCAD.DocumentObject): Document object.
         layout (GridfinityLayout): 2 dimentional list of feature locations.
-        bin_inside_shape (Part.Wire): Profile of bin inside wall
+        bin_inside_solid (Part.Wire): Profile of bin inside wall
 
     Returns:
         Part.Shape: Eco bin cutout shape.
@@ -920,19 +946,62 @@ def make_eco_compartments(
 
     func_fuse = func_fuse.cut(outer_trim2)
 
+    xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
+        obj.xDividers + 1
+    )
+    ycomp_w = (obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness) / (
+        obj.yDividers + 1
+    )
     if obj.xDividers > 0 or obj.yDividers > 0:
-        func_fuse = func_fuse.cut(_eco_bin_deviders(obj))
+        func_fuse = func_fuse.cut(_eco_bin_deviders(obj, xcomp_w, ycomp_w))
 
-        b_edges = []
-        divfil = -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1 * unitmm
-        for edge in func_fuse.Edges:
-            z0 = edge.Vertexes[0].Point.z
-            z1 = edge.Vertexes[1].Point.z
+    fillets = []
+    bottom_right_fillet = utils.corner_fillet(obj.InsideFilletRadius)
+    bottom_right_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -270)
+    bottom_right_fillet.translate(fc.Vector(obj.Clearance + obj.WallThickness + xcomp_w,
+                                            obj.Clearance + obj.WallThickness,
+                                            -obj.LabelShelfStackingOffset,
+                                            ))
+    bottom_right_fillet = bottom_right_fillet.extrude(fc.Vector(0, 0, -obj.TotalHeight))
+    fillets.append(bottom_right_fillet)
 
-            if z1 != z0 and (z1 >= divfil or z0 >= divfil):
-                b_edges.append(edge)
+    top_right_fillet = utils.corner_fillet(obj.InsideFilletRadius)
+    top_right_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -180)
+    top_right_fillet.translate(fc.Vector(obj.Clearance + obj.WallThickness + xcomp_w,
+                                         obj.Clearance + obj.WallThickness + ycomp_w,
+                                         -obj.LabelShelfStackingOffset,
+                                         ))
+    top_right_fillet = top_right_fillet.extrude(fc.Vector(0, 0, -obj.TotalHeight))
+    fillets.append(top_right_fillet)
 
-        func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius / 2, b_edges)
+    top_left_fillet = utils.corner_fillet(obj.InsideFilletRadius)
+    top_left_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -90)
+    top_left_fillet.translate(fc.Vector(obj.Clearance + obj.WallThickness,
+                                        obj.Clearance + obj.WallThickness + ycomp_w,
+                                        -obj.LabelShelfStackingOffset,
+                                        ))
+    top_left_fillet = top_left_fillet.extrude(fc.Vector(0, 0, -obj.TotalHeight))
+    fillets.append(top_left_fillet)
+
+    bottom_left_fillet = utils.corner_fillet(obj.InsideFilletRadius)
+    bottom_left_fillet.translate(fc.Vector(obj.Clearance + obj.WallThickness,
+                                           obj.Clearance + obj.WallThickness,
+                                           -obj.LabelShelfStackingOffset,
+                                           ))
+    bottom_left_fillet = bottom_left_fillet.extrude(fc.Vector(0, 0, -obj.TotalHeight))
+    fillets.append(bottom_left_fillet)
+
+    fillets =  utils.multi_fuse(fillets)
+    vec_list = []
+    xtranslate = 0
+    for _ in range(obj.xDividers + 1):
+        ytranslate = 0
+        for _ in range(obj.yDividers + 1):
+            vec_list.append(fc.Vector(xtranslate, ytranslate))
+            ytranslate += ycomp_w.Value + obj.DividerThickness.Value
+        xtranslate += xcomp_w.Value + obj.DividerThickness.Value
+    fillets = utils.copy_and_translate(fillets, vec_list)
+    func_fuse = func_fuse.cut(fillets)
 
     return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
