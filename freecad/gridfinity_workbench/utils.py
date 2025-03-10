@@ -389,3 +389,20 @@ def loop(lst: list[fc.Vector]) -> list[Part.LineSegment]:
 def corners(x: float, y: float, z: float = 0) -> list[fc.Vector]:
     """Get a list of four points located at (±x, ±y, z)."""
     return [fc.Vector(x_pos, y_pos, z) for x_pos, y_pos in ((-x, -y), (x, -y), (-x, y), (x, y))]
+
+def corner_fillet(radius: float) -> Part.Face:
+    """Make wire of a fillet to extrude."""
+    arc = radius - radius * math.sin(math.pi / 4)
+
+    v1 = fc.Vector(0, 0)
+    v2 = fc.Vector(0, radius)
+    v_arc = fc.Vector(arc, arc)
+    v3 = fc.Vector(radius, 0)
+
+    lines = [
+        Part.LineSegment(v1, v2),
+        Part.Arc(v2, v_arc, v3),
+        Part.LineSegment(v3, v1),
+    ]
+
+    return Part.Face(curve_to_wire(lines))
