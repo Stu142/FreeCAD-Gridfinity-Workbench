@@ -656,6 +656,14 @@ class StandaloneLabelShelf:
             "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
         ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
 
+        obj.addProperty(
+            "App::PropertyLink",
+            "Attachment",
+            "Base",
+            "Object this label shelf is attached to.",
+            read_only=True,
+        ).Attachment = target_obj
+
         normal = face.normalAt(*face.Surface.parameter(face.CenterOfMass))
         rotation = fc.Rotation(fc.Vector(1, 0, 0), normal)
 
@@ -669,22 +677,34 @@ class StandaloneLabelShelf:
         obj.Proxy = self
 
         obj.Placement = placement
-
-        obj.addExtension("Part::AttachExtensionPython")
-        obj.AttachmentSupport = target_obj
-        obj.AttachmentOffset = placement
-        obj.MapMode = "ObjectXY"
+        obj.setExpression(
+            "Placement.Base.z",
+            "Attachment.StackingLip == 1 ? -Attachment.LabelShelfStackingOffset : 0mm",
+        )
 
     def execute(self, obj: Part.Feature) -> None:
+        width = obj.Width
+        stacking_lip_offset = (
+            obj.Attachment.StackingLipTopChamfer
+            + obj.Attachment.StackingLipTopLedge
+            + obj.Attachment.StackingLipBottomChamfer
+            - obj.Attachment.WallThickness
+        )
+        # Check if the shelf is covered by a stacking lip
+        check_point = obj.Placement.Base + obj.Placement.Rotation.multVec(
+            fc.Vector(stacking_lip_offset / 2),
+        )
+        if obj.Attachment.StackingLip and obj.Attachment.Shape.isInside(check_point, 1e-6, False):  # noqa: FBT003
+            width += stacking_lip_offset
+
         shape = label_shelf.from_angle(
-            length=fc.Units.Quantity(obj.Length),
-            width=fc.Units.Quantity(obj.Width),
-            thickness=fc.Units.Quantity(obj.LabelShelfVerticalThickness),
-            angle=fc.Units.Quantity(obj.Angle),
+            length=obj.Length,
+            width=width,
+            thickness=obj.LabelShelfVerticalThickness,
+            angle=obj.Angle,
             center=True,
         )
 
-        obj.positionBySupport()
         obj.Shape = shape
 
     def dumps(self) -> None:

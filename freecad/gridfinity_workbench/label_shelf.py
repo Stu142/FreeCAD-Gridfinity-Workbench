@@ -1,5 +1,7 @@
 """A module for making label shelves."""
 
+from __future__ import annotations
+
 import math
 
 import FreeCAD as fc  # noqa: N813
@@ -66,9 +68,10 @@ def from_dimensions(
         thickness: Height of the front of the shelf.
         height: Height of the back of the shelf.
         center: If the origin should be placed in the center of top-back edge, or on its left end.
+        offset: Position offset.
 
     """
-    yoffset: fc.Units.Quantity = -length / 2 if center else 0 * unitmm
+    yoffset = -length.Value / 2 if center else 0
     v = [
         fc.Vector(0, yoffset, 0),
         fc.Vector(width, yoffset, 0),
@@ -96,11 +99,10 @@ def from_dimensions(
 
 def from_angle(
     *,
-    length: fc.Units.Quantity,
     width: fc.Units.Quantity,
     thickness: fc.Units.Quantity,
     angle: fc.Units.Quantity,
-    center: bool = False,
+    **kwargs,
 ) -> Part.Shape:
     """Create a label shelf with given width and angle.
 
@@ -109,13 +111,12 @@ def from_angle(
         width: Total width of the shelf.
         thickness: Height of the front of the shelf.
         angle: Angle of the shelf.
-        center: If the origin should be placed in the center of top-back edge, or on its left end.
+        kwargs: Additional arguments to `from_dimensions`.
 
     """
     return from_dimensions(
-        length=length,
         width=width,
         thickness=thickness,
         height=thickness + math.tan(math.radians(angle.Value)) * width,
-        center=center,
+        **kwargs,
     )
