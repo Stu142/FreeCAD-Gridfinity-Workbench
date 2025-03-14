@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
 
-from . import custom_shape, utils
+from . import custom_shape, features, utils
 from .features import (
     Baseplate,
     BinBase,
@@ -25,7 +25,6 @@ from .features import (
     PartsBin,
     ScrewTogetherBaseplate,
     SimpleStorageBin,
-    StandaloneLabelShelf,
 )
 
 if TYPE_CHECKING:
@@ -258,20 +257,26 @@ class CreateCustomBin(BaseCommand):
         fcg.SendMsgToActiveView("ViewFit")
 
 
-class AttachLabelShelf(BaseCommand):
+class StandaloneLabelShelf(BaseCommand):
     def __init__(self) -> None:
         pass
 
-    def _get_top_points(self) -> list[fc.Vector]:
+    def IsActive(self) -> bool:  # noqa: D102, N802
         selection = fcg.Selection.getSelectionEx()
         if len(selection) != 1 or len(selection[0].SubObjects) != 1:
-            return []
-        points = [v.Point for v in selection[0].SubObjects[0].Vertexes]
+            return False
+        obj = selection[0].Object
+        if not hasattr(obj, "Baseplate") or obj.Baseplate:
+            return False
+        face = selection[0].SubObjects[0]
+        if not hasattr(face, "ShapeType") or face.ShapeType != "Face":
+            return False
+        if face.findPlane() is None:
+            return False
+        points = [v.Point for v in face.Vertexes]
         height = max([p.z for p in points])
-        return [p for p in points if p.z > height - 1e-4]
-
-    def IsActive(self) -> bool:  # noqa: D102, N802
-        return len(self._get_top_points()) == 2  # noqa: PLR2004
+        max_points = [p for p in points if p.z > height - 1e-4]
+        return len(max_points) == 2  # noqa: PLR2004
 
     def Activated(self) -> None:  # noqa: D102, N802
         obj = utils.new_object("LabelShelf")
@@ -283,13 +288,13 @@ class AttachLabelShelf(BaseCommand):
         target_obj: fc.DocumentObject = selection[0].Object
         face: Part.Face = selection[0].SubObjects[0]
 
-        StandaloneLabelShelf(obj, target_obj, face)
+        features.StandaloneLabelShelf(obj, target_obj, face)
 
         fc.ActiveDocument.recompute()
 
     def GetResources(self) -> dict[str, str]:  # noqa: D102, N802
         return {
             "Pixmap": str(ICONDIR / "BinBlank.svg"),
-            "MenuText": "Attach label shelf",
-            "ToolTip": "Attach label shelf to a face",
+            "MenuText": "Standalone label shelf",
+            "ToolTip": "Attach a standalone label shelf to a bin face",
         }
