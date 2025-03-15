@@ -327,7 +327,7 @@ def _corner_fillets(
     xcomp_width: float,
     ycomp_width: float,
 ) -> Part.Shape:
-    fillets: list[Part.Shape] = ()
+    fillets: list[Part.Shape] = []
     bottom_right_fillet = utils.corner_fillet(obj.InsideFilletRadius)
     bottom_right_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -270)
     bottom_right_fillet.translate(
