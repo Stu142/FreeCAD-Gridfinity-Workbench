@@ -390,6 +390,7 @@ def corners(x: float, y: float, z: float = 0) -> list[fc.Vector]:
     """Get a list of four points located at (±x, ±y, z)."""
     return [fc.Vector(x_pos, y_pos, z) for x_pos, y_pos in ((-x, -y), (x, -y), (-x, y), (x, y))]
 
+
 def corner_fillet(radius: float) -> Part.Face:
     """Make wire of a fillet to extrude."""
     arc = radius - radius * math.sin(math.pi / 4)

@@ -139,7 +139,7 @@ def custom_shape_stacking_lip(
         layout,
         obj.Clearance.Value,
         obj.Clearance.Value,
-        )
+    )
 
     for x in range(len(layout)):
         for y in range(len(layout[x])):
@@ -161,13 +161,14 @@ def custom_shape_stacking_lip(
 
     return stacking_lip
 
+
 def get_object_shape(
     obj: fc.DocumentObject,
     solid_shape: Part.Shape,
     layout: GridfinityLayout,
     xoffset: float,
     yoffset: float,
-    ) -> Part.Wire:
+) -> Part.Wire:
     """Return wire of object shape."""
     trim = custom_shape_trim(obj, layout, xoffset, yoffset)
     solid_cut = solid_shape.cut(trim)
@@ -177,7 +178,8 @@ def get_object_shape(
 
     return object_shape_wire
 
-def clean_up_layout(layout: GridfinityLayout)-> None:
+
+def clean_up_layout(layout: GridfinityLayout) -> list[list[bool]]:
     """Remove empty rows and colums from the layout."""
     for _ in range(2):
         layout = [row for row in layout if any(row)]
@@ -185,21 +187,24 @@ def clean_up_layout(layout: GridfinityLayout)-> None:
 
     return layout
 
+
 def cut_outside_shape(
     obj: fc.DocumentObject,
     bin_outside_solid: Part.Solid,
-    )-> Part.Solid:
+) -> Part.Solid:
     """Return solid outer boundry of shape to cut away objects protruding from bin."""
     overall_rectangle = utils.rounded_rectangle_extrude(
-        obj.xTotalWidth.Value + obj.Clearance.Value *2,
-        obj.yTotalWidth.Value + obj.Clearance.Value *2,
+        obj.xTotalWidth.Value + obj.Clearance.Value * 2,
+        obj.yTotalWidth.Value + obj.Clearance.Value * 2,
         -obj.TotalHeight,
         obj.TotalHeight,
-        0.01).translate(fc.Vector(
+        0.01,
+    ).translate(
+        fc.Vector(
             obj.xTotalWidth / 2 + obj.Clearance,
             obj.yTotalWidth / 2 + obj.Clearance,
-            ))
+        )
+    )
     perimeter_negative = overall_rectangle.cut(bin_outside_solid)
 
     return perimeter_negative
-
