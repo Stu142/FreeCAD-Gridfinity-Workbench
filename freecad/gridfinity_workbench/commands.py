@@ -296,5 +296,9 @@ class StandaloneLabelShelf(BaseCommand):
         return {
             "Pixmap": str(ICONDIR / "BinBlank.svg"),
             "MenuText": "Standalone label shelf",
-            "ToolTip": "Attach a standalone label shelf to a bin face",
+            "ToolTip": (
+                "Create a standalone label shelf.<br><br>"
+                "Select any Gridfinity Bin face and run this command to create a label shelf"
+                "attached to selected face."
+            ),
         }
