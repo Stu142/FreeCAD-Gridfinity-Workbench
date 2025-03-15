@@ -327,7 +327,7 @@ def _corner_fillets(
     xcomp_width: float,
     ycomp_width: float,
 ) -> Part.Shape:
-    fillets = []
+    fillets: list[Part.Shape] = ()
     bottom_right_fillet = utils.corner_fillet(obj.InsideFilletRadius)
     bottom_right_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -270)
     bottom_right_fillet.translate(
@@ -375,7 +375,7 @@ def _corner_fillets(
     bottom_left_fillet = bottom_left_fillet.extrude(fc.Vector(0, 0, -obj.TotalHeight))
     fillets.append(bottom_left_fillet)
 
-    fillets = utils.multi_fuse(fillets)
+    fillets_solid = utils.multi_fuse(fillets)
     vec_list = []
     xtranslate = 0
     for _ in range(obj.xDividers + 1):
@@ -384,9 +384,9 @@ def _corner_fillets(
             vec_list.append(fc.Vector(xtranslate, ytranslate))
             ytranslate += ycomp_width.Value + obj.DividerThickness.Value
         xtranslate += xcomp_width.Value + obj.DividerThickness.Value
-    fillets = utils.copy_and_translate(fillets, vec_list)
+    fillets = utils.copy_and_translate(fillets_solid, vec_list)
 
-    return fillets
+    return fillets_solid
 
 
 def _make_compartments_no_deviders(
