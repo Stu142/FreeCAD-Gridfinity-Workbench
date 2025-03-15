@@ -31,3 +31,4 @@ ignore = ["EM101", "EM102", "RET504", "TRY003", "S101", "SIM300"]
 # PT027  - pytest-unittest-raises-assertion: we use unittest framework, not pytest
 # PT009  - pytest-unittest-assertion: we use unittest framework, not pytest
 "**/tests/*" = ["INP001", "D100", "D101", "D102", "PT027", "PT009"]
+"freecad/gridfinity_workbench/test_gridfinity.py" = ["D100", "D101", "D102", "PT027", "PT009"]

@@ -5,11 +5,29 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  unit-tests:
     runs-on: ubuntu-latest
     container: ruudjhuu/freecad:v1.0.0
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-      - name: Run tests
+      - name: Run unit tests
         run: python -m unittest discover tests -v
+  freecad-tests:
+    runs-on: ubuntu-latest
+    container: ruudjhuu/freecad:v1.0.0
+    steps:
+      - name: Install X environment
+        run: |
+          pacman --noconfirm -Syu
+          pacman --noconfirm -S xorg-server-xvfb
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Add workbench to FreeCAD
+        run: |
+          mkdir -p $HOME/.local/share/FreeCAD/Mod
+          ln -s $PWD $HOME/.local/share/FreeCAD/Mod/Gridfinity
+      - name: Run freecad tests
+        run: xvfb-run freecad -t freecad.gridfinity_workbench.test_gridfinity 2>&1 | tee output.txt
+      - name: Check caught exceptions
+        run: "! grep -B 1 Traceback output.txt"
