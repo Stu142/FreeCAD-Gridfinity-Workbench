@@ -203,7 +203,7 @@ def cut_outside_shape(
         fc.Vector(
             obj.xTotalWidth / 2 + obj.Clearance,
             obj.yTotalWidth / 2 + obj.Clearance,
-        )
+        ),
     )
     perimeter_negative = overall_rectangle.cut(bin_outside_solid)
 

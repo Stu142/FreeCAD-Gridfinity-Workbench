@@ -152,6 +152,7 @@ class CreateCommand(BaseCommand):
         fc.ActiveDocument.recompute()
         fcg.SendMsgToActiveView("ViewFit")
 
+
 class DrawCommand(BaseCommand):
     """Base for gridfinity workbench command.
 
@@ -171,7 +172,6 @@ class DrawCommand(BaseCommand):
             pixmap=pixmap,
             menu_text=f"Gridfinity {PASCAL_CASE_REGEX.sub(' ', name)}",
             tooltip=f"Draw a Gridfinty {PASCAL_CASE_REGEX.sub(' ', name)}.",
-
         )
         self.gridfinity_function = gridfinity_function
 
@@ -189,6 +189,7 @@ class DrawCommand(BaseCommand):
 
         fc.ActiveDocument.recompute()
         fcg.SendMsgToActiveView("ViewFit")
+
 
 class CreateBinBlank(CreateCommand):
     def __init__(self) -> None:
