@@ -322,6 +322,73 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
     return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
+def _corner_fillets(
+    obj: fc.DocumentObject,
+    xcomp_width: float,
+    ycomp_width: float,
+) -> Part.Shape:
+    fillets: list[Part.Shape] = []
+    bottom_right_fillet = utils.corner_fillet(obj.InsideFilletRadius)
+    bottom_right_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -270)
+    bottom_right_fillet.translate(
+        fc.Vector(
+            obj.Clearance + obj.WallThickness + xcomp_width,
+            obj.Clearance + obj.WallThickness,
+            -obj.LabelShelfStackingOffset,
+        ),
+    )
+    bottom_right_fillet = bottom_right_fillet.extrude(fc.Vector(0, 0, -obj.TotalHeight))
+    fillets.append(bottom_right_fillet)
+
+    top_right_fillet = utils.corner_fillet(obj.InsideFilletRadius)
+    top_right_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -180)
+    top_right_fillet.translate(
+        fc.Vector(
+            obj.Clearance + obj.WallThickness + xcomp_width,
+            obj.Clearance + obj.WallThickness + ycomp_width,
+            -obj.LabelShelfStackingOffset,
+        ),
+    )
+    top_right_fillet = top_right_fillet.extrude(fc.Vector(0, 0, -obj.TotalHeight))
+    fillets.append(top_right_fillet)
+
+    top_left_fillet = utils.corner_fillet(obj.InsideFilletRadius)
+    top_left_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -90)
+    top_left_fillet.translate(
+        fc.Vector(
+            obj.Clearance + obj.WallThickness,
+            obj.Clearance + obj.WallThickness + ycomp_width,
+            -obj.LabelShelfStackingOffset,
+        ),
+    )
+    top_left_fillet = top_left_fillet.extrude(fc.Vector(0, 0, -obj.TotalHeight))
+    fillets.append(top_left_fillet)
+
+    bottom_left_fillet = utils.corner_fillet(obj.InsideFilletRadius)
+    bottom_left_fillet.translate(
+        fc.Vector(
+            obj.Clearance + obj.WallThickness,
+            obj.Clearance + obj.WallThickness,
+            -obj.LabelShelfStackingOffset,
+        ),
+    )
+    bottom_left_fillet = bottom_left_fillet.extrude(fc.Vector(0, 0, -obj.TotalHeight))
+    fillets.append(bottom_left_fillet)
+
+    fillets_solid = utils.multi_fuse(fillets)
+    vec_list = []
+    xtranslate = 0
+    for _ in range(obj.xDividers + 1):
+        ytranslate = 0
+        for _ in range(obj.yDividers + 1):
+            vec_list.append(fc.Vector(xtranslate, ytranslate))
+            ytranslate += ycomp_width.Value + obj.DividerThickness.Value
+        xtranslate += xcomp_width.Value + obj.DividerThickness.Value
+    fillets = utils.copy_and_translate(fillets_solid, vec_list)
+
+    return fillets_solid
+
+
 def _make_compartments_no_deviders(
     obj: fc.DocumentObject,
     func_fuse: Part.Shape,
@@ -395,19 +462,9 @@ def _make_compartments_with_deviders(
     if ydiv:
         func_fuse = func_fuse.cut(ydiv)
 
-    b_edges = []
+    func_fuse = func_fuse.cut(_corner_fillets(obj, xcomp_w, ycomp_w))
 
-    for edge in func_fuse.Edges:
-        z0 = edge.Vertexes[0].Point.z
-        z1 = edge.Vertexes[1].Point.z
-
-        if z0 != z1:
-            b_edges.append(edge)
-
-        if z0 <= -obj.UsableHeight and z1 <= -obj.UsableHeight:
-            b_edges.append(edge)
-
-    return func_fuse.makeFillet(obj.InsideFilletRadius, b_edges)
+    return func_fuse
 
 
 def compartments_properties(obj: fc.DocumentObject, x_div_default: int, y_div_default: int) -> None:
@@ -480,20 +537,17 @@ def compartments_properties(obj: fc.DocumentObject, x_div_default: int, y_div_de
     )
 
 
-def make_compartments(obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
+def make_compartments(obj: fc.DocumentObject, bin_inside_solid: Part.Shape) -> Part.Shape:
     """Create compartment cutout objects.
 
     Args:
         obj (FreeCAD.DocumentObject): Document object.
-        bin_inside_shape (Part.Wire): Profile of bin inside wall
+        bin_inside_solid (Part.Wire): solid negative of inside bin walls
 
     Returns:
         Part.Shape: Compartments cutout shape.
 
     """
-    ## Calculated Parameters
-    obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
-
     ## Error Checks
     divmin = (
         obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm + obj.LabelShelfStackingOffset
@@ -522,14 +576,11 @@ def make_compartments(obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Pa
             "Label Shelf turned off for less than full height x dividers\n",
         )
     ## Compartment Generation
-    face = Part.Face(bin_inside_shape)
-
-    func_fuse = face.extrude(fc.Vector(0, 0, -obj.UsableHeight))
 
     if obj.xDividers == 0 and obj.yDividers == 0:
-        func_fuse = _make_compartments_no_deviders(obj, func_fuse)
+        func_fuse = _make_compartments_no_deviders(obj, bin_inside_solid)
     else:
-        func_fuse = _make_compartments_with_deviders(obj, func_fuse)
+        func_fuse = _make_compartments_with_deviders(obj, bin_inside_solid)
 
     return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
@@ -628,14 +679,7 @@ def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
     return bottom_hole_shape
 
 
-def _eco_bin_deviders(obj: fc.DocumentObject) -> Part.Shape:
-    xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
-        obj.xDividers + 1
-    )
-    ycomp_w = (obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness) / (
-        obj.yDividers + 1
-    )
-
+def _eco_bin_deviders(obj: fc.DocumentObject, xcomp_w: float, ycomp_w: float) -> Part.Shape:
     stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
 
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
@@ -684,7 +728,8 @@ def _eco_bin_deviders(obj: fc.DocumentObject) -> Part.Shape:
     return assembly.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
 
-def _eco_error_check(obj: fc.DocumentObject) -> None:
+def eco_error_check(obj: fc.DocumentObject) -> None:
+    """Check if eco dividers are possible with current parameters."""
     # Divider Minimum Height
 
     divmin = obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm
@@ -782,14 +827,14 @@ def eco_compartments_properties(obj: fc.DocumentObject) -> None:
 def make_eco_compartments(
     obj: fc.DocumentObject,
     layout: GridfinityLayout,
-    bin_inside_shape: Part.Wire,
+    bin_inside_solid: Part.Shape,
 ) -> Part.Shape:
     """Create eco bin cutouts.
 
     Args:
         obj (FreeCAD.DocumentObject): Document object.
         layout (GridfinityLayout): 2 dimentional list of feature locations.
-        bin_inside_shape (Part.Wire): Profile of bin inside wall
+        bin_inside_solid (Part.Wire): Profile of bin inside wall
 
     Returns:
         Part.Shape: Eco bin cutout shape.
@@ -800,14 +845,9 @@ def make_eco_compartments(
     obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
     ## Error Checking
 
-    _eco_error_check(obj)
+    eco_error_check(obj)
 
     ## Eco Compartement Generation
-    face = Part.Face(bin_inside_shape)
-
-    func_fuse = face.extrude(
-        fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness),
-    )
 
     base_offset = obj.BaseWallThickness * math.tan(math.pi / 8)
 
@@ -901,7 +941,7 @@ def make_eco_compartments(
     eco_base_cut = utils.copy_and_translate(assembly, vec_list)
     eco_base_cut.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
-    func_fuse = func_fuse.fuse(eco_base_cut)
+    func_fuse = bin_inside_solid.fuse(eco_base_cut)
 
     trim_tanslation = fc.Vector(
         obj.xTotalWidth / 2 + obj.Clearance,
@@ -927,19 +967,16 @@ def make_eco_compartments(
 
     func_fuse = func_fuse.cut(outer_trim2)
 
+    xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
+        obj.xDividers + 1
+    )
+    ycomp_w = (obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness) / (
+        obj.yDividers + 1
+    )
     if obj.xDividers > 0 or obj.yDividers > 0:
-        func_fuse = func_fuse.cut(_eco_bin_deviders(obj))
+        func_fuse = func_fuse.cut(_eco_bin_deviders(obj, xcomp_w, ycomp_w))
 
-        b_edges = []
-        divfil = -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness + 1 * unitmm
-        for edge in func_fuse.Edges:
-            z0 = edge.Vertexes[0].Point.z
-            z1 = edge.Vertexes[1].Point.z
-
-            if z1 != z0 and (z1 >= divfil or z0 >= divfil):
-                b_edges.append(edge)
-
-        func_fuse = func_fuse.makeFillet(obj.InsideFilletRadius / 2, b_edges)
+    func_fuse = func_fuse.cut(_corner_fillets(obj, xcomp_w, ycomp_w))
 
     return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 

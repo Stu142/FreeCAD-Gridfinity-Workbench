@@ -44,7 +44,13 @@ class GridfinityWorkbench(Workbench):
         "CreateMagnetBaseplate",
         "CreateScrewTogetherBaseplate",
         "CreateLBinBlank",
-        "CreateCustomBin",
+        "CreateCustomBlankBin",
+        "CreateCustomBinBase",
+        "CreateCustomStorageBin",
+        "CreateCustomEcoBin",
+        "CreateCustomBaseplate",
+        "CreateCustomMagnetBaseplate",
+        "CreateCustomScrewTogetherBaseplate",
     ]
 
     def GetClassName(self) -> str:  # noqa: N802
@@ -66,7 +72,13 @@ class GridfinityWorkbench(Workbench):
             CreateBaseplate,
             CreateBinBase,
             CreateBinBlank,
-            CreateCustomBin,
+            CreateCustomBaseplate,
+            CreateCustomBinBase,
+            CreateCustomBlankBin,
+            CreateCustomEcoBin,
+            CreateCustomMagnetBaseplate,
+            CreateCustomScrewTogetherBaseplate,
+            CreateCustomStorageBin,
             CreateEcoBin,
             CreateLBinBlank,
             CreateMagnetBaseplate,
@@ -90,7 +102,13 @@ class GridfinityWorkbench(Workbench):
         fcg.addCommand("CreateMagnetBaseplate", CreateMagnetBaseplate())
         fcg.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
         fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
-        fcg.addCommand("CreateCustomBin", CreateCustomBin())
+        fcg.addCommand("CreateCustomBlankBin", CreateCustomBlankBin())
+        fcg.addCommand("CreateCustomBinBase", CreateCustomBinBase())
+        fcg.addCommand("CreateCustomStorageBin", CreateCustomStorageBin())
+        fcg.addCommand("CreateCustomEcoBin", CreateCustomEcoBin())
+        fcg.addCommand("CreateCustomBaseplate", CreateCustomBaseplate())
+        fcg.addCommand("CreateCustomMagnetBaseplate", CreateCustomMagnetBaseplate())
+        fcg.addCommand("CreateCustomScrewTogetherBaseplate", CreateCustomScrewTogetherBaseplate())
 
 
 fcg.addWorkbench(GridfinityWorkbench())

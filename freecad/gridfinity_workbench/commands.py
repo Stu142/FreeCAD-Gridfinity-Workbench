@@ -16,7 +16,13 @@ from .features import (
     Baseplate,
     BinBase,
     BinBlank,
-    CustomBin,
+    CustomBaseplate,
+    CustomBinBase,
+    CustomBlankBin,
+    CustomEcoBin,
+    CustomMagnetBaseplate,
+    CustomScrewTogetherBaseplate,
+    CustomStorageBin,
     EcoBin,
     FoundationGridfinity,
     LBinBlank,
@@ -147,6 +153,44 @@ class CreateCommand(BaseCommand):
         fcg.SendMsgToActiveView("ViewFit")
 
 
+class DrawCommand(BaseCommand):
+    """Base for gridfinity workbench command.
+
+    Used for commands where an object is drawn.
+
+    """
+
+    def __init__(
+        self,
+        *,
+        name: str,
+        gridfinity_function: type[FoundationGridfinity],
+        pixmap: Path,
+    ) -> None:
+        super().__init__(
+            name=name,
+            pixmap=pixmap,
+            menu_text=f"Gridfinity {PASCAL_CASE_REGEX.sub(' ', name)}",
+            tooltip=f"Draw a Gridfinty {PASCAL_CASE_REGEX.sub(' ', name)}.",
+        )
+        self.gridfinity_function = gridfinity_function
+
+    def Activated(self) -> None:  # noqa: N802, D102
+        layout = custom_shape.get_layout()
+        if layout is None:
+            return
+
+        obj = utils.new_object(self.name)
+        if fc.GuiUp:
+            view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
+            ViewProviderGridfinity(view_object, str(self.pixmap))
+
+        self.gridfinity_function(obj, layout)  # type: ignore [call-arg]
+
+        fc.ActiveDocument.recompute()
+        fcg.SendMsgToActiveView("ViewFit")
+
+
 class CreateBinBlank(CreateCommand):
     def __init__(self) -> None:
         super().__init__(
@@ -228,26 +272,64 @@ class CreateLBinBlank(CreateCommand):
         )
 
 
-class CreateCustomBin(BaseCommand):
+class CreateCustomBlankBin(DrawCommand):
     def __init__(self) -> None:
         super().__init__(
-            name="CustomBin",
-            pixmap=ICONDIR / "CustomBlankBinBeta.svg",
-            menu_text="Gridfinity Custom Bin",
-            tooltip="Draw a custom shaped bin.",
+            name="CustomBlankBin",
+            gridfinity_function=CustomBlankBin,
+            pixmap=ICONDIR / "CustomBlankBin.svg",
         )
 
-    def Activated(self) -> None:  # noqa: N802, D102
-        layout = custom_shape.get_layout()
-        if layout is None:
-            return
 
-        obj = utils.new_object(self.name)
-        if fc.GuiUp:
-            view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
-            ViewProviderGridfinity(view_object, str(self.pixmap))
+class CreateCustomBinBase(DrawCommand):
+    def __init__(self) -> None:
+        super().__init__(
+            name="CustomBinBase",
+            gridfinity_function=CustomBinBase,
+            pixmap=ICONDIR / "CustomBinBase.svg",
+        )
 
-        CustomBin(obj, layout)
 
-        fc.ActiveDocument.recompute()
-        fcg.SendMsgToActiveView("ViewFit")
+class CreateCustomEcoBin(DrawCommand):
+    def __init__(self) -> None:
+        super().__init__(
+            name="CustomEcoBin",
+            gridfinity_function=CustomEcoBin,
+            pixmap=ICONDIR / "CustomEcoBin.svg",
+        )
+
+
+class CreateCustomStorageBin(DrawCommand):
+    def __init__(self) -> None:
+        super().__init__(
+            name="CustomStorageBin",
+            gridfinity_function=CustomStorageBin,
+            pixmap=ICONDIR / "CustomStorageBin.svg",
+        )
+
+
+class CreateCustomBaseplate(DrawCommand):
+    def __init__(self) -> None:
+        super().__init__(
+            name="CustomBaseplate",
+            gridfinity_function=CustomBaseplate,
+            pixmap=ICONDIR / "CustomBaseplate.svg",
+        )
+
+
+class CreateCustomMagnetBaseplate(DrawCommand):
+    def __init__(self) -> None:
+        super().__init__(
+            name="CustomMagnetBaseplate",
+            gridfinity_function=CustomMagnetBaseplate,
+            pixmap=ICONDIR / "CustomMagnetBaseplate.svg",
+        )
+
+
+class CreateCustomScrewTogetherBaseplate(DrawCommand):
+    def __init__(self) -> None:
+        super().__init__(
+            name="CustomScrewTogetherBaseplate",
+            gridfinity_function=CustomScrewTogetherBaseplate,
+            pixmap=ICONDIR / "CustomScrewTogetherBaseplate.svg",
+        )
