@@ -257,7 +257,7 @@ def make_magnet_holes(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.
 
                 # Translate for next hole
                 hm1_copy.translate(fc.Vector(xtranslate, ytranslate))
-            hm2 = hm1_copy if hm2 is None else hm2.fuse(hm1_copy)
+                hm2 = hm1_copy if hm2 is None else hm2.fuse(hm1_copy)
             ytranslate += obj.yGridSize  # Track position
 
         hm3 = hm2 if hm3 is None else hm3.fuse(hm2)
@@ -339,7 +339,7 @@ def make_screw_bottom_chamfer(obj: fc.DocumentObject, layout: GridfinityLayout) 
             if cell:
                 hm1_copy = hm1.copy()
                 hm1_copy.translate(fc.Vector(xtranslate, ytranslate))
-            hm2 = hm1_copy if hm2 is None else hm2.fuse(hm1_copy)
+                hm2 = hm1_copy if hm2 is None else hm2.fuse(hm1_copy)
             ytranslate += obj.yGridSize
         hm3 = hm2 if hm3 is None else hm3.fuse(hm2)
         xtranslate += obj.xGridSize
@@ -368,11 +368,12 @@ def connection_holes_properties(obj: fc.DocumentObject) -> None:
     ).ConnectionHoleDiameter = const.CONNECTION_HOLE_DIAMETER
 
 
-def make_connection_holes(obj: fc.DocumentObject) -> Part.Shape:
+def make_connection_holes(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.Shape:
     """Create connection holes for a baseplate.
 
     Args:
         obj (FreeCAD.DocumentObject): FreeCAD config object.
+        layout (GridfinityLayout): Grid layout of the object.
 
     Returns:
         Part.Shape: 3d Shape.
@@ -416,17 +417,17 @@ def make_connection_holes(obj: fc.DocumentObject) -> Part.Shape:
     hx2: Part.Shape | None = None
 
     xtranslate = zeromm
-    for _ in range(obj.xGridUnits):
-        hx1 = hx1.copy()
-        hx1.translate(fc.Vector(xtranslate, zeromm))
-        hx2 = hx1 if hx2 is None else hx2.fuse(hx1)
+    for _ in range(len(layout)):
+        hx1_copy = hx1.copy()
+        hx1_copy.translate(fc.Vector(xtranslate, zeromm))
+        hx2 = hx1_copy if hx2 is None else hx2.fuse(hx1_copy)
         xtranslate += obj.xGridSize
 
     hy1 = c3.fuse(c4)
     hy2: Part.Shape | None = None
 
     ytranslate = zeromm
-    for _ in range(obj.yGridUnits):
+    for _y in range(len(layout[_])):
         hy1_copy = hy1.copy()
         hy1_copy.translate(fc.Vector(zeromm, ytranslate))
         hy2 = hy1_copy if hy2 is None else hy2.fuse(hy1_copy)
@@ -575,10 +576,10 @@ def make_center_cut(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.Sh
     xtranslate = 0
     ytranslate = 0
 
-    for x in range(obj.xGridUnits):
+    for col in layout:
         ytranslate = 0
-        for y in range(obj.yGridUnits):
-            if layout[x][y]:
+        for cell in col:
+            if cell:
                 vec_list.append(fc.Vector(xtranslate, ytranslate))
             ytranslate += obj.yGridSize.Value
         xtranslate += obj.xGridSize.Value
