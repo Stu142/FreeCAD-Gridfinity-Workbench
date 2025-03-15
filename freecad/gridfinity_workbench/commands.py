@@ -185,7 +185,7 @@ class DrawCommand(BaseCommand):
             view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
             ViewProviderGridfinity(view_object, str(self.pixmap))
 
-        self.gridfinity_function(obj, layout)
+        self.gridfinity_function(obj, layout) # type: ignore [call-arg]
 
         fc.ActiveDocument.recompute()
         fcg.SendMsgToActiveView("ViewFit")
