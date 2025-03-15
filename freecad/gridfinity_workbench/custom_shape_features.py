@@ -131,7 +131,7 @@ def custom_shape_stacking_lip(
     obj: fc.DocumentObject,
     solid_shape: Part.Shape,
     layout: GridfinityLayout,
-) -> Part.Wire:
+) -> Part.Shape:
     """Create Custom Stacking Lip."""
     bin_outside_shape = get_object_shape(
         obj,
@@ -190,8 +190,8 @@ def clean_up_layout(layout: GridfinityLayout) -> list[list[bool]]:
 
 def cut_outside_shape(
     obj: fc.DocumentObject,
-    bin_outside_solid: Part.Solid,
-) -> Part.Solid:
+    bin_outside_solid: Part.Shape,
+) -> Part.Shape:
     """Return solid outer boundry of shape to cut away objects protruding from bin."""
     overall_rectangle = utils.rounded_rectangle_extrude(
         obj.xTotalWidth.Value + obj.Clearance.Value * 2,

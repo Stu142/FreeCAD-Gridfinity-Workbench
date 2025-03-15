@@ -987,7 +987,7 @@ class CustomStorageBin(FoundationGridfinity):
             fuse_total = fuse_total.fuse(label_shelf)
 
         if obj.Scoop:
-            scoop = feat.make_scoop(self, obj)
+            scoop = feat.make_scoop(obj)
             scoop = scoop.cut(outside_bin_solid)
             fuse_total = fuse_total.fuse(scoop)
 

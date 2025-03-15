@@ -326,7 +326,7 @@ def _corner_fillets(
     obj: fc.DocumentObject,
     xcomp_width: float,
     ycomp_width: float,
-) -> Part.Solid:
+) -> Part.Shape:
     fillets = []
     bottom_right_fillet = utils.corner_fillet(obj.InsideFilletRadius)
     bottom_right_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -270)
@@ -537,7 +537,7 @@ def compartments_properties(obj: fc.DocumentObject, x_div_default: int, y_div_de
     )
 
 
-def make_compartments(obj: fc.DocumentObject, bin_inside_solid: Part.Solid) -> Part.Shape:
+def make_compartments(obj: fc.DocumentObject, bin_inside_solid: Part.Shape) -> Part.Shape:
     """Create compartment cutout objects.
 
     Args:
@@ -827,7 +827,7 @@ def eco_compartments_properties(obj: fc.DocumentObject) -> None:
 def make_eco_compartments(
     obj: fc.DocumentObject,
     layout: GridfinityLayout,
-    bin_inside_solid: Part.Solid,
+    bin_inside_solid: Part.Shape,
 ) -> Part.Shape:
     """Create eco bin cutouts.
 
