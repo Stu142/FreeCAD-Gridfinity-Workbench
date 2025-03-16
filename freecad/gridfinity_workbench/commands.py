@@ -336,7 +336,7 @@ class StandaloneLabelShelf(BaseCommand):
     def __init__(self) -> None:
         super().__init__(
             name="StandaloneLabelShelf",
-            pixmap=ICONDIR / "BinBlank.svg",
+            pixmap=ICONDIR / "PlaceLabelShelf.svg",
             menu_text="Standalone label shelf",
             tooltip=(
                 "Create a standalone label shelf.<br><br>"
