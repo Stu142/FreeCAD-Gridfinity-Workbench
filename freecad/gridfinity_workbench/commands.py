@@ -99,14 +99,7 @@ class BaseCommand:
         self.tooltip = tooltip
 
     def IsActive(self) -> bool:  # noqa: N802
-        """Check if command should be active.
-
-        Gridfinity workbench command should only be active when there is an active document.
-
-        Returns:
-            bool: True when command is active, otherwise False.
-
-        """
+        """Check if command should be active."""
         return fc.ActiveDocument is not None
 
     def Activated(self) -> None:  # noqa: N802
@@ -341,7 +334,16 @@ class CreateCustomScrewTogetherBaseplate(DrawCommand):
 
 class StandaloneLabelShelf(BaseCommand):
     def __init__(self) -> None:
-        pass
+        super().__init__(
+            name="StandaloneLabelShelf",
+            pixmap=ICONDIR / "BinBlank.svg",
+            menu_text="Standalone label shelf",
+            tooltip=(
+                "Create a standalone label shelf.<br><br>"
+                "Select any Gridfinity Bin face and run this command to create a label shelf"
+                "attached to selected face."
+            ),
+        )
 
     def IsActive(self) -> bool:  # noqa: D102, N802
         selection = fcg.Selection.getSelectionEx()
@@ -373,14 +375,3 @@ class StandaloneLabelShelf(BaseCommand):
         features.StandaloneLabelShelf(obj, target_obj, face)
 
         fc.ActiveDocument.recompute()
-
-    def GetResources(self) -> dict[str, str]:  # noqa: D102, N802
-        return {
-            "Pixmap": str(ICONDIR / "BinBlank.svg"),
-            "MenuText": "Standalone label shelf",
-            "ToolTip": (
-                "Create a standalone label shelf.<br><br>"
-                "Select any Gridfinity Bin face and run this command to create a label shelf"
-                "attached to selected face."
-            ),
-        }
