@@ -11,9 +11,11 @@ from . import baseplate_feature_construction as baseplate_feat
 from . import const, grid_initial_layout, label_shelf, utils
 from . import feature_construction as feat
 from .custom_shape_features import (
+    clean_up_layout,
     custom_shape_solid,
     custom_shape_stacking_lip,
     custom_shape_trim,
+    cut_outside_shape,
     vertical_edge_fillet,
 )
 from .version import __version__
@@ -76,86 +78,6 @@ class FoundationGridfinity:
 
         State argument required, otherwise expecting argument error message.
         """
-
-
-class CustomBin(FoundationGridfinity):
-    def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
-        super().__init__(obj)
-        self.layout = layout
-
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
-        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
-        feat.bin_solid_mid_section_properties(
-            obj,
-            default_height_units=const.HEIGHT_UNITS,
-            default_wall_thickness=const.WALL_THICKNESS,
-        )
-        feat.blank_bin_recessed_top_properties(obj)
-        feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP)
-        feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
-        feat.bin_base_values_properties(obj)
-
-    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        ## calculated here
-        if obj.NonStandardHeight:
-            obj.TotalHeight = obj.CustomHeight
-
-        else:
-            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
-
-        obj.BaseProfileHeight = (
-            obj.BaseProfileBottomChamfer
-            + obj.BaseProfileVerticalSection
-            + obj.BaseProfileTopChamfer
-        )
-
-        obj.StackingLipTopChamfer = (
-            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
-        )
-        ## calculated values over
-        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
-        solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
-        outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
-        fuse_total = solid_shape.cut(outside_trim)
-        fuse_total = fuse_total.removeSplitter()
-        fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
-        fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, self.layout))
-
-        if obj.RecessedTopDepth > 0:
-            recessed_solid = custom_shape_solid(obj, self.layout, obj.RecessedTopDepth)
-            recessed_outside_trim = custom_shape_trim(
-                obj,
-                self.layout,
-                obj.Clearance.Value + obj.WallThickness.Value,
-                obj.Clearance.Value + obj.WallThickness.Value,
-            )
-            recessed_solid = recessed_solid.cut(recessed_outside_trim)
-            recessed_solid = recessed_solid.removeSplitter()
-            recessed_solid = vertical_edge_fillet(
-                recessed_solid,
-                obj.BinOuterRadius - obj.WallThickness,
-            )
-            fuse_total = fuse_total.cut(recessed_solid)
-        if obj.ScrewHoles or obj.MagnetHoles:
-            holes = feat.make_bin_bottom_holes(obj, self.layout)
-            fuse_total = Part.Shape.cut(fuse_total, holes)
-        if obj.StackingLip:
-            fuse_total = fuse_total.fuse(custom_shape_stacking_lip(obj, solid_shape, self.layout))
-
-        return fuse_total
-
-    def dumps(self) -> dict:
-        """Needed for JSON Serialization when saving a file containing gridfinity object."""
-        return {"layout": self.layout}
-
-    def loads(self, state: dict) -> None:
-        """Needed for JSON Serialization when opening a file containing gridfinity object."""
-        self.layout = state["layout"]
 
 
 class FullBin(FoundationGridfinity):
@@ -312,7 +234,11 @@ class StorageBin(FoundationGridfinity):
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
-        fuse_total = fuse_total.cut(feat.make_compartments(obj, bin_inside_shape))
+        obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
+        face = Part.Face(bin_inside_shape).translate(fc.Vector(0, 0, -obj.UsableHeight))
+        compartments = face.extrude(fc.Vector(0, 0, obj.UsableHeight))
+
+        fuse_total = fuse_total.cut(feat.make_compartments(obj, compartments))
 
         if obj.StackingLip:
             fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
@@ -407,7 +333,18 @@ class EcoBin(FoundationGridfinity):
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
-        fuse_total = fuse_total.cut(feat.make_eco_compartments(obj, layout, bin_inside_shape))
+        face = Part.Face(bin_inside_shape).translate(
+            fc.Vector(
+                0,
+                0,
+                -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness,
+            ),
+        )
+
+        compartment_solid = face.extrude(
+            fc.Vector(0, 0, obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness),
+        )
+        fuse_total = fuse_total.cut(feat.make_eco_compartments(obj, layout, compartment_solid))
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -551,7 +488,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         fuse_total = fuse_total.cut(baseplate_feat.make_magnet_holes(obj, layout))
         fuse_total = fuse_total.cut(baseplate_feat.make_center_cut(obj, layout))
         fuse_total = fuse_total.cut(baseplate_feat.make_screw_bottom_chamfer(obj, layout))
-        fuse_total = fuse_total.cut(baseplate_feat.make_connection_holes(obj))
+        fuse_total = fuse_total.cut(baseplate_feat.make_connection_holes(obj, layout))
 
         return fuse_total
 
@@ -613,6 +550,568 @@ class LBinBlank(FoundationGridfinity):
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
 
         return fuse_total
+
+
+class CustomBlankBin(FoundationGridfinity):
+    """Gridfinity CustomBlankBin object."""
+
+    def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
+        super().__init__(obj)
+        self.layout = clean_up_layout(layout)
+
+        obj.addProperty(
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
+        )
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
+        feat.bin_solid_mid_section_properties(
+            obj,
+            default_height_units=const.HEIGHT_UNITS,
+            default_wall_thickness=const.WALL_THICKNESS,
+        )
+        feat.blank_bin_recessed_top_properties(obj)
+        feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP)
+        feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
+        feat.bin_base_values_properties(obj)
+
+        obj.Proxy = self
+
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        """Generate BinBlank Shape."""
+        ## calculated here
+        if obj.NonStandardHeight:
+            obj.TotalHeight = obj.CustomHeight
+
+        else:
+            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
+
+        obj.BaseProfileHeight = (
+            obj.BaseProfileBottomChamfer
+            + obj.BaseProfileVerticalSection
+            + obj.BaseProfileTopChamfer
+        )
+
+        obj.StackingLipTopChamfer = (
+            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
+        )
+        ## calculated values over
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
+        solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
+        outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
+        fuse_total = solid_shape.cut(outside_trim)
+        fuse_total = fuse_total.removeSplitter()
+        fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
+        fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, self.layout))
+
+        if obj.RecessedTopDepth > 0:
+            recessed_solid = custom_shape_solid(obj, self.layout, obj.RecessedTopDepth)
+            recessed_outside_trim = custom_shape_trim(
+                obj,
+                self.layout,
+                obj.Clearance.Value + obj.WallThickness.Value,
+                obj.Clearance.Value + obj.WallThickness.Value,
+            )
+            recessed_solid = recessed_solid.cut(recessed_outside_trim)
+            recessed_solid = recessed_solid.removeSplitter()
+            recessed_solid = vertical_edge_fillet(
+                recessed_solid,
+                obj.BinOuterRadius - obj.WallThickness,
+            )
+            fuse_total = fuse_total.cut(recessed_solid)
+        if obj.ScrewHoles or obj.MagnetHoles:
+            holes = feat.make_bin_bottom_holes(obj, self.layout)
+            fuse_total = Part.Shape.cut(fuse_total, holes)
+        if obj.StackingLip:
+            fuse_total = fuse_total.fuse(
+                custom_shape_stacking_lip(obj, solid_shape, self.layout),
+            )
+
+        return fuse_total
+
+    def dumps(self) -> dict:
+        """Needed for JSON Serialization when saving a file containing gridfinity object."""
+        return {"layout": self.layout}
+
+    def loads(self, state: dict) -> None:
+        """Needed for JSON Serialization when opening a file containing gridfinity object."""
+        self.layout = state["layout"]
+
+
+class CustomBinBase(FoundationGridfinity):
+    """Gridfinity CustomBinBase object."""
+
+    def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
+        super().__init__(obj)
+        self.layout = clean_up_layout(layout)
+
+        obj.addProperty(
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
+        )
+        self.bintype = "standard"
+
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
+        feat.bin_solid_mid_section_properties(
+            obj,
+            default_height_units=1,
+            default_wall_thickness=const.WALL_THICKNESS,
+        )
+        feat.blank_bin_recessed_top_properties(obj)
+        feat.stacking_lip_properties(obj, stacking_lip_default=False)
+        feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
+        feat.bin_base_values_properties(obj)
+
+        obj.Proxy = self
+
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        """Generate BinBase Shape."""
+        ## calculated here
+        if obj.NonStandardHeight:
+            obj.TotalHeight = obj.CustomHeight
+
+        else:
+            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
+
+        obj.BaseProfileHeight = (
+            obj.BaseProfileBottomChamfer
+            + obj.BaseProfileVerticalSection
+            + obj.BaseProfileTopChamfer
+        )
+
+        obj.StackingLipTopChamfer = (
+            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
+        )
+        ## calculated values over
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
+        solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
+        outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
+        fuse_total = solid_shape.cut(outside_trim)
+        fuse_total = fuse_total.removeSplitter()
+        fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
+        fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, self.layout))
+
+        if obj.RecessedTopDepth > 0:
+            recessed_solid = custom_shape_solid(obj, self.layout, obj.RecessedTopDepth)
+            recessed_outside_trim = custom_shape_trim(
+                obj,
+                self.layout,
+                obj.Clearance.Value + obj.WallThickness.Value,
+                obj.Clearance.Value + obj.WallThickness.Value,
+            )
+            recessed_solid = recessed_solid.cut(recessed_outside_trim)
+            recessed_solid = recessed_solid.removeSplitter()
+            recessed_solid = vertical_edge_fillet(
+                recessed_solid,
+                obj.BinOuterRadius - obj.WallThickness,
+            )
+            fuse_total = fuse_total.cut(recessed_solid)
+        if obj.ScrewHoles or obj.MagnetHoles:
+            holes = feat.make_bin_bottom_holes(obj, self.layout)
+            fuse_total = Part.Shape.cut(fuse_total, holes)
+        if obj.StackingLip:
+            fuse_total = fuse_total.fuse(
+                custom_shape_stacking_lip(obj, solid_shape, self.layout),
+            )
+
+        return fuse_total
+
+    def dumps(self) -> dict:
+        """Needed for JSON Serialization when saving a file containing gridfinity object."""
+        return {"layout": self.layout}
+
+    def loads(self, state: dict) -> None:
+        """Needed for JSON Serialization when opening a file containing gridfinity object."""
+        self.layout = state["layout"]
+
+
+class CustomEcoBin(FoundationGridfinity):
+    """Gridfinity CustomEcoBin object."""
+
+    def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
+        super().__init__(obj)
+        self.layout = clean_up_layout(layout)
+
+        obj.addProperty(
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
+        )
+        self.bintype = "eco"
+
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
+        feat.bin_solid_mid_section_properties(
+            obj,
+            default_height_units=const.HEIGHT_UNITS,
+            default_wall_thickness=const.WALL_THICKNESS,
+        )
+        feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP)
+        feat.bin_bottom_holes_properties(obj, magnet_holes_default=False)
+        feat.bin_base_values_properties(obj)
+        feat.label_shelf_properties(obj, label_style_default="Off")
+        feat.eco_compartments_properties(obj)
+
+        obj.Proxy = self
+
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        """Generate EcoBin Shape."""
+        ## calculated here
+        if obj.NonStandardHeight:
+            obj.TotalHeight = obj.CustomHeight
+        else:
+            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
+
+        obj.BaseProfileHeight = (
+            obj.BaseProfileBottomChamfer
+            + obj.BaseProfileVerticalSection
+            + obj.BaseProfileTopChamfer
+        )
+
+        obj.StackingLipTopChamfer = (
+            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
+        )
+        ## calculated values over
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
+        solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
+        outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
+        fuse_total = solid_shape.cut(outside_trim)
+        fuse_total = fuse_total.removeSplitter()
+        fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
+        fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, self.layout))
+
+        feat.eco_error_check(obj)
+        compartments_solid = custom_shape_solid(
+            obj,
+            self.layout,
+            obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness,
+        )
+        compartment_trim = custom_shape_trim(
+            obj,
+            self.layout,
+            obj.Clearance.Value + obj.WallThickness.Value,
+            obj.Clearance.Value + obj.WallThickness.Value,
+        )
+        compartments_solid = compartments_solid.cut(compartment_trim)
+        compartments_solid = compartments_solid.removeSplitter()
+        compartments_solid = vertical_edge_fillet(
+            compartments_solid,
+            obj.BinOuterRadius - obj.WallThickness,
+        )
+        inside_wall_solid_full_height = custom_shape_solid(
+            obj,
+            self.layout,
+            obj.TotalHeight,
+        )
+        inside_wall_solid_full_height = inside_wall_solid_full_height.cut(compartment_trim)
+        inside_wall_solid_full_height = inside_wall_solid_full_height.removeSplitter()
+        inside_wall_solid_full_height = vertical_edge_fillet(
+            inside_wall_solid_full_height,
+            obj.BinOuterRadius - obj.WallThickness,
+        )
+        compartments = feat.make_eco_compartments(obj, self.layout, compartments_solid)
+        inside_wall_negative = cut_outside_shape(obj, inside_wall_solid_full_height)
+        compartments = compartments.cut(inside_wall_negative)
+        fuse_total = fuse_total.cut(compartments)
+
+        if obj.LabelShelfStyle != "Off":
+            label_shelf = feat.make_label_shelf(obj, "eco")
+            label_shelf = label_shelf.cut(inside_wall_negative)
+            fuse_total = fuse_total.fuse(label_shelf)
+
+        if obj.ScrewHoles or obj.MagnetHoles:
+            holes = self.bin_bottom_holes.make(obj, self.layout)
+            fuse_total = Part.Shape.cut(fuse_total, holes)
+        if obj.StackingLip:
+            fuse_total = fuse_total.fuse(
+                custom_shape_stacking_lip(obj, solid_shape, self.layout),
+            )
+
+        return fuse_total.removeSplitter()
+
+    def dumps(self) -> dict:
+        """Needed for JSON Serialization when saving a file containing gridfinity object."""
+        return {"layout": self.layout}
+
+    def loads(self, state: dict) -> None:
+        """Needed for JSON Serialization when opening a file containing gridfinity object."""
+        self.layout = state["layout"]
+
+
+class CustomStorageBin(FoundationGridfinity):
+    """Gridfinity CustomStorageBin object."""
+
+    def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
+        super().__init__(obj)
+        self.layout = clean_up_layout(layout)
+
+        obj.addProperty(
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
+        )
+
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
+        feat.bin_solid_mid_section_properties(
+            obj,
+            default_height_units=const.HEIGHT_UNITS,
+            default_wall_thickness=const.WALL_THICKNESS,
+        )
+        feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP)
+        feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
+        feat.bin_base_values_properties(obj)
+        feat.compartments_properties(obj, x_div_default=0, y_div_default=0)
+        feat.label_shelf_properties(obj, label_style_default="Off")
+        feat.scoop_properties(obj, scoop_default=False)
+
+        obj.Proxy = self
+
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        """Generate StorageBin Shape."""
+        ## calculated here
+        if obj.NonStandardHeight:
+            obj.TotalHeight = obj.CustomHeight
+
+        else:
+            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
+
+        obj.BaseProfileHeight = (
+            obj.BaseProfileBottomChamfer
+            + obj.BaseProfileVerticalSection
+            + obj.BaseProfileTopChamfer
+        )
+
+        obj.StackingLipTopChamfer = (
+            obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
+        )
+        obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
+        ## calculated values over
+
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
+        solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
+        outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
+        fuse_total = solid_shape.cut(outside_trim)
+        fuse_total = fuse_total.removeSplitter()
+        fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
+        fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, self.layout))
+
+        compartments_solid = custom_shape_solid(obj, self.layout, obj.UsableHeight)
+        compartment_trim = custom_shape_trim(
+            obj,
+            self.layout,
+            obj.Clearance.Value + obj.WallThickness.Value,
+            obj.Clearance.Value + obj.WallThickness.Value,
+        )
+        compartments_solid = compartments_solid.cut(compartment_trim)
+        compartments_solid = compartments_solid.removeSplitter()
+        compartments_solid = vertical_edge_fillet(
+            compartments_solid,
+            obj.BinOuterRadius - obj.WallThickness,
+        )
+        compartments = feat.make_compartments(obj, compartments_solid)
+
+        fuse_total = fuse_total.cut(compartments)
+
+        if obj.ScrewHoles or obj.MagnetHoles:
+            holes = feat.make_bin_bottom_holes(obj, self.layout)
+            fuse_total = Part.Shape.cut(fuse_total, holes)
+        if obj.StackingLip:
+            fuse_total = fuse_total.fuse(
+                custom_shape_stacking_lip(obj, solid_shape, self.layout),
+            )
+        outside_bin_solid = cut_outside_shape(obj, compartments_solid)
+
+        if obj.LabelShelfStyle != "Off":
+            label_shelf = feat.make_label_shelf(obj, "standard")
+            label_shelf = label_shelf.cut(outside_bin_solid)
+            fuse_total = fuse_total.fuse(label_shelf)
+
+        if obj.Scoop:
+            scoop = feat.make_scoop(obj)
+            scoop = scoop.cut(outside_bin_solid)
+            fuse_total = fuse_total.fuse(scoop)
+
+        return fuse_total.removeSplitter()
+
+    def dumps(self) -> dict:
+        """Needed for JSON Serialization when saving a file containing gridfinity object."""
+        return {"layout": self.layout}
+
+    def loads(self, state: dict) -> None:
+        """Needed for JSON Serialization when opening a file containing gridfinity object."""
+        self.layout = state["layout"]
+
+
+class CustomBaseplate(FoundationGridfinity):
+    """Gridfinity CustomBaseplate object."""
+
+    def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
+        super().__init__(obj)
+        self.layout = clean_up_layout(layout)
+
+        obj.addProperty(
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
+        )
+        self.bintype = "standard"
+
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=True)
+        baseplate_feat.solid_shape_properties(obj)
+        baseplate_feat.base_values_properties(obj)
+
+        obj.Proxy = self
+
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        """Generate Baseplate Shape."""
+        ## calculated here
+        baseplate_feat.make_base_values(obj)
+        obj.TotalHeight = obj.BaseProfileHeight
+
+        ## calculated values over
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
+        solid_shape = custom_shape_solid(
+            obj,
+            self.layout,
+            obj.TotalHeight,
+        ).translate(fc.Vector(0, 0, obj.TotalHeight))
+        solid_shape = solid_shape.removeSplitter()
+        solid_shape = vertical_edge_fillet(solid_shape, obj.BinOuterRadius)
+
+        fuse_total = feat.make_complex_bin_base(obj, self.layout)
+        fuse_total.translate(fc.Vector(0, 0, obj.TotalHeight))
+        fuse_total = solid_shape.cut(fuse_total)
+
+        return fuse_total
+
+    def dumps(self) -> dict:
+        """Needed for JSON Serialization when saving a file containing gridfinity object."""
+        return {"layout": self.layout}
+
+    def loads(self, state: dict) -> None:
+        """Needed for JSON Serialization when opening a file containing gridfinity object."""
+        self.layout = state["layout"]
+
+
+class CustomMagnetBaseplate(FoundationGridfinity):
+    """Gridfinity CustomMagnetBaseplate object."""
+
+    def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
+        super().__init__(obj)
+        self.layout = clean_up_layout(layout)
+
+        obj.addProperty(
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
+        )
+        self.bintype = "standard"
+
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=True)
+        baseplate_feat.solid_shape_properties(obj)
+        baseplate_feat.base_values_properties(obj)
+        baseplate_feat.magnet_holes_properties(obj)
+        baseplate_feat.center_cut_properties(obj)
+
+        obj.Proxy = self
+
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        """Generate MagnetBaseplate Shape."""
+        ## calculated here
+        baseplate_feat.make_base_values(obj)
+        obj.TotalHeight = obj.BaseProfileHeight + obj.MagnetHoleDepth + obj.MagnetBase
+
+        ## calculated values over
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
+        solid_shape = custom_shape_solid(
+            obj,
+            self.layout,
+            obj.TotalHeight,
+        ).translate(fc.Vector(0, 0, obj.BaseProfileHeight))
+        solid_shape = solid_shape.removeSplitter()
+        solid_shape = vertical_edge_fillet(solid_shape, obj.BinOuterRadius)
+
+        fuse_total = feat.make_complex_bin_base(obj, self.layout)
+        fuse_total.translate(fc.Vector(0, 0, obj.TotalHeight))
+        fuse_total = solid_shape.cut(fuse_total)
+        fuse_total = fuse_total.cut(baseplate_feat.make_magnet_holes(obj, self.layout))
+        fuse_total = fuse_total.cut(baseplate_feat.make_center_cut(obj, self.layout))
+
+        return fuse_total
+
+    def dumps(self) -> dict:
+        """Needed for JSON Serialization when saving a file containing gridfinity object."""
+        return {"layout": self.layout}
+
+    def loads(self, state: dict) -> None:
+        """Needed for JSON Serialization when opening a file containing gridfinity object."""
+        self.layout = state["layout"]
+
+
+class CustomScrewTogetherBaseplate(FoundationGridfinity):
+    """Gridfinity CustomScrewTogetherBaseplate object."""
+
+    def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
+        super().__init__(obj)
+        self.layout = clean_up_layout(layout)
+
+        obj.addProperty(
+            "App::PropertyPythonObject",
+            "Bin",
+            "base",
+            "python gridfinity object",
+        )
+        self.bintype = "standard"
+
+        grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=True)
+        baseplate_feat.solid_shape_properties(obj)
+        baseplate_feat.base_values_properties(obj)
+        baseplate_feat.magnet_holes_properties(obj)
+        baseplate_feat.center_cut_properties(obj)
+        baseplate_feat.screw_bottom_chamfer_properties(obj)
+        baseplate_feat.connection_holes_properties(obj)
+
+        obj.Proxy = self
+
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        """Generate Screw Together Baseplate Shape."""
+        ## calculated here
+        baseplate_feat.make_base_values(obj)
+        obj.TotalHeight = obj.BaseProfileHeight + obj.BaseThickness
+
+        ## calculated values over
+        grid_initial_layout.make_custom_shape_layout(obj, self.layout)
+        solid_shape = custom_shape_solid(
+            obj,
+            self.layout,
+            obj.TotalHeight,
+        ).translate(fc.Vector(0, 0, obj.BaseProfileHeight))
+        solid_shape = solid_shape.removeSplitter()
+        solid_shape = vertical_edge_fillet(solid_shape, obj.BinOuterRadius)
+
+        fuse_total = feat.make_complex_bin_base(obj, self.layout)
+        fuse_total.translate(fc.Vector(0, 0, obj.TotalHeight))
+        fuse_total = solid_shape.cut(fuse_total)
+        fuse_total = fuse_total.cut(baseplate_feat.make_magnet_holes(obj, self.layout))
+        fuse_total = fuse_total.cut(baseplate_feat.make_center_cut(obj, self.layout))
+        fuse_total = fuse_total.cut(baseplate_feat.make_screw_bottom_chamfer(obj, self.layout))
+        fuse_total = fuse_total.cut(baseplate_feat.make_connection_holes(obj, self.layout))
+
+        return fuse_total
+
+    def dumps(self) -> dict:
+        """Needed for JSON Serialization when saving a file containing gridfinity object."""
+        return {"layout": self.layout}
+
+    def loads(self, state: dict) -> None:
+        """Needed for JSON Serialization when opening a file containing gridfinity object."""
+        self.layout = state["layout"]
 
 
 class StandaloneLabelShelf:
