@@ -281,7 +281,7 @@ class DrawBin(DrawCommand):
     def __init__(self) -> None:
         super().__init__(
             name="CustomBin",
-            pixmap=ICONDIR / "CustomBlankBin.svg",
+            pixmap=ICONDIR / "CustomBin.svg",
             menu_text="Gridfinity Custom Bin",
             tooltip="Draw a custom gridfinity bin of any type.",
             gridfinity_functions=OrderedDict(

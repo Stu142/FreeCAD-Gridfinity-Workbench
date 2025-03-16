@@ -7,7 +7,7 @@
    viewBox="0 0 16.933333 16.933333"
    version="1.1"
    id="svg1"
-   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
    sodipodi:docname="CustomBaseplate.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -24,12 +24,12 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="5.7513468"
-     inkscape:cx="49.553611"
-     inkscape:cy="44.772122"
-     inkscape:window-width="1920"
-     inkscape:window-height="1009"
-     inkscape:window-x="1912"
-     inkscape:window-y="-8"
+     inkscape:cx="49.727483"
+     inkscape:cy="44.859058"
+     inkscape:window-width="2560"
+     inkscape:window-height="1374"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1" />
   <defs
@@ -41,35 +41,46 @@
     <text
        xml:space="preserve"
        style="font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#ff01f1;fill-opacity:1;stroke-width:0.264583"
-       x="0.41403368"
-       y="4.2783456"
+       x="0.59804857"
+       y="7.7286243"
        id="text2"><tspan
          sodipodi:role="line"
          id="tspan2"
          style="fill:#ff01f1;fill-opacity:1;stroke-width:0.264583"
-         x="0.41403368"
-         y="4.2783456">Custom</tspan></text>
+         x="0.59804857"
+         y="7.7286243">Custom</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#ff01f1;fill-opacity:1;stroke-width:0.264583"
-       x="3.2662642"
-       y="9.9828053"
+       x="3.3582716"
+       y="11.684943"
        id="text5"><tspan
          sodipodi:role="line"
          style="stroke-width:0.264583"
-         x="3.2662642"
-         y="9.9828053"
+         x="3.3582716"
+         y="11.684943"
          id="tspan1">Base</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#ff01f1;fill-opacity:1;stroke-width:0.264583"
-       x="3.1641834"
-       y="13.638797"
+       x="3.2561908"
+       y="15.340935"
        id="text5-8"><tspan
          sodipodi:role="line"
          style="stroke-width:0.264583"
-         x="3.1641834"
-         y="13.638797"
+         x="3.2561908"
+         y="15.340935"
          id="tspan1-8">Plate</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.23333px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#dfdd00;stroke-width:0.264583"
+       x="3.7297015"
+       y="3.953615"
+       id="text1"><tspan
+         sodipodi:role="line"
+         id="tspan1-5"
+         style="stroke-width:0.264583"
+         x="3.7297015"
+         y="3.953615">Beta</tspan></text>
   </g>
 </svg>
