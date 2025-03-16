@@ -8,7 +8,7 @@ import FreeCAD as fc  # noqa: N813
 import Part
 
 from . import baseplate_feature_construction as baseplate_feat
-from . import const, grid_initial_layout, utils
+from . import const, grid_initial_layout, label_shelf, utils
 from . import feature_construction as feat
 from .custom_shape_features import (
     clean_up_layout,
@@ -1112,3 +1112,102 @@ class CustomScrewTogetherBaseplate(FoundationGridfinity):
     def loads(self, state: dict) -> None:
         """Needed for JSON Serialization when opening a file containing gridfinity object."""
         self.layout = state["layout"]
+
+
+class StandaloneLabelShelf:
+    def __init__(
+        self,
+        obj: fc.DocumentObject,
+        target_obj: fc.DocumentObject,
+        face: Part.Face,
+    ) -> None:
+        obj.addProperty(
+            "App::PropertyString",
+            "version",
+            "version",
+            "Gridfinity Workbench Version",
+            1,
+        ).version = __version__
+
+        obj.addProperty(
+            "App::PropertyLength",
+            "Width",
+            "GridfinityNonStandard",
+            "Width of the Label Shelf, how far it sticks out from the wall"
+            " <br> <br> default = 12 mm",
+        ).Width = const.LABEL_SHELF_WIDTH
+        obj.addProperty(
+            "App::PropertyLength",
+            "Length",
+            "GridfinityNonStandard",
+            "Length of the Label Shelf, how long it is <br> <br> default = 42 mm",
+        ).Length = const.LABEL_SHELF_LENGTH
+        obj.addProperty(
+            "App::PropertyAngle",
+            "Angle",
+            "GridfinityNonStandard",
+            "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
+        ).Angle = const.LABEL_SHELF_ANGLE
+        obj.addProperty(
+            "App::PropertyLength",
+            "LabelShelfVerticalThickness",
+            "zzExpertOnly",
+            "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
+        ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
+
+        obj.addProperty(
+            "App::PropertyLink",
+            "Attachment",
+            "Base",
+            "Object this label shelf is attached to.",
+            read_only=True,
+        ).Attachment = target_obj
+
+        normal = face.normalAt(*face.Surface.parameter(face.CenterOfMass))
+        rotation = fc.Rotation(fc.Vector(1, 0, 0), normal)
+
+        points = [v.Point for v in face.Vertexes]
+        height = max([p.z for p in points])
+        [p1, p2] = [p for p in points if p.z > height - 1e-4]
+        translation = (p1 + p2) / 2  # type: ignore[operator]
+
+        placement = fc.Placement(translation, rotation)
+
+        obj.Proxy = self
+
+        obj.Placement = placement
+        obj.setExpression(
+            "Placement.Base.z",
+            "Attachment.StackingLip == 1 ? -Attachment.LabelShelfStackingOffset : 0mm",
+        )
+
+    def execute(self, obj: Part.Feature) -> None:
+        width = obj.Width
+        stacking_lip_offset = (
+            obj.Attachment.StackingLipTopChamfer
+            + obj.Attachment.StackingLipTopLedge
+            + obj.Attachment.StackingLipBottomChamfer
+            - obj.Attachment.WallThickness
+        )
+        # Check if the shelf is covered by a stacking lip
+        check_point = obj.Placement.Base + obj.Placement.Rotation.multVec(
+            fc.Vector(stacking_lip_offset / 2),
+        )
+        if obj.Attachment.StackingLip and obj.Attachment.Shape.isInside(check_point, 1e-6, False):  # noqa: FBT003
+            width += stacking_lip_offset
+
+        shape = label_shelf.from_angle(
+            length=obj.Length,
+            width=width,
+            thickness=obj.LabelShelfVerticalThickness,
+            angle=obj.Angle,
+            center=True,
+        )
+
+        obj.Shape = shape
+
+    def dumps(self) -> None:
+        return
+
+    def loads(self, state: tuple) -> None:  # noqa: ARG002
+        return
