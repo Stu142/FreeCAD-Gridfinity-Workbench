@@ -6,7 +6,9 @@ Contains command objects representing what should happen on a button press.
 # ruff: noqa: D101, D107
 
 import re
+from collections import OrderedDict
 from pathlib import Path
+from typing import Any
 
 import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
@@ -153,44 +155,6 @@ class CreateCommand(BaseCommand):
         fcg.SendMsgToActiveView("ViewFit")
 
 
-class DrawCommand(BaseCommand):
-    """Base for gridfinity workbench command.
-
-    Used for commands where an object is drawn.
-
-    """
-
-    def __init__(
-        self,
-        *,
-        name: str,
-        gridfinity_function: type[FoundationGridfinity],
-        pixmap: Path,
-    ) -> None:
-        super().__init__(
-            name=name,
-            pixmap=pixmap,
-            menu_text=f"Gridfinity {PASCAL_CASE_REGEX.sub(' ', name)}",
-            tooltip=f"Draw a Gridfinty {PASCAL_CASE_REGEX.sub(' ', name)}.",
-        )
-        self.gridfinity_function = gridfinity_function
-
-    def Activated(self) -> None:  # noqa: N802, D102
-        layout = custom_shape.get_layout()
-        if layout is None:
-            return
-
-        obj = utils.new_object(self.name)
-        if fc.GuiUp:
-            view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
-            ViewProviderGridfinity(view_object, str(self.pixmap))
-
-        self.gridfinity_function(obj, layout)  # type: ignore [call-arg]
-
-        fc.ActiveDocument.recompute()
-        fcg.SendMsgToActiveView("ViewFit")
-
-
 class CreateBinBlank(CreateCommand):
     def __init__(self) -> None:
         super().__init__(
@@ -272,64 +236,77 @@ class CreateLBinBlank(CreateCommand):
         )
 
 
-class CreateCustomBlankBin(DrawCommand):
+class DrawCommand(BaseCommand):
+    """Base for gridfinity workbench command.
+
+    Used for commands where an object is drawn.
+
+    """
+
+    def __init__(
+        self,
+        *,
+        name: str,
+        pixmap: Path,
+        menu_text: str,
+        tooltip: str,
+        gridfinity_functions: OrderedDict[str, Any],
+    ) -> None:
+        super().__init__(
+            name=name,
+            pixmap=pixmap,
+            menu_text=menu_text,
+            tooltip=tooltip,
+        )
+        self.gridfinity_functions = gridfinity_functions
+
+    def Activated(self) -> None:  # noqa: N802, D102
+        dialog_data = custom_shape.custom_bin_dialog(list(self.gridfinity_functions.keys()))
+        if dialog_data is None:
+            return
+        assert dialog_data.bin_type in self.gridfinity_functions
+
+        obj = utils.new_object(self.name)
+        if fc.GuiUp:
+            view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
+            ViewProviderGridfinity(view_object, str(self.pixmap))
+
+        self.gridfinity_functions[dialog_data.bin_type](obj, dialog_data.layout)
+
+        fc.ActiveDocument.recompute()
+        fcg.SendMsgToActiveView("ViewFit")
+
+
+class DrawBin(DrawCommand):
     def __init__(self) -> None:
         super().__init__(
-            name="CustomBlankBin",
-            gridfinity_function=CustomBlankBin,
+            name="CustomBin",
             pixmap=ICONDIR / "CustomBlankBin.svg",
+            menu_text="Gridfinity Custom Bin",
+            tooltip="Draw a custom gridfinity bin of any type.",
+            gridfinity_functions=OrderedDict(
+                [
+                    ("Blank Bin", CustomBlankBin),
+                    ("Bin Base", CustomBinBase),
+                    ("Storage Bin", CustomStorageBin),
+                    ("Eco Bin", CustomEcoBin),
+                ],
+            ),
         )
 
 
-class CreateCustomBinBase(DrawCommand):
-    def __init__(self) -> None:
-        super().__init__(
-            name="CustomBinBase",
-            gridfinity_function=CustomBinBase,
-            pixmap=ICONDIR / "CustomBinBase.svg",
-        )
-
-
-class CreateCustomEcoBin(DrawCommand):
-    def __init__(self) -> None:
-        super().__init__(
-            name="CustomEcoBin",
-            gridfinity_function=CustomEcoBin,
-            pixmap=ICONDIR / "CustomEcoBin.svg",
-        )
-
-
-class CreateCustomStorageBin(DrawCommand):
-    def __init__(self) -> None:
-        super().__init__(
-            name="CustomStorageBin",
-            gridfinity_function=CustomStorageBin,
-            pixmap=ICONDIR / "CustomStorageBin.svg",
-        )
-
-
-class CreateCustomBaseplate(DrawCommand):
+class DrawBaseplate(DrawCommand):
     def __init__(self) -> None:
         super().__init__(
             name="CustomBaseplate",
-            gridfinity_function=CustomBaseplate,
             pixmap=ICONDIR / "CustomBaseplate.svg",
-        )
-
-
-class CreateCustomMagnetBaseplate(DrawCommand):
-    def __init__(self) -> None:
-        super().__init__(
-            name="CustomMagnetBaseplate",
-            gridfinity_function=CustomMagnetBaseplate,
-            pixmap=ICONDIR / "CustomMagnetBaseplate.svg",
-        )
-
-
-class CreateCustomScrewTogetherBaseplate(DrawCommand):
-    def __init__(self) -> None:
-        super().__init__(
-            name="CustomScrewTogetherBaseplate",
-            gridfinity_function=CustomScrewTogetherBaseplate,
-            pixmap=ICONDIR / "CustomScrewTogetherBaseplate.svg",
+            menu_text="Gridfinity Custom Baseplate",
+            tooltip="Draw a custom gridfinity baseplate of any type.",
+            gridfinity_functions=OrderedDict(
+                [
+                    ("Simple Baseplate", CustomBaseplate),
+                    ("Magnet Baseplate", CustomMagnetBaseplate),
+                    ("Screw Together Baseplate", CustomScrewTogetherBaseplate),
+                ],
+            ),
         )

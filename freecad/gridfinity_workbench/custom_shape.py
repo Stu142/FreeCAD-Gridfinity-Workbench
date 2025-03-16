@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 
 # The PySide library is provided by FreeCAD and it's path is platform dependent,
 # so it cannot be analyzed by mypy.
@@ -22,6 +23,7 @@ from PySide.QtGui import (
     QShowEvent,
 )
 from PySide.QtWidgets import (
+    QComboBox,
     QDialog,
     QDialogButtonBox,
     QLabel,
@@ -32,7 +34,7 @@ from PySide.QtWidgets import (
 class GridDialog(QDialog):
     """A dialog with togglable grid cells."""
 
-    def __init__(self, x: int, y: int, offset: int, spacing: int) -> None:
+    def __init__(self, types: list[str], x: int, y: int, offset: int, spacing: int) -> None:
         """Create the dialog object."""
         super().__init__()
         self.x = x
@@ -44,11 +46,15 @@ class GridDialog(QDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
+        self.comboBox = QComboBox()
+        self.comboBox.addItems(types)
+
         self.label = QLabel()
         self.pixmap = QPixmap(QSize(2 * offset + x * spacing, 2 * offset + y * spacing))
 
         layout = QVBoxLayout()
         layout.addWidget(self.label)
+        layout.addWidget(self.comboBox)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
 
@@ -139,13 +145,24 @@ class GridDialog(QDialog):
             self._recompute()
 
 
-def get_layout() -> list[list[bool]] | None:
+@dataclass
+class GridDialogData:
+    """A result of a successful GridDialog."""
+
+    layout: list[list[bool]]
+    bin_type: str
+
+
+def custom_bin_dialog(types: list[str]) -> GridDialogData | None:
     """Get a custom layout from the user.
 
     Returns None if the user aborted the operation.
 
     """
-    dialog = GridDialog(10, 10, 40, 50)
+    dialog = GridDialog(types, 10, 10, 40, 50)
     if not dialog.exec():
         return None
-    return dialog.grid_layout
+    return GridDialogData(
+        layout=dialog.grid_layout,
+        bin_type=dialog.comboBox.currentText(),
+    )
