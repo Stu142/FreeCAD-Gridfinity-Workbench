@@ -5,7 +5,9 @@ from tempfile import gettempdir
 import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
 
-import freecad
+from freecad.gridfinity_workbench.custom_shape import GridDialogData
+
+from . import custom_shape
 
 TEMPDIR = Path(gettempdir())
 DOC_NAME = "GridfinityDocument"
@@ -23,7 +25,8 @@ SIMPLE_COMMANDS = [
 ]
 
 CUSTOM_BIN_COMMANDS = [
-    "CreateCustomBlankBin",
+    "CreateCustomBin",
+    "CreateCustomBaseplate",
 ]
 
 
@@ -125,21 +128,27 @@ class TestGenerationLocation(TestWithDocument):
 
 class TestVolumes(TestWithDocument):
     def test_custom_bin_rectangle(self) -> None:
-        freecad.gridfinity_workbench.custom_shape.get_layout = lambda: [[True, True], [True, True]]
+        custom_shape.custom_bin_dialog = lambda _: GridDialogData(
+            layout=[[True, True], [True, True]],
+            bin_type="Blank Bin",
+        )
         fcg.Command.get("CreateBinBlank").run()
         obj1 = fcg.ActiveDocument.ActiveObject.Object
-        fcg.Command.get("CreateCustomBlankBin").run()
+        fcg.Command.get("CreateCustomBin").run()
         obj2 = fcg.ActiveDocument.ActiveObject.Object
         self.assertAlmostEqual(obj1.Shape.Volume, obj2.Shape.Volume)
 
     def test_custom_bin_l(self) -> None:
-        freecad.gridfinity_workbench.custom_shape.get_layout = lambda: [
-            [True, True, True],
-            [True, False, False],
-        ]
+        custom_shape.custom_bin_dialog = lambda _: GridDialogData(
+            layout=[
+                [True, True, True],
+                [True, False, False],
+            ],
+            bin_type="Blank Bin",
+        )
         fcg.Command.get("CreateLBinBlank").run()
         obj1 = fcg.ActiveDocument.ActiveObject.Object
-        fcg.Command.get("CreateCustomBlankBin").run()
+        fcg.Command.get("CreateCustomBin").run()
         obj2 = fcg.ActiveDocument.ActiveObject.Object
         self.assertAlmostEqual(obj1.Shape.Volume, obj2.Shape.Volume)
 

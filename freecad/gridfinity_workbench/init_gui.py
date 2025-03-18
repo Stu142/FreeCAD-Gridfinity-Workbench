@@ -44,13 +44,8 @@ class GridfinityWorkbench(Workbench):
         "CreateMagnetBaseplate",
         "CreateScrewTogetherBaseplate",
         "CreateLBinBlank",
-        "CreateCustomBlankBin",
-        "CreateCustomBinBase",
-        "CreateCustomStorageBin",
-        "CreateCustomEcoBin",
+        "CreateCustomBin",
         "CreateCustomBaseplate",
-        "CreateCustomMagnetBaseplate",
-        "CreateCustomScrewTogetherBaseplate",
         "StandaloneLabelShelf",
     ]
 
@@ -73,19 +68,14 @@ class GridfinityWorkbench(Workbench):
             CreateBaseplate,
             CreateBinBase,
             CreateBinBlank,
-            CreateCustomBaseplate,
-            CreateCustomBinBase,
-            CreateCustomBlankBin,
-            CreateCustomEcoBin,
-            CreateCustomMagnetBaseplate,
-            CreateCustomScrewTogetherBaseplate,
-            CreateCustomStorageBin,
             CreateEcoBin,
             CreateLBinBlank,
             CreateMagnetBaseplate,
             CreatePartsBin,
             CreateScrewTogetherBaseplate,
             CreateSimpleStorageBin,
+            DrawBaseplate,
+            DrawBin,
             StandaloneLabelShelf,
         )
 
@@ -104,13 +94,8 @@ class GridfinityWorkbench(Workbench):
         fcg.addCommand("CreateMagnetBaseplate", CreateMagnetBaseplate())
         fcg.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
         fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
-        fcg.addCommand("CreateCustomBlankBin", CreateCustomBlankBin())
-        fcg.addCommand("CreateCustomBinBase", CreateCustomBinBase())
-        fcg.addCommand("CreateCustomStorageBin", CreateCustomStorageBin())
-        fcg.addCommand("CreateCustomEcoBin", CreateCustomEcoBin())
-        fcg.addCommand("CreateCustomBaseplate", CreateCustomBaseplate())
-        fcg.addCommand("CreateCustomMagnetBaseplate", CreateCustomMagnetBaseplate())
-        fcg.addCommand("CreateCustomScrewTogetherBaseplate", CreateCustomScrewTogetherBaseplate())
+        fcg.addCommand("CreateCustomBin", DrawBin())
+        fcg.addCommand("CreateCustomBaseplate", DrawBaseplate())
         fcg.addCommand("StandaloneLabelShelf", StandaloneLabelShelf())
 
 
