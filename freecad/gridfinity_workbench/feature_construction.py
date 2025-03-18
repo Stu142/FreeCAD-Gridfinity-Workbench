@@ -384,7 +384,7 @@ def _corner_fillets(
             vec_list.append(fc.Vector(xtranslate, ytranslate))
             ytranslate += ycomp_width.Value + obj.DividerThickness.Value
         xtranslate += xcomp_width.Value + obj.DividerThickness.Value
-    fillets = utils.copy_and_translate(fillets_solid, vec_list)
+    fillets_solid = utils.copy_and_translate(fillets_solid, vec_list)
 
     return fillets_solid
 

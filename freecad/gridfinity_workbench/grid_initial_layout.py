@@ -123,8 +123,12 @@ def make_rectangle_layout(obj: fc.DocumentObject) -> list[list[bool]]:
         obj.yTotalWidth = obj.yGridUnits * obj.yGridSize - obj.Clearance * 2
 
     if obj.GenerationLocation == "Centered at Origin":
-        obj.xLocationOffset = obj.xTotalWidth / 2
-        obj.yLocationOffset = obj.yTotalWidth / 2
+        if obj.Baseplate:
+            obj.xLocationOffset = obj.xTotalWidth / 2
+            obj.yLocationOffset = obj.yTotalWidth / 2
+        else:
+            obj.xLocationOffset = (obj.xTotalWidth + obj.Clearance * 2) / 2
+            obj.yLocationOffset = (obj.yTotalWidth + obj.Clearance * 2) / 2
     else:
         obj.xLocationOffset = 0
         obj.yLocationOffset = 0

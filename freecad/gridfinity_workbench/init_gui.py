@@ -46,6 +46,7 @@ class GridfinityWorkbench(Workbench):
         "CreateLBinBlank",
         "CreateCustomBin",
         "CreateCustomBaseplate",
+        "StandaloneLabelShelf",
     ]
 
     def GetClassName(self) -> str:  # noqa: N802
@@ -75,6 +76,7 @@ class GridfinityWorkbench(Workbench):
             CreateSimpleStorageBin,
             DrawBaseplate,
             DrawBin,
+            StandaloneLabelShelf,
         )
 
         fc.Console.PrintMessage("switching to Gridfinity Workbench\n")
@@ -94,6 +96,9 @@ class GridfinityWorkbench(Workbench):
         fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
         fcg.addCommand("CreateCustomBin", DrawBin())
         fcg.addCommand("CreateCustomBaseplate", DrawBaseplate())
+        fcg.addCommand("StandaloneLabelShelf", StandaloneLabelShelf())
 
 
 fcg.addWorkbench(GridfinityWorkbench())
+
+fc.__unit_test__ += ["freecad.gridfinity_workbench.test_gridfinity"]
