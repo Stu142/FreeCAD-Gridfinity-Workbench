@@ -536,7 +536,7 @@
          <string/>
         </property>
         <property name="pixmap">
-         <pixmap>label-shelf.png</pixmap>
+         <pixmap>label-shelf-dimensions.png</pixmap>
         </property>
        </widget>
       </item>
