@@ -5,8 +5,9 @@ from tempfile import gettempdir
 import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
 
-import freecad
 from freecad.gridfinity_workbench.custom_shape import GridDialogData
+
+from . import custom_shape
 
 TEMPDIR = Path(gettempdir())
 DOC_NAME = "GridfinityDocument"
@@ -127,7 +128,7 @@ class TestGenerationLocation(TestWithDocument):
 
 class TestVolumes(TestWithDocument):
     def test_custom_bin_rectangle(self) -> None:
-        freecad.gridfinity_workbench.custom_shape.custom_bin_dialog = lambda _: GridDialogData(
+        custom_shape.custom_bin_dialog = lambda _: GridDialogData(
             layout=[[True, True], [True, True]],
             bin_type="Blank Bin",
         )
@@ -138,7 +139,7 @@ class TestVolumes(TestWithDocument):
         self.assertAlmostEqual(obj1.Shape.Volume, obj2.Shape.Volume)
 
     def test_custom_bin_l(self) -> None:
-        freecad.gridfinity_workbench.custom_shape.custom_bin_dialog = lambda _: GridDialogData(
+        custom_shape.custom_bin_dialog = lambda _: GridDialogData(
             layout=[
                 [True, True, True],
                 [True, False, False],
