@@ -23,18 +23,6 @@ from .version import __version__
 unitmm = fc.Units.Quantity("1 mm")
 
 
-__all__ = [
-    "Baseplate",
-    "BinBlank",
-    "EcoBin",
-    "EcoBin",
-    "LBinBlank",
-    "MagnetBaseplate",
-    "PartsBin",
-    "ScrewTogetherBaseplate",
-]
-
-
 class FoundationGridfinity:
     def __init__(self, obj: fc.DocumentObject) -> None:
         obj.addProperty(
@@ -42,7 +30,7 @@ class FoundationGridfinity:
             "version",
             "version",
             "Gridfinity Workbench Version",
-            1,
+            read_only=True,
         ).version = __version__
 
         obj.Proxy = self
@@ -374,8 +362,6 @@ class Baseplate(FoundationGridfinity):
         baseplate_feat.base_values_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        baseplate_feat.make_base_values(obj)
-
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         baseplate_outside_shape = utils.create_rounded_rectangle(
@@ -417,8 +403,6 @@ class MagnetBaseplate(FoundationGridfinity):
         baseplate_feat.center_cut_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        baseplate_feat.make_base_values(obj)
-
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         baseplate_outside_shape = utils.create_rounded_rectangle(
@@ -464,8 +448,6 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         baseplate_feat.connection_holes_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        baseplate_feat.make_base_values(obj)
-
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         baseplate_outside_shape = utils.create_rounded_rectangle(
@@ -581,11 +563,6 @@ class CustomBlankBin(FoundationGridfinity):
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate BinBlank Shape."""
         ## calculated here
-        if obj.NonStandardHeight:
-            obj.TotalHeight = obj.CustomHeight
-
-        else:
-            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
 
         obj.BaseProfileHeight = (
             obj.BaseProfileBottomChamfer
@@ -599,7 +576,7 @@ class CustomBlankBin(FoundationGridfinity):
         ## calculated values over
         grid_initial_layout.make_custom_shape_layout(obj, self.layout)
         solid_shape = custom_shape_solid(obj, self.layout, obj.TotalHeight - obj.BaseProfileHeight)
-        outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance.Value, obj.Clearance.Value)
+        outside_trim = custom_shape_trim(obj, self.layout, obj.Clearance, obj.Clearance)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
         fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
@@ -670,12 +647,6 @@ class CustomBinBase(FoundationGridfinity):
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate BinBase Shape."""
         ## calculated here
-        if obj.NonStandardHeight:
-            obj.TotalHeight = obj.CustomHeight
-
-        else:
-            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
-
         obj.BaseProfileHeight = (
             obj.BaseProfileBottomChamfer
             + obj.BaseProfileVerticalSection
@@ -760,10 +731,6 @@ class CustomEcoBin(FoundationGridfinity):
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate EcoBin Shape."""
         ## calculated here
-        if obj.NonStandardHeight:
-            obj.TotalHeight = obj.CustomHeight
-        else:
-            obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
 
         obj.BaseProfileHeight = (
             obj.BaseProfileBottomChamfer
@@ -970,7 +937,6 @@ class CustomBaseplate(FoundationGridfinity):
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate Baseplate Shape."""
         ## calculated here
-        baseplate_feat.make_base_values(obj)
         obj.TotalHeight = obj.BaseProfileHeight
 
         ## calculated values over
@@ -1024,7 +990,6 @@ class CustomMagnetBaseplate(FoundationGridfinity):
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate MagnetBaseplate Shape."""
         ## calculated here
-        baseplate_feat.make_base_values(obj)
         obj.TotalHeight = obj.BaseProfileHeight + obj.MagnetHoleDepth + obj.MagnetBase
 
         ## calculated values over
@@ -1082,7 +1047,6 @@ class CustomScrewTogetherBaseplate(FoundationGridfinity):
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate Screw Together Baseplate Shape."""
         ## calculated here
-        baseplate_feat.make_base_values(obj)
         obj.TotalHeight = obj.BaseProfileHeight + obj.BaseThickness
 
         ## calculated values over
@@ -1126,7 +1090,7 @@ class StandaloneLabelShelf:
             "version",
             "version",
             "Gridfinity Workbench Version",
-            1,
+            read_only=True,
         ).version = __version__
 
         obj.addProperty(

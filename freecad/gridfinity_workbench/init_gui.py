@@ -4,21 +4,16 @@ The file name is given by FreeCAD. FreeCAD uses this file to initialize GUI comp
 """
 
 from pathlib import Path
-from typing import ClassVar
 
 import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
 
 try:
     from FreeCADGui import Workbench
-
 except ImportError:
     fc.Console.PrintWarning(
-        "you are using the GridfinityWorkbench with an old version of FreeCAD (<0.16)",
-    )
-
-    fc.Console.PrintWarning(
-        "the class Workbench is loaded, although not imported: magic",
+        "you are using the GridfinityWorkbench with an old version of FreeCAD (<0.16)\n"
+        "the class Workbench is loaded, although not imported: magic\n",
     )
 
 
@@ -33,21 +28,6 @@ class GridfinityWorkbench(Workbench):
     ToolTip = "FreeCAD Gridfinity Workbench"
 
     Icon = str(ICONPATH / "gridfinity_workbench_icon.svg")
-
-    toolbox: ClassVar[list[str]] = [
-        "CreateBinBlank",
-        "CreateBinBase",
-        "CreateSimpleStorageBin",
-        "CreateEcoBin",
-        "CreatePartsBin",
-        "CreateBaseplate",
-        "CreateMagnetBaseplate",
-        "CreateScrewTogetherBaseplate",
-        "CreateLBinBlank",
-        "CreateCustomBin",
-        "CreateCustomBaseplate",
-        "StandaloneLabelShelf",
-    ]
 
     def GetClassName(self) -> str:  # noqa: N802
         """Get freecad internal class name.
@@ -64,39 +44,30 @@ class GridfinityWorkbench(Workbench):
         This function is called at the first activation of the workbench.
         here is the place to import all the commands.
         """
-        from .commands import (
-            CreateBaseplate,
-            CreateBinBase,
-            CreateBinBlank,
-            CreateEcoBin,
-            CreateLBinBlank,
-            CreateMagnetBaseplate,
-            CreatePartsBin,
-            CreateScrewTogetherBaseplate,
-            CreateSimpleStorageBin,
-            DrawBaseplate,
-            DrawBin,
-            StandaloneLabelShelf,
-        )
+        from . import commands
 
         fc.Console.PrintMessage("switching to Gridfinity Workbench\n")
 
-        self.appendToolbar("Gridfinity", self.toolbox)
+        workbench_commands = {
+            "CreateBinBlank": commands.CreateBinBlank(),
+            "CreateBinBase": commands.CreateBinBase(),
+            "CreateSimpleStorageBin": commands.CreateSimpleStorageBin(),
+            "CreateEcoBin": commands.CreateEcoBin(),
+            "CreatePartsBin": commands.CreatePartsBin(),
+            "CreateBaseplate": commands.CreateBaseplate(),
+            "CreateMagnetBaseplate": commands.CreateMagnetBaseplate(),
+            "CreateScrewTogetherBaseplate": commands.CreateScrewTogetherBaseplate(),
+            "CreateLBinBlank": commands.CreateLBinBlank(),
+            "CreateCustomBin": commands.DrawBin(),
+            "CreateCustomBaseplate": commands.DrawBaseplate(),
+            "StandaloneLabelShelf": commands.StandaloneLabelShelf(),
+        }
 
-        self.appendMenu("Gridfinity", self.toolbox)
+        for command_name, command in workbench_commands.items():
+            fcg.addCommand(command_name, command)
 
-        fcg.addCommand("CreateBinBlank", CreateBinBlank())
-        fcg.addCommand("CreateBinBase", CreateBinBase())
-        fcg.addCommand("CreateSimpleStorageBin", CreateSimpleStorageBin())
-        fcg.addCommand("CreateEcoBin", CreateEcoBin())
-        fcg.addCommand("CreatePartsBin", CreatePartsBin())
-        fcg.addCommand("CreateBaseplate", CreateBaseplate())
-        fcg.addCommand("CreateMagnetBaseplate", CreateMagnetBaseplate())
-        fcg.addCommand("CreateScrewTogetherBaseplate", CreateScrewTogetherBaseplate())
-        fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
-        fcg.addCommand("CreateCustomBin", DrawBin())
-        fcg.addCommand("CreateCustomBaseplate", DrawBaseplate())
-        fcg.addCommand("StandaloneLabelShelf", StandaloneLabelShelf())
+        self.appendToolbar("Gridfinity", list(workbench_commands.keys()))
+        self.appendMenu("Gridfinity", list(workbench_commands.keys()))
 
 
 fcg.addWorkbench(GridfinityWorkbench())

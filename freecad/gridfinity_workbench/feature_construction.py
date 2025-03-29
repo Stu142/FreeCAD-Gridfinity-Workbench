@@ -194,9 +194,9 @@ def scoop_properties(obj: fc.DocumentObject, *, scoop_default: bool) -> None:
 
 def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
     """Create scoop."""
-    scooprad1 = obj.ScoopRadius + 1 * unitmm
-    scooprad2 = obj.ScoopRadius + 1 * unitmm
-    scooprad3 = obj.ScoopRadius + 1 * unitmm
+    scooprad1 = obj.ScoopRadius + unitmm
+    scooprad2 = obj.ScoopRadius + unitmm
+    scooprad3 = obj.ScoopRadius + unitmm
 
     xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
         obj.xDividers + 1
@@ -254,13 +254,6 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
     face = Part.Face(wire)
 
     xdiv = obj.xDividers + 1
-    xtranslate = (
-        0 * unitmm
-        - obj.WallThickness
-        + obj.StackingLipTopLedge
-        + obj.StackingLipTopChamfer
-        + obj.StackingLipBottomChamfer
-    )
     compwidth = (obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers) / (
         xdiv
     )
@@ -283,33 +276,27 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
 
     vec_list = []
     for x in range(xdiv):
-        vec_list.append(fc.Vector(-xtranslate, obj.Clearance + obj.WallThickness))
-
-        if x > 0:
-            xtranslate += compwidth + obj.DividerThickness
-        else:
-            xtranslate += (
-                +obj.WallThickness
-                - obj.StackingLipTopLedge
-                - obj.StackingLipTopChamfer
-                - obj.StackingLipBottomChamfer
-                + compwidth
-                + obj.DividerThickness
+        if x == 0:
+            xtranslate = (
+                zeromm
+                - obj.WallThickness
+                + obj.StackingLipTopLedge
+                + obj.StackingLipTopChamfer
+                + obj.StackingLipBottomChamfer
             )
+        else:
+            xtranslate = x * (compwidth + obj.DividerThickness)
+        vec_list.append(fc.Vector(-xtranslate, obj.Clearance + obj.WallThickness))
 
     funcfuse = utils.copy_and_translate(scoop, vec_list)
     funcfuse = funcfuse.fuse(scoopbox)
 
-    b_edges = []
-    for edge in funcfuse.Edges:
-        z0 = edge.Vertexes[0].Point.z
-        z1 = edge.Vertexes[1].Point.z
-        x0 = edge.Vertexes[0].Point.x
-        x1 = edge.Vertexes[1].Point.x
-
-        hdif = abs(z0 - z1)
-        if hdif == obj.UsableHeight and x0 == x1:
-            b_edges.append(edge)
+    edges = [
+        edge
+        for edge in funcfuse.Edges
+        if abs(edge.Vertexes[0].Z - edge.Vertexes[1].Z) == obj.UsableHeight
+        and edge.Vertexes[0].X == edge.Vertexes[1].X
+    ]
 
     fuse_total = funcfuse.makeFillet(
         obj.StackingLipBottomChamfer
@@ -317,7 +304,7 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
         + obj.StackingLipTopLedge
         - obj.WallThickness
         - 0.01 * unitmm,
-        b_edges,
+        edges,
     )
     return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
@@ -327,63 +314,70 @@ def _corner_fillets(
     xcomp_width: float,
     ycomp_width: float,
 ) -> Part.Shape:
-    fillets: list[Part.Shape] = []
-    bottom_right_fillet = utils.corner_fillet(obj.InsideFilletRadius)
-    bottom_right_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -270)
-    bottom_right_fillet.translate(
-        fc.Vector(
+    def make_fillet(rotation: float, translation: fc.Vector) -> Part.Shape:
+        radius = obj.InsideFilletRadius
+        arc = radius - radius * math.sin(math.pi / 4)
+
+        v1 = fc.Vector(0, 0)
+        v2 = fc.Vector(0, radius)
+        v_arc = fc.Vector(arc, arc)
+        v3 = fc.Vector(radius, 0)
+
+        lines = [
+            Part.LineSegment(v1, v2),
+            Part.Arc(v2, v_arc, v3),
+            Part.LineSegment(v3, v1),
+        ]
+
+        face = Part.Face(utils.curve_to_wire(lines))
+        face.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), rotation)
+        face.translate(translation)
+        return face.extrude(fc.Vector(0, 0, -obj.TotalHeight))
+
+    bottom_right_fillet = make_fillet(
+        rotation=90,
+        translation=fc.Vector(
             obj.Clearance + obj.WallThickness + xcomp_width,
             obj.Clearance + obj.WallThickness,
             -obj.LabelShelfStackingOffset,
         ),
     )
-    bottom_right_fillet = bottom_right_fillet.extrude(fc.Vector(0, 0, -obj.TotalHeight))
-    fillets.append(bottom_right_fillet)
-
-    top_right_fillet = utils.corner_fillet(obj.InsideFilletRadius)
-    top_right_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -180)
-    top_right_fillet.translate(
-        fc.Vector(
+    top_right_fillet = make_fillet(
+        rotation=180,
+        translation=fc.Vector(
             obj.Clearance + obj.WallThickness + xcomp_width,
             obj.Clearance + obj.WallThickness + ycomp_width,
             -obj.LabelShelfStackingOffset,
         ),
     )
-    top_right_fillet = top_right_fillet.extrude(fc.Vector(0, 0, -obj.TotalHeight))
-    fillets.append(top_right_fillet)
-
-    top_left_fillet = utils.corner_fillet(obj.InsideFilletRadius)
-    top_left_fillet.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), -90)
-    top_left_fillet.translate(
-        fc.Vector(
+    top_left_fillet = make_fillet(
+        rotation=270,
+        translation=fc.Vector(
             obj.Clearance + obj.WallThickness,
             obj.Clearance + obj.WallThickness + ycomp_width,
             -obj.LabelShelfStackingOffset,
         ),
     )
-    top_left_fillet = top_left_fillet.extrude(fc.Vector(0, 0, -obj.TotalHeight))
-    fillets.append(top_left_fillet)
-
-    bottom_left_fillet = utils.corner_fillet(obj.InsideFilletRadius)
-    bottom_left_fillet.translate(
-        fc.Vector(
+    bottom_left_fillet = make_fillet(
+        rotation=0,
+        translation=fc.Vector(
             obj.Clearance + obj.WallThickness,
             obj.Clearance + obj.WallThickness,
             -obj.LabelShelfStackingOffset,
         ),
     )
-    bottom_left_fillet = bottom_left_fillet.extrude(fc.Vector(0, 0, -obj.TotalHeight))
-    fillets.append(bottom_left_fillet)
 
-    fillets_solid = utils.multi_fuse(fillets)
-    vec_list = []
-    xtranslate = 0
-    for _ in range(obj.xDividers + 1):
-        ytranslate = 0
-        for _ in range(obj.yDividers + 1):
-            vec_list.append(fc.Vector(xtranslate, ytranslate))
-            ytranslate += ycomp_width.Value + obj.DividerThickness.Value
-        xtranslate += xcomp_width.Value + obj.DividerThickness.Value
+    fillets_solid = utils.multi_fuse(
+        [bottom_right_fillet, top_right_fillet, top_left_fillet, bottom_left_fillet],
+    )
+    vec_list = [
+        fc.Vector(
+            x * (xcomp_width + obj.DividerThickness),
+            y * (ycomp_width + obj.DividerThickness),
+        )
+        for x in range(obj.xDividers + 1)
+        for y in range(obj.yDividers + 1)
+    ]
     fillets_solid = utils.copy_and_translate(fillets_solid, vec_list)
 
     return fillets_solid
@@ -412,7 +406,7 @@ def _make_compartments_with_deviders(
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
     ydivheight = obj.yDividerHeight if obj.yDividerHeight != 0 else obj.TotalHeight
 
-    stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
+    stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else zeromm
 
     xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
         obj.xDividers + 1
@@ -421,8 +415,8 @@ def _make_compartments_with_deviders(
         obj.yDividers + 1
     )
 
-    xtranslate = zeromm + xcomp_w + obj.WallThickness - obj.DividerThickness
-    ytranslate = zeromm + ycomp_w + obj.WallThickness
+    xtranslate = xcomp_w + obj.WallThickness - obj.DividerThickness
+    ytranslate = ycomp_w + obj.WallThickness
 
     # dividers in x direction
     xdiv: Part.Shape | None = None
@@ -680,13 +674,13 @@ def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
 
 
 def _eco_bin_deviders(obj: fc.DocumentObject, xcomp_w: float, ycomp_w: float) -> Part.Shape:
-    stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else 0 * unitmm
+    stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else zeromm
 
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
     ydivheight = obj.yDividerHeight if obj.yDividerHeight != 0 else obj.TotalHeight
 
-    xtranslate = zeromm + xcomp_w + obj.WallThickness - obj.DividerThickness
-    ytranslate = zeromm + ycomp_w + obj.WallThickness
+    xtranslate = xcomp_w + obj.WallThickness - obj.DividerThickness
+    ytranslate = ycomp_w + obj.WallThickness
 
     assembly: Part.Shape | None = None
 
@@ -818,7 +812,7 @@ def eco_compartments_properties(obj: fc.DocumentObject) -> None:
             "Height of the bin minus the bottom unit, "
             "the amount of the bin that can be effectively used"
         ),
-        1,
+        read_only=True,
     )
     ## Hidden Parameters
     obj.setEditorMode("ScrewHoles", 2)
@@ -840,14 +834,11 @@ def make_eco_compartments(
         Part.Shape: Eco bin cutout shape.
 
     """
-    ## Parameter Calculation
-
     obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
-    ## Error Checking
 
     eco_error_check(obj)
 
-    ## Eco Compartement Generation
+    ## Compartement Generation
 
     base_offset = obj.BaseWallThickness * math.tan(math.pi / 8)
 
@@ -855,28 +846,28 @@ def make_eco_compartments(
         obj.xGridSize
         - obj.Clearance * 2
         - 2 * obj.BaseProfileTopChamfer
-        - obj.BaseWallThickness * 2
-        - 0.4 * unitmm * 2
+        - 2 * obj.BaseWallThickness
+        - 2 * 0.4 * unitmm
     )
     y_bt_cmf_width = (
         obj.yGridSize
         - obj.Clearance * 2
         - 2 * obj.BaseProfileTopChamfer
-        - obj.BaseWallThickness * 2
-        - 0.4 * unitmm * 2
+        - 2 * obj.BaseWallThickness
+        - 2 * 0.4 * unitmm
     )
 
     x_vert_width = (
         obj.xGridSize
         - obj.Clearance * 2
         - 2 * obj.BaseProfileTopChamfer
-        - obj.BaseWallThickness * 2
+        - 2 * obj.BaseWallThickness
     )
     y_vert_width = (
         obj.yGridSize
         - obj.Clearance * 2
         - 2 * obj.BaseProfileTopChamfer
-        - obj.BaseWallThickness * 2
+        - 2 * obj.BaseWallThickness
     )
 
     bt_chf_rad = obj.BinVerticalRadius - 0.4 * unitmm - obj.BaseWallThickness
@@ -885,7 +876,8 @@ def make_eco_compartments(
     v_chf_rad = obj.BinVerticalRadius - obj.BaseWallThickness
     v_chf_rad = 0.01 * unitmm if v_chf_rad <= SMALL_NUMBER else v_chf_rad
 
-    magoffset, tp_chf_offset = zeromm, zeromm
+    magoffset = zeromm
+    tp_chf_offset = zeromm
     if obj.MagnetHoles:
         magoffset = obj.MagnetHoleDepth
         if (obj.MagnetHoleDepth + obj.BaseWallThickness) > (
@@ -928,17 +920,7 @@ def make_eco_compartments(
     )
     assembly = bottom_chamfer.multiFuse([vertical_section, top_chamfer])
 
-    xtranslate, ytranslate = zeromm, zeromm
-    vec_list = []
-    for col in layout:
-        ytranslate = zeromm
-        for cell in col:
-            if cell:
-                vec_list.append(fc.Vector(xtranslate, ytranslate))
-            ytranslate += obj.yGridSize
-        xtranslate += obj.xGridSize
-
-    eco_base_cut = utils.copy_and_translate(assembly, vec_list)
+    eco_base_cut = utils.copy_in_layout(assembly, layout, obj.xGridSize, obj.yGridSize)
     eco_base_cut.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
     func_fuse = bin_inside_solid.fuse(eco_base_cut)
@@ -994,7 +976,7 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
         "BaseProfileBottomChamfer",
         "zzExpertOnly",
         "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
-        1,
+        read_only=True,
     ).BaseProfileBottomChamfer = const.BIN_BASE_BOTTOM_CHAMFER
 
     obj.addProperty(
@@ -1002,7 +984,7 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
         "BaseProfileVerticalSection",
         "zzExpertOnly",
         "Height of the vertical section in bin base profile",
-        1,
+        read_only=True,
     ).BaseProfileVerticalSection = const.BIN_BASE_VERTICAL_SECTION
 
     obj.addProperty(
@@ -1010,7 +992,7 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
         "BaseProfileTopChamfer",
         "zzExpertOnly",
         "Height of the top chamfer in the bin base profile",
-        1,
+        read_only=True,
     ).BaseProfileTopChamfer = const.BIN_BASE_TOP_CHAMFER
 
     obj.addProperty(
@@ -1018,7 +1000,7 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
         "BinOuterRadius",
         "zzExpertOnly",
         "Outer radius of the bin",
-        1,
+        read_only=True,
     ).BinOuterRadius = const.BIN_OUTER_RADIUS
 
     obj.addProperty(
@@ -1026,7 +1008,7 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
         "BinVerticalRadius",
         "zzExpertOnly",
         "Radius of the base profile Vertical section",
-        1,
+        read_only=True,
     ).BinVerticalRadius = const.BIN_BASE_VERTICAL_RADIUS
 
     obj.addProperty(
@@ -1034,7 +1016,7 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
         "BinBottomRadius",
         "zzExpertOnly",
         "bottom of bin corner radius",
-        1,
+        read_only=True,
     ).BinBottomRadius = const.BIN_BASE_BOTTOM_RADIUS
 
     obj.addProperty(
@@ -1054,8 +1036,10 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
         "BaseProfileHeight",
         "ReferenceParameters",
         "Height of the Gridfinity Base Profile, bottom of the bin",
-        1,
+        read_only=True,
     )
+
+    ## Expressions
     obj.setExpression(
         "BaseProfileHeight",
         "BaseProfileBottomChamfer + BaseProfileVerticalSection + BaseProfileTopChamfer",
@@ -1066,16 +1050,7 @@ def make_complex_bin_base(
     obj: fc.DocumentObject,
     layout: GridfinityLayout,
 ) -> Part.Shape:
-    """Creaet complex shaped bin base.
-
-    Args:
-        obj (FreeCAD.DocumentObject): Document object.mro
-        layout (GridfinityLayout): 2 dimentional list of feature locations.
-
-    Returns:
-        Part.Shape: Complex bin base shape.
-
-    """
+    """Creaet complex shaped bin base."""
     if obj.Baseplate:
         baseplate_size_adjustment = obj.BaseplateTopLedgeWidth - obj.Clearance
     else:
@@ -1103,8 +1078,6 @@ def make_complex_bin_base(
         - 2 * obj.BaseProfileTopChamfer
         - 2 * baseplate_size_adjustment
     )
-    xtranslate = zeromm
-    ytranslate = zeromm
 
     bottom_chamfer = utils.rounded_rectangle_chamfer(
         x_bt_cmf_width,
@@ -1133,26 +1106,7 @@ def make_complex_bin_base(
 
     assembly = bottom_chamfer.multiFuse([vertical_section, top_chamfer])
 
-    parts = []
-    feat_count = 0
-
-    for col in layout:
-        ytranslate = zeromm
-        for cell in col:
-            if cell:
-                b = assembly.copy()
-                b.translate(fc.Vector(xtranslate, ytranslate))
-                feat_count += 1
-                if feat_count == 1:
-                    b1 = b
-                else:
-                    parts.append(b)
-
-            ytranslate += obj.yGridSize
-
-        xtranslate += obj.xGridSize
-
-    fuse_total = b1 if feat_count == 1 else b1.multiFuse(parts)
+    fuse_total = utils.copy_in_layout(assembly, layout, obj.xGridSize, obj.yGridSize)
 
     return fuse_total.translate(
         fc.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset),
@@ -1176,19 +1130,9 @@ def blank_bin_recessed_top_properties(obj: fc.DocumentObject) -> None:
 
 
 def make_blank_bin_recessed_top(obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
-    """Generate Rectanble layout and calculate relevant parameters.
-
-    Args:
-        obj (FreeCAD.DocumentObject): Document object.
-        bin_inside_shape (Part.Wire): shape of the bin inside the walls
-
-    Returns:
-        Part.Shape: Extruded part to cut out inside of bin.
-
-    """
+    """Generate Rectanble layout and calculate relevant parameters."""
     face = Part.Face(bin_inside_shape)
     fuse_total = face.extrude(fc.Vector(0, 0, -obj.RecessedTopDepth))
-
     return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
@@ -1278,7 +1222,7 @@ def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default:
         "MagnetHoleDistanceFromEdge",
         "zzExpertOnly",
         "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
-        1,
+        read_only=True,
     ).MagnetHoleDistanceFromEdge = const.MAGNET_HOLE_DISTANCE_FROM_EDGE
 
 
@@ -1286,16 +1230,7 @@ def make_bin_bottom_holes(
     obj: fc.DocumentObject,
     layout: GridfinityLayout,
 ) -> Part.Shape:
-    """Make bin bottom holes.
-
-    Args:
-        obj (FreeCAD.DocumentObject): DocumentObject
-        layout (GridfinityLayout): Layout of the gridfinity grid.
-
-    Returns:
-        Part.Shape: Shape containing negatives of all holes.
-
-    """
+    """Make bin bottom holes."""
     bottom_hole_shape = make_bottom_hole_shape(obj)
 
     x_hole_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
@@ -1305,19 +1240,9 @@ def make_bin_bottom_holes(
         bottom_hole_shape,
         utils.corners(x_hole_pos, y_hole_pos, -obj.TotalHeight),
     )
-    vec_list = []
-    xtranslate = 0
-    for col in layout:
-        ytranslate = 0
-        for cell in col:
-            if cell:
-                vec_list.append(fc.Vector(xtranslate, ytranslate))
-            ytranslate += obj.yGridSize.Value
-        xtranslate += obj.xGridSize.Value
 
-    fuse_total = utils.copy_and_translate(hole_shape_sub_array, vec_list).translate(
-        fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2),
-    )
+    fuse_total = utils.copy_in_layout(hole_shape_sub_array, layout, obj.xGridSize, obj.yGridSize)
+    fuse_total.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
     return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
@@ -1327,60 +1252,33 @@ def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:
     obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
 
     ## Stacking Lip Generation
+    x1 = obj.Clearance
+    x2 = x1 + obj.StackingLipTopLedge
+    x3 = x2 + obj.StackingLipTopChamfer
+    x4 = x3 + obj.StackingLipBottomChamfer
+    x5 = obj.Clearance + obj.WallThickness
+    y = obj.yGridSize / 2
+    z1 = obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer
+    z2 = obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection
+    z3 = obj.StackingLipBottomChamfer
+    z4 = -obj.StackingLipVerticalSection
+    z5 = (
+        z4
+        - obj.StackingLipTopLedge
+        - obj.StackingLipTopChamfer
+        - obj.StackingLipBottomChamfer
+        + obj.WallThickness
+    )
     st = [
-        fc.Vector(obj.Clearance, obj.yGridSize / 2, 0),
-        fc.Vector(
-            obj.Clearance,
-            obj.yGridSize / 2,
-            obj.StackingLipBottomChamfer
-            + obj.StackingLipVerticalSection
-            + obj.StackingLipTopChamfer,
-        ),
-        fc.Vector(
-            obj.Clearance + obj.StackingLipTopLedge,
-            obj.yGridSize / 2,
-            obj.StackingLipBottomChamfer
-            + obj.StackingLipVerticalSection
-            + obj.StackingLipTopChamfer,
-        ),
-        fc.Vector(
-            obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
-            obj.yGridSize / 2,
-            obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
-        ),
-        fc.Vector(
-            obj.Clearance + obj.StackingLipTopLedge + obj.StackingLipTopChamfer,
-            obj.yGridSize / 2,
-            obj.StackingLipBottomChamfer,
-        ),
-        fc.Vector(
-            obj.Clearance
-            + obj.StackingLipTopLedge
-            + obj.StackingLipTopChamfer
-            + obj.StackingLipBottomChamfer,
-            obj.yGridSize / 2,
-            0,
-        ),
-        fc.Vector(
-            obj.Clearance
-            + obj.StackingLipTopLedge
-            + obj.StackingLipTopChamfer
-            + obj.StackingLipBottomChamfer,
-            obj.yGridSize / 2,
-            -obj.StackingLipVerticalSection,
-        ),
-        fc.Vector(
-            obj.Clearance + obj.WallThickness,
-            obj.yGridSize / 2,
-            -obj.StackingLipVerticalSection
-            - (
-                obj.StackingLipTopLedge
-                + obj.StackingLipTopChamfer
-                + obj.StackingLipBottomChamfer
-                - obj.WallThickness
-            ),
-        ),
-        fc.Vector(obj.Clearance + obj.WallThickness, obj.yGridSize / 2, 0),
+        fc.Vector(x1, y, 0),
+        fc.Vector(x1, y, z1),
+        fc.Vector(x2, y, z1),
+        fc.Vector(x3, y, z2),
+        fc.Vector(x3, y, z3),
+        fc.Vector(x4, y, 0),
+        fc.Vector(x4, y, z4),
+        fc.Vector(x5, y, z5),
+        fc.Vector(x5, y, 0),
     ]
 
     stacking_lip_profile = Part.Wire(Part.Shape(utils.loop(st)).Edges)
@@ -1414,7 +1312,7 @@ def stacking_lip_properties(
         "StackingLipTopLedge",
         "zzExpertOnly",
         "Top Ledge of the stacking lip <br> <br> default = 0.4 mm",
-        1,
+        read_only=True,
     ).StackingLipTopLedge = const.STACKING_LIP_TOP_LEDGE
 
     obj.addProperty(
@@ -1422,7 +1320,7 @@ def stacking_lip_properties(
         "StackingLipTopChamfer",
         "zzExpertOnly",
         "Top Chamfer of the Stacking lip",
-        1,
+        read_only=True,
     )
 
     obj.addProperty(
@@ -1430,7 +1328,7 @@ def stacking_lip_properties(
         "StackingLipBottomChamfer",
         "zzExpertOnly",
         "Bottom Chamfer of the Stacking lip<br> <br> default = 0.7 mm",
-        1,
+        read_only=True,
     ).StackingLipBottomChamfer = const.STACKING_LIP_BOTTOM_CHAMFER
 
     obj.addProperty(
@@ -1438,7 +1336,7 @@ def stacking_lip_properties(
         "StackingLipVerticalSection",
         "zzExpertOnly",
         "vertical section of the Stacking lip<br> <br> default = 1.8 mm",
-        1,
+        read_only=True,
     ).StackingLipVerticalSection = const.STACKING_LIP_VERTICAL_SECTION
 
 
@@ -1448,9 +1346,6 @@ def make_stacking_lip(obj: fc.DocumentObject, bin_outside_shape: Part.Wire) -> P
     Args:
         obj (FreeCAD.DocumentObject): DocumentObject
         bin_outside_shape (Part.Wire): exterior wall of the bin
-
-    Returns:
-        Part.Shape: Stacking lip shape.
 
     """
     wire = _stacking_lip_profile(obj)
@@ -1512,7 +1407,7 @@ def bin_solid_mid_section_properties(
         "TotalHeight",
         "ReferenceParameters",
         "total height of the bin",
-        1,
+        read_only=True,
     )
     ## Expert Only Parameters
     obj.addProperty(
@@ -1520,8 +1415,14 @@ def bin_solid_mid_section_properties(
         "HeightUnitValue",
         "zzExpertOnly",
         "height per unit, default is 7mm",
-        1,
+        read_only=True,
     ).HeightUnitValue = const.HEIGHT_UNIT_VALUE
+
+    ## Expressions
+    obj.setExpression(
+        "TotalHeight",
+        "NonStandardHeight == 1 ? CustomHeight : (HeightUnits * HeightUnitValue)",
+    )
 
 
 def make_bin_solid_mid_section(obj: fc.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
@@ -1531,17 +1432,7 @@ def make_bin_solid_mid_section(obj: fc.DocumentObject, bin_outside_shape: Part.W
         obj (FreeCAD.DocumentObject): Document object.
         bin_outside_shape (Part.Wire): shape of the bin
 
-    Returns:
-        Part.Shape: Extruded bin mid section of the input shape
-
     """
-    ## Calculated Values
-    if obj.NonStandardHeight:
-        obj.TotalHeight = obj.CustomHeight
-    else:
-        obj.TotalHeight = obj.HeightUnits * obj.HeightUnitValue
-
-    ## Bin Solid Mid Section Generation
     face = Part.Face(bin_outside_shape)
 
     fuse_total = face.extrude(fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight))

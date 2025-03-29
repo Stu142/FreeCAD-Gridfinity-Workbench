@@ -5,11 +5,7 @@ import Part
 
 from . import utils
 from .feature_construction import _stacking_lip_profile
-
-GridfinityLayout = list[list[bool]]
-
-unitmm = fc.Units.Quantity("1 mm")
-zeromm = fc.Units.Quantity("0 mm")
+from .utils import GridfinityLayout
 
 
 def custom_shape_solid(
@@ -18,31 +14,15 @@ def custom_shape_solid(
     height: float,
 ) -> Part.Shape:
     """Make solid cubes of the gridsize per the layout."""
-    xtranslate = zeromm
-    ytranslate = zeromm
-
     grid_box = Part.makeBox(obj.xGridSize, obj.yGridSize, height, fc.Vector(0, 0, -height))
-
-    vec_list = []
-    xtranslate = 0
-    for col in layout:
-        ytranslate = 0
-        for cell in col:
-            if cell:
-                vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
-            ytranslate += obj.yGridSize.Value
-        xtranslate += obj.xGridSize.Value
-
-    fuse_total = utils.copy_and_translate(grid_box, vec_list)
-
-    return fuse_total
+    return utils.copy_in_layout(grid_box, layout, obj.xGridSize, obj.yGridSize)
 
 
 def custom_shape_trim(
     obj: fc.DocumentObject,
     layout: GridfinityLayout,
-    xtrim: float,
-    ytrim: float,
+    xtrim: fc.Units.Quantity,
+    ytrim: fc.Units.Quantity,
 ) -> Part.Shape:
     """Make outer edge solid to trim edges from custom shape solid."""
 
@@ -50,39 +30,35 @@ def custom_shape_trim(
         return x >= 0 and x < len(layout) and y >= 0 and y < len(layout[x]) and layout[x][y]
 
     x_trim_box = Part.makeBox(
-        xtrim,
-        obj.yGridSize.Value + ytrim,
+        xtrim.Value,
+        obj.yGridSize + ytrim,
         obj.TotalHeight,
         fc.Vector(0, -ytrim, -obj.TotalHeight),
     )
     y_trim_box = Part.makeBox(
-        obj.xGridSize.Value + xtrim * 2,
-        ytrim,
+        obj.xGridSize + 2 * xtrim,
+        ytrim.Value,
         obj.TotalHeight,
         fc.Vector(-xtrim, 0, -obj.TotalHeight),
     )
 
     x_vec_list = []
     y_vec_list = []
-    xtranslate = 0
-    for x in range(len(layout)):
-        ytranslate = 0
-        for y in range(len(layout[x])):
-            if layout[x][y]:
+    for x, col in enumerate(layout):
+        for y, cell in enumerate(col):
+            if cell:
                 if not is_set(x - 1, y):
-                    x_vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
+                    x_vec_list.append(fc.Vector(x * obj.xGridSize, y * obj.yGridSize))
                 if not is_set(x + 1, y):
                     x_vec_list.append(
-                        fc.Vector(xtranslate + obj.xGridSize.Value - xtrim, ytranslate, 0),
+                        fc.Vector((x + 1) * obj.xGridSize - xtrim, y * obj.yGridSize),
                     )
                 if not is_set(x, y - 1):
-                    y_vec_list.append(fc.Vector(xtranslate, ytranslate, 0))
+                    y_vec_list.append(fc.Vector(x * obj.xGridSize, y * obj.yGridSize))
                 if not is_set(x, y + 1):
                     y_vec_list.append(
-                        fc.Vector(xtranslate, ytranslate + obj.yGridSize.Value - ytrim, 0),
+                        fc.Vector(x * obj.xGridSize, (y + 1) * obj.yGridSize - ytrim),
                     )
-            ytranslate += obj.yGridSize.Value
-        xtranslate += obj.xGridSize.Value
 
     fuse_total = utils.copy_and_translate(x_trim_box, x_vec_list)
 
@@ -96,35 +72,21 @@ def vertical_edge_fillet(
     radius: float,
 ) -> Part.Shape:
     """Fillet vertical Edges of input shape."""
-    b_edges = []
-
-    for edge in solid_shape.Edges:
-        z0 = edge.Vertexes[0].Point.z
-        z1 = edge.Vertexes[1].Point.z
-
-        if z0 != z1:
-            b_edges.append(edge)
-
-    return solid_shape.makeFillet(radius, b_edges)
+    edges = [edge for edge in solid_shape.Edges if edge.Vertexes[0].Z != edge.Vertexes[1].Z]
+    return solid_shape.makeFillet(radius, edges)
 
 
 def get_largest_top_wire(solid_shape: Part.Shape, zheight: float) -> Part.Wire:
     """Return the largest wire of the top face of a solid shape."""
     solid_shape = solid_shape.translate(fc.Vector(0, 0, zheight))
-    b_wires = []
-    b_wire_size = []
-
-    for wire in solid_shape.Wires:
-        z0 = wire.Vertexes[0].Point.z
-        z1 = wire.Vertexes[1].Point.z
-        z2 = wire.Vertexes[2].Point.z
-
-        if z0 == zheight and z1 == zheight and z2 == zheight:
-            b_wire_size.append(len(wire.Vertexes))
-            b_wires.append(wire)
-    i = b_wire_size.index(max(b_wire_size))
-
-    return b_wires[i]
+    wires = [
+        wire
+        for wire in solid_shape.Wires
+        if wire.Vertexes[0].Point.z == zheight
+        and wire.Vertexes[1].Point.z == zheight
+        and wire.Vertexes[2].Point.z == zheight
+    ]
+    return max(wires, key=lambda wire: len(wire.Vertexes))
 
 
 def custom_shape_stacking_lip(
@@ -137,15 +99,14 @@ def custom_shape_stacking_lip(
         obj,
         solid_shape,
         layout,
-        obj.Clearance.Value,
-        obj.Clearance.Value,
+        obj.Clearance,
+        obj.Clearance,
     )
 
     for x in range(len(layout)):
         for y in range(len(layout[x])):
             if layout[x][y]:
                 break
-
         else:
             continue
         break
@@ -166,8 +127,8 @@ def get_object_shape(
     obj: fc.DocumentObject,
     solid_shape: Part.Shape,
     layout: GridfinityLayout,
-    xoffset: float,
-    yoffset: float,
+    xoffset: fc.Units.Quantity,
+    yoffset: fc.Units.Quantity,
 ) -> Part.Wire:
     """Return wire of object shape."""
     trim = custom_shape_trim(obj, layout, xoffset, yoffset)
