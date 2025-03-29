@@ -66,6 +66,7 @@ class GridfinityWorkbench(Workbench):
         here is the place to import all the commands.
         """
         from .commands import (
+            ChangeLayout,
             CreateBaseplate,
             CreateBinBase,
             CreateBinBlank,
@@ -78,7 +79,6 @@ class GridfinityWorkbench(Workbench):
             DrawBaseplate,
             DrawBin,
             StandaloneLabelShelf,
-            ChangeLayout,
         )
 
         fc.Console.PrintMessage("switching to Gridfinity Workbench\n")

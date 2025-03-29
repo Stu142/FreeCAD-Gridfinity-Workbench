@@ -34,7 +34,13 @@ from PySide.QtWidgets import (
 class GridDialog(QDialog):
     """A dialog with togglable grid cells."""
 
-    def __init__(self, types: list[str], grid_layout: list[list[bool]], offset: int, spacing: int) -> None:
+    def __init__(
+        self,
+        types: list[str],
+        grid_layout: list[list[bool]],
+        offset: int,
+        spacing: int,
+    ) -> None:
         """Create the dialog object."""
         super().__init__()
         self.x = len(grid_layout)
@@ -155,14 +161,17 @@ class GridDialogData:
     bin_type: str | None
 
 
-def custom_bin_dialog(types: list[str], initial_layout: list[list[bool]] | None = None) -> GridDialogData | None:
+def custom_bin_dialog(
+    types: list[str],
+    initial_layout: list[list[bool]] | None,
+) -> GridDialogData | None:
     """Get a custom layout from the user.
 
     Returns None if the user aborted the operation.
 
     """
     if initial_layout is None:
-        initial_layout = [[False]*10 for _ in range(10)]
+        initial_layout = [[False] * 10 for _ in range(10)]
     dialog = GridDialog(types, initial_layout, 40, 50)
     if not dialog.exec():
         return None
