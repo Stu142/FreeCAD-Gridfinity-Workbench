@@ -34,31 +34,33 @@ from PySide.QtWidgets import (
 class GridDialog(QDialog):
     """A dialog with togglable grid cells."""
 
-    def __init__(self, types: list[str], x: int, y: int, offset: int, spacing: int) -> None:
+    def __init__(self, types: list[str], grid_layout: list[list[bool]], offset: int, spacing: int) -> None:
         """Create the dialog object."""
         super().__init__()
-        self.x = x
-        self.y = y
+        self.x = len(grid_layout)
+        self.y = len(grid_layout[0])
         self.offset = offset
         self.spacing = spacing
+
+        layout = QVBoxLayout()
+
+        self.label = QLabel()
+        self.pixmap = QPixmap(QSize(2 * offset + self.x * spacing, 2 * offset + self.y * spacing))
+        layout.addWidget(self.label)
+
+        if types:
+            self.comboBox = QComboBox()
+            self.comboBox.addItems(types)
+            layout.addWidget(self.comboBox)
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
-
-        self.comboBox = QComboBox()
-        self.comboBox.addItems(types)
-
-        self.label = QLabel()
-        self.pixmap = QPixmap(QSize(2 * offset + x * spacing, 2 * offset + y * spacing))
-
-        layout = QVBoxLayout()
-        layout.addWidget(self.label)
-        layout.addWidget(self.comboBox)
         layout.addWidget(self.buttonBox)
+
         self.setLayout(layout)
 
-        self.grid_layout = [[False] * y for _ in range(x)]
+        self.grid_layout = grid_layout
 
         self.origin_pos = QPoint(
             self.offset,
@@ -150,19 +152,21 @@ class GridDialogData:
     """A result of a successful GridDialog."""
 
     layout: list[list[bool]]
-    bin_type: str
+    bin_type: str | None
 
 
-def custom_bin_dialog(types: list[str]) -> GridDialogData | None:
+def custom_bin_dialog(types: list[str], initial_layout: list[list[bool]] | None = None) -> GridDialogData | None:
     """Get a custom layout from the user.
 
     Returns None if the user aborted the operation.
 
     """
-    dialog = GridDialog(types, 10, 10, 40, 50)
+    if initial_layout is None:
+        initial_layout = [[False]*10 for _ in range(10)]
+    dialog = GridDialog(types, initial_layout, 40, 50)
     if not dialog.exec():
         return None
     return GridDialogData(
         layout=dialog.grid_layout,
-        bin_type=dialog.comboBox.currentText(),
+        bin_type=dialog.comboBox.currentText() if types else None,
     )

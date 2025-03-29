@@ -306,6 +306,35 @@ class DrawBaseplate(DrawCommand):
                 ],
             ),
         )
+    
+
+class ChangeLayout(BaseCommand):
+    def __init__(self) -> None:
+        super().__init__(
+            name="ChangeLayout",
+            pixmap=ICONDIR / "ChangeLayout.svg",
+            menu_text="Change layout",
+            tooltip=(
+                "Change the layout of an existing custom shape."
+            )
+        )
+    
+    def IsActive(self) -> bool:
+        selection = fcg.Selection.getSelection()
+        if len(selection) != 1:
+            return False
+        return hasattr(selection[0].Proxy, "layout")
+    
+    def Activated(self) -> None:
+        obj = fcg.Selection.getSelection()[0]
+
+        dialog_data = custom_shape.custom_bin_dialog([], obj.Proxy.layout)
+        if dialog_data is None:
+            return
+        assert dialog_data.bin_type == None
+
+        obj.Proxy.layout = dialog_data.layout
+        obj.recompute()
 
 
 class StandaloneLabelShelf(BaseCommand):

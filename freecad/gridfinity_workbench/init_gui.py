@@ -46,6 +46,7 @@ class GridfinityWorkbench(Workbench):
         "CreateLBinBlank",
         "CreateCustomBin",
         "CreateCustomBaseplate",
+        "ChangeLayout",
         "StandaloneLabelShelf",
     ]
 
@@ -77,6 +78,7 @@ class GridfinityWorkbench(Workbench):
             DrawBaseplate,
             DrawBin,
             StandaloneLabelShelf,
+            ChangeLayout,
         )
 
         fc.Console.PrintMessage("switching to Gridfinity Workbench\n")
@@ -96,6 +98,7 @@ class GridfinityWorkbench(Workbench):
         fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
         fcg.addCommand("CreateCustomBin", DrawBin())
         fcg.addCommand("CreateCustomBaseplate", DrawBaseplate())
+        fcg.addCommand("ChangeLayout", ChangeLayout())
         fcg.addCommand("StandaloneLabelShelf", StandaloneLabelShelf())
 
 
