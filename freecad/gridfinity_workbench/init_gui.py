@@ -43,7 +43,6 @@ class GridfinityWorkbench(Workbench):
         "CreateBaseplate",
         "CreateMagnetBaseplate",
         "CreateScrewTogetherBaseplate",
-        "CreateLBinBlank",
         "CreateCustomBin",
         "CreateCustomBaseplate",
         "ChangeLayout",
