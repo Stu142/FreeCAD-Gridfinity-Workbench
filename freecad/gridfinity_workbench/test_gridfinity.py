@@ -128,7 +128,7 @@ class TestGenerationLocation(TestWithDocument):
 
 class TestVolumes(TestWithDocument):
     def test_custom_bin_rectangle(self) -> None:
-        custom_shape.custom_bin_dialog = lambda _: GridDialogData(
+        custom_shape.custom_bin_dialog = lambda _1, _2: GridDialogData(
             layout=[[True, True], [True, True]],
             bin_type="Blank Bin",
         )
@@ -139,7 +139,7 @@ class TestVolumes(TestWithDocument):
         self.assertAlmostEqual(obj1.Shape.Volume, obj2.Shape.Volume)
 
     def test_custom_bin_l(self) -> None:
-        custom_shape.custom_bin_dialog = lambda _: GridDialogData(
+        custom_shape.custom_bin_dialog = lambda _1, _2: GridDialogData(
             layout=[
                 [True, True, True],
                 [True, False, False],

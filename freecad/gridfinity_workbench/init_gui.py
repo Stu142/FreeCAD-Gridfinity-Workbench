@@ -43,9 +43,9 @@ class GridfinityWorkbench(Workbench):
         "CreateBaseplate",
         "CreateMagnetBaseplate",
         "CreateScrewTogetherBaseplate",
-        "CreateLBinBlank",
         "CreateCustomBin",
         "CreateCustomBaseplate",
+        "ChangeLayout",
         "StandaloneLabelShelf",
     ]
 
@@ -65,6 +65,7 @@ class GridfinityWorkbench(Workbench):
         here is the place to import all the commands.
         """
         from .commands import (
+            ChangeLayout,
             CreateBaseplate,
             CreateBinBase,
             CreateBinBlank,
@@ -96,6 +97,7 @@ class GridfinityWorkbench(Workbench):
         fcg.addCommand("CreateLBinBlank", CreateLBinBlank())
         fcg.addCommand("CreateCustomBin", DrawBin())
         fcg.addCommand("CreateCustomBaseplate", DrawBaseplate())
+        fcg.addCommand("ChangeLayout", ChangeLayout())
         fcg.addCommand("StandaloneLabelShelf", StandaloneLabelShelf())
 
 

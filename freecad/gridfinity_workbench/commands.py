@@ -3,7 +3,7 @@
 Contains command objects representing what should happen on a button press.
 """
 
-# ruff: noqa: D101, D107
+# ruff: noqa: D101, D102, D107, N802
 
 import re
 from collections import OrderedDict
@@ -63,7 +63,7 @@ class ViewProviderGridfinity:
         """Attach viewproviderdocument object to self."""
         self.vobj = vobj
 
-    def getIcon(self) -> str:  # noqa: N802
+    def getIcon(self) -> str:
         """Get icons path."""
         self._check_attr()
         return self.icon_path
@@ -99,15 +99,15 @@ class BaseCommand:
         self.menu_text = menu_text
         self.tooltip = tooltip
 
-    def IsActive(self) -> bool:  # noqa: N802
+    def IsActive(self) -> bool:
         """Check if command should be active."""
         return fc.ActiveDocument is not None
 
-    def Activated(self) -> None:  # noqa: N802
+    def Activated(self) -> None:
         """Execute when command is activated."""
         raise NotImplementedError
 
-    def GetResources(self) -> dict[str, str]:  # noqa: N802
+    def GetResources(self) -> dict[str, str]:
         """Get command resources."""
         return {
             "Pixmap": str(self.pixmap),
@@ -138,7 +138,7 @@ class CreateCommand(BaseCommand):
         )
         self.gridfinity_function = gridfinity_function
 
-    def Activated(self) -> None:  # noqa: N802
+    def Activated(self) -> None:
         """Execute when command is activated."""
         obj = utils.new_object(self.name)
         if fc.GuiUp:
@@ -256,10 +256,11 @@ class DrawCommand(BaseCommand):
         )
         self.gridfinity_functions = gridfinity_functions
 
-    def Activated(self) -> None:  # noqa: N802, D102
-        dialog_data = custom_shape.custom_bin_dialog(list(self.gridfinity_functions.keys()))
+    def Activated(self) -> None:
+        dialog_data = custom_shape.custom_bin_dialog(list(self.gridfinity_functions.keys()), None)
         if dialog_data is None:
             return
+        assert dialog_data.bin_type is not None
         assert dialog_data.bin_type in self.gridfinity_functions
 
         obj = utils.new_object(self.name)
@@ -308,6 +309,31 @@ class DrawBaseplate(DrawCommand):
         )
 
 
+class ChangeLayout(BaseCommand):
+    def __init__(self) -> None:
+        super().__init__(
+            name="ChangeLayout",
+            pixmap=ICONDIR / "ChangeLayout.svg",
+            menu_text="Change layout",
+            tooltip=("Change the layout of an existing custom shape."),
+        )
+
+    def IsActive(self) -> bool:
+        selection = fcg.Selection.getSelection()
+        return len(selection) == 1 and hasattr(selection[0].Proxy, "layout")
+
+    def Activated(self) -> None:
+        obj = fcg.Selection.getSelection()[0]
+
+        dialog_data = custom_shape.custom_bin_dialog([], obj.Proxy.layout)
+        if dialog_data is None:
+            return
+        assert dialog_data.bin_type is None
+
+        obj.Proxy.layout = dialog_data.layout
+        obj.recompute()
+
+
 class StandaloneLabelShelf(BaseCommand):
     def __init__(self) -> None:
         super().__init__(
@@ -321,7 +347,7 @@ class StandaloneLabelShelf(BaseCommand):
             ),
         )
 
-    def IsActive(self) -> bool:  # noqa: D102, N802
+    def IsActive(self) -> bool:
         selection = fcg.Selection.getSelectionEx()
         if len(selection) != 1 or len(selection[0].SubObjects) != 1:
             return False
@@ -338,7 +364,7 @@ class StandaloneLabelShelf(BaseCommand):
         max_points = [p for p in points if p.z > height - 1e-4]
         return len(max_points) == 2  # noqa: PLR2004
 
-    def Activated(self) -> None:  # noqa: D102, N802
+    def Activated(self) -> None:
         obj = utils.new_object("LabelShelf")
         if fc.GuiUp:
             view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
