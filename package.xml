@@ -5,9 +5,9 @@
 
   <description>This Workbench will generate several variations of parametric Gridfinity bins and baseplates that can be easily customized. </description>
 
-  <version>0.11.5</version>
+  <version>0.11.6</version>
 
-  <date>2025-04-05</date>
+  <date>2025-04-06</date>
 
   <license file="LICENSE">lgpl-2.1-or-later</license>
 
