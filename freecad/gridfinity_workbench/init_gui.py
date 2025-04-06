@@ -3,6 +3,7 @@
 The file name is given by FreeCAD. FreeCAD uses this file to initialize GUI components.
 """
 
+from collections import OrderedDict
 from pathlib import Path
 
 import FreeCAD as fc  # noqa: N813
@@ -48,19 +49,22 @@ class GridfinityWorkbench(Workbench):
 
         fc.Console.PrintMessage("switching to Gridfinity Workbench\n")
 
-        workbench_commands = {
-            "CreateBinBlank": commands.CreateBinBlank(),
-            "CreateBinBase": commands.CreateBinBase(),
-            "CreateSimpleStorageBin": commands.CreateSimpleStorageBin(),
-            "CreateEcoBin": commands.CreateEcoBin(),
-            "CreatePartsBin": commands.CreatePartsBin(),
-            "CreateBaseplate": commands.CreateBaseplate(),
-            "CreateMagnetBaseplate": commands.CreateMagnetBaseplate(),
-            "CreateScrewTogetherBaseplate": commands.CreateScrewTogetherBaseplate(),
-            "CreateCustomBin": commands.DrawBin(),
-            "CreateCustomBaseplate": commands.DrawBaseplate(),
-            "StandaloneLabelShelf": commands.StandaloneLabelShelf(),
-        }
+        workbench_commands = OrderedDict(
+            [
+                ("CreateBinBlank", commands.CreateBinBlank()),
+                ("CreateBinBase", commands.CreateBinBase()),
+                ("CreateSimpleStorageBin", commands.CreateSimpleStorageBin()),
+                ("CreateEcoBin", commands.CreateEcoBin()),
+                ("CreatePartsBin", commands.CreatePartsBin()),
+                ("CreateBaseplate", commands.CreateBaseplate()),
+                ("CreateMagnetBaseplate", commands.CreateMagnetBaseplate()),
+                ("CreateScrewTogetherBaseplate", commands.CreateScrewTogetherBaseplate()),
+                ("CreateCustomBin", commands.DrawBin()),
+                ("CreateCustomBaseplate", commands.DrawBaseplate()),
+                ("ChangeLayout", commands.ChangeLayout()),
+                ("StandaloneLabelShelf", commands.StandaloneLabelShelf()),
+            ],
+        )
 
         for command_name, command in workbench_commands.items():
             fcg.addCommand(command_name, command)

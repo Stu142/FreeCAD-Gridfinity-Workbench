@@ -21,7 +21,6 @@ SIMPLE_COMMANDS = [
     "CreateBaseplate",
     "CreateMagnetBaseplate",
     "CreateScrewTogetherBaseplate",
-    "CreateLBinBlank",
 ]
 
 CUSTOM_BIN_COMMANDS = [
@@ -96,7 +95,6 @@ class TestGenerationLocation(TestWithDocument):
     def setUp(self) -> None:
         super().setUp()
         self.commands = SIMPLE_COMMANDS.copy()
-        self.commands.remove("CreateLBinBlank")
 
     def test_positive_from_origin(self) -> None:
         for command_name in self.commands:
@@ -133,20 +131,6 @@ class TestVolumes(TestWithDocument):
             bin_type="Blank Bin",
         )
         fcg.Command.get("CreateBinBlank").run()
-        obj1 = fcg.ActiveDocument.ActiveObject.Object
-        fcg.Command.get("CreateCustomBin").run()
-        obj2 = fcg.ActiveDocument.ActiveObject.Object
-        self.assertAlmostEqual(obj1.Shape.Volume, obj2.Shape.Volume)
-
-    def test_custom_bin_l(self) -> None:
-        custom_shape.custom_bin_dialog = lambda _1, _2: GridDialogData(
-            layout=[
-                [True, True, True],
-                [True, False, False],
-            ],
-            bin_type="Blank Bin",
-        )
-        fcg.Command.get("CreateLBinBlank").run()
         obj1 = fcg.ActiveDocument.ActiveObject.Object
         fcg.Command.get("CreateCustomBin").run()
         obj2 = fcg.ActiveDocument.ActiveObject.Object
