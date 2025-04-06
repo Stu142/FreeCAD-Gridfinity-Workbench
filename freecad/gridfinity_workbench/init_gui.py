@@ -57,7 +57,6 @@ class GridfinityWorkbench(Workbench):
             "CreateBaseplate": commands.CreateBaseplate(),
             "CreateMagnetBaseplate": commands.CreateMagnetBaseplate(),
             "CreateScrewTogetherBaseplate": commands.CreateScrewTogetherBaseplate(),
-            "CreateLBinBlank": commands.CreateLBinBlank(),
             "CreateCustomBin": commands.DrawBin(),
             "CreateCustomBaseplate": commands.DrawBaseplate(),
             "StandaloneLabelShelf": commands.StandaloneLabelShelf(),
