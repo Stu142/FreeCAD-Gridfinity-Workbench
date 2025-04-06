@@ -14,25 +14,6 @@ import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
 
 from . import custom_shape, features, utils
-from .features import (
-    Baseplate,
-    BinBase,
-    BinBlank,
-    CustomBaseplate,
-    CustomBinBase,
-    CustomBlankBin,
-    CustomEcoBin,
-    CustomMagnetBaseplate,
-    CustomScrewTogetherBaseplate,
-    CustomStorageBin,
-    EcoBin,
-    FoundationGridfinity,
-    LBinBlank,
-    MagnetBaseplate,
-    PartsBin,
-    ScrewTogetherBaseplate,
-    SimpleStorageBin,
-)
 
 if TYPE_CHECKING:
     import Part
@@ -127,7 +108,7 @@ class CreateCommand(BaseCommand):
         self,
         *,
         name: str,
-        gridfinity_function: type[FoundationGridfinity],
+        gridfinity_function: type[features.FoundationGridfinity],
         pixmap: Path,
     ) -> None:
         super().__init__(
@@ -155,7 +136,7 @@ class CreateBinBlank(CreateCommand):
     def __init__(self) -> None:
         super().__init__(
             name="BinBlank",
-            gridfinity_function=BinBlank,
+            gridfinity_function=features.BinBlank,
             pixmap=ICONDIR / "BinBlank.svg",
         )
 
@@ -164,7 +145,7 @@ class CreateBinBase(CreateCommand):
     def __init__(self) -> None:
         super().__init__(
             name="BinBase",
-            gridfinity_function=BinBase,
+            gridfinity_function=features.BinBase,
             pixmap=ICONDIR / "BinBase.svg",
         )
 
@@ -173,7 +154,7 @@ class CreateSimpleStorageBin(CreateCommand):
     def __init__(self) -> None:
         super().__init__(
             name="SimpleStorageBin",
-            gridfinity_function=SimpleStorageBin,
+            gridfinity_function=features.SimpleStorageBin,
             pixmap=ICONDIR / "SimpleStorageBin.svg",
         )
 
@@ -182,7 +163,7 @@ class CreateEcoBin(CreateCommand):
     def __init__(self) -> None:
         super().__init__(
             name="EcoBin",
-            gridfinity_function=EcoBin,
+            gridfinity_function=features.EcoBin,
             pixmap=ICONDIR / "eco_bin.svg",
         )
 
@@ -191,7 +172,7 @@ class CreatePartsBin(CreateCommand):
     def __init__(self) -> None:
         super().__init__(
             name="PartsBin",
-            gridfinity_function=PartsBin,
+            gridfinity_function=features.PartsBin,
             pixmap=ICONDIR / "parts_bin.svg",
         )
 
@@ -200,7 +181,7 @@ class CreateBaseplate(CreateCommand):
     def __init__(self) -> None:
         super().__init__(
             name="Baseplate",
-            gridfinity_function=Baseplate,
+            gridfinity_function=features.Baseplate,
             pixmap=ICONDIR / "Baseplate.svg",
         )
 
@@ -209,7 +190,7 @@ class CreateMagnetBaseplate(CreateCommand):
     def __init__(self) -> None:
         super().__init__(
             name="MagnetBaseplate",
-            gridfinity_function=MagnetBaseplate,
+            gridfinity_function=features.MagnetBaseplate,
             pixmap=ICONDIR / "magnet_baseplate.svg",
         )
 
@@ -218,7 +199,7 @@ class CreateScrewTogetherBaseplate(CreateCommand):
     def __init__(self) -> None:
         super().__init__(
             name="ScrewTogetherBaseplate",
-            gridfinity_function=ScrewTogetherBaseplate,
+            gridfinity_function=features.ScrewTogetherBaseplate,
             pixmap=ICONDIR / "screw_together_baseplate.svg",
         )
 
@@ -227,7 +208,7 @@ class CreateLBinBlank(CreateCommand):
     def __init__(self) -> None:
         super().__init__(
             name="LShapedBlankBin",
-            gridfinity_function=LBinBlank,
+            gridfinity_function=features.LBinBlank,
             pixmap=ICONDIR / "BetaLBinBlank.svg",
         )
 
@@ -283,10 +264,10 @@ class DrawBin(DrawCommand):
             tooltip="Draw a custom gridfinity bin of any type.",
             gridfinity_functions=OrderedDict(
                 [
-                    ("Blank Bin", CustomBlankBin),
-                    ("Bin Base", CustomBinBase),
-                    ("Storage Bin", CustomStorageBin),
-                    ("Eco Bin", CustomEcoBin),
+                    ("Blank Bin", features.CustomBlankBin),
+                    ("Bin Base", features.CustomBinBase),
+                    ("Storage Bin", features.CustomStorageBin),
+                    ("Eco Bin", features.CustomEcoBin),
                 ],
             ),
         )
@@ -301,9 +282,9 @@ class DrawBaseplate(DrawCommand):
             tooltip="Draw a custom gridfinity baseplate of any type.",
             gridfinity_functions=OrderedDict(
                 [
-                    ("Simple Baseplate", CustomBaseplate),
-                    ("Magnet Baseplate", CustomMagnetBaseplate),
-                    ("Screw Together Baseplate", CustomScrewTogetherBaseplate),
+                    ("Simple Baseplate", features.CustomBaseplate),
+                    ("Magnet Baseplate", features.CustomMagnetBaseplate),
+                    ("Screw Together Baseplate", features.CustomScrewTogetherBaseplate),
                 ],
             ),
         )

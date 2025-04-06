@@ -9,12 +9,7 @@ import FreeCAD as fc  # noqa: N813
 import Part
 
 from . import const, utils
-
-GridfinityLayout = list[list[bool]]
-
-unitmm = fc.Units.Quantity("1 mm")
-
-zeromm = fc.Units.Quantity("0 mm")
+from .utils import GridfinityLayout
 
 
 def _magnet_hole_hex(
@@ -187,7 +182,7 @@ def magnet_holes_properties(obj: fc.DocumentObject) -> None:
         "MagnetHoleDistanceFromEdge",
         "zzExpertOnly",
         "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
-        1,
+        read_only=True,
     ).MagnetHoleDistanceFromEdge = const.MAGNET_HOLE_DISTANCE_FROM_EDGE
 
     ## Gridfinity Hidden Properties
@@ -196,29 +191,20 @@ def magnet_holes_properties(obj: fc.DocumentObject) -> None:
         "BaseThickness",
         "Hidden",
         "Thickness of base under the normal baseplate  profile <br> <br> default = 6.4 mm",
+        hidden=True,
     ).BaseThickness = const.BASE_THICKNESS
-    obj.setEditorMode("BaseThickness", 2)
 
     obj.addProperty(
         "App::PropertyBool",
         "MagnetHoles",
         "ShouldBeHidden",
         "MagnetHoles",
+        hidden=True,
     ).MagnetHoles = const.MAGNET_HOLES
-    obj.setEditorMode("MagnetHoles", 2)
 
 
 def make_magnet_holes(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.Shape:
-    """Create magentholes for a baseplate.
-
-    Args:
-        obj (FreeCAD.DocumentObject): FreeCAD config object
-        layout (GridfinityLayout): 2 dimentional list of feature locations.
-
-    Returns:
-        Part.Shape: 3d object geometry.
-
-    """
+    """Create magentholes for a baseplate."""
     x_hole_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
     y_hole_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
 
@@ -244,26 +230,8 @@ def make_magnet_holes(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.
     hm1 = hm1.multiFuse(ca)
     hm1.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
-    xtranslate = zeromm
-    ytranslate = zeromm
-    hm2: Part.Shape | None = None
-    hm3: Part.Shape | None = None
-
-    for col in layout:
-        ytranslate = zeromm
-        for cell in col:
-            if cell:
-                hm1_copy = hm1.copy()
-
-                # Translate for next hole
-                hm1_copy.translate(fc.Vector(xtranslate, ytranslate))
-                hm2 = hm1_copy if hm2 is None else hm2.fuse(hm1_copy)
-            ytranslate += obj.yGridSize  # Track position
-
-        hm3 = hm2 if hm3 is None else hm3.fuse(hm2)
-        xtranslate += obj.xGridSize
-
-    return hm3.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
+    hm2 = utils.copy_in_layout(hm1, layout, obj.xGridSize, obj.yGridSize)
+    return hm2.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
 def screw_bottom_chamfer_properties(obj: fc.DocumentObject) -> None:
@@ -292,16 +260,7 @@ def screw_bottom_chamfer_properties(obj: fc.DocumentObject) -> None:
 
 
 def make_screw_bottom_chamfer(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.Shape:
-    """Create screw chamfer for a baseplate.
-
-    Args:
-        obj (FreeCAD.DocumentObject): FreeCAD config object.
-        layout (GridfinityLayout): 2 dimentional list of feature locations.
-
-    Returns:
-        Part.Shape: 3d Shape.
-
-    """
+    """Create screw chamfer for a baseplate."""
     x_hole_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
     y_hole_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
 
@@ -326,29 +285,10 @@ def make_screw_bottom_chamfer(obj: fc.DocumentObject, layout: GridfinityLayout) 
 
     ch = [Part.makeLoft([t, b], solid=True) for t, b in zip(ct, cb)]
 
-    xtranslate = zeromm
-    ytranslate = zeromm
-
     hm1 = utils.multi_fuse(ch)
-    hm2: Part.Shape | None = None
-    hm3: Part.Shape | None = None
-
-    for col in layout:
-        ytranslate = zeromm
-        for cell in col:
-            if cell:
-                hm1_copy = hm1.copy()
-                hm1_copy.translate(fc.Vector(xtranslate, ytranslate))
-                hm2 = hm1_copy if hm2 is None else hm2.fuse(hm1_copy)
-            ytranslate += obj.yGridSize
-        hm3 = hm2 if hm3 is None else hm3.fuse(hm2)
-        xtranslate += obj.xGridSize
-
-    return hm3.translate(
-        fc.Vector(
-            obj.xGridSize / 2 - obj.xLocationOffset,
-            obj.yGridSize / 2 - obj.yLocationOffset,
-        ),
+    hm2 = utils.copy_in_layout(hm1, layout, obj.xGridSize, obj.yGridSize)
+    return hm2.translate(
+        fc.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset),
     )
 
 
@@ -369,16 +309,7 @@ def connection_holes_properties(obj: fc.DocumentObject) -> None:
 
 
 def make_connection_holes(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.Shape:
-    """Create connection holes for a baseplate.
-
-    Args:
-        obj (FreeCAD.DocumentObject): FreeCAD config object.
-        layout (GridfinityLayout): Grid layout of the object.
-
-    Returns:
-        Part.Shape: 3d Shape.
-
-    """
+    """Create connection holes for a baseplate."""
     c1 = Part.makeCylinder(
         obj.ConnectionHoleDiameter / 2,
         obj.BaseThickness,
@@ -413,32 +344,15 @@ def make_connection_holes(obj: fc.DocumentObject, layout: GridfinityLayout) -> P
         fc.Vector(1, 0, 0),
     )
 
-    hx1 = c1.fuse(c2)
-    hx2: Part.Shape | None = None
+    vec_list = [fc.Vector(x * obj.xGridSize, 0) for x in range(len(layout))]
+    hx = utils.copy_and_translate(c1.fuse(c2), vec_list)
 
-    xtranslate = zeromm
-    for _ in range(len(layout)):
-        hx1_copy = hx1.copy()
-        hx1_copy.translate(fc.Vector(xtranslate, zeromm))
-        hx2 = hx1_copy if hx2 is None else hx2.fuse(hx1_copy)
-        xtranslate += obj.xGridSize
+    vec_list = [fc.Vector(0, y * obj.yGridSize) for y in range(len(layout[-1]))]
+    hy = utils.copy_and_translate(c3.fuse(c4), vec_list)
 
-    hy1 = c3.fuse(c4)
-    hy2: Part.Shape | None = None
-
-    ytranslate = zeromm
-    for _y in range(len(layout[_])):
-        hy1_copy = hy1.copy()
-        hy1_copy.translate(fc.Vector(zeromm, ytranslate))
-        hy2 = hy1_copy if hy2 is None else hy2.fuse(hy1_copy)
-        ytranslate += obj.yGridSize
-
-    fuse_total = hx2.fuse(hy2)
+    fuse_total = hx.fuse(hy)
     fuse_total = fuse_total.translate(
-        fc.Vector(
-            obj.xGridSize / 2 - obj.xLocationOffset,
-            obj.yGridSize / 2 - obj.yLocationOffset,
-        ),
+        fc.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset),
     )
 
     return fuse_total
@@ -553,16 +467,7 @@ def center_cut_properties(obj: fc.DocumentObject) -> None:
 
 
 def make_center_cut(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.Shape:
-    """Create baseplate center cutout.
-
-    Args:
-        obj (FreeCAD.DocumentObject): Document object.
-        layout (GridfinityLayout): 2 dimentional list of feature locations.
-
-    Returns:
-        Part.Shape: Baseplate center cutout shape.
-
-    """
+    """Create baseplate center cutout."""
     wire = _center_cut_wire(obj)
 
     partial_shape1 = Part.Face(wire).extrude(fc.Vector(0, 0, -obj.TotalHeight))
@@ -572,25 +477,10 @@ def make_center_cut(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.Sh
 
     shape = partial_shape1.multiFuse([partial_shape2, partial_shape3, partial_shape4])
 
-    vec_list: list[fc.Vector] = []
-    xtranslate = 0
-    ytranslate = 0
-
-    for col in layout:
-        ytranslate = 0
-        for cell in col:
-            if cell:
-                vec_list.append(fc.Vector(xtranslate, ytranslate))
-            ytranslate += obj.yGridSize.Value
-        xtranslate += obj.xGridSize.Value
-
-    fuse_total = utils.copy_and_translate(shape, vec_list)
+    fuse_total = utils.copy_in_layout(shape, layout, obj.xGridSize, obj.yGridSize)
 
     return fuse_total.translate(
-        fc.Vector(
-            obj.xGridSize / 2 - obj.xLocationOffset,
-            obj.yGridSize / 2 - obj.yLocationOffset,
-        ),
+        fc.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset),
     )
 
 
@@ -607,7 +497,7 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
         "BaseProfileHeight",
         "ReferenceParameters",
         "Height of the Gridfinity Base Profile",
-        1,
+        read_only=True,
     )
 
     ## Expert Only Parameters
@@ -616,7 +506,7 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
         "BaseProfileBottomChamfer",
         "zzExpertOnly",
         "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
-        1,
+        read_only=True,
     ).BaseProfileBottomChamfer = const.BASEPLATE_BOTTOM_CHAMFER
 
     obj.addProperty(
@@ -624,7 +514,7 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
         "BaseProfileVerticalSection",
         "zzExpertOnly",
         "Height of the vertical section in bin base profile",
-        1,
+        read_only=True,
     ).BaseProfileVerticalSection = const.BASEPLATE_VERTICAL_SECTION
 
     obj.addProperty(
@@ -632,7 +522,7 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
         "BaseProfileTopChamfer",
         "zzExpertOnly",
         "Height of the top chamfer in the bin base profile",
-        1,
+        read_only=True,
     ).BaseProfileTopChamfer = const.BASEPLATE_TOP_CHAMFER
 
     obj.addProperty(
@@ -640,7 +530,7 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
         "BinOuterRadius",
         "zzExpertOnly",
         "Outer radius of the bin",
-        1,
+        read_only=True,
     ).BinOuterRadius = const.BASEPLATE_OUTER_RADIUS
 
     obj.addProperty(
@@ -648,7 +538,7 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
         "BinVerticalRadius",
         "zzExpertOnly",
         "Radius of the base profile Vertical section",
-        1,
+        read_only=True,
     ).BinVerticalRadius = const.BASEPLATE_VERTICAL_RADIUS
 
     obj.addProperty(
@@ -656,14 +546,14 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
         "BinBottomRadius",
         "zzExpertOnly",
         "bottom of bin corner radius",
-        1,
+        read_only=True,
     ).BinBottomRadius = const.BASEPLATE_BOTTOM_RADIUS
 
     obj.addProperty(
         "App::PropertyLength",
         "Clearance",
         "zzExpertOnly",
-        ("The Clearance between bin and baseplate <br> <br>default = 0.25 mm"),
+        "The Clearance between bin and baseplate <br> <br>default = 0.25 mm",
     ).Clearance = const.CLEARANCE
 
     obj.addProperty(
@@ -671,14 +561,13 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
         "BaseplateTopLedgeWidth",
         "zzExpertOnly",
         "Top ledge of baseplate, doubled between grids <br> <br> default = 0.4 mm",
-        1,
+        read_only=True,
     ).BaseplateTopLedgeWidth = const.BASEPLATE_TOP_LEDGE_WIDTH
 
-
-def make_base_values(obj: fc.DocumentObject) -> None:
-    """Generate Rectanble layout and calculate relevant parameters."""
-    obj.BaseProfileHeight = (
-        obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection + obj.BaseProfileTopChamfer
+    ## Expressions
+    obj.setExpression(
+        "BaseProfileHeight",
+        "BaseProfileBottomChamfer + BaseProfileVerticalSection + BaseProfileTopChamfer",
     )
 
 
@@ -689,7 +578,7 @@ def solid_shape_properties(obj: fc.DocumentObject) -> None:
         "TotalHeight",
         "ReferenceDimensions",
         "total height of the bin",
-        1,
+        read_only=True,
     )
 
 

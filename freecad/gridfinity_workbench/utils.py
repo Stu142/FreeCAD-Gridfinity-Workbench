@@ -18,6 +18,9 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 
+GridfinityLayout = list[list[bool]]
+
+
 unitmm = fc.Units.Quantity("1 mm")
 
 
@@ -66,6 +69,29 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
     if not vec_list:
         raise ValueError("Vector list is empty")
     return multi_fuse([shape.translated(vec) for vec in vec_list])
+
+
+def copy_in_layout(
+    shape: Part.Shape,
+    layout: GridfinityLayout,
+    x_gird_size: fc.Units.Quantity,
+    y_grid_size: fc.Units.Quantity,
+) -> Part.Shape:
+    """Copy a shape in a layout.
+
+    Raises:
+        ValueError: Layout is empty.
+
+    """
+    vec_list = [
+        fc.Vector(x * x_gird_size, y * y_grid_size)
+        for x, col in enumerate(layout)
+        for y, cell in enumerate(col)
+        if cell
+    ]
+    if not vec_list:
+        raise ValueError("Layout is empty")
+    return copy_and_translate(shape, vec_list)
 
 
 def copy_in_grid(
@@ -389,21 +415,3 @@ def loop(lst: list[fc.Vector]) -> list[Part.LineSegment]:
 def corners(x: float, y: float, z: float = 0) -> list[fc.Vector]:
     """Get a list of four points located at (±x, ±y, z)."""
     return [fc.Vector(x_pos, y_pos, z) for x_pos, y_pos in ((-x, -y), (x, -y), (-x, y), (x, y))]
-
-
-def corner_fillet(radius: float) -> Part.Face:
-    """Make wire of a fillet to extrude."""
-    arc = radius - radius * math.sin(math.pi / 4)
-
-    v1 = fc.Vector(0, 0)
-    v2 = fc.Vector(0, radius)
-    v_arc = fc.Vector(arc, arc)
-    v3 = fc.Vector(radius, 0)
-
-    lines = [
-        Part.LineSegment(v1, v2),
-        Part.Arc(v2, v_arc, v3),
-        Part.LineSegment(v3, v1),
-    ]
-
-    return Part.Face(curve_to_wire(lines))

@@ -19,16 +19,16 @@ def _location_properties(obj: fc.DocumentObject) -> None:
         "xLocationOffset",
         "ShouldBeHidden",
         "changing bin location in the x direction",
+        hidden=True,
     )
-    obj.setEditorMode("xLocationOffset", 2)
 
     obj.addProperty(
         "App::PropertyLength",
         "yLocationOffset",
         "ShouldBeHidden",
         "changing bin location in the y direction",
+        hidden=True,
     )
-    obj.setEditorMode("yLocationOffset", 2)
 
 
 def _total_width_properties(obj: fc.DocumentObject) -> None:
@@ -38,7 +38,7 @@ def _total_width_properties(obj: fc.DocumentObject) -> None:
         "xTotalWidth",
         "ReferenceParameters",
         "total width of Gridfinity object in x direction",
-        1,
+        read_only=True,
     )
 
     obj.addProperty(
@@ -46,7 +46,7 @@ def _total_width_properties(obj: fc.DocumentObject) -> None:
         "yTotalWidth",
         "ReferenceParameters",
         "total width of Gridfinity object in y direction",
-        1,
+        read_only=True,
     )
 
 
@@ -100,40 +100,34 @@ def rectangle_layout_properties(obj: fc.DocumentObject, *, baseplate_default: bo
         "Baseplate",
         "ShouldBeHidden",
         "Is the Gridfinity Object a baseplate",
+        hidden=True,
     ).Baseplate = baseplate_default
 
-    obj.setEditorMode("Baseplate", 2)
+    ## Expressions
+    obj.setExpression(
+        "xTotalWidth",
+        "xGridUnits * xGridSize - (Baseplate == 1 ? 0mm : 2 * Clearance)",
+    )
+    obj.setExpression(
+        "yTotalWidth",
+        "yGridUnits * yGridSize - (Baseplate == 1 ? 0mm : 2 * Clearance)",
+    )
 
 
 def make_rectangle_layout(obj: fc.DocumentObject) -> list[list[bool]]:
-    """Generate Rectanble layout and calculate relevant parameters.
-
-    Args:
-        obj (FreeCAD.DocumentObject): Document object.
-
-    Returns:
-        rectangle_layout: 2 dimentional list of feature locations
-
-    """
-    if obj.Baseplate:
-        obj.xTotalWidth = obj.xGridUnits * obj.xGridSize
-        obj.yTotalWidth = obj.yGridUnits * obj.yGridSize
-    else:
-        obj.xTotalWidth = obj.xGridUnits * obj.xGridSize - obj.Clearance * 2
-        obj.yTotalWidth = obj.yGridUnits * obj.yGridSize - obj.Clearance * 2
-
+    """Generate Rectanble layout and calculate relevant parameters."""
     if obj.GenerationLocation == "Centered at Origin":
         if obj.Baseplate:
             obj.xLocationOffset = obj.xTotalWidth / 2
             obj.yLocationOffset = obj.yTotalWidth / 2
         else:
-            obj.xLocationOffset = (obj.xTotalWidth + obj.Clearance * 2) / 2
-            obj.yLocationOffset = (obj.yTotalWidth + obj.Clearance * 2) / 2
+            obj.xLocationOffset = obj.xTotalWidth / 2 + obj.Clearance
+            obj.yLocationOffset = obj.yTotalWidth / 2 + obj.Clearance
     else:
         obj.xLocationOffset = 0
         obj.yLocationOffset = 0
 
-    return [[True for y in range(obj.yGridUnits)] for x in range(obj.xGridUnits)]
+    return [[True] * obj.yGridUnits for x in range(obj.xGridUnits)]
 
 
 def l_shaped_layout_properties(obj: fc.DocumentObject, *, baseplate_default: bool) -> None:
@@ -180,28 +174,28 @@ def l_shaped_layout_properties(obj: fc.DocumentObject, *, baseplate_default: boo
         "x1TotalDimension",
         "ReferenceDimensions",
         "total dimension of the gridfintiy object in the x direction",
-        1,
+        read_only=True,
     )
     obj.addProperty(
         "App::PropertyLength",
         "y1TotalDimension",
         "ReferenceDimensions",
         "total dimension of the gridfintiy object in the y direction",
-        1,
+        read_only=True,
     )
     obj.addProperty(
         "App::PropertyLength",
         "x2TotalDimension",
         "ReferenceDimensions",
         "total width of the L part in the x direction",
-        1,
+        read_only=True,
     )
     obj.addProperty(
         "App::PropertyLength",
         "y2TotalDimension",
         "ReferenceDimensions",
         "total width of the L part in the y direction",
-        1,
+        read_only=True,
     )
     ## Hidden Properties
     obj.addProperty(
@@ -209,8 +203,8 @@ def l_shaped_layout_properties(obj: fc.DocumentObject, *, baseplate_default: boo
         "Baseplate",
         "Flags",
         "Is the Gridfinity Object a baseplate",
+        hidden=True,
     ).Baseplate = baseplate_default
-    obj.setEditorMode("Baseplate", 2)
 
 
 def make_l_shaped_layout(obj: fc.DocumentObject) -> list[list[bool]]:
@@ -286,8 +280,8 @@ def custom_shape_layout_properties(obj: fc.DocumentObject, *, baseplate_default:
         "Baseplate",
         "ShouldBeHidden",
         "Is the Gridfinity Object a baseplate",
+        hidden=True,
     ).Baseplate = baseplate_default
-    obj.setEditorMode("Baseplate", 2)
 
 
 def make_custom_shape_layout(obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
