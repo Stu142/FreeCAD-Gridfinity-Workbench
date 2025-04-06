@@ -661,7 +661,7 @@ class CustomBinBase(FoundationGridfinity):
         layout = clean_up_layout(self.layout)
         grid_initial_layout.make_custom_shape_layout(obj, layout)
         solid_shape = custom_shape_solid(obj, layout, obj.TotalHeight - obj.BaseProfileHeight)
-        outside_trim = custom_shape_trim(obj, layout, obj.Clearance.Value, obj.Clearance.Value)
+        outside_trim = custom_shape_trim(obj, layout, obj.Clearance, obj.Clearance)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
         fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
@@ -747,7 +747,7 @@ class CustomEcoBin(FoundationGridfinity):
         layout = clean_up_layout(self.layout)
         grid_initial_layout.make_custom_shape_layout(obj, layout)
         solid_shape = custom_shape_solid(obj, layout, obj.TotalHeight - obj.BaseProfileHeight)
-        outside_trim = custom_shape_trim(obj, layout, obj.Clearance.Value, obj.Clearance.Value)
+        outside_trim = custom_shape_trim(obj, layout, obj.Clearance, obj.Clearance)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
         fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
@@ -762,8 +762,8 @@ class CustomEcoBin(FoundationGridfinity):
         compartment_trim = custom_shape_trim(
             obj,
             layout,
-            obj.Clearance.Value + obj.WallThickness.Value,
-            obj.Clearance.Value + obj.WallThickness.Value,
+            obj.Clearance + obj.WallThickness,
+            obj.Clearance + obj.WallThickness,
         )
         compartments_solid = compartments_solid.cut(compartment_trim)
         compartments_solid = compartments_solid.removeSplitter()
@@ -864,7 +864,7 @@ class CustomStorageBin(FoundationGridfinity):
         layout = clean_up_layout(self.layout)
         grid_initial_layout.make_custom_shape_layout(obj, layout)
         solid_shape = custom_shape_solid(obj, layout, obj.TotalHeight - obj.BaseProfileHeight)
-        outside_trim = custom_shape_trim(obj, layout, obj.Clearance.Value, obj.Clearance.Value)
+        outside_trim = custom_shape_trim(obj, layout, obj.Clearance, obj.Clearance)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
         fuse_total = vertical_edge_fillet(fuse_total, obj.BinOuterRadius)
@@ -874,8 +874,8 @@ class CustomStorageBin(FoundationGridfinity):
         compartment_trim = custom_shape_trim(
             obj,
             layout,
-            obj.Clearance.Value + obj.WallThickness.Value,
-            obj.Clearance.Value + obj.WallThickness.Value,
+            obj.Clearance + obj.WallThickness,
+            obj.Clearance + obj.WallThickness,
         )
         compartments_solid = compartments_solid.cut(compartment_trim)
         compartments_solid = compartments_solid.removeSplitter()
