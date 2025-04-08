@@ -492,7 +492,7 @@ class LBinBlank(FoundationGridfinity):
             "New LBinBlank objects should not be created. Use CustomBlankBin instead.",
         )
 
-    def onDocumentRestored(self, obj: fc.DocumentObject) -> None:  # noqa: N802, PLR0915
+    def onDocumentRestored(self, obj: fc.DocumentObject) -> None:  # noqa: N802
         # save the layout to pass to CustomBlankBin, with some padding
         layout = [[False] * (obj.y1GridUnits + 6) for _ in range(obj.x1GridUnits + 6)]
         for x in range(obj.x1GridUnits):
@@ -500,68 +500,19 @@ class LBinBlank(FoundationGridfinity):
                 if x < obj.x2GridUnits or y < obj.y2GridUnits:
                     layout[x + 3][y + 3] = True
 
-        # clean the object by removing ALL properties
-        # proper properties will be re-added by CustomBlankBin(obj, ...)
-        # __init__ properties
-        obj.removeProperty("Bin")
-        obj.removeProperty("version")
-        # l_shaped_layout_properties
-        obj.removeProperty("x1GridUnits")
-        obj.removeProperty("y1GridUnits")
-        obj.removeProperty("x2GridUnits")
-        obj.removeProperty("y2GridUnits")
-        obj.removeProperty("x1TotalDimension")
-        obj.removeProperty("y1TotalDimension")
-        obj.removeProperty("x2TotalDimension")
-        obj.removeProperty("y2TotalDimension")
-        obj.removeProperty("Baseplate")
-        # l_shaped_layout_properties -> _location_properties
-        obj.removeProperty("GenerationLocation")
-        obj.removeProperty("xLocationOffset")
-        obj.removeProperty("yLocationOffset")
-        # l_shaped_layout_properties -> _total_width_properties
-        obj.removeProperty("xTotalWidth")
-        obj.removeProperty("yTotalWidth")
-        # l_shaped_layout_properties -> _grid_size_properties
-        obj.removeProperty("xGridSize")
-        obj.removeProperty("yGridSize")
-        # bin_solid_mid_section_properties
-        obj.removeProperty("HeightUnits")
-        obj.removeProperty("CustomHeight")
-        obj.removeProperty("NonStandardHeight")
-        obj.removeProperty("WallThickness")
-        obj.removeProperty("TotalHeight")
-        obj.removeProperty("HeightUnitValue")
-        # blank_bin_recessed_top_properties
-        obj.removeProperty("RecessedTopDepth")
-        # stacking_lip_properties
-        obj.removeProperty("StackingLip")
-        obj.removeProperty("StackingLipTopLedge")
-        obj.removeProperty("StackingLipTopChamfer")
-        obj.removeProperty("StackingLipBottomChamfer")
-        obj.removeProperty("StackingLipVerticalSection")
-        # bin_bottom_holes_properties
-        obj.removeProperty("MagnetHoles")
-        obj.removeProperty("ScrewHoles")
-        obj.removeProperty("SequentialBridgingLayerHeight")
-        obj.removeProperty("MagnetHolesShape")
-        obj.removeProperty("MagnetHoleDiameter")
-        obj.removeProperty("MagnetHoleDepth")
-        obj.removeProperty("ScrewHoleDiameter")
-        obj.removeProperty("ScrewHoleDepth")
-        obj.removeProperty("MagnetHoleDistanceFromEdge")
-        # bin_base_values_properties
-        obj.removeProperty("BaseProfileBottomChamfer")
-        obj.removeProperty("BaseProfileVerticalSection")
-        obj.removeProperty("BaseProfileTopChamfer")
-        obj.removeProperty("BinOuterRadius")
-        obj.removeProperty("BinVerticalRadius")
-        obj.removeProperty("BinBottomRadius")
-        obj.removeProperty("Clearance")
-        obj.removeProperty("BaseProfileHeight")
+        tmp = utils.new_object("tmp")
+        properties = set(obj.PropertiesList) - set(tmp.PropertiesList)
+        tmp.Document.removeObject(tmp.Name)
 
-        # migrate to custom shape
+        property_values = [(p, getattr(obj, p)) for p in properties]
+        for p in properties:
+            obj.removeProperty(p)
+
         CustomBlankBin(obj, layout)
+
+        for p, value in property_values:
+            if hasattr(obj, p):
+                setattr(obj, p, value)
 
         fc.Console.PrintMessage(
             f"Your '{obj.Label}' L-shaped bin has been migrated to the Custom bin",
