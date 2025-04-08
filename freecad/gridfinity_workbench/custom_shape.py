@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-# The PySide library is provided by FreeCAD and it's path is platform dependent,
+# The PySide library is provided by FreeCAD and its path is platform dependent,
 # so it cannot be analyzed by mypy.
 # mypy: disable-error-code="import-not-found"
 from PySide.QtCore import (

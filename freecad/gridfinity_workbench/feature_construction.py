@@ -1179,8 +1179,7 @@ def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default:
             "<br> <br> Hex is alternative press fit style."
             "<br> <br> default = 6.2 mm"
         ),
-    )
-    obj.MagnetHolesShape = const.HOLE_SHAPES
+    ).MagnetHolesShape = const.HOLE_SHAPES
 
     obj.addProperty(
         "App::PropertyLength",

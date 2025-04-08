@@ -37,7 +37,7 @@ class ViewProviderGridfinity:
 
         Required to set icon_path when reopening after saving.
         """
-        if not hasattr(self, "icon_path"):
+        if not hasattr(self, "icon_path") or not Path(self.icon_path).exists():
             self.icon_path = str(ICONDIR / "gridfinity_workbench_icon.svg")
 
     def attach(self, vobj: fcg.ViewProviderDocumentObject) -> None:
@@ -201,15 +201,6 @@ class CreateScrewTogetherBaseplate(CreateCommand):
             name="ScrewTogetherBaseplate",
             gridfinity_function=features.ScrewTogetherBaseplate,
             pixmap=ICONDIR / "screw_together_baseplate.svg",
-        )
-
-
-class CreateLBinBlank(CreateCommand):
-    def __init__(self) -> None:
-        super().__init__(
-            name="LShapedBlankBin",
-            gridfinity_function=features.LBinBlank,
-            pixmap=ICONDIR / "BetaLBinBlank.svg",
         )
 
 
