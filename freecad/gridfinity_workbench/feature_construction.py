@@ -8,6 +8,7 @@ import Part
 
 from . import const, utils
 from . import label_shelf as label_shelf_module
+from . import magnet_hole as magnet_hole_module
 
 unitmm = fc.Units.Quantity("1 mm")
 zeromm = fc.Units.Quantity("0 mm")
@@ -549,15 +550,11 @@ def make_compartments(obj: fc.DocumentObject, bin_inside_solid: Part.Shape) -> P
 
     if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
         obj.xDividerHeight = divmin
-        fc.Console.PrintWarning(
-            f"Divider Height must be equal to or greater than:  {divmin}\n",
-        )
+        fc.Console.PrintWarning(f"Divider Height must be equal to or greater than:  {divmin}\n")
 
     if obj.yDividerHeight < divmin and obj.yDividerHeight != 0:
         obj.yDividerHeight = divmin
-        fc.Console.PrintWarning(
-            f"Divider Height must be equal to or greater than:  {divmin}\n",
-        )
+        fc.Console.PrintWarning(f"Divider Height must be equal to or greater than:  {divmin}\n")
 
     if (
         obj.xDividerHeight < obj.TotalHeight
@@ -566,9 +563,7 @@ def make_compartments(obj: fc.DocumentObject, bin_inside_solid: Part.Shape) -> P
         and obj.xDividers != 0
     ):
         obj.LabelShelfStyle = "Off"
-        fc.Console.PrintWarning(
-            "Label Shelf turned off for less than full height x dividers\n",
-        )
+        fc.Console.PrintWarning("Label Shelf turned off for less than full height x dividers\n")
     ## Compartment Generation
 
     if obj.xDividers == 0 and obj.yDividers == 0:
@@ -584,53 +579,20 @@ def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
 
     Returns one combined shape containing of the different hole types.
     """
-    sqbr1_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight
-    sqbr2_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight * 2
-
-    bottom_hole_shape: Part.Shape | None = None
+    shape: Part.Shape | None = None
 
     if obj.MagnetHoles:
-        if obj.MagnetHolesShape == "Hex":
-            # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed
-            # circle radius
-            radius = obj.MagnetHoleDiameter / math.sqrt(3)
-            p = fc.ActiveDocument.addObject("Part::RegularPolygon")
-            p.Polygon = 6
-            p.Circumradius = radius
-            p.recompute()
-
-            p_wire: Part.Wire = p.Shape
-            magnet_hole_shape = Part.Face(p_wire).extrude(fc.Vector(0, 0, obj.MagnetHoleDepth))
-            fc.ActiveDocument.removeObject(p.Name)
-        else:
-            magnet_hole_shape = Part.makeCylinder(
-                obj.MagnetHoleDiameter / 2,
-                obj.MagnetHoleDepth,
-                fc.Vector(0, 0, 0),
-                fc.Vector(0, 0, 1),
-            )
-
-        bottom_hole_shape = (
-            magnet_hole_shape
-            if bottom_hole_shape is None
-            else bottom_hole_shape.fuse(magnet_hole_shape)
-        )
+        shape = magnet_hole_module.from_obj(obj)
 
     if obj.ScrewHoles:
-        screw_hole_shape = Part.makeCylinder(
-            obj.ScrewHoleDiameter / 2,
-            obj.ScrewHoleDepth,
-            fc.Vector(0, 0, 0),
-            fc.Vector(0, 0, 1),
-        )
+        screw_hole_shape = Part.makeCylinder(obj.ScrewHoleDiameter / 2, obj.ScrewHoleDepth)
 
-        bottom_hole_shape = (
-            screw_hole_shape
-            if bottom_hole_shape is None
-            else bottom_hole_shape.fuse(screw_hole_shape)
-        )
+        shape = screw_hole_shape if shape is None else shape.fuse(screw_hole_shape)
 
     if obj.ScrewHoles and obj.MagnetHoles:
+        sqbr1_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight
+        sqbr2_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight * 2
+
         b1 = Part.makeBox(
             obj.ScrewHoleDiameter,
             obj.ScrewHoleDiameter,
@@ -661,16 +623,13 @@ def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
         sq1_1 = sq1_1.extrude(fc.Vector(0, 0, sqbr1_depth))
         holes_interface_shape = sq1_1.fuse(b1)
 
-        bottom_hole_shape = (
-            holes_interface_shape
-            if bottom_hole_shape is None
-            else bottom_hole_shape.fuse(holes_interface_shape)
-        )
+        assert shape is not None
+        shape = shape.fuse(holes_interface_shape)
 
-    if bottom_hole_shape is None:
+    if shape is None:
         raise RuntimeError("No bottom_hole_shape to return")
 
-    return bottom_hole_shape
+    return shape
 
 
 def _eco_bin_deviders(obj: fc.DocumentObject, xcomp_w: float, ycomp_w: float) -> Part.Shape:
@@ -1169,6 +1128,13 @@ def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default:
     ).SequentialBridgingLayerHeight = const.SEQUENTIAL_BRIDGING_LAYER_HEIGHT
 
     obj.addProperty(
+        "App::PropertyBool",
+        "MagnetRelief",
+        "GridfinityNonStandard",
+        "Toggle the magnet relief on or off",
+    ).MagnetRelief = False
+
+    obj.addProperty(
         "App::PropertyEnumeration",
         "MagnetHolesShape",
         "GridfinityNonStandard",
@@ -1239,6 +1205,9 @@ def make_bin_bottom_holes(
         bottom_hole_shape,
         utils.corners(x_hole_pos, y_hole_pos, -obj.TotalHeight),
     )
+    if obj.MagnetHoles and obj.MagnetRelief:
+        relief = magnet_hole_module.relief(obj).translate(fc.Vector(0, 0, -obj.TotalHeight))
+        hole_shape_sub_array = hole_shape_sub_array.fuse(relief)
 
     fuse_total = utils.copy_in_layout(hole_shape_sub_array, layout, obj.xGridSize, obj.yGridSize)
     fuse_total.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))

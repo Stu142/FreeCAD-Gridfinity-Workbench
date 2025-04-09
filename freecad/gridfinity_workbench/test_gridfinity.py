@@ -184,6 +184,13 @@ class TestVolumes(TestWithDocument):
         obj = fcg.ActiveDocument.ActiveObject.Object
         self.assertAlmostEqual(obj.Shape.Volume, 12606.095388468213)
 
+    def test_magnet_baseplate_hex(self) -> None:
+        fcg.Command.get("CreateMagnetBaseplate").run()
+        obj = fcg.ActiveDocument.ActiveObject.Object
+        obj.MagnetHolesShape = "Hex"
+        obj.recompute()
+        self.assertAlmostEqual(obj.Shape.Volume, 12513.08585103324)
+
     def test_screw_together_baseplate(self) -> None:
         fcg.Command.get("CreateScrewTogetherBaseplate").run()
         obj = fcg.ActiveDocument.ActiveObject.Object

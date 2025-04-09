@@ -18,7 +18,7 @@ SCREW_HOLE_DEPTH = 6
 
 MAGNET_HOLE_DISTANCE_FROM_EDGE = 8
 
-HOLE_SHAPES = ["Round", "Hex"]
+HOLE_SHAPES = ["Round", "Crush ribs", "Hex"]
 
 ## Bins
 # General Bin Parameters
