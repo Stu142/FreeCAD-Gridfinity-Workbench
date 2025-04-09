@@ -9,107 +9,12 @@ import FreeCAD as fc  # noqa: N813
 import Part
 
 from . import const, utils
+from . import magnet_hole as magnet_hole_module
 from .utils import GridfinityLayout
 
 
-def _magnet_hole_hex(
-    obj: fc.DocumentObject,
-    x_hole_pos: float,
-    y_hole_pos: float,
-) -> Part.Shape:
-    # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed circle radius
-    radius = obj.MagnetHoleDiameter / math.sqrt(3)
-
-    n_sides = 6
-    rot = fc.Rotation(fc.Vector(0, 0, 1), 0)
-
-    p = fc.ActiveDocument.addObject("Part::RegularPolygon")
-    p.Polygon = n_sides
-    p.Circumradius = radius
-    p.Placement = fc.Placement(fc.Vector(-x_hole_pos, -y_hole_pos), rot)
-    p.recompute()
-    f = Part.Face(Part.Wire(p.Shape.Edges))
-    c1 = f.extrude(fc.Vector(0, 0, -obj.MagnetHoleDepth))
-    fc.ActiveDocument.removeObject(p.Name)
-
-    p = fc.ActiveDocument.addObject("Part::RegularPolygon")
-    p.Polygon = n_sides
-    p.Circumradius = radius
-    p.Placement = fc.Placement(
-        fc.Vector(x_hole_pos, -y_hole_pos),
-        rot,
-    )
-    p.recompute()
-    f = Part.Face(Part.Wire(p.Shape.Edges))
-    c2 = f.extrude(fc.Vector(0, 0, -obj.MagnetHoleDepth))
-    fc.ActiveDocument.removeObject(p.Name)
-
-    p = fc.ActiveDocument.addObject("Part::RegularPolygon")
-    p.Polygon = n_sides
-    p.Circumradius = radius
-    p.Placement = fc.Placement(fc.Vector(-x_hole_pos, y_hole_pos), rot)
-    p.recompute()
-    f = Part.Face(Part.Wire(p.Shape.Edges))
-    c3 = f.extrude(fc.Vector(0, 0, -obj.MagnetHoleDepth))
-    fc.ActiveDocument.removeObject(p.Name)
-
-    p = fc.ActiveDocument.addObject("Part::RegularPolygon")
-    p.Polygon = n_sides
-    p.Circumradius = radius
-    p.Placement = fc.Placement(fc.Vector(x_hole_pos, y_hole_pos), rot)
-    p.recompute()
-    f = Part.Face(Part.Wire(p.Shape.Edges))
-    c4 = f.extrude(fc.Vector(0, 0, -obj.MagnetHoleDepth))
-    fc.ActiveDocument.removeObject(p.Name)
-
-    return c1.multiFuse([c2, c3, c4])
-
-
-def _magnet_hole_round(
-    obj: fc.DocumentObject,
-    x_hole_pos: float,
-    y_hole_pos: float,
-) -> Part.Shape:
-    c = [
-        Part.makeCylinder(
-            obj.MagnetHoleDiameter / 2,
-            obj.MagnetHoleDepth,
-            pos,
-            fc.Vector(0, 0, -1),
-        )
-        for pos in utils.corners(x_hole_pos, y_hole_pos)
-    ]
-
-    # Chamfer
-    ct = [
-        Part.makeCircle(
-            obj.MagnetHoleDiameter / 2 + obj.MagnetChamfer,
-            pos,
-            fc.Vector(0, 0, 1),
-        )
-        for pos in utils.corners(x_hole_pos, y_hole_pos)
-    ]
-    cb = [
-        Part.makeCircle(
-            obj.MagnetHoleDiameter / 2,
-            pos,
-            fc.Vector(0, 0, 1),
-        )
-        for pos in utils.corners(x_hole_pos, y_hole_pos, -obj.MagnetChamfer)
-    ]
-
-    ch = [Part.makeLoft([t, b], solid=True) for t, b in zip(ct, cb)]
-
-    return utils.multi_fuse(c + ch)
-
-
 def magnet_holes_properties(obj: fc.DocumentObject) -> None:
-    """Make baseplate magnet holes.
-
-    Args:
-        obj (FreeCAD.DocumentObject): Document object.
-
-    """
+    """Make baseplate magnet holes."""
     ## Gridfinity Non Standard Parameters
 
     obj.addProperty(
@@ -123,9 +28,7 @@ def magnet_holes_properties(obj: fc.DocumentObject) -> None:
             "<br> <br> Hex is alternative press fit style."
             "<br> <br> default = 6.2 mm"
         ),
-    )
-
-    obj.MagnetHolesShape = const.HOLE_SHAPES
+    ).MagnetHolesShape = const.HOLE_SHAPES
 
     obj.addProperty(
         "App::PropertyLength",
@@ -209,38 +112,25 @@ def make_magnet_holes(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.
     y_hole_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
 
     # Magnet holes
-    if obj.MagnetHolesShape == "Hex":
-        hm1 = _magnet_hole_hex(obj, x_hole_pos, y_hole_pos)
-    elif obj.MagnetHolesShape == "Round":
-        hm1 = _magnet_hole_round(obj, x_hole_pos, y_hole_pos)
-    else:
-        raise ValueError(f"Unexpected hole shape: {obj.MagnetHolesShape}")
+    shape = magnet_hole_module.from_obj(obj)
+    shape = shape.translate(fc.Vector(0, 0, -obj.MagnetHoleDepth))
+    screw_hole = Part.makeCylinder(
+        obj.MagnetBaseHole / 2,
+        obj.MagnetHoleDepth + obj.BaseThickness,
+        fc.Vector(0, 0, 0),
+        fc.Vector(0, 0, -1),
+    )
+    shape = shape.fuse(screw_hole)
+    shape = utils.copy_and_translate(shape, utils.corners(x_hole_pos, y_hole_pos))
 
-    # Screw holes
-    ca = [
-        Part.makeCylinder(
-            obj.MagnetBaseHole / 2,
-            obj.MagnetHoleDepth + obj.BaseThickness,
-            pos,
-            fc.Vector(0, 0, -1),
-        )
-        for pos in utils.corners(x_hole_pos, -y_hole_pos)
-    ]
+    shape.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
-    hm1 = hm1.multiFuse(ca)
-    hm1.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
-
-    hm2 = utils.copy_in_layout(hm1, layout, obj.xGridSize, obj.yGridSize)
-    return hm2.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
+    shape = utils.copy_in_layout(shape, layout, obj.xGridSize, obj.yGridSize)
+    return shape.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
 def screw_bottom_chamfer_properties(obj: fc.DocumentObject) -> None:
-    """Create Baseplate Connection Holes.
-
-    Args:
-        obj (FreeCAD.DocumentObject): Document object.
-
-    """
+    """Create Baseplate Connection Holes."""
     ## Gridfinity Non Standard Parameters
     obj.addProperty(
         "App::PropertyLength",
@@ -264,28 +154,14 @@ def make_screw_bottom_chamfer(obj: fc.DocumentObject, layout: GridfinityLayout) 
     x_hole_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
     y_hole_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
 
-    ct_z = -obj.TotalHeight + obj.BaseProfileHeight
-    ct = [
-        Part.makeCircle(
-            obj.ScrewHoleDiameter / 2 + obj.MagnetBottomChamfer,
-            pos,
-            fc.Vector(0, 0, 1),
-        )
-        for pos in utils.corners(x_hole_pos, y_hole_pos, ct_z)
-    ]
-    cb_z = -obj.TotalHeight + obj.MagnetBottomChamfer + obj.BaseProfileHeight
-    cb = [
-        Part.makeCircle(
-            obj.ScrewHoleDiameter / 2,
-            pos,
-            fc.Vector(0, 0, 1),
-        )
-        for pos in utils.corners(x_hole_pos, y_hole_pos, cb_z)
-    ]
+    ch = utils.round_chamfer(
+        obj.ScrewHoleDiameter / 2 + obj.MagnetBottomChamfer,
+        obj.ScrewHoleDiameter / 2,
+        obj.MagnetBottomChamfer,
+        pPnt=fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight),
+    )
 
-    ch = [Part.makeLoft([t, b], solid=True) for t, b in zip(ct, cb)]
-
-    hm1 = utils.multi_fuse(ch)
+    hm1 = utils.copy_and_translate(ch, utils.corners(x_hole_pos, y_hole_pos))
     hm2 = utils.copy_in_layout(hm1, layout, obj.xGridSize, obj.yGridSize)
     return hm2.translate(
         fc.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset),
@@ -293,12 +169,7 @@ def make_screw_bottom_chamfer(obj: fc.DocumentObject, layout: GridfinityLayout) 
 
 
 def connection_holes_properties(obj: fc.DocumentObject) -> None:
-    """Create Baseplate Connection Holes.
-
-    Args:
-        obj (FreeCAD.DocumentObject): Document object.
-
-    """
+    """Create Baseplate Connection Holes."""
     ## Gridfinity Non Standard Parameters
     obj.addProperty(
         "App::PropertyLength",

@@ -254,6 +254,31 @@ def rounded_rectangle_extrude(
     return Part.Face(w1).extrude(fc.Vector(0, 0, height))
 
 
+def round_chamfer(
+    radius1: fc.Units.Quantity,
+    radius2: fc.Units.Quantity,
+    height: fc.Units.Quantity,
+    *,
+    pPnt: fc.Vector | None = None,  # noqa: N803
+) -> Part.Shape:
+    """Create a cut cone.
+
+    Args:
+        radius1: Bottom radius.
+        radius2: Top radius.
+        height: Height of the cone.
+        pPnt: Position.
+
+    """
+    if pPnt is None:
+        pPnt = fc.Vector(0, 0, 0)  # noqa: N806
+
+    circle1 = Part.makeCircle(radius1.Value, pPnt)
+    circle2 = Part.makeCircle(radius2.Value, pPnt + fc.Vector(0, 0, height))
+
+    return Part.makeLoft([circle1, circle2], solid=True)
+
+
 @dataclass
 class LShapeData:
     """Data class containing information regarding a L shape.
