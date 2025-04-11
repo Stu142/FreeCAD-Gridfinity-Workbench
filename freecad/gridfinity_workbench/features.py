@@ -476,62 +476,47 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
 
 
 class LBinBlank(FoundationGridfinity):
-    def __init__(self, obj: fc.DocumentObject) -> None:
-        super().__init__(obj)
+    """Legacy L shaped bin.
 
-        obj.addProperty("App::PropertyPythonObject", "Bin", "base", "python gridfinity object")
+    This class is never created in the current version, but might be used in old files.
 
-        grid_initial_layout.l_shaped_layout_properties(obj, baseplate_default=False)
-        feat.bin_solid_mid_section_properties(
-            obj,
-            default_height_units=const.HEIGHT_UNITS,
-            default_wall_thickness=const.WALL_THICKNESS,
-        )
-        feat.blank_bin_recessed_top_properties(obj)
-        feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP)
-        feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
-        feat.bin_base_values_properties(obj)
+    When opening a file that uses this class, the objects will be migrated to
+    use the CustomBlankBin class. This needs to happen only once per file.
 
-    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        layout = grid_initial_layout.make_l_shaped_layout(obj)
+    This class should removed from the project after 01.08.2025, when the
+    migration perioid ends. It is the only thing that needs action at that time.
+    """
 
-        bin_outside_shape = utils.create_rounded_l(
-            utils.LShapeData(
-                obj.x1TotalDimension,
-                obj.y1TotalDimension,
-                obj.x2TotalDimension,
-                obj.y2TotalDimension,
-            ),
-            obj.Clearance,
-            obj.Clearance,
-            obj.BinOuterRadius,
+    def __init__(self, _obj: fc.DocumentObject) -> None:
+        raise AssertionError(
+            "New LBinBlank objects should not be created. Use CustomBlankBin instead.",
         )
 
-        bin_inside_shape = utils.create_rounded_l(
-            utils.LShapeData(
-                obj.x1TotalDimension - obj.WallThickness * 2,
-                obj.y1TotalDimension - obj.WallThickness * 2,
-                obj.x2TotalDimension - obj.WallThickness * 2,
-                obj.y2TotalDimension,
-            ),
-            obj.Clearance + obj.WallThickness,
-            obj.Clearance + obj.WallThickness,
-            obj.BinOuterRadius - obj.WallThickness,
+    def onDocumentRestored(self, obj: fc.DocumentObject) -> None:  # noqa: N802
+        # save the layout to pass to CustomBlankBin, with some padding
+        layout = [[False] * (obj.y1GridUnits + 6) for _ in range(obj.x1GridUnits + 6)]
+        for x in range(obj.x1GridUnits):
+            for y in range(obj.y1GridUnits):
+                if x < obj.x2GridUnits or y < obj.y2GridUnits:
+                    layout[x + 3][y + 3] = True
+
+        tmp = utils.new_object("tmp")
+        properties = set(obj.PropertiesList) - set(tmp.PropertiesList)
+        tmp.Document.removeObject(tmp.Name)
+
+        property_values = [(p, getattr(obj, p)) for p in properties]
+        for p in properties:
+            obj.removeProperty(p)
+
+        CustomBlankBin(obj, layout)
+
+        for p, value in property_values:
+            if hasattr(obj, p):
+                setattr(obj, p, value)
+
+        fc.Console.PrintMessage(
+            f"Your '{obj.Label}' L-shaped bin has been migrated to the Custom bin",
         )
-
-        fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
-        fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
-
-        if obj.RecessedTopDepth > 0:
-            fuse_total = fuse_total.cut(feat.make_blank_bin_recessed_top(obj, bin_inside_shape))
-
-        if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
-
-        if obj.ScrewHoles or obj.MagnetHoles:
-            fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
-
-        return fuse_total
 
 
 class CustomBlankBin(FoundationGridfinity):
