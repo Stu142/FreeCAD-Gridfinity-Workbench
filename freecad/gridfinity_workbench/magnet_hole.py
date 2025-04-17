@@ -9,19 +9,14 @@ import Part
 
 from . import utils
 
+unitmm = fc.Units.Quantity("1 mm")
 
-def _crush_ribs(
-    radius: fc.Units.Quantity,
-    depth: fc.Units.Quantity,
-    *,
-    n: int,
-    beta: float,
-) -> Part.Shape:
-    """Make crush ribs inner shape.
+
+def _crush_ribs(radius: fc.Units.Quantity, *, n: int, beta: float) -> tuple[Part.Face, float]:
+    """Make crush ribs inner face.
 
     Args:
         radius (fc.Units.Quantity): Inner radius.
-        depth (fc.Units.Quantity): Depth.
         n (int): Number of ribs.
         beta (float): Waviness of the ribs. It is the angle at wich inner at outer arcs meet.
         A value of 0 would result in a perfect circle.
@@ -52,14 +47,10 @@ def _crush_ribs(
             math.degrees((i + 0.5) / len(lines) * 2 * math.pi),
         )
         arc.rotate(placement)
-    wire = utils.curve_to_wire(lines)
-    face = Part.Face(wire)
-    shape = face.extrude(fc.Vector(0, 0, depth))
-
-    return shape
+    return utils.curve_to_face(lines), r3 - r1
 
 
-def _hex_shape(radius: fc.Units.Quantity, depth: fc.Units.Quantity) -> Part.Shape:
+def _hex_shape(radius: fc.Units.Quantity) -> Part.Shape:
     # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed
     # circle radius
     radius = 2 * radius / math.sqrt(3)
@@ -70,7 +61,7 @@ def _hex_shape(radius: fc.Units.Quantity, depth: fc.Units.Quantity) -> Part.Shap
     p.recompute()
 
     p_wire: Part.Wire = p.Shape
-    shape = Part.Face(p_wire).extrude(fc.Vector(0, 0, depth))
+    shape = Part.Face(p_wire)
     fc.ActiveDocument.removeObject(p.Name)
     return shape
 
@@ -83,24 +74,30 @@ def from_obj(obj: fc.DocumentObject) -> Part.Shape:
     hole_shape = obj.MagnetHolesShape
     radius = obj.MagnetHoleDiameter / 2
     depth = obj.MagnetHoleDepth
+    chamfer_depth = depth / 8
 
     if hole_shape == "Hex":
-        shape = _hex_shape(radius, depth)
+        shape = _hex_shape(radius)
+        chamfer_width = (2 / math.sqrt(3) - 1) * radius
     elif hole_shape == "Crush ribs":
-        shape = _crush_ribs(radius, depth, n=8, beta=0.5 * math.pi / 2)
+        shape, ch = _crush_ribs(radius, n=8, beta=0.5 * math.pi / 2)
+        chamfer_width = ch * unitmm
     elif hole_shape == "Round":
-        shape = Part.makeCylinder(radius, depth)
-        if obj.Baseplate:
-            chamfer = obj.MagnetChamfer
-            chamfer_shape = utils.round_chamfer(
-                radius,
-                radius + chamfer,
-                chamfer,
-                pPnt=fc.Vector(0, 0, depth - chamfer),
-            )
-            shape = shape.fuse(chamfer_shape)
+        shape = Part.Face(Part.Wire(Part.makeCircle(radius)))
+        chamfer_width = chamfer_depth
     else:
         raise ValueError(f"Unrecognised magnet hole shape {hole_shape:!r}")
+
+    shape = shape.extrude(fc.Vector(0, 0, depth))
+
+    if obj.Baseplate:
+        chamfer_shape = utils.round_chamfer(
+            radius,
+            radius + chamfer_width,
+            chamfer_depth,
+            pPnt=fc.Vector(0, 0, depth - chamfer_depth),
+        )
+        shape = shape.fuse(chamfer_shape)
 
     return shape
 
@@ -125,8 +122,7 @@ def relief(obj: fc.DocumentObject) -> Part.Shape:
         Part.LineSegment(p4, p5),
         Part.LineSegment(p5, p1),
     ]
-    wire = utils.curve_to_wire(lines)
-    face = Part.Face(wire)
+    face = utils.curve_to_face(lines)
     shape = face.extrude(fc.Vector(0, 0, obj.MagnetHoleDepth))
 
     positions = [

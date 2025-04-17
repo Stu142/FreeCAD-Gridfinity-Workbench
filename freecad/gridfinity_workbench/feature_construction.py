@@ -330,7 +330,7 @@ def _corner_fillets(
             Part.LineSegment(v3, v1),
         ]
 
-        face = Part.Face(utils.curve_to_wire(lines))
+        face = utils.curve_to_face(lines)
         face.rotate(fc.Vector(0, 0, 0), fc.Vector(0, 0, 1), rotation)
         face.translate(translation)
         return face.extrude(fc.Vector(0, 0, -obj.TotalHeight))

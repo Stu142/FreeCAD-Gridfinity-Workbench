@@ -72,13 +72,6 @@ def magnet_holes_properties(obj: fc.DocumentObject) -> None:
         "<br> <br> default = 3 mm",
     ).MagnetBaseHole = const.MAGNET_BASE_HOLE
 
-    obj.addProperty(
-        "App::PropertyLength",
-        "MagnetChamfer",
-        "NonStandard",
-        "Chamfer at top of magnet hole <br> <br> default = 0.4 mm",
-    ).MagnetChamfer = const.MAGNET_CHAMFER
-
     ## Gridfinity Expert Only Parameters
     obj.addProperty(
         "App::PropertyLength",
@@ -229,7 +222,7 @@ def make_connection_holes(obj: fc.DocumentObject, layout: GridfinityLayout) -> P
     return fuse_total
 
 
-def _center_cut_wire(obj: fc.DocumentObject) -> Part.Wire:
+def _center_cut_face(obj: fc.DocumentObject) -> Part.Face:
     """Create wire for the baseplate center cut."""
     x_inframedis = (
         obj.xGridSize / 2
@@ -324,7 +317,7 @@ def _center_cut_wire(obj: fc.DocumentObject) -> Part.Wire:
     l5 = Part.LineSegment(l4.EndPoint, mec_middle)
     l6 = Part.LineSegment(l5.EndPoint, l1.StartPoint)
 
-    return utils.curve_to_wire([l1, ar1, l2, ar2, l3, ar3, l4, l5, l6])
+    return utils.curve_to_face([l1, ar1, l2, ar2, l3, ar3, l4, l5, l6])
 
 
 def center_cut_properties(obj: fc.DocumentObject) -> None:
@@ -339,9 +332,9 @@ def center_cut_properties(obj: fc.DocumentObject) -> None:
 
 def make_center_cut(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.Shape:
     """Create baseplate center cutout."""
-    wire = _center_cut_wire(obj)
+    face = _center_cut_face(obj)
 
-    partial_shape1 = Part.Face(wire).extrude(fc.Vector(0, 0, -obj.TotalHeight))
+    partial_shape1 = face.extrude(fc.Vector(0, 0, -obj.TotalHeight))
     partial_shape2 = partial_shape1.mirror(fc.Vector(0, 0, 0), fc.Vector(0, 1, 0))
     partial_shape3 = partial_shape1.mirror(fc.Vector(0, 0, 0), fc.Vector(1, 0, 0))
     partial_shape4 = partial_shape2.mirror(fc.Vector(0, 0, 0), fc.Vector(1, 0, 0))

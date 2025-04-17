@@ -26,7 +26,7 @@ def _corner_fillet(radius: float) -> Part.Face:
         Part.LineSegment(v3, v1),
     ]
 
-    return Part.Face(utils.curve_to_wire(lines))
+    return utils.curve_to_face(lines)
 
 
 def outside_fillet(
@@ -79,7 +79,7 @@ def from_dimensions(
         fc.Vector(0, yoffset, -height),
     ]
 
-    face = Part.Face(utils.curve_to_wire(utils.loop(v)))
+    face = utils.curve_to_face(utils.loop(v))
     shape = face.extrude(fc.Vector(0, length))
 
     # Front fillet

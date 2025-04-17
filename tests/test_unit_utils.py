@@ -63,29 +63,8 @@ class UtilsTest(unittest.TestCase):
         )
         self.assertEqual(shapes, shape.translated().multiFuse())
 
-    def test_curve_to_wire_empty_list(self) -> None:
-        self.assertRaises(ValueError, utils.curve_to_wire, [])
-
-    def test_curve_to_wire_one_line(self) -> None:
-        vertexes = [fc.Vector(0, 0, 0), fc.Vector(10, 0, 0)]
-        line = Part.LineSegment(vertexes[0], vertexes[1])
-
-        wire = utils.curve_to_wire([line])
-
-        self.assertEqual(wire.Length, 10)
-        self.assertListEqual(vertexes, [vertex.Point for vertex in wire.Vertexes])
-
-    def test_cuve_to_wire_rectangle(self) -> None:
-        line_1 = Part.LineSegment(fc.Vector(0, 0, 0), fc.Vector(10, 0, 0))
-        line_2 = Part.LineSegment(fc.Vector(10, 0, 0), fc.Vector(10, 10, 0))
-        line_3 = Part.LineSegment(fc.Vector(10, 10, 0), fc.Vector(10, 0, 0))
-        line_4 = Part.LineSegment(fc.Vector(10, 0, 0), fc.Vector(0, 0, 0))
-
-        wire = utils.curve_to_wire([line_1, line_2, line_3, line_4])
-
-        self.assertTrue(wire.isClosed)
-        self.assertEqual(wire.Length, 10 * 4)
-        self.assertEqual(len(wire.Edges), 4)
+    def test_curve_to_face_empty_list(self) -> None:
+        self.assertRaises(ValueError, utils.curve_to_face, [])
 
     def test_create_rounded_rectangle_radius_1(self) -> None:
         length, width, radius = 5, 6, 1
