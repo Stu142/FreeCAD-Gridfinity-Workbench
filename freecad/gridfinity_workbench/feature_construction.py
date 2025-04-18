@@ -574,64 +574,6 @@ def make_compartments(obj: fc.DocumentObject, bin_inside_solid: Part.Shape) -> P
     return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
-    """Create bottom hole shape.
-
-    Returns one combined shape containing of the different hole types.
-    """
-    shape: Part.Shape | None = None
-
-    if obj.MagnetHoles:
-        shape = magnet_hole_module.from_obj(obj)
-
-    if obj.ScrewHoles:
-        screw_hole_shape = Part.makeCylinder(obj.ScrewHoleDiameter / 2, obj.ScrewHoleDepth)
-
-        shape = screw_hole_shape if shape is None else shape.fuse(screw_hole_shape)
-
-    if obj.ScrewHoles and obj.MagnetHoles:
-        sqbr1_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight
-        sqbr2_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight * 2
-
-        b1 = Part.makeBox(
-            obj.ScrewHoleDiameter,
-            obj.ScrewHoleDiameter,
-            sqbr2_depth,
-            fc.Vector(-obj.ScrewHoleDiameter / 2, -obj.ScrewHoleDiameter / 2),
-            fc.Vector(0, 0, 1),
-        )
-        arc_pt_off_x = (
-            math.sqrt(
-                ((obj.MagnetHoleDiameter / 2) ** 2) - ((obj.ScrewHoleDiameter / 2) ** 2),
-            )
-        ) * unitmm
-        arc_pt_off_y = obj.ScrewHoleDiameter / 2
-
-        va1 = fc.Vector(arc_pt_off_x, arc_pt_off_y)
-        va2 = fc.Vector(-arc_pt_off_x, arc_pt_off_y)
-        va3 = fc.Vector(-arc_pt_off_x, -arc_pt_off_y)
-        va4 = fc.Vector(arc_pt_off_x, -arc_pt_off_y)
-        var1 = fc.Vector(obj.MagnetHoleDiameter / 2, 0)
-        var2 = fc.Vector(-obj.MagnetHoleDiameter / 2, 0)
-        line_1 = Part.LineSegment(va1, va2)
-        line_2 = Part.LineSegment(va3, va4)
-        ar1 = Part.Arc(va1, var1, va4)
-        ar2 = Part.Arc(va2, var2, va3)
-        s1 = Part.Shape([line_1, ar1, ar2, line_2])
-        w1 = Part.Wire(s1.Edges)
-        sq1_1 = Part.Face(w1)
-        sq1_1 = sq1_1.extrude(fc.Vector(0, 0, sqbr1_depth))
-        holes_interface_shape = sq1_1.fuse(b1)
-
-        assert shape is not None
-        shape = shape.fuse(holes_interface_shape)
-
-    if shape is None:
-        raise RuntimeError("No bottom_hole_shape to return")
-
-    return shape
-
-
 def _eco_bin_deviders(obj: fc.DocumentObject, xcomp_w: float, ycomp_w: float) -> Part.Shape:
     stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else zeromm
 
@@ -1073,12 +1015,7 @@ def make_complex_bin_base(
 
 
 def blank_bin_recessed_top_properties(obj: fc.DocumentObject) -> None:
-    """Create blank bin recessed top section.
-
-    Args:
-        obj (FreeCAD.DocumentObject): Document object
-
-    """
+    """Create blank bin recessed top section."""
     ## Gridfinity Non Standard Parameters
     obj.addProperty(
         "App::PropertyLength",
@@ -1139,11 +1076,11 @@ def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default:
         "MagnetHolesShape",
         "GridfinityNonStandard",
         (
-            "Shape of magnet holes, change to suit your printers capabilities"
-            "which might require testing."
-            "<br> Round press fit by default, increase to 6.5 mm if using glue"
-            "<br> <br> Hex is alternative press fit style."
-            "<br> <br> default = 6.2 mm"
+            "Shape of magnet holes, change to suit your printers capabilities which might require"
+            "testing."
+            "<br> Round is press fit by default, increase to 6.5 mm if using glue."
+            "<br> <br> Crush ribs are an alternative press fit style."
+            "<br> <br> Hex is a legacy press fit style."
         ),
     ).MagnetHolesShape = const.HOLE_SHAPES
 
@@ -1152,9 +1089,7 @@ def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default:
         "MagnetHoleDiameter",
         "GridfinityNonStandard",
         (
-            "Diameter of Magnet Holes "
-            "<br> Round press fit by default, increase to 6.5 mm if using glue"
-            "<br> <br> Hex is alternative press fit style, inscribed diameter<br> <br>"
+            "Diameter of Magnet Holes. Press fit by default, increase to 6.5 mm if using glue."
             "<br> <br> default = 6.2 mm"
         ),
     ).MagnetHoleDiameter = const.MAGNET_HOLE_DIAMETER
@@ -1191,27 +1126,70 @@ def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default:
     ).MagnetHoleDistanceFromEdge = const.MAGNET_HOLE_DISTANCE_FROM_EDGE
 
 
+def _make_holes_interface(obj: fc.DocumentObject) -> Part.Shape:
+    sqbr1_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight
+    sqbr2_depth = obj.MagnetHoleDepth + obj.SequentialBridgingLayerHeight * 2
+
+    b1 = Part.makeBox(
+        obj.ScrewHoleDiameter,
+        obj.ScrewHoleDiameter,
+        sqbr2_depth,
+        fc.Vector(-obj.ScrewHoleDiameter / 2, -obj.ScrewHoleDiameter / 2),
+        fc.Vector(0, 0, 1),
+    )
+    arc_pt_off_x = (
+        math.sqrt(
+            ((obj.MagnetHoleDiameter / 2) ** 2) - ((obj.ScrewHoleDiameter / 2) ** 2),
+        )
+    ) * unitmm
+    arc_pt_off_y = obj.ScrewHoleDiameter / 2
+
+    va1 = fc.Vector(arc_pt_off_x, arc_pt_off_y)
+    va2 = fc.Vector(-arc_pt_off_x, arc_pt_off_y)
+    va3 = fc.Vector(-arc_pt_off_x, -arc_pt_off_y)
+    va4 = fc.Vector(arc_pt_off_x, -arc_pt_off_y)
+    var1 = fc.Vector(obj.MagnetHoleDiameter / 2, 0)
+    var2 = fc.Vector(-obj.MagnetHoleDiameter / 2, 0)
+    line_1 = Part.LineSegment(va1, va2)
+    line_2 = Part.LineSegment(va3, va4)
+    ar1 = Part.Arc(va1, var1, va4)
+    ar2 = Part.Arc(va2, var2, va3)
+    s1 = Part.Shape([line_1, ar1, ar2, line_2])
+    w1 = Part.Wire(s1.Edges)
+    sq1_1 = Part.Face(w1)
+    sq1_1 = sq1_1.extrude(fc.Vector(0, 0, sqbr1_depth))
+
+    return sq1_1.fuse(b1)
+
+
 def make_bin_bottom_holes(
     obj: fc.DocumentObject,
     layout: GridfinityLayout,
 ) -> Part.Shape:
     """Make bin bottom holes."""
-    bottom_hole_shape = make_bottom_hole_shape(obj)
+    shapes = []
+    if obj.MagnetHoles:
+        shapes.append(magnet_hole_module.from_obj(obj))
+    if obj.ScrewHoles:
+        shapes.append(Part.makeCylinder(obj.ScrewHoleDiameter / 2, obj.ScrewHoleDepth))
+    if obj.ScrewHoles and obj.MagnetHoles:
+        shapes.append(_make_holes_interface(obj))
+    shape = utils.multi_fuse(shapes)
 
-    x_hole_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
-    y_hole_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
+    x_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
+    y_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
+    shape = utils.copy_and_translate(shape, utils.corners(x_pos, y_pos, -obj.TotalHeight))
 
-    hole_shape_sub_array = utils.copy_and_translate(
-        bottom_hole_shape,
-        utils.corners(x_hole_pos, y_hole_pos, -obj.TotalHeight),
-    )
     if obj.MagnetHoles and obj.MagnetRelief:
         relief = magnet_hole_module.relief(obj).translate(fc.Vector(0, 0, -obj.TotalHeight))
-        hole_shape_sub_array = hole_shape_sub_array.fuse(relief)
+        shape = shape.fuse(relief)
 
-    fuse_total = utils.copy_in_layout(hole_shape_sub_array, layout, obj.xGridSize, obj.yGridSize)
-    fuse_total.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
-    return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
+    shape = utils.copy_in_layout(shape, layout, obj.xGridSize, obj.yGridSize)
+    shape.translate(
+        fc.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset),
+    )
+
+    return shape
 
 
 def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:

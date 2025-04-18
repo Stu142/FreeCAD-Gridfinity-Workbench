@@ -91,11 +91,11 @@ def from_obj(obj: fc.DocumentObject) -> Part.Shape:
     shape = shape.extrude(fc.Vector(0, 0, depth))
 
     if obj.Baseplate:
-        chamfer_shape = utils.round_chamfer(
+        chamfer_shape = Part.makeCone(
             radius,
             radius + chamfer_width,
             chamfer_depth,
-            pPnt=fc.Vector(0, 0, depth - chamfer_depth),
+            fc.Vector(0, 0, depth - chamfer_depth),
         )
         shape = shape.fuse(chamfer_shape)
 

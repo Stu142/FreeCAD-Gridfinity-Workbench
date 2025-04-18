@@ -147,11 +147,11 @@ def make_screw_bottom_chamfer(obj: fc.DocumentObject, layout: GridfinityLayout) 
     x_hole_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
     y_hole_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
 
-    ch = utils.round_chamfer(
+    ch = Part.makeCone(
         obj.ScrewHoleDiameter / 2 + obj.MagnetBottomChamfer,
         obj.ScrewHoleDiameter / 2,
         obj.MagnetBottomChamfer,
-        pPnt=fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight),
+        fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight),
     )
 
     hm1 = utils.copy_and_translate(ch, utils.corners(x_hole_pos, y_hole_pos))
