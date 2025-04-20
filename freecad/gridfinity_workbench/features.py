@@ -83,13 +83,6 @@ class FullBin(FoundationGridfinity):
     ) -> None:
         super().__init__(obj)
 
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
-
         grid_initial_layout.rectangle_layout_properties(obj, baseplate_default=False)
         feat.bin_solid_mid_section_properties(
             obj,
@@ -177,13 +170,6 @@ class StorageBin(FoundationGridfinity):
     ) -> None:
         super().__init__(obj)
 
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
-
         grid_initial_layout.rectangle_layout_properties(obj, baseplate_default=False)
         feat.bin_solid_mid_section_properties(
             obj,
@@ -269,13 +255,6 @@ class EcoBin(FoundationGridfinity):
     def __init__(self, obj: fc.DocumentObject) -> None:
         super().__init__(obj)
 
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
-
         grid_initial_layout.rectangle_layout_properties(obj, baseplate_default=False)
         feat.bin_solid_mid_section_properties(
             obj,
@@ -350,13 +329,6 @@ class Baseplate(FoundationGridfinity):
     def __init__(self, obj: fc.DocumentObject) -> None:
         super().__init__(obj)
 
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
-
         grid_initial_layout.rectangle_layout_properties(obj, baseplate_default=True)
         baseplate_feat.solid_shape_properties(obj)
         baseplate_feat.base_values_properties(obj)
@@ -388,13 +360,6 @@ class Baseplate(FoundationGridfinity):
 class MagnetBaseplate(FoundationGridfinity):
     def __init__(self, obj: fc.DocumentObject) -> None:
         super().__init__(obj)
-
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
 
         grid_initial_layout.rectangle_layout_properties(obj, baseplate_default=True)
         baseplate_feat.solid_shape_properties(obj)
@@ -431,13 +396,6 @@ class MagnetBaseplate(FoundationGridfinity):
 class ScrewTogetherBaseplate(FoundationGridfinity):
     def __init__(self, obj: fc.DocumentObject) -> None:
         super().__init__(obj)
-
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
 
         grid_initial_layout.rectangle_layout_properties(obj, baseplate_default=True)
         baseplate_feat.solid_shape_properties(obj)
@@ -526,12 +484,6 @@ class CustomBlankBin(FoundationGridfinity):
         super().__init__(obj)
         self.layout = layout
 
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
         feat.bin_solid_mid_section_properties(
             obj,
@@ -609,14 +561,6 @@ class CustomBinBase(FoundationGridfinity):
         super().__init__(obj)
         self.layout = layout
 
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
-        self.bintype = "standard"
-
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
         feat.bin_solid_mid_section_properties(
             obj,
@@ -692,14 +636,6 @@ class CustomEcoBin(FoundationGridfinity):
     def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
         super().__init__(obj)
         self.layout = layout
-
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
-        self.bintype = "eco"
 
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
         feat.bin_solid_mid_section_properties(
@@ -803,13 +739,6 @@ class CustomStorageBin(FoundationGridfinity):
         super().__init__(obj)
         self.layout = layout
 
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
-
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=False)
         feat.bin_solid_mid_section_properties(
             obj,
@@ -909,14 +838,6 @@ class CustomBaseplate(FoundationGridfinity):
         super().__init__(obj)
         self.layout = layout
 
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
-        self.bintype = "standard"
-
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=True)
         baseplate_feat.solid_shape_properties(obj)
         baseplate_feat.base_values_properties(obj)
@@ -960,14 +881,6 @@ class CustomMagnetBaseplate(FoundationGridfinity):
     def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
         super().__init__(obj)
         self.layout = layout
-
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
-        self.bintype = "standard"
 
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=True)
         baseplate_feat.solid_shape_properties(obj)
@@ -1016,14 +929,6 @@ class CustomScrewTogetherBaseplate(FoundationGridfinity):
     def __init__(self, obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
         super().__init__(obj)
         self.layout = layout
-
-        obj.addProperty(
-            "App::PropertyPythonObject",
-            "Bin",
-            "base",
-            "python gridfinity object",
-        )
-        self.bintype = "standard"
 
         grid_initial_layout.custom_shape_layout_properties(obj, baseplate_default=True)
         baseplate_feat.solid_shape_properties(obj)
