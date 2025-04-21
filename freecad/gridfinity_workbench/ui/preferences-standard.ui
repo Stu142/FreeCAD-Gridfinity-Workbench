@@ -189,7 +189,7 @@
       <item row="2" column="0" colspan="2">
        <widget class="QLabel" name="StackingLipBottomChamferLabel_2">
         <property name="text">
-         <string>c1</string>
+         <string>c1 (Bottom Chamfer)</string>
         </property>
        </widget>
       </item>
@@ -263,7 +263,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="StackingLipTopLedgeLabel_2">
         <property name="text">
-         <string>l1</string>
+         <string>l1 (Top Ledge)</string>
         </property>
        </widget>
       </item>
@@ -299,7 +299,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="StackingLipVerticalSectionLabel_2">
         <property name="text">
-         <string>l2</string>
+         <string>l2 (Vertical Section)</string>
         </property>
        </widget>
       </item>
@@ -359,7 +359,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="BaseBottomChamferLabel">
         <property name="text">
-         <string comment="Disambiguation text" extracomment="Comment text">l1</string>
+         <string comment="Disambiguation text" extracomment="Comment text">l1 (Bottom Chamfer)</string>
         </property>
        </widget>
       </item>
@@ -423,7 +423,7 @@
       <item row="4" column="0">
        <widget class="QLabel" name="BaseOuterRadiusLabel">
         <property name="text">
-         <string>r1</string>
+         <string>r1 (Bin Outer Radius)</string>
         </property>
        </widget>
       </item>
@@ -490,7 +490,7 @@
       <item row="5" column="0">
        <widget class="QLabel" name="BaseVerticalRadiusLabel">
         <property name="text">
-         <string>r2</string>
+         <string>r2 (Vertical Radius)</string>
         </property>
        </widget>
       </item>
@@ -532,21 +532,21 @@
       <item row="6" column="0">
        <widget class="QLabel" name="BaseBottomRadiusLabel">
         <property name="text">
-         <string>r3</string>
+         <string>r3 (Bottom Radius)</string>
         </property>
        </widget>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="BaseTopChamferLabel">
         <property name="text">
-         <string>l3</string>
+         <string>l3 (Top Chamfer)</string>
         </property>
        </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="BaseVerticalSectionLabel">
         <property name="text">
-         <string>l2</string>
+         <string>l2 (Vertical Section)</string>
         </property>
        </widget>
       </item>
@@ -575,7 +575,7 @@
       <item row="3" column="0">
        <widget class="QLabel" name="MagnetHoleDistanceFromEdgeLabel">
         <property name="text">
-         <string>l4</string>
+         <string>l4 (Magnet Distance From Edge)</string>
         </property>
        </widget>
       </item>
@@ -642,7 +642,7 @@
       <item row="4" column="0">
        <widget class="QLabel" name="label_11">
         <property name="text">
-         <string>r1</string>
+         <string>r1 (Outer Radius)</string>
         </property>
        </widget>
       </item>
@@ -737,7 +737,7 @@
       <item row="2" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
-         <string>c1</string>
+         <string>c1 (Bottom Chamfer)</string>
         </property>
        </widget>
       </item>
@@ -757,21 +757,21 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label_8">
         <property name="text">
-         <string>l1</string>
+         <string>l1 (Vertical Section)</string>
         </property>
        </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_10">
         <property name="text">
-         <string>l2</string>
+         <string>l2 (Top Ledge Width)</string>
         </property>
        </widget>
       </item>
       <item row="6" column="0">
        <widget class="QLabel" name="label_13">
         <property name="text">
-         <string>r3</string>
+         <string>r3 (Bottom Radius)</string>
         </property>
        </widget>
       </item>
@@ -800,7 +800,7 @@
       <item row="3" column="0">
        <widget class="QLabel" name="label_9">
         <property name="text">
-         <string>c2</string>
+         <string>c2 (Top Chamfer)</string>
         </property>
        </widget>
       </item>
@@ -845,7 +845,7 @@
       <item row="5" column="0">
        <widget class="QLabel" name="label_12">
         <property name="text">
-         <string>r2</string>
+         <string>r2 (Vertical Radius)</string>
         </property>
        </widget>
       </item>

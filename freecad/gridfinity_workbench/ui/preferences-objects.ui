@@ -690,21 +690,21 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_15">
         <property name="text">
-         <string>l1</string>
+         <string>l1 (Magnet Edge Thickness)</string>
         </property>
        </widget>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label_16">
         <property name="text">
-         <string>l2</string>
+         <string>l2 (Magnet Base)</string>
         </property>
        </widget>
       </item>
       <item row="4" column="0">
        <widget class="QLabel" name="label_14">
         <property name="text">
-         <string>r1</string>
+         <string>r1 (Small Fillet)</string>
         </property>
        </widget>
       </item>
@@ -724,14 +724,14 @@
       <item row="3" column="0">
        <widget class="QLabel" name="label_17">
         <property name="text">
-         <string>l3</string>
+         <string>l3 (Magnet Base Hole)</string>
         </property>
        </widget>
       </item>
       <item row="5" column="0">
        <widget class="QLabel" name="label_18">
         <property name="text">
-         <string>c1</string>
+         <string>c1 (Magnet Chamfer)</string>
         </property>
        </widget>
       </item>
@@ -763,7 +763,7 @@
       <item row="2" column="0">
        <widget class="QLabel" name="label_21">
         <property name="text">
-         <string>l1</string>
+         <string>l1 (Base Thickness)</string>
         </property>
        </widget>
       </item>
@@ -780,7 +780,7 @@
       <item row="4" column="0">
        <widget class="QLabel" name="label_20">
         <property name="text">
-         <string>c1</string>
+         <string>c1 (Magnet Bottom Chamfer)</string>
         </property>
        </widget>
       </item>
@@ -844,7 +844,7 @@
       <item row="3" column="0">
        <widget class="QLabel" name="label_19">
         <property name="text">
-         <string>d1</string>
+         <string>d1 (Hole Diameter)</string>
         </property>
        </widget>
       </item>
