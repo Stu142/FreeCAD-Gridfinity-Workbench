@@ -190,6 +190,7 @@ def from_obj(obj: fc.DocumentObject) -> Part.Shape:
     shape = shape.extrude(fc.Vector(0, 0, depth))
 
     if obj.Baseplate:
+        assert chamfer_depth is not None
         chamfer_shape = Part.makeCone(
             radius,
             radius + chamfer_width,
