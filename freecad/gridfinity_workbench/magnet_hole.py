@@ -7,9 +7,104 @@ import math
 import FreeCAD as fc  # noqa: N813
 import Part
 
-from . import utils
+from . import const, utils
 
 unitmm = fc.Units.Quantity("1 mm")
+
+
+def add_properties(
+    obj: fc.DocumentObject,
+    *,
+    relief: bool,
+    chamfer: bool,
+    magnet_holes_default: bool,
+) -> None:
+    """Add magnet holes properties to an object.
+
+    Args:
+        obj (FreeCAD.DocumentObject): Document object.
+        relief (bool): Does the object support magnet relief.
+        chamfer (bool): Does the object support hole chamfer.
+        magnet_holes_default (bool): Should magnet holes be enabled by default.
+
+    """
+    ## Gridfinity Parameters
+    obj.addProperty(
+        "App::PropertyBool",
+        "MagnetHoles",
+        "Gridfinity",
+        "Toggle the magnet holes on or off",
+    ).MagnetHoles = magnet_holes_default
+
+    ## Gridfinity Non Standard Parameters
+    obj.addProperty(
+        "App::PropertyLength",
+        "MagnetHoleDepth",
+        "GridfinityNonStandard",
+        "Depth of Magnet Holes <br> <br> default = 2.4 mm",
+    ).MagnetHoleDepth = const.MAGNET_HOLE_DEPTH
+
+    obj.addProperty(
+        "App::PropertyLength",
+        "MagnetHoleDiameter",
+        "GridfinityNonStandard",
+        (
+            "Diameter of Magnet Holes. Press fit by default, increase to 6.5 mm if using glue."
+            "For crush ribs, 5.7mm is recommended. <br> <br> default = 6.2 mm"
+        ),
+    ).MagnetHoleDiameter = const.MAGNET_HOLE_DIAMETER
+
+    obj.addProperty(
+        "App::PropertyEnumeration",
+        "MagnetHolesShape",
+        "GridfinityNonStandard",
+        (
+            "Shape of magnet holes, change to suit your printers capabilities which might require"
+            "testing."
+            "<br> Round is press fit by default, increase to 6.5 mm if using glue."
+            "<br> <br> Crush ribs are an alternative press fit style."
+            "<br> <br> Hex is a legacy press fit style."
+        ),
+    ).MagnetHolesShape = const.HOLE_SHAPES
+
+    if chamfer:
+        obj.addProperty(
+            "App::PropertyLength",
+            "MagnetHoleChamfer",
+            "GridfinityNonStandard",
+            "The depth at which magnet hole chamfer starts.",
+        ).MagnetHoleChamfer = 0.25
+
+    if relief:
+        obj.addProperty(
+            "App::PropertyBool",
+            "MagnetRelief",
+            "GridfinityNonStandard",
+            "Toggle the magnet relief on or off",
+        ).MagnetRelief = False
+
+    obj.addProperty(
+        "App::PropertyInteger",
+        "CrushRibsCount",
+        "GridfinityNonStandard",
+        "Number of crush ribs <br><br> default = 12",
+    ).CrushRibsCount = const.CRUSH_RIB_N
+
+    obj.addProperty(
+        "App::PropertyFloatConstraint",
+        "CrushRibsWaviness",
+        "GridfinityNonStandard",
+        "Waviness of crush ribs, from range [0, 1]",
+    ).CrushRibsWaviness = (const.CRUSH_RIB_WAVINESS, 0, 1, 0.05)
+
+    ## Expert Only Parameters
+    obj.addProperty(
+        "App::PropertyLength",
+        "MagnetHoleDistanceFromEdge",
+        "zzExpertOnly",
+        "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
+        read_only=True,
+    ).MagnetHoleDistanceFromEdge = const.MAGNET_HOLE_DISTANCE_FROM_EDGE
 
 
 def _crush_ribs(radius: fc.Units.Quantity, *, n: int, beta: float) -> tuple[Part.Face, float]:
@@ -74,13 +169,17 @@ def from_obj(obj: fc.DocumentObject) -> Part.Shape:
     hole_shape = obj.MagnetHolesShape
     radius = obj.MagnetHoleDiameter / 2
     depth = obj.MagnetHoleDepth
-    chamfer_depth = depth / 8
+    chamfer_depth = obj.MagnetHoleChamfer if hasattr(obj, "MagnetHoleChamfer") else None
 
     if hole_shape == "Hex":
         shape = _hex_shape(radius)
         chamfer_width = (2 / math.sqrt(3) - 1) * radius
     elif hole_shape == "Crush ribs":
-        shape, ch = _crush_ribs(radius, n=8, beta=0.5 * math.pi / 2)
+        shape, ch = _crush_ribs(
+            radius,
+            n=obj.CrushRibsCount,
+            beta=obj.CrushRibsWaviness * math.pi / 2,
+        )
         chamfer_width = ch * unitmm
     elif hole_shape == "Round":
         shape = Part.Face(Part.Wire(Part.makeCircle(radius)))

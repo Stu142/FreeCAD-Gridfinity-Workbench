@@ -20,7 +20,7 @@ GridfinityLayout = list[list[bool]]
 
 
 def label_shelf_properties(obj: fc.DocumentObject, *, label_style_default: str) -> None:
-    """Create bin compartments with the option for dividers.
+    """Add label shelf properties to an object.
 
     Args:
         obj (FreeCAD.DocumentObject): Document object.
@@ -1040,14 +1040,14 @@ def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default:
         magnet_holes_default (bool): does the object have magnet holes
 
     """
-    ## Gridfinity Parameters
-    obj.addProperty(
-        "App::PropertyBool",
-        "MagnetHoles",
-        "Gridfinity",
-        "Toggle the magnet holes on or off",
-    ).MagnetHoles = magnet_holes_default
+    magnet_hole_module.add_properties(
+        obj,
+        relief=True,
+        chamfer=False,
+        magnet_holes_default=magnet_holes_default,
+    )
 
+    ## Gridfinity Parameters
     obj.addProperty(
         "App::PropertyBool",
         "ScrewHoles",
@@ -1065,43 +1065,6 @@ def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default:
     ).SequentialBridgingLayerHeight = const.SEQUENTIAL_BRIDGING_LAYER_HEIGHT
 
     obj.addProperty(
-        "App::PropertyBool",
-        "MagnetRelief",
-        "GridfinityNonStandard",
-        "Toggle the magnet relief on or off",
-    ).MagnetRelief = False
-
-    obj.addProperty(
-        "App::PropertyEnumeration",
-        "MagnetHolesShape",
-        "GridfinityNonStandard",
-        (
-            "Shape of magnet holes, change to suit your printers capabilities which might require"
-            "testing."
-            "<br> Round is press fit by default, increase to 6.5 mm if using glue."
-            "<br> <br> Crush ribs are an alternative press fit style."
-            "<br> <br> Hex is a legacy press fit style."
-        ),
-    ).MagnetHolesShape = const.HOLE_SHAPES
-
-    obj.addProperty(
-        "App::PropertyLength",
-        "MagnetHoleDiameter",
-        "GridfinityNonStandard",
-        (
-            "Diameter of Magnet Holes. Press fit by default, increase to 6.5 mm if using glue."
-            "<br> <br> default = 6.2 mm"
-        ),
-    ).MagnetHoleDiameter = const.MAGNET_HOLE_DIAMETER
-
-    obj.addProperty(
-        "App::PropertyLength",
-        "MagnetHoleDepth",
-        "GridfinityNonStandard",
-        "Depth of Magnet Holes <br> <br> default = 2.4 mm",
-    ).MagnetHoleDepth = const.MAGNET_HOLE_DEPTH
-
-    obj.addProperty(
         "App::PropertyLength",
         "ScrewHoleDiameter",
         "GridfinityNonStandard",
@@ -1115,15 +1078,6 @@ def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default:
         "GridfinityNonStandard",
         "Depth of Screw Holes <br> <br> default = 6.0 mm",
     ).ScrewHoleDepth = const.SCREW_HOLE_DEPTH
-
-    ## Expert Only Parameters
-    obj.addProperty(
-        "App::PropertyLength",
-        "MagnetHoleDistanceFromEdge",
-        "zzExpertOnly",
-        "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
-        read_only=True,
-    ).MagnetHoleDistanceFromEdge = const.MAGNET_HOLE_DISTANCE_FROM_EDGE
 
 
 def _make_holes_interface(obj: fc.DocumentObject) -> Part.Shape:

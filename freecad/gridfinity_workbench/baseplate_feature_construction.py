@@ -15,39 +15,8 @@ from .utils import GridfinityLayout
 
 def magnet_holes_properties(obj: fc.DocumentObject) -> None:
     """Make baseplate magnet holes."""
-    ## Gridfinity Non Standard Parameters
-
-    obj.addProperty(
-        "App::PropertyEnumeration",
-        "MagnetHolesShape",
-        "NonStandard",
-        (
-            "Shape of magnet holes, change to suit your printers capabilities which"
-            "might require testing."
-            "<br> Round press fit by default, increase to 6.5 mm if using glue"
-            "<br> <br> Hex is alternative press fit style."
-            "<br> <br> default = 6.2 mm"
-        ),
-    ).MagnetHolesShape = const.HOLE_SHAPES
-
-    obj.addProperty(
-        "App::PropertyLength",
-        "MagnetHoleDiameter",
-        "NonStandard",
-        (
-            "Diameter of Magnet Holes"
-            "<br> Round press fit by default, increase to 6.5 mm if using glue"
-            "<br> <br> Hex is alternative press fit style, inscribed diameter<br> <br>"
-            "<br> <br> default = 6.2 mm"
-        ),
-    ).MagnetHoleDiameter = const.MAGNET_HOLE_DIAMETER
-
-    obj.addProperty(
-        "App::PropertyLength",
-        "MagnetHoleDepth",
-        "NonStandard",
-        "Depth of Magnet Holes <br> <br> default = 2.4 mm",
-    ).MagnetHoleDepth = const.MAGNET_HOLE_DEPTH
+    magnet_hole_module.add_properties(obj, relief=False, chamfer=True, magnet_holes_default=True)
+    obj.setEditorMode("MagnetHoles", ("ReadOnly", "Hidden"))
 
     obj.addProperty(
         "App::PropertyLength",
@@ -72,15 +41,6 @@ def magnet_holes_properties(obj: fc.DocumentObject) -> None:
         "<br> <br> default = 3 mm",
     ).MagnetBaseHole = const.MAGNET_BASE_HOLE
 
-    ## Gridfinity Expert Only Parameters
-    obj.addProperty(
-        "App::PropertyLength",
-        "MagnetHoleDistanceFromEdge",
-        "zzExpertOnly",
-        "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
-        read_only=True,
-    ).MagnetHoleDistanceFromEdge = const.MAGNET_HOLE_DISTANCE_FROM_EDGE
-
     ## Gridfinity Hidden Properties
     obj.addProperty(
         "App::PropertyLength",
@@ -89,14 +49,6 @@ def magnet_holes_properties(obj: fc.DocumentObject) -> None:
         "Thickness of base under the normal baseplate  profile <br> <br> default = 6.4 mm",
         hidden=True,
     ).BaseThickness = const.BASE_THICKNESS
-
-    obj.addProperty(
-        "App::PropertyBool",
-        "MagnetHoles",
-        "ShouldBeHidden",
-        "MagnetHoles",
-        hidden=True,
-    ).MagnetHoles = const.MAGNET_HOLES
 
 
 def make_magnet_holes(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.Shape:
