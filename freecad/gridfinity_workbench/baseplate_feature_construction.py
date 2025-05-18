@@ -65,42 +65,30 @@ def _magnet_hole_hex(
     return c1.multiFuse([c2, c3, c4])
 
 
-def _magnet_hole_round(
-    obj: fc.DocumentObject,
-    x_hole_pos: float,
-    y_hole_pos: float,
-) -> Part.Shape:
-    c = [
-        Part.makeCylinder(
-            obj.MagnetHoleDiameter / 2,
-            obj.MagnetHoleDepth,
-            pos,
-            fc.Vector(0, 0, -1),
-        )
-        for pos in utils.corners(x_hole_pos, y_hole_pos)
-    ]
+def _magnet_hole_round(obj: fc.DocumentObject) -> Part.Shape:
+    cylinder = Part.makeCylinder(
+        obj.MagnetHoleDiameter / 2,
+        obj.MagnetHoleDepth,
+        fc.Vector(),
+        fc.Vector(0, 0, -1),
+    )
 
     # Chamfer
-    ct = [
-        Part.makeCircle(
-            obj.MagnetHoleDiameter / 2 + obj.MagnetChamfer,
-            pos,
-            fc.Vector(0, 0, 1),
-        )
-        for pos in utils.corners(x_hole_pos, y_hole_pos)
-    ]
-    cb = [
-        Part.makeCircle(
-            obj.MagnetHoleDiameter / 2,
-            pos,
-            fc.Vector(0, 0, 1),
-        )
-        for pos in utils.corners(x_hole_pos, y_hole_pos, -obj.MagnetChamfer)
-    ]
+    ct = Part.makeCircle(
+        obj.MagnetHoleDiameter / 2 + obj.MagnetChamfer,
+        fc.Vector(),
+        fc.Vector(0, 0, 1),
+    )
 
-    ch = [Part.makeLoft([t, b], solid=True) for t, b in zip(ct, cb)]
+    cb = Part.makeCircle(
+        obj.MagnetHoleDiameter / 2,
+        fc.Vector(0, 0, -obj.MagnetChamfer),
+        fc.Vector(0, 0, 1),
+    )
 
-    return utils.multi_fuse(c + ch)
+    ch = Part.makeLoft([ct, cb], solid=True)
+
+    return cylinder.fuse(ch)
 
 
 def magnet_holes_properties(obj: fc.DocumentObject) -> None:
@@ -212,7 +200,7 @@ def make_magnet_holes(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.
     if obj.MagnetHolesShape == "Hex":
         hm1 = _magnet_hole_hex(obj, x_hole_pos, y_hole_pos)
     elif obj.MagnetHolesShape == "Round":
-        hm1 = _magnet_hole_round(obj, x_hole_pos, y_hole_pos)
+        hm1 = utils.copy_in_corners(_magnet_hole_round(obj), x_hole_pos, y_hole_pos)
     else:
         raise ValueError(f"Unexpected hole shape: {obj.MagnetHolesShape}")
 

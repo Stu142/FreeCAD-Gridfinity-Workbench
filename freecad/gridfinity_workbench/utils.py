@@ -93,6 +93,12 @@ def copy_in_layout(
     return copy_and_translate(shape, vec_list)
 
 
+def copy_in_corners(shape: Part.Shape, x: float, y: float, z: float = 0) -> Part.Shape:
+    """Copy shape to points located at (±x, ±y, z)."""
+    vec_l = corners(x, y, z)
+    return copy_and_translate(shape, vec_l)
+
+
 def copy_in_grid(
     shape: Part.Shape,
     *,

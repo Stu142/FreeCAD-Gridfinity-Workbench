@@ -63,6 +63,19 @@ class UtilsTest(unittest.TestCase):
         )
         self.assertEqual(shapes, shape.translated().multiFuse())
 
+    def test_copy_in_corners(self) -> None:
+        shape = mock.MagicMock(spec=Part.Shape)
+        x, y, z = 3, 4, 5
+        utils.copy_in_corners(shape, x, y, z)
+        shape.translated.assert_has_calls(
+            [
+                mock.call(fc.Vector(-x, -y, z)),
+                mock.call(fc.Vector(x, -y, z)),
+                mock.call(fc.Vector(-x, y, z)),
+                mock.call(fc.Vector(x, y, z)),
+            ],
+        )
+
     def test_curve_to_wire_empty_list(self) -> None:
         self.assertRaises(ValueError, utils.curve_to_wire, [])
 
