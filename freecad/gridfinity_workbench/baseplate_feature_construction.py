@@ -14,58 +14,6 @@ from .utils import GridfinityLayout
 
 def _magnet_hole_hex(
     obj: fc.DocumentObject,
-    x_hole_pos: float,
-    y_hole_pos: float,
-) -> Part.Shape:
-    # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed circle radius
-    radius = obj.MagnetHoleDiameter / math.sqrt(3)
-    n_sides = 6
-    rot = fc.Rotation(fc.Vector(0, 0, 1), 0)
-
-    p = fc.ActiveDocument.addObject("Part::RegularPolygon")
-    p.Polygon = n_sides
-    p.Circumradius = radius
-    p.Placement = fc.Placement(fc.Vector(-x_hole_pos, -y_hole_pos), rot)
-    p.recompute()
-    f = Part.Face(Part.Wire(p.Shape.Edges))
-    c1 = f.extrude(fc.Vector(0, 0, -obj.MagnetHoleDepth))
-    fc.ActiveDocument.removeObject(p.Name)
-
-    p = fc.ActiveDocument.addObject("Part::RegularPolygon")
-    p.Polygon = n_sides
-    p.Circumradius = radius
-    p.Placement = fc.Placement(
-        fc.Vector(x_hole_pos, -y_hole_pos),
-        rot,
-    )
-    p.recompute()
-    f = Part.Face(Part.Wire(p.Shape.Edges))
-    c2 = f.extrude(fc.Vector(0, 0, -obj.MagnetHoleDepth))
-    fc.ActiveDocument.removeObject(p.Name)
-
-    p = fc.ActiveDocument.addObject("Part::RegularPolygon")
-    p.Polygon = n_sides
-    p.Circumradius = radius
-    p.Placement = fc.Placement(fc.Vector(-x_hole_pos, y_hole_pos), rot)
-    p.recompute()
-    f = Part.Face(Part.Wire(p.Shape.Edges))
-    c3 = f.extrude(fc.Vector(0, 0, -obj.MagnetHoleDepth))
-    fc.ActiveDocument.removeObject(p.Name)
-
-    p = fc.ActiveDocument.addObject("Part::RegularPolygon")
-    p.Polygon = n_sides
-    p.Circumradius = radius
-    p.Placement = fc.Placement(fc.Vector(x_hole_pos, y_hole_pos), rot)
-    p.recompute()
-    f = Part.Face(Part.Wire(p.Shape.Edges))
-    c4 = f.extrude(fc.Vector(0, 0, -obj.MagnetHoleDepth))
-    fc.ActiveDocument.removeObject(p.Name)
-
-    return c1.multiFuse([c2, c3, c4])
-
-
-def _single_magnet_hole_hex(
-    obj: fc.DocumentObject,
 ) -> Part.Shape:
     # Ratio of 2/sqrt(3) converts from inscribed circle radius to circumscribed circle radius
     radius = obj.MagnetHoleDiameter / math.sqrt(3)
@@ -217,7 +165,7 @@ def make_magnet_holes(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.
 
     # Magnet holes
     if obj.MagnetHolesShape == "Hex":
-        hm1 = _single_magnet_hole_hex(obj)
+        hm1 = _magnet_hole_hex(obj)
     elif obj.MagnetHolesShape == "Round":
         hm1 = _magnet_hole_round(obj)
     else:
