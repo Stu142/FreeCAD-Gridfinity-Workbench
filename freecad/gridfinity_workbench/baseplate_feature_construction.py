@@ -217,24 +217,23 @@ def make_magnet_holes(obj: fc.DocumentObject, layout: GridfinityLayout) -> Part.
 
     # Magnet holes
     if obj.MagnetHolesShape == "Hex":
-        hm1 = utils.copy_in_corners(_single_magnet_hole_hex(obj), x_hole_pos, y_hole_pos)
+        hm1 = _single_magnet_hole_hex(obj)
     elif obj.MagnetHolesShape == "Round":
-        hm1 = utils.copy_in_corners(_magnet_hole_round(obj), x_hole_pos, y_hole_pos)
+        hm1 = _magnet_hole_round(obj)
     else:
         raise ValueError(f"Unexpected hole shape: {obj.MagnetHolesShape}")
 
     # Screw holes
-    ca = [
-        Part.makeCylinder(
-            obj.MagnetBaseHole / 2,
-            obj.MagnetHoleDepth + obj.BaseThickness,
-            pos,
-            fc.Vector(0, 0, -1),
-        )
-        for pos in utils.corners(x_hole_pos, -y_hole_pos)
-    ]
+    ca = Part.makeCylinder(
+        obj.MagnetBaseHole / 2,
+        obj.MagnetHoleDepth + obj.BaseThickness,
+        fc.Vector(),
+        fc.Vector(0, 0, -1),
+    )
 
-    hm1 = hm1.multiFuse(ca)
+    hm1 = hm1.fuse(ca)
+    hm1 = utils.copy_in_corners(hm1, x_hole_pos, y_hole_pos)
+
     hm1.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
     hm2 = utils.copy_in_layout(hm1, layout, obj.xGridSize, obj.yGridSize)
