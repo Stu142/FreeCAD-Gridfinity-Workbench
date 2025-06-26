@@ -15,7 +15,12 @@ from .utils import GridfinityLayout
 
 def magnet_holes_properties(obj: fc.DocumentObject) -> None:
     """Make baseplate magnet holes."""
-    magnet_hole_module.add_properties(obj, remove_channel=False, chamfer=True, magnet_holes_default=True)
+    magnet_hole_module.add_properties(
+        obj,
+        remove_channel=False,
+        chamfer=True,
+        magnet_holes_default=True,
+    )
     obj.setEditorMode("MagnetHoles", ("ReadOnly", "Hidden"))
 
     obj.addProperty(
