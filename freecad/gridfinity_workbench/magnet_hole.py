@@ -15,7 +15,7 @@ unitmm = fc.Units.Quantity("1 mm")
 def add_properties(
     obj: fc.DocumentObject,
     *,
-    relief: bool,
+    remove_channel: bool,
     chamfer: bool,
     magnet_holes_default: bool,
 ) -> None:
@@ -23,7 +23,7 @@ def add_properties(
 
     Args:
         obj (FreeCAD.DocumentObject): Document object.
-        relief (bool): Does the object support magnet relief.
+        remove_channel (bool): Does the object support magnet remove channel.
         chamfer (bool): Does the object support hole chamfer.
         magnet_holes_default (bool): Should magnet holes be enabled by default.
 
@@ -75,12 +75,12 @@ def add_properties(
             "The depth at which magnet hole chamfer starts.",
         ).MagnetHoleChamfer = 0.25
 
-    if relief:
+    if remove_channel:
         obj.addProperty(
             "App::PropertyBool",
             "MagnetRelief",
             "GridfinityNonStandard",
-            "Toggle the magnet relief on or off",
+            "Toggle the magnet remove channel on or off",
         ).MagnetRelief = False
 
     obj.addProperty(
@@ -202,8 +202,8 @@ def from_obj(obj: fc.DocumentObject) -> Part.Shape:
     return shape
 
 
-def relief(obj: fc.DocumentObject) -> Part.Shape:
-    """Create a magnet relief shape for four magnets from object properties."""
+def remove_channel(obj: fc.DocumentObject) -> Part.Shape:
+    """Create a magnet remove channel shape for four magnets from object properties."""
     x_hole_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
     y_hole_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
     alpha = math.pi / 8

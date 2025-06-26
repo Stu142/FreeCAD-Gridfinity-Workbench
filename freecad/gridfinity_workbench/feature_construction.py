@@ -1042,7 +1042,7 @@ def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default:
     """
     magnet_hole_module.add_properties(
         obj,
-        relief=True,
+        remove_channel=True,
         chamfer=False,
         magnet_holes_default=magnet_holes_default,
     )
@@ -1135,7 +1135,7 @@ def make_bin_bottom_holes(
     shape = utils.copy_and_translate(shape, utils.corners(x_pos, y_pos, -obj.TotalHeight))
 
     if obj.MagnetHoles and obj.MagnetRelief:
-        relief = magnet_hole_module.relief(obj).translate(fc.Vector(0, 0, -obj.TotalHeight))
+        relief = magnet_hole_module.remove_channel(obj).translate(fc.Vector(0, 0, -obj.TotalHeight))
         shape = shape.fuse(relief)
 
     shape = utils.copy_in_layout(shape, layout, obj.xGridSize, obj.yGridSize)
