@@ -78,10 +78,10 @@ def add_properties(
     if remove_channel:
         obj.addProperty(
             "App::PropertyBool",
-            "MagnetRelief",
+            "MagnetRemoveChannel",
             "GridfinityNonStandard",
             "Toggle the magnet remove channel on or off",
-        ).MagnetRelief = False
+        ).MagnetRemoveChannel = False
 
     obj.addProperty(
         "App::PropertyInteger",
