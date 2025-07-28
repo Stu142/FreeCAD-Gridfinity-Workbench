@@ -1135,7 +1135,9 @@ def make_bin_bottom_holes(
     shape = utils.copy_and_translate(shape, utils.corners(x_pos, y_pos, -obj.TotalHeight))
 
     if obj.MagnetHoles and obj.MagnetRemoveChannel:
-        remove_channel = magnet_hole_module.remove_channel(obj).translate(fc.Vector(0, 0, -obj.TotalHeight))
+        remove_channel = magnet_hole_module.remove_channel(obj).translate(
+            fc.Vector(0, 0, -obj.TotalHeight),
+        )
         shape = shape.fuse(remove_channel)
 
     shape = utils.copy_in_layout(shape, layout, obj.xGridSize, obj.yGridSize)
