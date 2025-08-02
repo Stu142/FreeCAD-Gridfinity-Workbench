@@ -81,14 +81,13 @@ def rectangle_layout_properties(obj: fc.DocumentObject, *, baseplate_default: bo
 
     ## Standard Gridfinity Parameters
     obj.addProperty(
-        "App::PropertyInteger",
+        "App::PropertyFloat",
         "xGridUnits",
         "Gridfinity",
         "Number of grid units in the x direction <br> <br> default = 2",
     ).xGridUnits = const.X_GRID_UNITS
-
     obj.addProperty(
-        "App::PropertyInteger",
+        "App::PropertyFloat",
         "yGridUnits",
         "Gridfinity",
         "Number of grid units in the y direction <br> <br> default = 2",
@@ -115,7 +114,7 @@ def rectangle_layout_properties(obj: fc.DocumentObject, *, baseplate_default: bo
 
 
 def make_rectangle_layout(obj: fc.DocumentObject) -> list[list[bool]]:
-    """Generate Rectanble layout and calculate relevant parameters."""
+    """Generate Rectangle layout and calculate relevant parameters."""
     if obj.GenerationLocation == "Centered at Origin":
         if obj.Baseplate:
             obj.xLocationOffset = obj.xTotalWidth / 2
@@ -127,7 +126,7 @@ def make_rectangle_layout(obj: fc.DocumentObject) -> list[list[bool]]:
         obj.xLocationOffset = 0
         obj.yLocationOffset = 0
 
-    return [[True] * obj.yGridUnits for x in range(obj.xGridUnits)]
+    return [[True] * int(obj.yGridUnits + 1e-6) for x in range(int(obj.xGridUnits + 1e-6))]
 
 
 def custom_shape_layout_properties(obj: fc.DocumentObject, *, baseplate_default: bool) -> None:

@@ -183,6 +183,8 @@ class StorageBin(FoundationGridfinity):
         feat.label_shelf_properties(obj, label_style_default=label_style_default)
         feat.scoop_properties(obj, scoop_default=scoop_default)
 
+        obj.setExpression("UsableHeight", "TotalHeight - HeightUnitValue")
+
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
@@ -208,7 +210,6 @@ class StorageBin(FoundationGridfinity):
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
-        obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
         face = Part.Face(bin_inside_shape).translate(fc.Vector(0, 0, -obj.UsableHeight))
         compartments = face.extrude(fc.Vector(0, 0, obj.UsableHeight))
 
@@ -267,6 +268,8 @@ class EcoBin(FoundationGridfinity):
         feat.label_shelf_properties(obj, label_style_default="Standard")
         feat.eco_compartments_properties(obj)
 
+        obj.setExpression("UsableHeight", "TotalHeight - HeightUnitValue")
+
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
@@ -277,11 +280,7 @@ class EcoBin(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         bin_outside_shape.translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-                0,
-            ),
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance, 0),
         )
 
         bin_inside_shape = utils.create_rounded_rectangle(
@@ -291,11 +290,7 @@ class EcoBin(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
         bin_inside_shape.translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-                0,
-            ),
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance, 0),
         )
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
@@ -752,6 +747,8 @@ class CustomStorageBin(FoundationGridfinity):
         feat.label_shelf_properties(obj, label_style_default="Off")
         feat.scoop_properties(obj, scoop_default=False)
 
+        obj.setExpression("UsableHeight", "TotalHeight - HeightUnitValue")
+
         obj.Proxy = self
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
@@ -772,7 +769,6 @@ class CustomStorageBin(FoundationGridfinity):
         obj.StackingLipTopChamfer = (
             obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
         )
-        obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
 
         ## calculated values over
         layout = clean_up_layout(self.layout)

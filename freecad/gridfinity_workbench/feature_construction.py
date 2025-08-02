@@ -268,7 +268,7 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
         obj.UsableHeight,
         fc.Vector(
             obj.xTotalWidth + obj.Clearance - obj.WallThickness,
-            +obj.Clearance + obj.WallThickness,
+            obj.Clearance + obj.WallThickness,
         ),
         fc.Vector(0, 0, -1),
     )
@@ -528,7 +528,7 @@ def compartments_properties(obj: fc.DocumentObject, x_div_default: int, y_div_de
             "Height of the bin minus the bottom unit, "
             "the amount of the bin that can be effectively used"
         ),
-        1,
+        read_only=True,
     )
 
 
@@ -735,8 +735,6 @@ def make_eco_compartments(
         Part.Shape: Eco bin cutout shape.
 
     """
-    obj.UsableHeight = obj.TotalHeight - obj.HeightUnitValue
-
     eco_error_check(obj)
 
     ## Compartement Generation
