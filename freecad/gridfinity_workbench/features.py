@@ -475,50 +475,6 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         return fuse_total
 
 
-class LBinBlank(FoundationGridfinity):
-    """Legacy L shaped bin.
-
-    This class is never created in the current version, but might be used in old files.
-
-    When opening a file that uses this class, the objects will be migrated to
-    use the CustomBlankBin class. This needs to happen only once per file.
-
-    This class should removed from the project after 01.08.2025, when the
-    migration perioid ends. It is the only thing that needs action at that time.
-    """
-
-    def __init__(self, _obj: fc.DocumentObject) -> None:
-        raise AssertionError(
-            "New LBinBlank objects should not be created. Use CustomBlankBin instead.",
-        )
-
-    def onDocumentRestored(self, obj: fc.DocumentObject) -> None:  # noqa: N802
-        # save the layout to pass to CustomBlankBin, with some padding
-        layout = [[False] * (obj.y1GridUnits + 6) for _ in range(obj.x1GridUnits + 6)]
-        for x in range(obj.x1GridUnits):
-            for y in range(obj.y1GridUnits):
-                if x < obj.x2GridUnits or y < obj.y2GridUnits:
-                    layout[x + 3][y + 3] = True
-
-        tmp = utils.new_object("tmp")
-        properties = set(obj.PropertiesList) - set(tmp.PropertiesList)
-        tmp.Document.removeObject(tmp.Name)
-
-        property_values = [(p, getattr(obj, p)) for p in properties]
-        for p in properties:
-            obj.removeProperty(p)
-
-        CustomBlankBin(obj, layout)
-
-        for p, value in property_values:
-            if hasattr(obj, p):
-                setattr(obj, p, value)
-
-        fc.Console.PrintMessage(
-            f"Your '{obj.Label}' L-shaped bin has been migrated to the Custom bin",
-        )
-
-
 class CustomBlankBin(FoundationGridfinity):
     """Gridfinity CustomBlankBin object."""
 
