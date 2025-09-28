@@ -196,7 +196,9 @@ def scoop_properties(obj: fc.DocumentObject, *, scoop_default: bool) -> None:
     ).Scoop = scoop_default
 
 
-def make_scoop(obj: fc.DocumentObject, *, usable_height: None | int = None) -> Part.Shape:
+def make_scoop(
+    obj: fc.DocumentObject, *, usable_height: None | fc.Units.Quantity = None
+) -> Part.Shape:
     """Create scoop.
 
     Args:
