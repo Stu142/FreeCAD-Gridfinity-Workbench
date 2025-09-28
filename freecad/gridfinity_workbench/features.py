@@ -320,11 +320,7 @@ class EcoBin(FoundationGridfinity):
 
         # Now add scoop, but only where eco compartments exist (reversed logic)
         if obj.Scoop:
-            # Store original UsableHeight and adjust for eco bin's deeper compartment
-            original_usable_height = obj.UsableHeight
-            obj.UsableHeight = obj.TotalHeight - obj.BaseWallThickness
-            scoop = feat.make_scoop(obj)
-            obj.UsableHeight = original_usable_height  # Restore original value
+            scoop = feat.make_scoop(obj, usable_height=obj.TotalHeight - obj.BaseWallThickness)
             # Only add scoop where compartments exist - use intersection to constrain
             scoop_constrained = scoop.common(eco_compartments)
             fuse_total = fuse_total.fuse(scoop_constrained)
@@ -728,11 +724,7 @@ class CustomEcoBin(FoundationGridfinity):
 
         # Now add scoop, but only where eco compartments exist (reversed logic)
         if obj.Scoop:
-            # Store original UsableHeight and adjust for eco bin's deeper compartment
-            original_usable_height = obj.UsableHeight
-            obj.UsableHeight = obj.TotalHeight - obj.BaseWallThickness
-            scoop = feat.make_scoop(obj)
-            obj.UsableHeight = original_usable_height  # Restore original value
+            scoop = feat.make_scoop(obj, usable_height=obj.TotalHeight - obj.BaseWallThickness)
             # Only add scoop where compartments exist - use intersection to constrain
             scoop_constrained = scoop.common(compartments)
             fuse_total = fuse_total.fuse(scoop_constrained)
