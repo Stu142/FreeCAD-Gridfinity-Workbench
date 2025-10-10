@@ -8,8 +8,9 @@ from pathlib import Path
 
 import FreeCADGui as fcg  # noqa: N813
 
-from . import commands
 import FreeCAD as fc  # noqa: N813
+
+from . import commands
 
 try:
     from FreeCADGui import Workbench

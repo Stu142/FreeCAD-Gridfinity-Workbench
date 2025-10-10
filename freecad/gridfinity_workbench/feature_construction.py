@@ -197,7 +197,9 @@ def scoop_properties(obj: fc.DocumentObject, *, scoop_default: bool) -> None:
 
 
 def make_scoop(
-    obj: fc.DocumentObject, *, usable_height: None | fc.Units.Quantity = None,
+    obj: fc.DocumentObject,
+    *,
+    usable_height: None | fc.Units.Quantity = None,
 ) -> Part.Shape:
     """Create scoop.
 
@@ -237,17 +239,17 @@ def make_scoop(
     v1 = fc.Vector(
         obj.xTotalWidth + obj.Clearance - obj.WallThickness,
         0,
-        -usable_height + scooprad,
+        -float(usable_height) + scooprad,
     )
     v2 = fc.Vector(
         obj.xTotalWidth + obj.Clearance - obj.WallThickness,
         0,
-        -usable_height,
+        -float(usable_height),
     )
     v3 = fc.Vector(
         obj.xTotalWidth + obj.Clearance - obj.WallThickness - scooprad,
         0,
-        -usable_height,
+        -float(usable_height),
     )
 
     l1 = Part.LineSegment(v1, v2)
@@ -260,7 +262,7 @@ def make_scoop(
         - scooprad
         + scooprad * math.sin(math.pi / 4),
         0,
-        -usable_height + scooprad - scooprad * math.sin(math.pi / 4),
+        -float(usable_height) + scooprad - scooprad * math.sin(math.pi / 4),
     )
 
     c1 = Part.Arc(v1, vc1, v3)
@@ -282,7 +284,7 @@ def make_scoop(
         + obj.StackingLipTopLedge
         - obj.WallThickness,
         obj.yTotalWidth - obj.WallThickness * 2,
-        usable_height,
+        float(usable_height),
         fc.Vector(
             obj.xTotalWidth + obj.Clearance - obj.WallThickness,
             +obj.Clearance + obj.WallThickness,
