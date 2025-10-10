@@ -5,8 +5,9 @@ Contains implementation to conscruct baseplate features.
 
 import math
 
-import FreeCAD as fc  # noqa: N813
 import Part
+
+import FreeCAD as fc  # noqa: N813
 
 from . import const, utils
 from . import magnet_hole as magnet_hole_module

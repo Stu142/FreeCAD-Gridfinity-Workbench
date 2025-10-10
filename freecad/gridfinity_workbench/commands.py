@@ -10,8 +10,9 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
+
+import FreeCAD as fc  # noqa: N813
 
 from . import custom_shape, features, utils
 

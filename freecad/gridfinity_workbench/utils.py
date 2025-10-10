@@ -9,9 +9,10 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING
 
-import FreeCAD as fc  # noqa:N813
 import FreeCADGui as fcg  # noqa: N813
 import Part
+
+import FreeCAD as fc  # noqa:N813
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

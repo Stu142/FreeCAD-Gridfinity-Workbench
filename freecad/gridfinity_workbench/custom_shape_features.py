@@ -1,7 +1,8 @@
 """Custom shape features for bin and baplate generation."""
 
-import FreeCAD as fc  # noqa: N813
 import Part
+
+import FreeCAD as fc  # noqa: N813
 
 from . import utils
 from .feature_construction import _stacking_lip_profile

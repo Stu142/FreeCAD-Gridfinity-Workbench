@@ -2,9 +2,9 @@ import unittest
 from pathlib import Path
 from tempfile import gettempdir
 
-import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
 
+import FreeCAD as fc  # noqa: N813
 from freecad.gridfinity_workbench.custom_shape import GridDialogData
 
 from . import custom_shape
