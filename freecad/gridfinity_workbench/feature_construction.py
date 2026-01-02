@@ -1184,6 +1184,12 @@ def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:
         fc.Vector(x5, y, z5),
         fc.Vector(x5, y, 0),
     ]
+    if obj.StackingLipThinStyle:
+        st[4:] = [  # Modify the bottom section of the stacking lip profile
+            fc.Vector(x3, y, 0),
+            fc.Vector(x5, y, (x5 - x3)),  # 45 degree chamfer under the lip
+            fc.Vector(x5, y, 0),
+        ]
 
     stacking_lip_profile = Part.Wire(Part.Shape(utils.loop(st)).Edges)
 
@@ -1209,6 +1215,14 @@ def stacking_lip_properties(
         "Gridfinity",
         "Toggle the stacking lip on or off",
     ).StackingLip = stacking_lip_default
+
+    ## Gridfinity Parameters
+    obj.addProperty(
+        "App::PropertyBool",
+        "StackingLipThinStyle",
+        "Gridfinity",
+        "Toggle the thin style stacking lip on or off",
+    ).StackingLipThinStyle = const.STACKING_LIP_THIN_STYLE
 
     ## Expert Only Parameters
     obj.addProperty(
