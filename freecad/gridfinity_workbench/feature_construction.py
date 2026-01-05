@@ -114,13 +114,7 @@ def make_label_shelf(obj: fc.DocumentObject, bintype: Literal["eco", "standard"]
         ydiv = 1
         length = obj.yTotalWidth - obj.WallThickness * 2
 
-    width = (
-        obj.StackingLipTopChamfer
-        + obj.StackingLipTopLedge
-        + (obj.StackingLipBottomChamfer if not obj.StackingLipThinStyle else zeromm)
-        + obj.LabelShelfWidth
-        - obj.WallThickness
-    )
+    width = calc_stacking_lip_offset(obj) + obj.LabelShelfWidth
     assert width >= 0
 
     thickness = obj.LabelShelfVerticalThickness
@@ -260,27 +254,18 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
 
     scoop = face.extrude(fc.Vector(0, obj.yTotalWidth - obj.WallThickness * 2))
 
-    feature_x0: float = (  # The x position of the thick end of the scoop
-        (
-            (obj.StackingLipBottomChamfer if not obj.StackingLipThinStyle else zeromm)
-            + obj.StackingLipTopChamfer
-            + obj.StackingLipTopLedge
-            - obj.WallThickness
-        )
-        if obj.StackingLip
-        else zeromm  # Put the scoop against the wall if no stacking lip
-    )
+    stacking_lip_offset = calc_stacking_lip_offset(obj)
 
     vec_list = []
     for x in range(xdiv):
-        xtranslate = feature_x0 if x == 0 else x * (compwidth + obj.DividerThickness)
+        xtranslate = stacking_lip_offset.Value if x == 0 else x * (compwidth + obj.DividerThickness)
         vec_list.append(fc.Vector(-xtranslate, obj.Clearance + obj.WallThickness))
 
     funcfuse = utils.copy_and_translate(scoop, vec_list)
 
     if obj.StackingLip:  # Scoop is offset from the wall due to the stacking lip
         scoopbox = Part.makeBox(
-            feature_x0,
+            stacking_lip_offset.Value,
             obj.yTotalWidth - obj.WallThickness * 2,
             obj.UsableHeight,
             fc.Vector(
@@ -298,10 +283,13 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
             and edge.Vertexes[0].X == edge.Vertexes[1].X
         ]
 
-        funcfuse = funcfuse.makeFillet(feature_x0 - 0.01 * unitmm, edges)
+        funcfuse = funcfuse.makeFillet(stacking_lip_offset - 0.01 * unitmm, edges)
     else:  # No stacking lip: Trim scoop to stop it extending outside the rounded bin corners
         bin_outside_shape = utils.create_rounded_rectangle(
-            obj.xTotalWidth, obj.yTotalWidth, 0, obj.BinOuterRadius
+            obj.xTotalWidth,
+            obj.yTotalWidth,
+            0,
+            obj.BinOuterRadius,
         ).translate(
             fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
         )
@@ -1247,6 +1235,20 @@ def make_bin_bottom_holes(
     fuse_total = utils.copy_in_layout(hole_shape_sub_array, layout, obj.xGridSize, obj.yGridSize)
     fuse_total.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
     return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
+
+
+def calc_stacking_lip_offset(obj: fc.DocumentObject) -> fc.Units.Quantity:
+    """Calculate width of stacking lip relative to the inside wall."""
+    return (
+        (
+            obj.StackingLipTopLedge
+            + obj.StackingLipTopChamfer
+            + (obj.StackingLipBottomChamfer if not obj.StackingLipThinStyle else zeromm)
+            - obj.WallThickness
+        )
+        if obj.StackingLip
+        else zeromm
+    )
 
 
 def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:
