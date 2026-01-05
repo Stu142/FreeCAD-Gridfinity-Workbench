@@ -118,7 +118,7 @@ def make_label_shelf(obj: fc.DocumentObject, bintype: Literal["eco", "standard"]
     width = (
         obj.StackingLipTopChamfer
         + obj.StackingLipTopLedge
-        + obj.StackingLipBottomChamfer
+        + (obj.StackingLipBottomChamfer if not obj.StackingLipThinStyle else zeromm)
         + obj.LabelShelfWidth
         - obj.WallThickness
     )
@@ -263,7 +263,7 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
 
     feature_x0: float = (  # The x position of the thick end of the scoop
         (
-            obj.StackingLipBottomChamfer
+            (obj.StackingLipBottomChamfer if not obj.StackingLipThinStyle else zeromm)
             + obj.StackingLipTopChamfer
             + obj.StackingLipTopLedge
             - obj.WallThickness
