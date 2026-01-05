@@ -996,12 +996,7 @@ class StandaloneLabelShelf:
 
     def execute(self, obj: Part.Feature) -> None:
         width = obj.Width
-        stacking_lip_offset = (
-            obj.Attachment.StackingLipTopChamfer
-            + obj.Attachment.StackingLipTopLedge
-            + obj.Attachment.StackingLipBottomChamfer
-            - obj.Attachment.WallThickness
-        )
+        stacking_lip_offset = feat.calc_stacking_lip_offset(obj.Attachment)
         # Check if the shelf is covered by a stacking lip
         check_point = obj.Placement.Base + obj.Placement.Rotation.multVec(
             fc.Vector(stacking_lip_offset / 2),
