@@ -259,55 +259,59 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
         xdiv
     )
 
-    scoopbox = Part.makeBox(
-        obj.StackingLipBottomChamfer
-        + obj.StackingLipTopChamfer
-        + obj.StackingLipTopLedge
-        - obj.WallThickness,
-        obj.yTotalWidth - obj.WallThickness * 2,
-        obj.UsableHeight,
-        fc.Vector(
-            obj.xTotalWidth + obj.Clearance - obj.WallThickness,
-            obj.Clearance + obj.WallThickness,
-        ),
-        fc.Vector(0, 0, -1),
-    )
-
     scoop = face.extrude(fc.Vector(0, obj.yTotalWidth - obj.WallThickness * 2))
+
+    feature_x0: float = (  # The x position of the thick end of the scoop
+        (
+            obj.StackingLipBottomChamfer
+            + obj.StackingLipTopChamfer
+            + obj.StackingLipTopLedge
+            - obj.WallThickness
+        )
+        if obj.StackingLip
+        else zeromm  # Put the scoop against the wall if no stacking lip
+    )
 
     vec_list = []
     for x in range(xdiv):
-        if x == 0:
-            xtranslate = (
-                zeromm
-                - obj.WallThickness
-                + obj.StackingLipTopLedge
-                + obj.StackingLipTopChamfer
-                + obj.StackingLipBottomChamfer
-            )
-        else:
-            xtranslate = x * (compwidth + obj.DividerThickness)
+        xtranslate = feature_x0 if x == 0 else x * (compwidth + obj.DividerThickness)
         vec_list.append(fc.Vector(-xtranslate, obj.Clearance + obj.WallThickness))
 
     funcfuse = utils.copy_and_translate(scoop, vec_list)
-    funcfuse = funcfuse.fuse(scoopbox)
 
-    edges = [
-        edge
-        for edge in funcfuse.Edges
-        if abs(edge.Vertexes[0].Z - edge.Vertexes[1].Z) == obj.UsableHeight
-        and edge.Vertexes[0].X == edge.Vertexes[1].X
-    ]
+    if obj.StackingLip:  # Scoop is offset from the wall
+        scoopbox = Part.makeBox(
+            feature_x0,
+            obj.yTotalWidth - obj.WallThickness * 2,
+            obj.UsableHeight,
+            fc.Vector(
+                obj.xTotalWidth + obj.Clearance - obj.WallThickness,
+                obj.Clearance + obj.WallThickness,
+            ),
+            fc.Vector(0, 0, -1),
+        )
+        funcfuse = funcfuse.fuse(scoopbox)
 
-    fuse_total = funcfuse.makeFillet(
-        obj.StackingLipBottomChamfer
-        + obj.StackingLipTopChamfer
-        + obj.StackingLipTopLedge
-        - obj.WallThickness
-        - 0.01 * unitmm,
-        edges,
-    )
-    return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
+        edges = [
+            edge
+            for edge in funcfuse.Edges
+            if abs(edge.Vertexes[0].Z - edge.Vertexes[1].Z) == obj.UsableHeight
+            and edge.Vertexes[0].X == edge.Vertexes[1].X
+        ]
+
+        funcfuse = funcfuse.makeFillet(feature_x0 - 0.01 * unitmm, edges)
+    else:  # No stacking lip: Trim scoop to stop it extending outside the rounded bin corners
+        bin_outside_shape = utils.create_rounded_rectangle(
+            obj.xTotalWidth, obj.yTotalWidth, 0, obj.BinOuterRadius
+        ).translate(
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
+        )
+        bin_outside_solid = Part.Face(bin_outside_shape).extrude(
+            fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight),
+        )
+        funcfuse = funcfuse.common(bin_outside_solid)
+
+    return funcfuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
 def _corner_fillets(
