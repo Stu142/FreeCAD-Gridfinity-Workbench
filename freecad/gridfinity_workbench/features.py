@@ -2,14 +2,16 @@
 
 # ruff: noqa: D101, D102, D107
 
+import typing
 from abc import abstractmethod
 
 import FreeCAD as fc  # noqa: N813
 import Part
 
 from . import baseplate_feature_construction as baseplate_feat
-from . import const, grid_initial_layout, label_shelf, utils
+from . import const
 from . import feature_construction as feat
+from . import grid_initial_layout, label_shelf, utils
 from .custom_shape_features import (
     clean_up_layout,
     custom_shape_solid,
@@ -17,6 +19,13 @@ from .custom_shape_features import (
     custom_shape_trim,
     cut_outside_shape,
     vertical_edge_fillet,
+)
+from .gridfinity_types import (
+    BaseplateObject,
+    EcoBinObject,
+    FullBinObject,
+    StorageBinObject,
+    cast,
 )
 from .version import __version__
 
@@ -54,7 +63,7 @@ class FoundationGridfinity:
             fp.Shape = gridfinity_shape
 
     @abstractmethod
-    def generate_gridfinity_shape(self, fp: fc.DocumentObject) -> Part.Shape:
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate the TopoShape of the object."""
 
     def dumps(self) -> dict:
@@ -66,6 +75,52 @@ class FoundationGridfinity:
 
         State argument required, otherwise expecting argument error message.
         """
+
+    def addPropertyIfMissing(
+        self,
+        obj: fc.DocumentObject,
+        type: str,
+        name: str,
+        group: str = "",
+        doc: str = "",
+        attr: int = 0,
+        read_only: bool = False,
+        hidden: bool = False,
+        enum_vals=[],
+    ):
+        if name not in obj.PropertiesList:
+            return obj.addProperty(
+                type=type,
+                name=name,
+                group=group,
+                doc=doc,
+                attr=attr,
+                read_only=read_only,
+                hidden=hidden,
+                enum_vals=enum_vals,
+            )
+        from types import SimpleNamespace
+
+        dummy = SimpleNamespace()
+        setattr(dummy, name, None)
+        return dummy
+
+    def onDocumentRestored(self, obj: fc.DocumentObject) -> None:  # noqa: N802
+        # Syntax: addProperty(type, name, group, docstring)
+        self.addPropertyIfMissing(
+            obj,
+            "App::PropertyBool",
+            "StackingLipNotches",
+            "GridfinityNonStandard",
+            "Toggle the notches on the stacking lip on or off",
+        ).StackingLipNotches = const.STACKING_LIP_NOTCHES
+        self.addPropertyIfMissing(
+            obj,
+            "App::PropertyLength",
+            "StackingLipNotchesChamfer",
+            "GridfinityNonStandard",
+            f"Chamfer on the notches of the Stacking lip<br> <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_CHAMFER} mm ",
+        ).StackingLipNotchesChamfer = const.STACKING_LIP_NOTCHES_CHAMFER
 
 
 class FullBin(FoundationGridfinity):
@@ -95,6 +150,7 @@ class FullBin(FoundationGridfinity):
         feat.bin_base_values_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        obj = cast(FullBinObject, obj)
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -104,7 +160,9 @@ class FullBin(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         bin_outside_shape.translate(
-            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
+            fc.Vector(
+                obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance
+            ),
         )
 
         bin_inside_shape = utils.create_rounded_rectangle(
@@ -114,17 +172,21 @@ class FullBin(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
         bin_inside_shape.translate(
-            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
+            fc.Vector(
+                obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance
+            ),
         )
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
 
         if obj.RecessedTopDepth > 0:
-            fuse_total = fuse_total.cut(feat.make_blank_bin_recessed_top(obj, bin_inside_shape))
+            fuse_total = fuse_total.cut(
+                feat.make_blank_bin_recessed_top(obj, bin_inside_shape)
+            )
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout))
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -179,11 +241,15 @@ class StorageBin(FoundationGridfinity):
         feat.stacking_lip_properties(obj, stacking_lip_default=const.STACKING_LIP)
         feat.bin_bottom_holes_properties(obj, magnet_holes_default=const.MAGNET_HOLES)
         feat.bin_base_values_properties(obj)
-        feat.compartments_properties(obj, x_div_default=x_div_default, y_div_default=y_div_default)
+        feat.compartments_properties(
+            obj, x_div_default=x_div_default, y_div_default=y_div_default
+        )
         feat.label_shelf_properties(obj, label_style_default=label_style_default)
         feat.scoop_properties(obj, scoop_default=scoop_default)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        obj = cast(StorageBinObject, obj)
+
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -193,7 +259,10 @@ class StorageBin(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         bin_outside_shape.translate(
-            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
+            fc.Vector(
+                obj.xTotalWidth / 2 + obj.Clearance,
+                obj.yTotalWidth / 2 + obj.Clearance,
+            ),
         )
 
         bin_inside_shape = utils.create_rounded_rectangle(
@@ -203,7 +272,10 @@ class StorageBin(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
         bin_inside_shape.translate(
-            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
+            fc.Vector(
+                obj.xTotalWidth / 2 + obj.Clearance,
+                obj.yTotalWidth / 2 + obj.Clearance,
+            ),
         )
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
@@ -215,7 +287,7 @@ class StorageBin(FoundationGridfinity):
         fuse_total = fuse_total.cut(feat.make_compartments(obj, compartments))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout))
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -268,6 +340,7 @@ class EcoBin(FoundationGridfinity):
         feat.eco_compartments_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        obj = cast(EcoBinObject, obj)
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -309,15 +382,21 @@ class EcoBin(FoundationGridfinity):
         )
 
         compartment_solid = face.extrude(
-            fc.Vector(0, 0, obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness),
+            fc.Vector(
+                0,
+                0,
+                obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness,
+            ),
         )
-        fuse_total = fuse_total.cut(feat.make_eco_compartments(obj, layout, compartment_solid))
+        fuse_total = fuse_total.cut(
+            feat.make_eco_compartments(obj, layout, compartment_solid),
+        )
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout))
 
         if obj.LabelShelfStyle != "Off":
             fuse_total = fuse_total.fuse(feat.make_label_shelf(obj, "eco"))
@@ -334,6 +413,7 @@ class Baseplate(FoundationGridfinity):
         baseplate_feat.base_values_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        obj = cast(BaseplateObject, obj)
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         baseplate_outside_shape = utils.create_rounded_rectangle(
@@ -342,7 +422,9 @@ class Baseplate(FoundationGridfinity):
             0,
             obj.BinOuterRadius,
         )
-        baseplate_outside_shape.translate(fc.Vector(obj.xTotalWidth / 2, obj.yTotalWidth / 2, 0))
+        baseplate_outside_shape.translate(
+            fc.Vector(obj.xTotalWidth / 2, obj.yTotalWidth / 2, 0)
+        )
 
         solid_shape = baseplate_feat.make_solid_shape(
             obj,
@@ -376,7 +458,9 @@ class MagnetBaseplate(FoundationGridfinity):
             -obj.MagnetHoleDepth - obj.MagnetBase,
             obj.BinOuterRadius,
         )
-        baseplate_outside_shape.translate(fc.Vector(obj.xTotalWidth / 2, obj.yTotalWidth / 2, 0))
+        baseplate_outside_shape.translate(
+            fc.Vector(obj.xTotalWidth / 2, obj.yTotalWidth / 2, 0)
+        )
 
         solid_shape = baseplate_feat.make_solid_shape(
             obj,
@@ -414,7 +498,9 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
             -obj.BaseThickness,
             obj.BinOuterRadius,
         )
-        baseplate_outside_shape.translate(fc.Vector(obj.xTotalWidth / 2, obj.yTotalWidth / 2, 0))
+        baseplate_outside_shape.translate(
+            fc.Vector(obj.xTotalWidth / 2, obj.yTotalWidth / 2, 0)
+        )
 
         solid_shape = baseplate_feat.make_solid_shape(
             obj,
@@ -427,7 +513,9 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         fuse_total = solid_shape.cut(fuse_total)
         fuse_total = fuse_total.cut(baseplate_feat.make_magnet_holes(obj, layout))
         fuse_total = fuse_total.cut(baseplate_feat.make_center_cut(obj, layout))
-        fuse_total = fuse_total.cut(baseplate_feat.make_screw_bottom_chamfer(obj, layout))
+        fuse_total = fuse_total.cut(
+            baseplate_feat.make_screw_bottom_chamfer(obj, layout)
+        )
         fuse_total = fuse_total.cut(baseplate_feat.make_connection_holes(obj, layout))
 
         return fuse_total
@@ -513,7 +601,9 @@ class CustomBlankBin(FoundationGridfinity):
         ## calculated values over
         layout = clean_up_layout(self.layout)
         grid_initial_layout.make_custom_shape_layout(obj, layout)
-        solid_shape = custom_shape_solid(obj, layout, obj.TotalHeight - obj.BaseProfileHeight)
+        solid_shape = custom_shape_solid(
+            obj, layout, obj.TotalHeight - obj.BaseProfileHeight
+        )
         outside_trim = custom_shape_trim(obj, layout, obj.Clearance, obj.Clearance)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
@@ -589,7 +679,9 @@ class CustomBinBase(FoundationGridfinity):
         ## calculated values over
         layout = clean_up_layout(self.layout)
         grid_initial_layout.make_custom_shape_layout(obj, layout)
-        solid_shape = custom_shape_solid(obj, layout, obj.TotalHeight - obj.BaseProfileHeight)
+        solid_shape = custom_shape_solid(
+            obj, layout, obj.TotalHeight - obj.BaseProfileHeight
+        )
         outside_trim = custom_shape_trim(obj, layout, obj.Clearance, obj.Clearance)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
@@ -667,7 +759,9 @@ class CustomEcoBin(FoundationGridfinity):
         ## calculated values over
         layout = clean_up_layout(self.layout)
         grid_initial_layout.make_custom_shape_layout(obj, layout)
-        solid_shape = custom_shape_solid(obj, layout, obj.TotalHeight - obj.BaseProfileHeight)
+        solid_shape = custom_shape_solid(
+            obj, layout, obj.TotalHeight - obj.BaseProfileHeight
+        )
         outside_trim = custom_shape_trim(obj, layout, obj.Clearance, obj.Clearance)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
@@ -697,7 +791,9 @@ class CustomEcoBin(FoundationGridfinity):
             layout,
             obj.TotalHeight,
         )
-        inside_wall_solid_full_height = inside_wall_solid_full_height.cut(compartment_trim)
+        inside_wall_solid_full_height = inside_wall_solid_full_height.cut(
+            compartment_trim
+        )
         inside_wall_solid_full_height = inside_wall_solid_full_height.removeSplitter()
         inside_wall_solid_full_height = vertical_edge_fillet(
             inside_wall_solid_full_height,
@@ -777,7 +873,9 @@ class CustomStorageBin(FoundationGridfinity):
         ## calculated values over
         layout = clean_up_layout(self.layout)
         grid_initial_layout.make_custom_shape_layout(obj, layout)
-        solid_shape = custom_shape_solid(obj, layout, obj.TotalHeight - obj.BaseProfileHeight)
+        solid_shape = custom_shape_solid(
+            obj, layout, obj.TotalHeight - obj.BaseProfileHeight
+        )
         outside_trim = custom_shape_trim(obj, layout, obj.Clearance, obj.Clearance)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
@@ -961,7 +1059,9 @@ class CustomScrewTogetherBaseplate(FoundationGridfinity):
         fuse_total = solid_shape.cut(fuse_total)
         fuse_total = fuse_total.cut(baseplate_feat.make_magnet_holes(obj, layout))
         fuse_total = fuse_total.cut(baseplate_feat.make_center_cut(obj, layout))
-        fuse_total = fuse_total.cut(baseplate_feat.make_screw_bottom_chamfer(obj, layout))
+        fuse_total = fuse_total.cut(
+            baseplate_feat.make_screw_bottom_chamfer(obj, layout)
+        )
         fuse_total = fuse_total.cut(baseplate_feat.make_connection_holes(obj, layout))
 
         return fuse_total
@@ -1054,7 +1154,9 @@ class StandaloneLabelShelf:
         check_point = obj.Placement.Base + obj.Placement.Rotation.multVec(
             fc.Vector(stacking_lip_offset / 2),
         )
-        if obj.Attachment.StackingLip and obj.Attachment.Shape.isInside(check_point, 1e-6, False):  # noqa: FBT003
+        if obj.Attachment.StackingLip and obj.Attachment.Shape.isInside(
+            check_point, 1e-6, False
+        ):  # noqa: FBT003
             width += stacking_lip_offset
 
         shape = label_shelf.from_angle(
