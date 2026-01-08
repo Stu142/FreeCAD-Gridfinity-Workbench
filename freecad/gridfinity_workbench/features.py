@@ -107,20 +107,28 @@ class FoundationGridfinity:
 
     def onDocumentRestored(self, obj: fc.DocumentObject) -> None:  # noqa: N802
         # Syntax: addProperty(type, name, group, docstring)
-        self.addPropertyIfMissing(
-            obj,
-            "App::PropertyBool",
-            "StackingLipNotches",
-            "GridfinityNonStandard",
-            "Toggle the notches on the stacking lip on or off",
-        ).StackingLipNotches = const.STACKING_LIP_NOTCHES
-        self.addPropertyIfMissing(
-            obj,
-            "App::PropertyLength",
-            "StackingLipNotchesChamfer",
-            "GridfinityNonStandard",
-            f"Chamfer on the notches of the Stacking lip<br> <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_CHAMFER} mm ",
-        ).StackingLipNotchesChamfer = const.STACKING_LIP_NOTCHES_CHAMFER
+        if hasattr(obj, "StackingLip"):
+            self.addPropertyIfMissing(
+                obj,
+                "App::PropertyBool",
+                "StackingLipNotches",
+                "GridfinityNonStandard",
+                "Toggle the notches on the stacking lip on or off",
+            ).StackingLipNotches = const.STACKING_LIP_NOTCHES
+            self.addPropertyIfMissing(
+                obj,
+                "App::PropertyLength",
+                "StackingLipNotchesChamfer",
+                "GridfinityNonStandard",
+                f"Chamfer on the notches of the Stacking lip<br> <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_CHAMFER} mm ",
+            ).StackingLipNotchesChamfer = const.STACKING_LIP_NOTCHES_CHAMFER
+            self.addPropertyIfMissing(
+                obj,
+                "App::PropertyLength",
+                "StackingLipNotchesRecess",
+                "GridfinityNonStandard",
+                f"Recess of the notches of the Stacking lip<br> <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_RECESS} mm ",
+            ).StackingLipNotchesRecess = const.STACKING_LIP_NOTCHES_RECESS
 
 
 class FullBin(FoundationGridfinity):

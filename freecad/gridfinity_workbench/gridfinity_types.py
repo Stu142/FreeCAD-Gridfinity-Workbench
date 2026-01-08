@@ -76,6 +76,7 @@ class StackingLipMixin(SolidMidSectionMixin):
     StackingLipBottomChamfer: float = const.STACKING_LIP_BOTTOM_CHAMFER
     StackingLipVerticalSection: float = const.STACKING_LIP_VERTICAL_SECTION
     StackingLipNotchesChamfer: float = const.STACKING_LIP_NOTCHES_CHAMFER
+    StackingLipNotchesRecess: float = const.STACKING_LIP_NOTCHES_RECESS
 
 
 class SimpleBinMixin(StackingLipMixin, HoleMixin):

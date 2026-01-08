@@ -1397,8 +1397,8 @@ def _stacking_lip_plate(
 
     return fuse_total.translate(
         fc.Vector(
-            obj.xGridSize / 2 - obj.xLocationOffset,
-            obj.yGridSize / 2 - obj.yLocationOffset,
+            obj.xGridSize / 2,
+            obj.yGridSize / 2,
         ),
     )
 
@@ -1469,6 +1469,12 @@ def stacking_lip_properties(
         "GridfinityNonStandard",
         f"Chamfer on the notches of the Stacking lip<br> <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_CHAMFER} mm ",
     ).StackingLipNotchesChamfer = const.STACKING_LIP_NOTCHES_CHAMFER
+    obj.addProperty(
+        "App::PropertyLength",
+        "StackingLipNotchesRecess",
+        "GridfinityNonStandard",
+        f"Recess of the notches of the Stacking lip<br> <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_RECESS} mm ",
+    ).StackingLipNotchesRecess = const.STACKING_LIP_NOTCHES_RECESS
 
 
 def make_stacking_lip(
@@ -1529,7 +1535,6 @@ def make_stacking_lip(
             )
         )
         base = _stacking_lip_plate(obj, layout)
-        # base.translate(fc.Vector(0, 0, obj.TotalHeight))
         cover = cover.cut(base)
         offset = (
             obj.StackingLipTopLedge
@@ -1548,7 +1553,25 @@ def make_stacking_lip(
                 obj.yTotalWidth / 2 + obj.Clearance,
             )
         )
-        cover = cover.cut(cutout)
+
+        if obj.StackingLipNotchesRecess > 0:
+            chamfer_offset = obj.StackingLipTopLedge + obj.StackingLipNotchesRecess
+            cutout_recess = utils.rounded_rectangle_chamfer(
+                obj.xTotalWidth - chamfer_offset * 2,
+                obj.yTotalWidth - chamfer_offset * 2,
+                height - obj.StackingLipNotchesRecess,
+                obj.StackingLipNotchesRecess,
+                obj.BinOuterRadius
+                - obj.StackingLipTopLedge
+                - obj.StackingLipNotchesRecess,
+            ).translate(
+                fc.Vector(
+                    obj.xTotalWidth / 2 + obj.Clearance,
+                    obj.yTotalWidth / 2 + obj.Clearance,
+                )
+            )
+            cutout = cutout.fuse(cutout_recess)
+
         if obj.StackingLipNotchesChamfer > 0:
             chamfer_offset = (
                 obj.StackingLipTopLedge
@@ -1558,20 +1581,21 @@ def make_stacking_lip(
             cutout_chamfer = utils.rounded_rectangle_chamfer(
                 obj.xTotalWidth - chamfer_offset * 2,
                 obj.yTotalWidth - chamfer_offset * 2,
-                height - obj.StackingLipNotchesChamfer,
+                height - obj.StackingLipNotchesRecess - obj.StackingLipNotchesChamfer,
                 obj.StackingLipNotchesChamfer,
                 obj.BinOuterRadius
                 - obj.StackingLipTopLedge
-                - obj.StackingLipTopChamfer
-                + obj.StackingLipNotchesChamfer,
+                - obj.StackingLipNotchesRecess
+                - obj.StackingLipNotchesChamfer,
             ).translate(
                 fc.Vector(
                     obj.xTotalWidth / 2 + obj.Clearance,
                     obj.yTotalWidth / 2 + obj.Clearance,
                 )
             )
-            cover = cover.cut(cutout_chamfer)
+            cutout = cutout.fuse(cutout_chamfer)
 
+        cover = cover.cut(cutout)
         stacking_lip = stacking_lip.fuse(cover)
 
     stacking_lip = stacking_lip.translate(
