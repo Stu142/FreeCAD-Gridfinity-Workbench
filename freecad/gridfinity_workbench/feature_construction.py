@@ -7,6 +7,7 @@ import FreeCAD as fc  # noqa: N813
 import Part
 
 from . import const, utils
+from . import gridfinity_types as gft
 from . import label_shelf as label_shelf_module
 
 unitmm = fc.Units.Quantity("1 mm")
@@ -81,7 +82,7 @@ def label_shelf_properties(obj: fc.DocumentObject, *, label_style_default: str) 
     ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
 
 
-def make_label_shelf(obj: fc.DocumentObject, bintype: Literal["eco", "standard"]) -> Part.Shape:
+def make_label_shelf(obj: gft.CompartmentsMixin, bintype: Literal["eco", "standard"]) -> Part.Shape:
     """Create label shelf."""
     if (
         bintype == "eco"
@@ -192,7 +193,7 @@ def scoop_properties(obj: fc.DocumentObject, *, scoop_default: bool) -> None:
     ).Scoop = scoop_default
 
 
-def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
+def make_scoop(obj: gft.ScoopMixin) -> Part.Shape:
     """Create scoop."""
     scooprad1 = obj.ScoopRadius + unitmm
     scooprad2 = obj.ScoopRadius + unitmm
@@ -310,7 +311,7 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
 
 
 def _corner_fillets(
-    obj: fc.DocumentObject,
+    obj: gft.CompartmentsMixin,
     xcomp_width: float,
     ycomp_width: float,
 ) -> Part.Shape:
@@ -384,7 +385,7 @@ def _corner_fillets(
 
 
 def _make_compartments_no_deviders(
-    obj: fc.DocumentObject,
+    obj: gft.CompartmentsMixin,
     func_fuse: Part.Shape,
 ) -> Part.Shape:
     # Fillet Bottom edges
@@ -400,7 +401,7 @@ def _make_compartments_no_deviders(
 
 
 def _make_compartments_with_deviders(
-    obj: fc.DocumentObject,
+    obj: gft.CompartmentsMixin,
     func_fuse: Part.Shape,
 ) -> Part.Shape:
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
@@ -531,7 +532,7 @@ def compartments_properties(obj: fc.DocumentObject, x_div_default: int, y_div_de
     )
 
 
-def make_compartments(obj: fc.DocumentObject, bin_inside_solid: Part.Shape) -> Part.Shape:
+def make_compartments(obj: gft.CompartmentsMixin, bin_inside_solid: Part.Shape) -> Part.Shape:
     """Create compartment cutout objects.
 
     Args:
@@ -579,7 +580,7 @@ def make_compartments(obj: fc.DocumentObject, bin_inside_solid: Part.Shape) -> P
     return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
+def make_bottom_hole_shape(obj: gft.HoleMixin) -> Part.Shape:
     """Create bottom hole shape.
 
     Returns one combined shape containing of the different hole types.
@@ -673,7 +674,7 @@ def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
     return bottom_hole_shape
 
 
-def _eco_bin_deviders(obj: fc.DocumentObject, xcomp_w: float, ycomp_w: float) -> Part.Shape:
+def _eco_bin_deviders(obj: gft.EcoCompartmentsMixin, xcomp_w: float, ycomp_w: float) -> Part.Shape:
     stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else zeromm
 
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
@@ -722,7 +723,7 @@ def _eco_bin_deviders(obj: fc.DocumentObject, xcomp_w: float, ycomp_w: float) ->
     return assembly.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
 
-def eco_error_check(obj: fc.DocumentObject) -> None:
+def eco_error_check(obj: gft.EcoCompartmentsMixin) -> None:
     """Check if eco dividers are possible with current parameters."""
     # Divider Minimum Height
 
@@ -819,7 +820,7 @@ def eco_compartments_properties(obj: fc.DocumentObject) -> None:
 
 
 def make_eco_compartments(
-    obj: fc.DocumentObject,
+    obj: gft.EcoCompartmentsMixin,
     layout: GridfinityLayout,
     bin_inside_solid: Part.Shape,
 ) -> Part.Shape:
@@ -1047,14 +1048,15 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
 
 
 def make_complex_bin_base(
-    obj: fc.DocumentObject,
+    obj: gft.BaseMixin,
     layout: GridfinityLayout,
 ) -> Part.Shape:
     """Creaet complex shaped bin base."""
     if obj.Baseplate:
+        obj = gft.cast(gft.BaseplateMixin, obj)
         baseplate_size_adjustment = obj.BaseplateTopLedgeWidth - obj.Clearance
     else:
-        baseplate_size_adjustment = 0 * unitmm
+        baseplate_size_adjustment = zeromm
 
     x_bt_cmf_width = (
         (obj.xGridSize - obj.Clearance * 2)
@@ -1226,7 +1228,7 @@ def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default:
 
 
 def make_bin_bottom_holes(
-    obj: fc.DocumentObject,
+    obj: gft.HoleMixin,
     layout: GridfinityLayout,
 ) -> Part.Shape:
     """Make bin bottom holes."""
@@ -1245,12 +1247,10 @@ def make_bin_bottom_holes(
     return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:
+def _stacking_lip_profile(obj: gft.StackingLipMixin) -> Part.Wire:
     """Create stacking lip profile wire."""
     ## Calculated Values
     obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
-
-    ## Stacking Lip Generation
     x1 = obj.Clearance
     x2 = x1 + obj.StackingLipTopLedge
     x3 = x2 + obj.StackingLipTopChamfer
@@ -1261,28 +1261,99 @@ def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:
     z2 = obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection
     z3 = obj.StackingLipBottomChamfer
     z4 = -obj.StackingLipVerticalSection
-    z5 = (
-        z4
-        - obj.StackingLipTopLedge
-        - obj.StackingLipTopChamfer
-        - obj.StackingLipBottomChamfer
-        + obj.WallThickness
-    )
-    st = [
-        fc.Vector(x1, y, 0),
-        fc.Vector(x1, y, z1),
-        fc.Vector(x2, y, z1),
-        fc.Vector(x3, y, z2),
-        fc.Vector(x3, y, z3),
-        fc.Vector(x4, y, 0),
-        fc.Vector(x4, y, z4),
-        fc.Vector(x5, y, z5),
-        fc.Vector(x5, y, 0),
-    ]
+    z5 = z4 - abs(x4 - x5)
+    if obj.StackingLipNotches:
+        st = [
+            fc.Vector(x1, y, 0),
+            fc.Vector(x4, y, 0),
+            fc.Vector(x4, y, z4),
+            fc.Vector(x5, y, z5),
+            fc.Vector(x1, y, z5),
+        ]
+    else:
+        st = [
+            fc.Vector(x1, y, 0),
+            fc.Vector(x1, y, z1),
+            fc.Vector(x2, y, z1),
+            fc.Vector(x3, y, z2),
+            fc.Vector(x3, y, z3),
+            fc.Vector(x4, y, 0),
+            fc.Vector(x4, y, z4),
+            fc.Vector(x5, y, z5),
+            fc.Vector(x5, y, 0),
+        ]
 
     stacking_lip_profile = Part.Wire(Part.Shape(utils.loop(st)).Edges)
 
     return stacking_lip_profile
+
+
+def _stacking_lip_plate(
+    obj: gft.StackingLipMixin,
+    layout: GridfinityLayout,
+) -> Part.Shape:
+    """Creaet complex shaped bin base."""
+    x_bt_cmf_width = (
+        (obj.xGridSize - obj.Clearance * 2)
+        - 2 * obj.StackingLipBottomChamfer
+        - 2 * obj.StackingLipTopChamfer
+        - 2 * obj.StackingLipTopLedge
+    )
+    y_bt_cmf_width = (
+        (obj.yGridSize - obj.Clearance * 2)
+        - 2 * obj.StackingLipBottomChamfer
+        - 2 * obj.StackingLipTopChamfer
+        - 2 * obj.StackingLipTopLedge
+    )
+    x_vert_width = (
+        (obj.xGridSize - obj.Clearance * 2)
+        - 2 * obj.StackingLipTopChamfer
+        - 2 * obj.StackingLipTopLedge
+    )
+    y_vert_width = (
+        (obj.yGridSize - obj.Clearance * 2)
+        - 2 * obj.StackingLipTopChamfer
+        - 2 * obj.StackingLipTopLedge
+    )
+
+    bottom_chamfer = utils.rounded_rectangle_chamfer(
+        x_bt_cmf_width,
+        y_bt_cmf_width,
+        zeromm,
+        obj.StackingLipBottomChamfer,
+        obj.BinOuterRadius
+        - obj.StackingLipTopLedge
+        - obj.StackingLipTopChamfer
+        - obj.StackingLipBottomChamfer,
+    )
+
+    vertical_section = utils.rounded_rectangle_extrude(
+        x_vert_width,
+        y_vert_width,
+        obj.StackingLipBottomChamfer,
+        obj.StackingLipVerticalSection,
+        obj.BinOuterRadius - obj.StackingLipTopLedge - obj.StackingLipTopChamfer,
+    )
+    assembly = bottom_chamfer.fuse(vertical_section)
+
+    top_chamfer = utils.rounded_rectangle_chamfer(
+        x_vert_width,
+        y_vert_width,
+        obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection,
+        obj.StackingLipTopChamfer,
+        obj.BinOuterRadius - obj.StackingLipTopLedge - obj.StackingLipTopChamfer,
+    )
+
+    assembly = bottom_chamfer.multiFuse([vertical_section, top_chamfer])
+
+    fuse_total = utils.copy_in_layout(assembly, layout, obj.xGridSize, obj.yGridSize)
+
+    return fuse_total.translate(
+        fc.Vector(
+            obj.xGridSize / 2,
+            obj.yGridSize / 2,
+        ),
+    )
 
 
 def stacking_lip_properties(
@@ -1338,22 +1409,123 @@ def stacking_lip_properties(
         read_only=True,
     ).StackingLipVerticalSection = const.STACKING_LIP_VERTICAL_SECTION
 
+    ## Gridfinity Non Standard Parameters
+    obj.addProperty(
+        "App::PropertyBool",
+        "StackingLipNotches",
+        "GridfinityNonStandard",
+        "Toggle the notches on the stacking lip on or off",
+    ).StackingLipNotches = const.STACKING_LIP_NOTCHES
+    obj.addProperty(
+        "App::PropertyLength",
+        "StackingLipNotchesChamfer",
+        "GridfinityNonStandard",
+        "Chamfer on the notches of the Stacking lip<br>"
+        f" <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_CHAMFER} mm ",
+    ).StackingLipNotchesChamfer = const.STACKING_LIP_NOTCHES_CHAMFER
+    obj.addProperty(
+        "App::PropertyLength",
+        "StackingLipNotchesRecess",
+        "GridfinityNonStandard",
+        "Recess of the notches of the Stacking lip<br>"
+        f" <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_RECESS} mm ",
+    ).StackingLipNotchesRecess = const.STACKING_LIP_NOTCHES_RECESS
 
-def make_stacking_lip(obj: fc.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
+
+def make_stacking_lip(
+    obj: gft.StackingLipMixin,
+    layout: GridfinityLayout,
+    bin_outside_shape: Part.Wire,
+) -> Part.Shape:
     """Create stacking lip based on input bin shape.
 
     Args:
         obj (FreeCAD.DocumentObject): DocumentObject
+        layout (GridfinityLayout): layout of the bin
         bin_outside_shape (Part.Wire): exterior wall of the bin
 
     """
     wire = _stacking_lip_profile(obj)
     stacking_lip = Part.Wire(bin_outside_shape).makePipe(wire)
     stacking_lip = Part.makeSolid(stacking_lip)
+    if obj.StackingLipNotches:
+        height = (
+            obj.StackingLipBottomChamfer
+            + obj.StackingLipVerticalSection
+            + obj.StackingLipTopChamfer
+        )
+        cover = utils.rounded_rectangle_extrude(
+            obj.xTotalWidth,
+            obj.yTotalWidth,
+            0,
+            height,
+            obj.BinOuterRadius,
+        ).translate(
+            fc.Vector(
+                obj.xTotalWidth / 2 + obj.Clearance,
+                obj.yTotalWidth / 2 + obj.Clearance,
+            ),
+        )
+        base = _stacking_lip_plate(obj, layout)
+        cover = cover.cut(base)
+        offset = obj.StackingLipTopLedge + obj.StackingLipTopChamfer + obj.StackingLipBottomChamfer
+        cutout = utils.rounded_rectangle_extrude(
+            obj.xTotalWidth - offset * 2,
+            obj.yTotalWidth - offset * 2,
+            0,
+            height,
+            obj.BinOuterRadius - offset,
+        ).translate(
+            fc.Vector(
+                obj.xTotalWidth / 2 + obj.Clearance,
+                obj.yTotalWidth / 2 + obj.Clearance,
+            ),
+        )
+
+        if obj.StackingLipNotchesRecess > 0:
+            chamfer_offset = obj.StackingLipTopLedge + obj.StackingLipNotchesRecess
+            cutout_recess = utils.rounded_rectangle_chamfer(
+                obj.xTotalWidth - chamfer_offset * 2,
+                obj.yTotalWidth - chamfer_offset * 2,
+                height - obj.StackingLipNotchesRecess,
+                obj.StackingLipNotchesRecess,
+                obj.BinOuterRadius - obj.StackingLipTopLedge - obj.StackingLipNotchesRecess,
+            ).translate(
+                fc.Vector(
+                    obj.xTotalWidth / 2 + obj.Clearance,
+                    obj.yTotalWidth / 2 + obj.Clearance,
+                ),
+            )
+            cutout = cutout.fuse(cutout_recess)
+
+        if obj.StackingLipNotchesChamfer > 0:
+            chamfer_offset = (
+                obj.StackingLipTopLedge + obj.StackingLipTopChamfer + obj.StackingLipBottomChamfer
+            )
+            cutout_chamfer = utils.rounded_rectangle_chamfer(
+                obj.xTotalWidth - chamfer_offset * 2,
+                obj.yTotalWidth - chamfer_offset * 2,
+                height - obj.StackingLipNotchesRecess - obj.StackingLipNotchesChamfer,
+                obj.StackingLipNotchesChamfer,
+                obj.BinOuterRadius
+                - obj.StackingLipTopLedge
+                - obj.StackingLipNotchesRecess
+                - obj.StackingLipNotchesChamfer,
+            ).translate(
+                fc.Vector(
+                    obj.xTotalWidth / 2 + obj.Clearance,
+                    obj.yTotalWidth / 2 + obj.Clearance,
+                ),
+            )
+            cutout = cutout.fuse(cutout_chamfer)
+
+        cover = cover.cut(cutout)
+        stacking_lip = stacking_lip.fuse(cover)
+        stacking_lip = stacking_lip.removeSplitter()
+
     stacking_lip = stacking_lip.translate(
         fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset),
     )
-
     return stacking_lip
 
 
@@ -1424,7 +1596,9 @@ def bin_solid_mid_section_properties(
     )
 
 
-def make_bin_solid_mid_section(obj: fc.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
+def make_bin_solid_mid_section(
+    obj: gft.SolidMidSectionMixin, bin_outside_shape: Part.Wire,
+) -> Part.Shape:
     """Generate bin solid mid section.
 
     Args:

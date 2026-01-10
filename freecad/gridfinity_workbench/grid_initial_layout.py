@@ -3,6 +3,8 @@
 import FreeCAD as fc  # noqa: N813
 
 from . import const
+from . import gridfinity_types as gft
+from .utils import GridfinityLayout
 
 
 def _location_properties(obj: fc.DocumentObject) -> None:
@@ -114,7 +116,7 @@ def rectangle_layout_properties(obj: fc.DocumentObject, *, baseplate_default: bo
     )
 
 
-def make_rectangle_layout(obj: fc.DocumentObject) -> list[list[bool]]:
+def make_rectangle_layout(obj: gft.RectangleLayoutMixin) -> GridfinityLayout:
     """Generate Rectanble layout and calculate relevant parameters."""
     if obj.GenerationLocation == "Centered at Origin":
         if obj.Baseplate:
@@ -156,7 +158,7 @@ def custom_shape_layout_properties(obj: fc.DocumentObject, *, baseplate_default:
     ).Baseplate = baseplate_default
 
 
-def make_custom_shape_layout(obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
+def make_custom_shape_layout(obj: gft.LayoutMixin, layout: GridfinityLayout) -> None:
     """Calculate values for custom shape.
 
     Args:

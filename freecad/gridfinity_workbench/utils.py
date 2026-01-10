@@ -73,8 +73,8 @@ def copy_and_translate(shape: Part.Shape, vec_list: list[fc.Vector]) -> Part.Sha
 def copy_in_layout(
     shape: Part.Shape,
     layout: GridfinityLayout,
-    x_gird_size: fc.Units.Quantity,
-    y_grid_size: fc.Units.Quantity,
+    x_gird_size: float,
+    y_grid_size: float,
 ) -> Part.Shape:
     """Copy a shape in a layout.
 

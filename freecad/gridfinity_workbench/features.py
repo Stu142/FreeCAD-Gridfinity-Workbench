@@ -18,9 +18,14 @@ from .custom_shape_features import (
     cut_outside_shape,
     vertical_edge_fillet,
 )
+from .gridfinity_types import (
+    BaseplateObject,
+    EcoBinObject,
+    FullBinObject,
+    StorageBinObject,
+    cast,
+)
 from .version import __version__
-
-unitmm = fc.Units.Quantity("1 mm")
 
 
 class FoundationGridfinity:
@@ -54,7 +59,7 @@ class FoundationGridfinity:
             fp.Shape = gridfinity_shape
 
     @abstractmethod
-    def generate_gridfinity_shape(self, fp: fc.DocumentObject) -> Part.Shape:
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
         """Generate the TopoShape of the object."""
 
     def dumps(self) -> dict:
@@ -66,6 +71,59 @@ class FoundationGridfinity:
 
         State argument required, otherwise expecting argument error message.
         """
+
+    def add_property_if_missing(  # noqa: PLR0913
+        self,
+        obj: fc.DocumentObject,
+        default_value: object,
+        prop_type: str,
+        name: str,
+        group: str = "",
+        doc: str = "",
+        attr: int = 0,
+        read_only: bool = False,  # noqa: FBT001, FBT002
+        hidden: bool = False,  # noqa: FBT001, FBT002
+    ) -> None:
+        if name not in obj.PropertiesList:
+            obj = obj.addProperty(
+                type=prop_type,
+                name=name,
+                group=group,
+                doc=doc,
+                attr=attr,
+                read_only=read_only,
+                hidden=hidden,
+            )
+            setattr(obj, name, default_value)
+
+    def onDocumentRestored(self, obj: fc.DocumentObject) -> None:  # noqa: N802
+        if hasattr(obj, "StackingLip"):
+            self.add_property_if_missing(
+                obj,
+                const.STACKING_LIP_NOTCHES,
+                "App::PropertyBool",
+                "StackingLipNotches",
+                "GridfinityNonStandard",
+                "Toggle the notches on the stacking lip on or off",
+            )
+            self.add_property_if_missing(
+                obj,
+                const.STACKING_LIP_NOTCHES_CHAMFER,
+                "App::PropertyLength",
+                "StackingLipNotchesChamfer",
+                "GridfinityNonStandard",
+                "Chamfer on the notches of the Stacking lip<br>"
+                f" <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_CHAMFER} mm ",
+            )
+            self.add_property_if_missing(
+                obj,
+                const.STACKING_LIP_NOTCHES_RECESS,
+                "App::PropertyLength",
+                "StackingLipNotchesRecess",
+                "GridfinityNonStandard",
+                "Recess of the notches of the Stacking lip<br> "
+                f"<br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_RECESS} mm ",
+            )
 
 
 class FullBin(FoundationGridfinity):
@@ -95,6 +153,7 @@ class FullBin(FoundationGridfinity):
         feat.bin_base_values_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        obj = cast(FullBinObject, obj)
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -124,7 +183,7 @@ class FullBin(FoundationGridfinity):
             fuse_total = fuse_total.cut(feat.make_blank_bin_recessed_top(obj, bin_inside_shape))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout, bin_outside_shape))
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -184,6 +243,8 @@ class StorageBin(FoundationGridfinity):
         feat.scoop_properties(obj, scoop_default=scoop_default)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        obj = cast(StorageBinObject, obj)
+
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -215,7 +276,7 @@ class StorageBin(FoundationGridfinity):
         fuse_total = fuse_total.cut(feat.make_compartments(obj, compartments))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout, bin_outside_shape))
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -268,6 +329,7 @@ class EcoBin(FoundationGridfinity):
         feat.eco_compartments_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        obj = cast(EcoBinObject, obj)
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -317,7 +379,7 @@ class EcoBin(FoundationGridfinity):
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout, bin_outside_shape))
 
         if obj.LabelShelfStyle != "Off":
             fuse_total = fuse_total.fuse(feat.make_label_shelf(obj, "eco"))
@@ -334,6 +396,7 @@ class Baseplate(FoundationGridfinity):
         baseplate_feat.base_values_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        obj = cast(BaseplateObject, obj)
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         baseplate_outside_shape = utils.create_rounded_rectangle(
