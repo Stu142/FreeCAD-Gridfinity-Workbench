@@ -135,11 +135,7 @@ def make_rectangle_layout(obj: gft.RectangleLayoutMixin) -> list[list[bool]]:
     return [[True] * obj.yGridUnits for x in range(obj.xGridUnits)]
 
 
-def custom_shape_layout_properties(
-    obj: fc.DocumentObject,
-    *,
-    baseplate_default: bool,
-) -> None:
+def custom_shape_layout_properties(obj: fc.DocumentObject, *, baseplate_default: bool) -> None:
     """Add relevant properties for a custom shape gridfinity object.
 
     Args:

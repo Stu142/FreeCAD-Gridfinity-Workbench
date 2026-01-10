@@ -741,7 +741,7 @@ class CustomEcoBin(FoundationGridfinity):
 
         feat.eco_error_check(obj)
         compartments_solid = custom_shape_solid(
-            obj, layout, obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness,
+            obj, layout, obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness
         )
         compartment_trim = custom_shape_trim(
             obj,
