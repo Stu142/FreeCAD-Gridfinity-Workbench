@@ -29,8 +29,6 @@ from .gridfinity_types import (
 )
 from .version import __version__
 
-unitmm = fc.Units.Quantity("1 mm")
-
 
 class FoundationGridfinity:
     def __init__(self, obj: fc.DocumentObject) -> None:

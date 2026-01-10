@@ -89,7 +89,7 @@ def label_shelf_properties(obj: fc.DocumentObject, *, label_style_default: str) 
 
 
 def make_label_shelf(
-    obj: fc.DocumentObject, bintype: Literal["eco", "standard"]
+    obj: gft.CompartmentsMixin, bintype: Literal["eco", "standard"]
 ) -> Part.Shape:
     """Create label shelf."""
     if (
@@ -397,7 +397,7 @@ def _corner_fillets(
 
 
 def _make_compartments_no_deviders(
-    obj: fc.DocumentObject,
+    obj: gft.CompartmentsMixin,
     func_fuse: Part.Shape,
 ) -> Part.Shape:
     # Fillet Bottom edges
@@ -1366,7 +1366,7 @@ def _stacking_lip_plate(
     bottom_chamfer = utils.rounded_rectangle_chamfer(
         x_bt_cmf_width,
         y_bt_cmf_width,
-        zeromm,
+        0,
         obj.StackingLipBottomChamfer,
         obj.BinOuterRadius
         - obj.StackingLipTopLedge
@@ -1597,6 +1597,7 @@ def make_stacking_lip(
 
         cover = cover.cut(cutout)
         stacking_lip = stacking_lip.fuse(cover)
+        stacking_lip = stacking_lip.removeSplitter()
 
     stacking_lip = stacking_lip.translate(
         fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset),

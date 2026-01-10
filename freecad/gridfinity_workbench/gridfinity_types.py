@@ -11,15 +11,18 @@ from . import const
 
 CALCULATED_VALUE = 0
 
+Length = float
+Angle = float
+
 
 class LayoutMixin(fc.DocumentObject):
     GenerationLocation: str = ""
-    xLocationOffset: float = 0.0
-    yLocationOffset: float = 0.0
-    xTotalWidth: float = 0.0
-    yTotalWidth: float = 0.0
-    xGridSize: float = const.X_GRID_SIZE
-    yGridSize: float = const.Y_GRID_SIZE
+    xLocationOffset: Length = 0.0
+    yLocationOffset: Length = 0.0
+    xTotalWidth: Length = 0.0
+    yTotalWidth: Length = 0.0
+    xGridSize: Length = const.X_GRID_SIZE
+    yGridSize: Length = const.Y_GRID_SIZE
     Baseplate: bool = False
 
 
@@ -29,54 +32,54 @@ class RectangleLayoutMixin(LayoutMixin):
 
 
 class SolidShapeMixin(LayoutMixin):
-    TotalHeight: float = CALCULATED_VALUE
+    TotalHeight: Length = CALCULATED_VALUE
 
 
 class BaseMixin(SolidShapeMixin):
-    BaseProfileBottomChamfer: float = const.BIN_BASE_BOTTOM_CHAMFER
-    BaseProfileVerticalSection: float = const.BIN_BASE_VERTICAL_SECTION
-    BaseProfileTopChamfer: float = const.BIN_BASE_TOP_CHAMFER
-    BinOuterRadius: float = const.BIN_OUTER_RADIUS
-    BinVerticalRadius: float = const.BIN_BASE_VERTICAL_RADIUS
-    BinBottomRadius: float = const.BIN_BASE_BOTTOM_RADIUS
-    Clearance: float = const.CLEARANCE
-    BaseProfileHeight: Final[float] = CALCULATED_VALUE
+    BaseProfileBottomChamfer: Length = const.BIN_BASE_BOTTOM_CHAMFER
+    BaseProfileVerticalSection: Length = const.BIN_BASE_VERTICAL_SECTION
+    BaseProfileTopChamfer: Length = const.BIN_BASE_TOP_CHAMFER
+    BinOuterRadius: Length = const.BIN_OUTER_RADIUS
+    BinVerticalRadius: Length = const.BIN_BASE_VERTICAL_RADIUS
+    BinBottomRadius: Length = const.BIN_BASE_BOTTOM_RADIUS
+    Clearance: Length = const.CLEARANCE
+    BaseProfileHeight: Final[Length] = CALCULATED_VALUE
 
 
 class BaseplateMixin(BaseMixin):
-    BaseplateTopLedgeWidth: float = const.BASEPLATE_TOP_LEDGE_WIDTH
+    BaseplateTopLedgeWidth: Length = const.BASEPLATE_TOP_LEDGE_WIDTH
 
 
 class HoleMixin(SolidShapeMixin):
     MagnetHoles: bool = const.MAGNET_HOLES
     ScrewHoles: bool = const.SCREW_HOLES
-    SequentialBridgingLayerHeight: float = const.SEQUENTIAL_BRIDGING_LAYER_HEIGHT
+    SequentialBridgingLayerHeight: Length = const.SEQUENTIAL_BRIDGING_LAYER_HEIGHT
     MagnetHolesShape: str = const.HOLE_SHAPES[0]
-    MagnetHoleDiameter: float = const.MAGNET_HOLE_DIAMETER
-    MagnetHoleDepth: float = const.MAGNET_HOLE_DEPTH
-    ScrewHoleDiameter: float = const.SCREW_HOLE_DIAMETER
-    ScrewHoleDepth: float = const.SCREW_HOLE_DEPTH
-    MagnetHoleDistanceFromEdge: float = const.MAGNET_HOLE_DISTANCE_FROM_EDGE
+    MagnetHoleDiameter: Length = const.MAGNET_HOLE_DIAMETER
+    MagnetHoleDepth: Length = const.MAGNET_HOLE_DEPTH
+    ScrewHoleDiameter: Length = const.SCREW_HOLE_DIAMETER
+    ScrewHoleDepth: Length = const.SCREW_HOLE_DEPTH
+    MagnetHoleDistanceFromEdge: Length = const.MAGNET_HOLE_DISTANCE_FROM_EDGE
 
 
 class SolidMidSectionMixin(BaseMixin):
     HeightUnits: int = 1
     ## Gridfinity Non Standard Parameters
-    CustomHeight: float = 42
+    CustomHeight: Length = 42
     NonStandardHeight: bool = False
-    WallThickness: float = 2
-    HeightUnitValue: float = const.HEIGHT_UNIT_VALUE
+    WallThickness: Length = 2
+    HeightUnitValue: Length = const.HEIGHT_UNIT_VALUE
 
 
 class StackingLipMixin(SolidMidSectionMixin):
     StackingLip: bool = False
     StackingLipNotches: bool = False
-    StackingLipTopLedge: float = const.STACKING_LIP_TOP_LEDGE
-    StackingLipTopChamfer: float = 0.0
-    StackingLipBottomChamfer: float = const.STACKING_LIP_BOTTOM_CHAMFER
-    StackingLipVerticalSection: float = const.STACKING_LIP_VERTICAL_SECTION
-    StackingLipNotchesChamfer: float = const.STACKING_LIP_NOTCHES_CHAMFER
-    StackingLipNotchesRecess: float = const.STACKING_LIP_NOTCHES_RECESS
+    StackingLipTopLedge: Length = const.STACKING_LIP_TOP_LEDGE
+    StackingLipTopChamfer: Length = 0.0
+    StackingLipBottomChamfer: Length = const.STACKING_LIP_BOTTOM_CHAMFER
+    StackingLipVerticalSection: Length = const.STACKING_LIP_VERTICAL_SECTION
+    StackingLipNotchesChamfer: Length = const.STACKING_LIP_NOTCHES_CHAMFER
+    StackingLipNotchesRecess: Length = const.STACKING_LIP_NOTCHES_RECESS
 
 
 class SimpleBinMixin(StackingLipMixin, HoleMixin):
@@ -86,29 +89,29 @@ class SimpleBinMixin(StackingLipMixin, HoleMixin):
 class LabelShelfMixin:
     LabelShelfStyle: str = ""
     LabelShelfPlacement: str = ""
-    LabelShelfWidth: float = const.LABEL_SHELF_WIDTH
-    LabelShelffloat: float = const.LABEL_SHELF_LENGTH
-    LabelShelfAngle: float = const.LABEL_SHELF_ANGLE
-    LabelShelfStackingOffset: float = const.LABEL_SHELF_STACKING_OFFSET
-    LabelShelfVerticalThickness: float = const.LABEL_SHELF_VERTICAL_THICKNESS
+    LabelShelfWidth: Length = const.LABEL_SHELF_WIDTH
+    LabelShelfLength: float = const.LABEL_SHELF_LENGTH
+    LabelShelfAngle: Angle = const.LABEL_SHELF_ANGLE
+    LabelShelfStackingOffset: Length = const.LABEL_SHELF_STACKING_OFFSET
+    LabelShelfVerticalThickness: Length = const.LABEL_SHELF_VERTICAL_THICKNESS
 
 
 class CompartmentsMixin(SimpleBinMixin, LabelShelfMixin):
     xDividers: int = const.X_DIVIDERS
     yDividers: int = const.Y_DIVIDERS
-    InsideFilletRadius: float = const.INSIDE_FILLET_RADIUS
-    DividerThickness: float = const.DIVIDER_THICKNESS
-    xDividerHeight: float = const.CUSTOM_X_DIVIDER_HEIGHT
-    yDividerHeight: float = const.CUSTOM_Y_DIVIDER_HEIGHT
-    UsableHeight: float = CALCULATED_VALUE
+    InsideFilletRadius: Length = const.INSIDE_FILLET_RADIUS
+    DividerThickness: Length = const.DIVIDER_THICKNESS
+    xDividerHeight: Length = const.CUSTOM_X_DIVIDER_HEIGHT
+    yDividerHeight: Length = const.CUSTOM_Y_DIVIDER_HEIGHT
+    UsableHeight: Length = CALCULATED_VALUE
 
 
 class EcoCompartmentsMixin(CompartmentsMixin):
-    BaseWallThickness: float = const.BASE_WALL_THICKNESS
+    BaseWallThickness: Length = const.BASE_WALL_THICKNESS
 
 
 class ScoopMixin(CompartmentsMixin):
-    ScoopRadius: float = const.SCOOP_RADIUS
+    ScoopRadius: Length = const.SCOOP_RADIUS
     Scoop: bool = False
 
 
@@ -125,7 +128,7 @@ class FullBinObject(
     HoleMixin,
 ):
     ## Gridfinity Non Standard Parameters
-    RecessedTopDepth: float = const.RECESSED_TOP_DEPTH
+    RecessedTopDepth: Length = const.RECESSED_TOP_DEPTH
 
 
 class StorageBinObject(
