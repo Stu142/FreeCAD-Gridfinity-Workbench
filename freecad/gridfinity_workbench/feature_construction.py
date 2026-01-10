@@ -1478,7 +1478,7 @@ def stacking_lip_properties(
 
 
 def make_stacking_lip(
-    obj: gft.StackingLipMixin, layout: GridfinityLayout
+    obj: gft.StackingLipMixin, layout: GridfinityLayout, bin_outside_shape: Part.Wire
 ) -> Part.Shape:
     """Create stacking lip based on input bin shape.
 
@@ -1488,31 +1488,6 @@ def make_stacking_lip(
 
     """
 
-    bin_outside_shape = utils.create_rounded_rectangle(
-        obj.xTotalWidth,
-        obj.yTotalWidth,
-        0,
-        obj.BinOuterRadius,
-    )
-    bin_outside_shape.translate(
-        fc.Vector(
-            obj.xTotalWidth / 2 + obj.Clearance,
-            obj.yTotalWidth / 2 + obj.Clearance,
-        ),
-    )
-
-    bin_inside_shape = utils.create_rounded_rectangle(
-        obj.xTotalWidth - obj.WallThickness * 2,
-        obj.yTotalWidth - obj.WallThickness * 2,
-        0,
-        obj.BinOuterRadius - obj.WallThickness,
-    )
-    bin_inside_shape.translate(
-        fc.Vector(
-            obj.xTotalWidth / 2 + obj.Clearance,
-            obj.yTotalWidth / 2 + obj.Clearance,
-        ),
-    )
     wire = _stacking_lip_profile(obj)
     stacking_lip = Part.Wire(bin_outside_shape).makePipe(wire)
     stacking_lip = Part.makeSolid(stacking_lip)

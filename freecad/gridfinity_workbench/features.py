@@ -191,7 +191,9 @@ class FullBin(FoundationGridfinity):
             )
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout))
+            fuse_total = fuse_total.fuse(
+                feat.make_stacking_lip(obj, layout, bin_outside_shape)
+            )
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -292,7 +294,9 @@ class StorageBin(FoundationGridfinity):
         fuse_total = fuse_total.cut(feat.make_compartments(obj, compartments))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout))
+            fuse_total = fuse_total.fuse(
+                feat.make_stacking_lip(obj, layout, bin_outside_shape)
+            )
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -401,7 +405,9 @@ class EcoBin(FoundationGridfinity):
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout))
+            fuse_total = fuse_total.fuse(
+                feat.make_stacking_lip(obj, layout, bin_outside_shape)
+            )
 
         if obj.LabelShelfStyle != "Off":
             fuse_total = fuse_total.fuse(feat.make_label_shelf(obj, "eco"))
