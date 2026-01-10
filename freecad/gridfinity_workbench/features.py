@@ -74,9 +74,10 @@ class FoundationGridfinity:
         State argument required, otherwise expecting argument error message.
         """
 
-    def addPropertyIfMissing(
+    def add_property_if_missing(
         self,
         obj: fc.DocumentObject,
+        default_value: object,
         type: str,
         name: str,
         group: str = "",
@@ -87,7 +88,7 @@ class FoundationGridfinity:
         enum_vals=[],
     ):
         if name not in obj.PropertiesList:
-            return obj.addProperty(
+            obj = obj.addProperty(
                 type=type,
                 name=name,
                 group=group,
@@ -97,36 +98,34 @@ class FoundationGridfinity:
                 hidden=hidden,
                 enum_vals=enum_vals,
             )
-        from types import SimpleNamespace
+            setattr(obj, name, default_value)
 
-        dummy = SimpleNamespace()
-        setattr(dummy, name, None)
-        return dummy
-
-    def onDocumentRestored(self, obj: fc.DocumentObject) -> None:  # noqa: N802
-        # Syntax: addProperty(type, name, group, docstring)
+    def onDocumentRestored(self, obj: fc.DocumentObject) -> None:
         if hasattr(obj, "StackingLip"):
-            self.addPropertyIfMissing(
+            self.add_property_if_missing(
                 obj,
+                const.STACKING_LIP_NOTCHES,
                 "App::PropertyBool",
                 "StackingLipNotches",
                 "GridfinityNonStandard",
                 "Toggle the notches on the stacking lip on or off",
-            ).StackingLipNotches = const.STACKING_LIP_NOTCHES
-            self.addPropertyIfMissing(
+            )
+            self.add_property_if_missing(
                 obj,
+                const.STACKING_LIP_NOTCHES_CHAMFER,
                 "App::PropertyLength",
                 "StackingLipNotchesChamfer",
                 "GridfinityNonStandard",
                 f"Chamfer on the notches of the Stacking lip<br> <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_CHAMFER} mm ",
-            ).StackingLipNotchesChamfer = const.STACKING_LIP_NOTCHES_CHAMFER
-            self.addPropertyIfMissing(
+            )
+            self.add_property_if_missing(
                 obj,
+                const.STACKING_LIP_NOTCHES_RECESS,
                 "App::PropertyLength",
                 "StackingLipNotchesRecess",
                 "GridfinityNonStandard",
                 f"Recess of the notches of the Stacking lip<br> <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_RECESS} mm ",
-            ).StackingLipNotchesRecess = const.STACKING_LIP_NOTCHES_RECESS
+            )
 
 
 class FullBin(FoundationGridfinity):

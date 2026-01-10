@@ -1366,7 +1366,7 @@ def _stacking_lip_plate(
     bottom_chamfer = utils.rounded_rectangle_chamfer(
         x_bt_cmf_width,
         y_bt_cmf_width,
-        0,
+        zeromm,
         obj.StackingLipBottomChamfer,
         obj.BinOuterRadius
         - obj.StackingLipTopLedge
