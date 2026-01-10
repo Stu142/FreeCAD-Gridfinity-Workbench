@@ -363,7 +363,11 @@ class EcoBin(FoundationGridfinity):
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
         face = Part.Face(bin_inside_shape).translate(
-            fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness),
+            fc.Vector(
+                0,
+                0,
+                -obj.TotalHeight + obj.BaseProfileHeight + obj.BaseWallThickness,
+            ),
         )
 
         compartment_solid = face.extrude(
@@ -375,9 +379,7 @@ class EcoBin(FoundationGridfinity):
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(
-                feat.make_stacking_lip(obj, layout, bin_outside_shape),
-            )
+            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout, bin_outside_shape))
 
         if obj.LabelShelfStyle != "Off":
             fuse_total = fuse_total.fuse(feat.make_label_shelf(obj, "eco"))
@@ -728,11 +730,7 @@ class CustomEcoBin(FoundationGridfinity):
         ## calculated values over
         layout = clean_up_layout(self.layout)
         grid_initial_layout.make_custom_shape_layout(obj, layout)
-        solid_shape = custom_shape_solid(
-            obj,
-            layout,
-            obj.TotalHeight - obj.BaseProfileHeight,
-        )
+        solid_shape = custom_shape_solid(obj, layout, obj.TotalHeight - obj.BaseProfileHeight)
         outside_trim = custom_shape_trim(obj, layout, obj.Clearance, obj.Clearance)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
@@ -741,7 +739,9 @@ class CustomEcoBin(FoundationGridfinity):
 
         feat.eco_error_check(obj)
         compartments_solid = custom_shape_solid(
-            obj, layout, obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness
+            obj,
+            layout,
+            obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness,
         )
         compartment_trim = custom_shape_trim(
             obj,
@@ -840,11 +840,7 @@ class CustomStorageBin(FoundationGridfinity):
         ## calculated values over
         layout = clean_up_layout(self.layout)
         grid_initial_layout.make_custom_shape_layout(obj, layout)
-        solid_shape = custom_shape_solid(
-            obj,
-            layout,
-            obj.TotalHeight - obj.BaseProfileHeight,
-        )
+        solid_shape = custom_shape_solid(obj, layout, obj.TotalHeight - obj.BaseProfileHeight)
         outside_trim = custom_shape_trim(obj, layout, obj.Clearance, obj.Clearance)
         fuse_total = solid_shape.cut(outside_trim)
         fuse_total = fuse_total.removeSplitter()
