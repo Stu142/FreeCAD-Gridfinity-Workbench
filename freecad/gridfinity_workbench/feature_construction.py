@@ -1111,10 +1111,7 @@ def make_complex_bin_base(
     fuse_total = utils.copy_in_layout(assembly, layout, obj.xGridSize, obj.yGridSize)
 
     return fuse_total.translate(
-        fc.Vector(
-            obj.xGridSize / 2 - obj.xLocationOffset,
-            obj.yGridSize / 2 - obj.yLocationOffset,
-        ),
+        fc.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset),
     )
 
 
