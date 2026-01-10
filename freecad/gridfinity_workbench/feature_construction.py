@@ -82,10 +82,7 @@ def label_shelf_properties(obj: fc.DocumentObject, *, label_style_default: str) 
     ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
 
 
-def make_label_shelf(
-    obj: gft.CompartmentsMixin,
-    bintype: Literal["eco", "standard"],
-) -> Part.Shape:
+def make_label_shelf(obj: gft.CompartmentsMixin, bintype: Literal["eco", "standard"]) -> Part.Shape:
     """Create label shelf."""
     if (
         bintype == "eco"
@@ -93,9 +90,7 @@ def make_label_shelf(
         and obj.LabelShelfStyle != "Overhang"
     ):
         obj.LabelShelfStyle = "Overhang"
-        fc.Console.PrintWarning(
-            "Label shelf style set to Overhang due to low bin height\n",
-        )
+        fc.Console.PrintWarning("Label shelf style set to Overhang due to low bin height\n")
 
     xdiv = obj.xDividers + 1
     ydiv = obj.yDividers + 1
@@ -140,12 +135,7 @@ def make_label_shelf(
     )
 
     if height > obj.UsableHeight:
-        boundingbox = Part.makeBox(
-            width,
-            length,
-            height,
-            fc.Vector(0, 0, -obj.UsableHeight),
-        )
+        boundingbox = Part.makeBox(width, length, height, fc.Vector(0, 0, -obj.UsableHeight))
         funcfuse = funcfuse.common(boundingbox)
 
     funcfuse = utils.copy_in_grid(
@@ -472,11 +462,7 @@ def _make_compartments_with_deviders(
     return func_fuse
 
 
-def compartments_properties(
-    obj: fc.DocumentObject,
-    x_div_default: int,
-    y_div_default: int,
-) -> None:
+def compartments_properties(obj: fc.DocumentObject, x_div_default: int, y_div_default: int) -> None:
     """Create bin compartments with the option for dividers.
 
     Args:
@@ -546,10 +532,7 @@ def compartments_properties(
     )
 
 
-def make_compartments(
-    obj: gft.CompartmentsMixin,
-    bin_inside_solid: Part.Shape,
-) -> Part.Shape:
+def make_compartments(obj: gft.CompartmentsMixin, bin_inside_solid: Part.Shape) -> Part.Shape:
     """Create compartment cutout objects.
 
     Args:
@@ -618,9 +601,7 @@ def make_bottom_hole_shape(obj: gft.HoleMixin) -> Part.Shape:
             p.recompute()
 
             p_wire: Part.Wire = p.Shape
-            magnet_hole_shape = Part.Face(p_wire).extrude(
-                fc.Vector(0, 0, obj.MagnetHoleDepth),
-            )
+            magnet_hole_shape = Part.Face(p_wire).extrude(fc.Vector(0, 0, obj.MagnetHoleDepth))
             fc.ActiveDocument.removeObject(p.Name)
         else:
             magnet_hole_shape = Part.makeCylinder(
@@ -693,11 +674,7 @@ def make_bottom_hole_shape(obj: gft.HoleMixin) -> Part.Shape:
     return bottom_hole_shape
 
 
-def _eco_bin_deviders(
-    obj: gft.EcoCompartmentsMixin,
-    xcomp_w: float,
-    ycomp_w: float,
-) -> Part.Shape:
+def _eco_bin_deviders(obj: gft.EcoCompartmentsMixin, xcomp_w: float, ycomp_w: float) -> Part.Shape:
     stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else zeromm
 
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
@@ -1073,14 +1050,13 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
 def make_complex_bin_base(
     obj: gft.BaseMixin,
     layout: GridfinityLayout,
-    adjust: fc.Units.Quantity | None = None,
 ) -> Part.Shape:
     """Creaet complex shaped bin base."""
     if obj.Baseplate:
         obj = gft.cast(gft.BaseplateMixin, obj)
         baseplate_size_adjustment = obj.BaseplateTopLedgeWidth - obj.Clearance
     else:
-        baseplate_size_adjustment = adjust if adjust is not None else zeromm  # mm
+        baseplate_size_adjustment = zeromm
 
     x_bt_cmf_width = (
         (obj.xGridSize - obj.Clearance * 2)
@@ -1158,21 +1134,14 @@ def blank_bin_recessed_top_properties(obj: fc.DocumentObject) -> None:
     ).RecessedTopDepth = const.RECESSED_TOP_DEPTH
 
 
-def make_blank_bin_recessed_top(
-    obj: fc.DocumentObject,
-    bin_inside_shape: Part.Wire,
-) -> Part.Shape:
+def make_blank_bin_recessed_top(obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
     """Generate Rectanble layout and calculate relevant parameters."""
     face = Part.Face(bin_inside_shape)
     fuse_total = face.extrude(fc.Vector(0, 0, -obj.RecessedTopDepth))
     return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-def bin_bottom_holes_properties(
-    obj: fc.DocumentObject,
-    *,
-    magnet_holes_default: bool,
-) -> None:
+def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default: bool) -> None:
     """Create bin solid mid section.
 
     Args:
@@ -1276,12 +1245,7 @@ def make_bin_bottom_holes(
         utils.corners(x_hole_pos, y_hole_pos, -obj.TotalHeight),
     )
 
-    fuse_total = utils.copy_in_layout(
-        hole_shape_sub_array,
-        layout,
-        obj.xGridSize,
-        obj.yGridSize,
-    )
+    fuse_total = utils.copy_in_layout(hole_shape_sub_array, layout, obj.xGridSize, obj.yGridSize)
     fuse_total.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
     return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
@@ -1636,8 +1600,7 @@ def bin_solid_mid_section_properties(
 
 
 def make_bin_solid_mid_section(
-    obj: gft.SolidMidSectionMixin,
-    bin_outside_shape: Part.Wire,
+    obj: gft.SolidMidSectionMixin, bin_outside_shape: Part.Wire,
 ) -> Part.Shape:
     """Generate bin solid mid section.
 
@@ -1649,11 +1612,6 @@ def make_bin_solid_mid_section(
     face = Part.Face(bin_outside_shape)
 
     fuse_total = face.extrude(fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight))
-    fuse_total = fuse_total.translate(
-        fc.Vector(
-            -obj.xLocationOffset,
-            -obj.yLocationOffset,
-        ),
-    )
+    fuse_total = fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
     return fuse_total
