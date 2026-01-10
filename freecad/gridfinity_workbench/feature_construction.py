@@ -88,9 +88,7 @@ def label_shelf_properties(obj: fc.DocumentObject, *, label_style_default: str) 
     ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
 
 
-def make_label_shelf(
-    obj: gft.CompartmentsMixin, bintype: Literal["eco", "standard"]
-) -> Part.Shape:
+def make_label_shelf(obj: gft.CompartmentsMixin, bintype: Literal["eco", "standard"]) -> Part.Shape:
     """Create label shelf."""
     if (
         bintype == "eco"
@@ -98,9 +96,7 @@ def make_label_shelf(
         and obj.LabelShelfStyle != "Overhang"
     ):
         obj.LabelShelfStyle = "Overhang"
-        fc.Console.PrintWarning(
-            "Label shelf style set to Overhang due to low bin height\n"
-        )
+        fc.Console.PrintWarning("Label shelf style set to Overhang due to low bin height\n")
 
     xdiv = obj.xDividers + 1
     ydiv = obj.yDividers + 1
@@ -145,9 +141,7 @@ def make_label_shelf(
     )
 
     if height > obj.UsableHeight:
-        boundingbox = Part.makeBox(
-            width, length, height, fc.Vector(0, 0, -obj.UsableHeight)
-        )
+        boundingbox = Part.makeBox(width, length, height, fc.Vector(0, 0, -obj.UsableHeight))
         funcfuse = funcfuse.common(boundingbox)
 
     funcfuse = utils.copy_in_grid(
@@ -211,9 +205,9 @@ def make_scoop(obj: gft.ScoopMixin) -> Part.Shape:
     scooprad2 = obj.ScoopRadius + unitmm
     scooprad3 = obj.ScoopRadius + unitmm
 
-    xcomp_w = (
-        obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness
-    ) / (obj.xDividers + 1)
+    xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
+        obj.xDividers + 1
+    )
 
     xdivscoop = obj.xDividerHeight - obj.HeightUnitValue - obj.LabelShelfStackingOffset
 
@@ -267,9 +261,9 @@ def make_scoop(obj: gft.ScoopMixin) -> Part.Shape:
     face = Part.Face(wire)
 
     xdiv = obj.xDividers + 1
-    compwidth = (
-        obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers
-    ) / (xdiv)
+    compwidth = (obj.xTotalWidth - obj.WallThickness * 2 - obj.DividerThickness * obj.xDividers) / (
+        xdiv
+    )
 
     scoopbox = Part.makeBox(
         obj.StackingLipBottomChamfer
@@ -421,12 +415,12 @@ def _make_compartments_with_deviders(
 
     stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else zeromm
 
-    xcomp_w = (
-        obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness
-    ) / (obj.xDividers + 1)
-    ycomp_w = (
-        obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness
-    ) / (obj.yDividers + 1)
+    xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
+        obj.xDividers + 1
+    )
+    ycomp_w = (obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness) / (
+        obj.yDividers + 1
+    )
 
     xtranslate = xcomp_w + obj.WallThickness - obj.DividerThickness
     ytranslate = ycomp_w + obj.WallThickness
@@ -474,9 +468,7 @@ def _make_compartments_with_deviders(
     return func_fuse
 
 
-def compartments_properties(
-    obj: fc.DocumentObject, x_div_default: int, y_div_default: int
-) -> None:
+def compartments_properties(obj: fc.DocumentObject, x_div_default: int, y_div_default: int) -> None:
     """Create bin compartments with the option for dividers.
 
     Args:
@@ -546,9 +538,7 @@ def compartments_properties(
     )
 
 
-def make_compartments(
-    obj: gft.CompartmentsMixin, bin_inside_solid: Part.Shape
-) -> Part.Shape:
+def make_compartments(obj: gft.CompartmentsMixin, bin_inside_solid: Part.Shape) -> Part.Shape:
     """Create compartment cutout objects.
 
     Args:
@@ -561,10 +551,7 @@ def make_compartments(
     """
     ## Error Checks
     divmin = (
-        obj.HeightUnitValue
-        + obj.InsideFilletRadius
-        + 0.05 * unitmm
-        + obj.LabelShelfStackingOffset
+        obj.HeightUnitValue + obj.InsideFilletRadius + 0.05 * unitmm + obj.LabelShelfStackingOffset
     )
 
     if obj.xDividerHeight < divmin and obj.xDividerHeight != 0:
@@ -620,9 +607,7 @@ def make_bottom_hole_shape(obj: gft.HoleMixin) -> Part.Shape:
             p.recompute()
 
             p_wire: Part.Wire = p.Shape
-            magnet_hole_shape = Part.Face(p_wire).extrude(
-                fc.Vector(0, 0, obj.MagnetHoleDepth)
-            )
+            magnet_hole_shape = Part.Face(p_wire).extrude(fc.Vector(0, 0, obj.MagnetHoleDepth))
             fc.ActiveDocument.removeObject(p.Name)
         else:
             magnet_hole_shape = Part.makeCylinder(
@@ -662,8 +647,7 @@ def make_bottom_hole_shape(obj: gft.HoleMixin) -> Part.Shape:
         )
         arc_pt_off_x = (
             math.sqrt(
-                ((obj.MagnetHoleDiameter / 2) ** 2)
-                - ((obj.ScrewHoleDiameter / 2) ** 2),
+                ((obj.MagnetHoleDiameter / 2) ** 2) - ((obj.ScrewHoleDiameter / 2) ** 2),
             )
         ) * unitmm
         arc_pt_off_y = obj.ScrewHoleDiameter / 2
@@ -696,9 +680,7 @@ def make_bottom_hole_shape(obj: gft.HoleMixin) -> Part.Shape:
     return bottom_hole_shape
 
 
-def _eco_bin_deviders(
-    obj: gft.EcoCompartmentsMixin, xcomp_w: float, ycomp_w: float
-) -> Part.Shape:
+def _eco_bin_deviders(obj: gft.EcoCompartmentsMixin, xcomp_w: float, ycomp_w: float) -> Part.Shape:
     stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else zeromm
 
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
@@ -909,9 +891,7 @@ def make_eco_compartments(
             obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection + base_offset
         ):
             tp_chf_offset = (obj.MagnetHoleDepth + obj.BaseWallThickness) - (
-                obj.BaseProfileBottomChamfer
-                + obj.BaseProfileVerticalSection
-                + base_offset
+                obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection + base_offset
             )
 
     bottom_chamfer = utils.rounded_rectangle_chamfer(
@@ -976,12 +956,12 @@ def make_eco_compartments(
 
     func_fuse = func_fuse.cut(outer_trim2)
 
-    xcomp_w = (
-        obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness
-    ) / (obj.xDividers + 1)
-    ycomp_w = (
-        obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness
-    ) / (obj.yDividers + 1)
+    xcomp_w = (obj.xTotalWidth - obj.WallThickness * 2 - obj.xDividers * obj.DividerThickness) / (
+        obj.xDividers + 1
+    )
+    ycomp_w = (obj.yTotalWidth - obj.WallThickness * 2 - obj.yDividers * obj.DividerThickness) / (
+        obj.yDividers + 1
+    )
     if obj.xDividers > 0 or obj.yDividers > 0:
         func_fuse = func_fuse.cut(_eco_bin_deviders(obj, xcomp_w, ycomp_w))
 
@@ -1128,9 +1108,7 @@ def make_complex_bin_base(
     top_chamfer = utils.rounded_rectangle_chamfer(
         x_vert_width,
         y_vert_width,
-        -obj.TotalHeight
-        + obj.BaseProfileBottomChamfer
-        + obj.BaseProfileVerticalSection,
+        -obj.TotalHeight + obj.BaseProfileBottomChamfer + obj.BaseProfileVerticalSection,
         obj.BaseProfileTopChamfer,
         obj.BinVerticalRadius,
     )
@@ -1163,18 +1141,14 @@ def blank_bin_recessed_top_properties(obj: fc.DocumentObject) -> None:
     ).RecessedTopDepth = const.RECESSED_TOP_DEPTH
 
 
-def make_blank_bin_recessed_top(
-    obj: fc.DocumentObject, bin_inside_shape: Part.Wire
-) -> Part.Shape:
+def make_blank_bin_recessed_top(obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
     """Generate Rectanble layout and calculate relevant parameters."""
     face = Part.Face(bin_inside_shape)
     fuse_total = face.extrude(fc.Vector(0, 0, -obj.RecessedTopDepth))
     return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-def bin_bottom_holes_properties(
-    obj: fc.DocumentObject, *, magnet_holes_default: bool
-) -> None:
+def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default: bool) -> None:
     """Create bin solid mid section.
 
     Args:
@@ -1291,20 +1265,14 @@ def make_bin_bottom_holes(
 def _stacking_lip_profile(obj: gft.StackingLipMixin) -> Part.Wire:
     """Create stacking lip profile wire."""
     ## Calculated Values
-    obj.StackingLipTopChamfer = (
-        obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
-    )
+    obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
     x1 = obj.Clearance
     x2 = x1 + obj.StackingLipTopLedge
     x3 = x2 + obj.StackingLipTopChamfer
     x4 = x3 + obj.StackingLipBottomChamfer
     x5 = obj.Clearance + obj.WallThickness
     y = obj.yGridSize / 2
-    z1 = (
-        obj.StackingLipBottomChamfer
-        + obj.StackingLipVerticalSection
-        + obj.StackingLipTopChamfer
-    )
+    z1 = obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection + obj.StackingLipTopChamfer
     z2 = obj.StackingLipBottomChamfer + obj.StackingLipVerticalSection
     z3 = obj.StackingLipBottomChamfer
     z4 = -obj.StackingLipVerticalSection
@@ -1511,11 +1479,7 @@ def make_stacking_lip(
         )
         base = _stacking_lip_plate(obj, layout)
         cover = cover.cut(base)
-        offset = (
-            obj.StackingLipTopLedge
-            + obj.StackingLipTopChamfer
-            + obj.StackingLipBottomChamfer
-        )
+        offset = obj.StackingLipTopLedge + obj.StackingLipTopChamfer + obj.StackingLipBottomChamfer
         cutout = utils.rounded_rectangle_extrude(
             obj.xTotalWidth - offset * 2,
             obj.yTotalWidth - offset * 2,
@@ -1536,9 +1500,7 @@ def make_stacking_lip(
                 obj.yTotalWidth - chamfer_offset * 2,
                 height - obj.StackingLipNotchesRecess,
                 obj.StackingLipNotchesRecess,
-                obj.BinOuterRadius
-                - obj.StackingLipTopLedge
-                - obj.StackingLipNotchesRecess,
+                obj.BinOuterRadius - obj.StackingLipTopLedge - obj.StackingLipNotchesRecess,
             ).translate(
                 fc.Vector(
                     obj.xTotalWidth / 2 + obj.Clearance,
@@ -1549,9 +1511,7 @@ def make_stacking_lip(
 
         if obj.StackingLipNotchesChamfer > 0:
             chamfer_offset = (
-                obj.StackingLipTopLedge
-                + obj.StackingLipTopChamfer
-                + obj.StackingLipBottomChamfer
+                obj.StackingLipTopLedge + obj.StackingLipTopChamfer + obj.StackingLipBottomChamfer
             )
             cutout_chamfer = utils.rounded_rectangle_chamfer(
                 obj.xTotalWidth - chamfer_offset * 2,

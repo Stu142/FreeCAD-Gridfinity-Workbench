@@ -68,9 +68,7 @@ def _grid_size_properties(obj: fc.DocumentObject) -> None:
     ).yGridSize = const.Y_GRID_SIZE
 
 
-def rectangle_layout_properties(
-    obj: fc.DocumentObject, *, baseplate_default: bool
-) -> None:
+def rectangle_layout_properties(obj: fc.DocumentObject, *, baseplate_default: bool) -> None:
     """Create Rectangle Layout.
 
     Args:
@@ -133,9 +131,7 @@ def make_rectangle_layout(obj: RectangleLayoutMixin) -> list[list[bool]]:
     return [[True] * obj.yGridUnits for x in range(obj.xGridUnits)]
 
 
-def custom_shape_layout_properties(
-    obj: fc.DocumentObject, *, baseplate_default: bool
-) -> None:
+def custom_shape_layout_properties(obj: fc.DocumentObject, *, baseplate_default: bool) -> None:
     """Add relevant properties for a custom shape gridfinity object.
 
     Args:
@@ -189,9 +185,5 @@ def make_custom_shape_layout(obj: LayoutMixin, layout: list[list[bool]]) -> None
         obj.xTotalWidth = (x_max_grid + 1 - x_min_grid) * obj.xGridSize
         obj.yTotalWidth = (y_max_grid + 1 - y_min_grid) * obj.yGridSize
     else:
-        obj.xTotalWidth = (
-            x_max_grid + 1 - x_min_grid
-        ) * obj.xGridSize - obj.Clearance * 2
-        obj.yTotalWidth = (
-            y_max_grid + 1 - y_min_grid
-        ) * obj.yGridSize - obj.Clearance * 2
+        obj.xTotalWidth = (x_max_grid + 1 - x_min_grid) * obj.xGridSize - obj.Clearance * 2
+        obj.yTotalWidth = (y_max_grid + 1 - y_min_grid) * obj.yGridSize - obj.Clearance * 2
