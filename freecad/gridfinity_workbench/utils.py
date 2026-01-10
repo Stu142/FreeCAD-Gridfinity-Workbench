@@ -13,7 +13,6 @@ import FreeCAD as fc  # noqa:N813
 import FreeCADGui as fcg  # noqa: N813
 import Part
 
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
 

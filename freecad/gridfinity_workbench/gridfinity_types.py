@@ -1,6 +1,6 @@
-"""Type declarations for casting"""
+"""Type declarations for casting."""
 
-# ruff: noqa: D101, D102, D107, N815
+# ruff: noqa: D101, N815
 
 import typing
 from typing import Final, TypeVar
@@ -148,5 +148,9 @@ class EcoBinObject(
 GridfinityObject = TypeVar("GridfinityObject", bound=fc.DocumentObject)
 
 
-def cast(type: type[GridfinityObject], obj: fc.DocumentObject) -> GridfinityObject:
-    return typing.cast(GridfinityObject, typing.cast(object, obj))
+def cast(
+    gftype: type[GridfinityObject],  # noqa: ARG001
+    obj: fc.DocumentObject,
+) -> GridfinityObject:
+    """Casts DocumentObject to gridfinity specific object with additional properties."""
+    return typing.cast("GridfinityObject", typing.cast("object", obj))

@@ -1,23 +1,17 @@
 """Module containing gridfinity feature constructions."""
 
-# ruff: noqa: D101, D102, D107
 import math
-import typing
 from typing import Literal
 
 import FreeCAD as fc  # noqa: N813
 import Part
 
-from . import const
+from . import const, utils
 from . import gridfinity_types as gft
 from . import label_shelf as label_shelf_module
-from . import utils
-from .grid_initial_layout import GridfinityObject
 
 unitmm = fc.Units.Quantity("1 mm")
 zeromm = fc.Units.Quantity("0 mm")
-# unitmm = 1  # mm
-# zeromm = 0  # mm
 
 ECO_USABLE_HEIGHT = 14
 SMALL_NUMBER = 0.01
@@ -88,7 +82,10 @@ def label_shelf_properties(obj: fc.DocumentObject, *, label_style_default: str) 
     ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
 
 
-def make_label_shelf(obj: gft.CompartmentsMixin, bintype: Literal["eco", "standard"]) -> Part.Shape:
+def make_label_shelf(
+    obj: gft.CompartmentsMixin,
+    bintype: Literal["eco", "standard"],
+) -> Part.Shape:
     """Create label shelf."""
     if (
         bintype == "eco"
@@ -96,7 +93,9 @@ def make_label_shelf(obj: gft.CompartmentsMixin, bintype: Literal["eco", "standa
         and obj.LabelShelfStyle != "Overhang"
     ):
         obj.LabelShelfStyle = "Overhang"
-        fc.Console.PrintWarning("Label shelf style set to Overhang due to low bin height\n")
+        fc.Console.PrintWarning(
+            "Label shelf style set to Overhang due to low bin height\n",
+        )
 
     xdiv = obj.xDividers + 1
     ydiv = obj.yDividers + 1
@@ -141,7 +140,12 @@ def make_label_shelf(obj: gft.CompartmentsMixin, bintype: Literal["eco", "standa
     )
 
     if height > obj.UsableHeight:
-        boundingbox = Part.makeBox(width, length, height, fc.Vector(0, 0, -obj.UsableHeight))
+        boundingbox = Part.makeBox(
+            width,
+            length,
+            height,
+            fc.Vector(0, 0, -obj.UsableHeight),
+        )
         funcfuse = funcfuse.common(boundingbox)
 
     funcfuse = utils.copy_in_grid(
@@ -468,7 +472,11 @@ def _make_compartments_with_deviders(
     return func_fuse
 
 
-def compartments_properties(obj: fc.DocumentObject, x_div_default: int, y_div_default: int) -> None:
+def compartments_properties(
+    obj: fc.DocumentObject,
+    x_div_default: int,
+    y_div_default: int,
+) -> None:
     """Create bin compartments with the option for dividers.
 
     Args:
@@ -538,7 +546,10 @@ def compartments_properties(obj: fc.DocumentObject, x_div_default: int, y_div_de
     )
 
 
-def make_compartments(obj: gft.CompartmentsMixin, bin_inside_solid: Part.Shape) -> Part.Shape:
+def make_compartments(
+    obj: gft.CompartmentsMixin,
+    bin_inside_solid: Part.Shape,
+) -> Part.Shape:
     """Create compartment cutout objects.
 
     Args:
@@ -607,7 +618,9 @@ def make_bottom_hole_shape(obj: gft.HoleMixin) -> Part.Shape:
             p.recompute()
 
             p_wire: Part.Wire = p.Shape
-            magnet_hole_shape = Part.Face(p_wire).extrude(fc.Vector(0, 0, obj.MagnetHoleDepth))
+            magnet_hole_shape = Part.Face(p_wire).extrude(
+                fc.Vector(0, 0, obj.MagnetHoleDepth),
+            )
             fc.ActiveDocument.removeObject(p.Name)
         else:
             magnet_hole_shape = Part.makeCylinder(
@@ -680,7 +693,11 @@ def make_bottom_hole_shape(obj: gft.HoleMixin) -> Part.Shape:
     return bottom_hole_shape
 
 
-def _eco_bin_deviders(obj: gft.EcoCompartmentsMixin, xcomp_w: float, ycomp_w: float) -> Part.Shape:
+def _eco_bin_deviders(
+    obj: gft.EcoCompartmentsMixin,
+    xcomp_w: float,
+    ycomp_w: float,
+) -> Part.Shape:
     stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else zeromm
 
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
@@ -1141,14 +1158,21 @@ def blank_bin_recessed_top_properties(obj: fc.DocumentObject) -> None:
     ).RecessedTopDepth = const.RECESSED_TOP_DEPTH
 
 
-def make_blank_bin_recessed_top(obj: fc.DocumentObject, bin_inside_shape: Part.Wire) -> Part.Shape:
+def make_blank_bin_recessed_top(
+    obj: fc.DocumentObject,
+    bin_inside_shape: Part.Wire,
+) -> Part.Shape:
     """Generate Rectanble layout and calculate relevant parameters."""
     face = Part.Face(bin_inside_shape)
     fuse_total = face.extrude(fc.Vector(0, 0, -obj.RecessedTopDepth))
     return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default: bool) -> None:
+def bin_bottom_holes_properties(
+    obj: fc.DocumentObject,
+    *,
+    magnet_holes_default: bool,
+) -> None:
     """Create bin solid mid section.
 
     Args:
@@ -1435,27 +1459,31 @@ def stacking_lip_properties(
         "App::PropertyLength",
         "StackingLipNotchesChamfer",
         "GridfinityNonStandard",
-        f"Chamfer on the notches of the Stacking lip<br> <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_CHAMFER} mm ",
+        "Chamfer on the notches of the Stacking lip<br>"
+        f" <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_CHAMFER} mm ",
     ).StackingLipNotchesChamfer = const.STACKING_LIP_NOTCHES_CHAMFER
     obj.addProperty(
         "App::PropertyLength",
         "StackingLipNotchesRecess",
         "GridfinityNonStandard",
-        f"Recess of the notches of the Stacking lip<br> <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_RECESS} mm ",
+        "Recess of the notches of the Stacking lip<br>"
+        f" <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_RECESS} mm ",
     ).StackingLipNotchesRecess = const.STACKING_LIP_NOTCHES_RECESS
 
 
 def make_stacking_lip(
-    obj: gft.StackingLipMixin, layout: GridfinityLayout, bin_outside_shape: Part.Wire
+    obj: gft.StackingLipMixin,
+    layout: GridfinityLayout,
+    bin_outside_shape: Part.Wire,
 ) -> Part.Shape:
     """Create stacking lip based on input bin shape.
 
     Args:
         obj (FreeCAD.DocumentObject): DocumentObject
+        layout (GridfinityLayout): layout of the bin
         bin_outside_shape (Part.Wire): exterior wall of the bin
 
     """
-
     wire = _stacking_lip_profile(obj)
     stacking_lip = Part.Wire(bin_outside_shape).makePipe(wire)
     stacking_lip = Part.makeSolid(stacking_lip)
@@ -1475,7 +1503,7 @@ def make_stacking_lip(
             fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
-            )
+            ),
         )
         base = _stacking_lip_plate(obj, layout)
         cover = cover.cut(base)
@@ -1490,7 +1518,7 @@ def make_stacking_lip(
             fc.Vector(
                 obj.xTotalWidth / 2 + obj.Clearance,
                 obj.yTotalWidth / 2 + obj.Clearance,
-            )
+            ),
         )
 
         if obj.StackingLipNotchesRecess > 0:
@@ -1505,7 +1533,7 @@ def make_stacking_lip(
                 fc.Vector(
                     obj.xTotalWidth / 2 + obj.Clearance,
                     obj.yTotalWidth / 2 + obj.Clearance,
-                )
+                ),
             )
             cutout = cutout.fuse(cutout_recess)
 
@@ -1526,7 +1554,7 @@ def make_stacking_lip(
                 fc.Vector(
                     obj.xTotalWidth / 2 + obj.Clearance,
                     obj.yTotalWidth / 2 + obj.Clearance,
-                )
+                ),
             )
             cutout = cutout.fuse(cutout_chamfer)
 
