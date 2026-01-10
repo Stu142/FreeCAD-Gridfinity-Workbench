@@ -163,10 +163,7 @@ class FullBin(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         bin_outside_shape.translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-            ),
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
         )
 
         bin_inside_shape = utils.create_rounded_rectangle(
@@ -176,24 +173,17 @@ class FullBin(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
         bin_inside_shape.translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-            ),
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
         )
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
         fuse_total = fuse_total.fuse(feat.make_complex_bin_base(obj, layout))
 
         if obj.RecessedTopDepth > 0:
-            fuse_total = fuse_total.cut(
-                feat.make_blank_bin_recessed_top(obj, bin_inside_shape),
-            )
+            fuse_total = fuse_total.cut(feat.make_blank_bin_recessed_top(obj, bin_inside_shape))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(
-                feat.make_stacking_lip(obj, layout, bin_outside_shape),
-            )
+            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout, bin_outside_shape))
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -268,10 +258,7 @@ class StorageBin(FoundationGridfinity):
             obj.BinOuterRadius,
         )
         bin_outside_shape.translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-            ),
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
         )
 
         bin_inside_shape = utils.create_rounded_rectangle(
@@ -281,10 +268,7 @@ class StorageBin(FoundationGridfinity):
             obj.BinOuterRadius - obj.WallThickness,
         )
         bin_inside_shape.translate(
-            fc.Vector(
-                obj.xTotalWidth / 2 + obj.Clearance,
-                obj.yTotalWidth / 2 + obj.Clearance,
-            ),
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
         )
 
         fuse_total = feat.make_bin_solid_mid_section(obj, bin_outside_shape)
@@ -296,9 +280,7 @@ class StorageBin(FoundationGridfinity):
         fuse_total = fuse_total.cut(feat.make_compartments(obj, compartments))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(
-                feat.make_stacking_lip(obj, layout, bin_outside_shape),
-            )
+            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout, bin_outside_shape))
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -399,9 +381,7 @@ class EcoBin(FoundationGridfinity):
                 obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness,
             ),
         )
-        fuse_total = fuse_total.cut(
-            feat.make_eco_compartments(obj, layout, compartment_solid),
-        )
+        fuse_total = fuse_total.cut(feat.make_eco_compartments(obj, layout, compartment_solid))
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -435,9 +415,7 @@ class Baseplate(FoundationGridfinity):
             0,
             obj.BinOuterRadius,
         )
-        baseplate_outside_shape.translate(
-            fc.Vector(obj.xTotalWidth / 2, obj.yTotalWidth / 2, 0),
-        )
+        baseplate_outside_shape.translate(fc.Vector(obj.xTotalWidth / 2, obj.yTotalWidth / 2, 0))
 
         solid_shape = baseplate_feat.make_solid_shape(
             obj,
@@ -471,9 +449,7 @@ class MagnetBaseplate(FoundationGridfinity):
             -obj.MagnetHoleDepth - obj.MagnetBase,
             obj.BinOuterRadius,
         )
-        baseplate_outside_shape.translate(
-            fc.Vector(obj.xTotalWidth / 2, obj.yTotalWidth / 2, 0),
-        )
+        baseplate_outside_shape.translate(fc.Vector(obj.xTotalWidth / 2, obj.yTotalWidth / 2, 0))
 
         solid_shape = baseplate_feat.make_solid_shape(
             obj,
@@ -526,9 +502,7 @@ class ScrewTogetherBaseplate(FoundationGridfinity):
         fuse_total = solid_shape.cut(fuse_total)
         fuse_total = fuse_total.cut(baseplate_feat.make_magnet_holes(obj, layout))
         fuse_total = fuse_total.cut(baseplate_feat.make_center_cut(obj, layout))
-        fuse_total = fuse_total.cut(
-            baseplate_feat.make_screw_bottom_chamfer(obj, layout),
-        )
+        fuse_total = fuse_total.cut(baseplate_feat.make_screw_bottom_chamfer(obj, layout))
         fuse_total = fuse_total.cut(baseplate_feat.make_connection_holes(obj, layout))
 
         return fuse_total
