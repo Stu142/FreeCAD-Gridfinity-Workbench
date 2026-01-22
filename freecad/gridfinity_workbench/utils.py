@@ -115,23 +115,22 @@ def copy_in_grid(
     return multi_fuse(shapes)
 
 
-def curve_to_wire(list_of_items: Sequence[Part.TrimmedCurve]) -> Part.Wire:
-    """Make a wire from curves (line,linesegment,arc,ect).
+def curve_to_face(curves: Sequence[Part.TrimmedCurve]) -> Part.Face:
+    """Make a face from curves (line,linesegment,arc,ect).
 
-    This function accepts all curves and makes it into a wire. Note that the wire should be
-    closed.
+    Note that the sequence should be a closed curve -- the end of last curve should be the beginning
+    of the first one.
 
     Args:
-        list_of_items (list[Part.LineSegment]): List of items to convert in a wire.
-
-    Returns:
-        Part.Wire: The created wire.
+        curves (Sequence[Part.LineSegment]): Sequence of corves to that enclose the face.
 
     """
-    if not list_of_items:
+    if not curves:
         raise ValueError("List is empty")
+    if not curves[0].StartPoint.isEqual(curves[-1].EndPoint, 1e-5):
+        raise ValueError("The sequence is not a closed curve")
 
-    return Part.Wire([item.toShape() for item in list_of_items])
+    return Part.Face(Part.Wire([item.toShape() for item in curves]))
 
 
 def create_rounded_rectangle(
