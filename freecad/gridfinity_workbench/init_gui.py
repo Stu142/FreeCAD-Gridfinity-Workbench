@@ -6,8 +6,9 @@ The file name is given by FreeCAD. FreeCAD uses this file to initialize GUI comp
 from collections import OrderedDict
 from pathlib import Path
 
-import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
+
+import FreeCAD as fc  # noqa: N813
 
 from . import commands
 

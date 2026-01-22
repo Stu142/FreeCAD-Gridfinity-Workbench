@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import math
 
-import FreeCAD as fc  # noqa: N813
 import Part
+
+import FreeCAD as fc  # noqa: N813
 
 from . import const, utils
 
