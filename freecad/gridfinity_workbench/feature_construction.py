@@ -332,7 +332,7 @@ def _corner_fillets(
         translation=fc.Vector(
             obj.Clearance + obj.WallThickness + xcomp_width,
             obj.Clearance + obj.WallThickness,
-            -obj.LabelShelfStackingOffset,
+            -obj.LabelShelfStackingOffset if obj.StackingLip else 0,
         ),
     )
     top_right_fillet = make_fillet(
@@ -340,7 +340,7 @@ def _corner_fillets(
         translation=fc.Vector(
             obj.Clearance + obj.WallThickness + xcomp_width,
             obj.Clearance + obj.WallThickness + ycomp_width,
-            -obj.LabelShelfStackingOffset,
+            -obj.LabelShelfStackingOffset if obj.StackingLip else 0,
         ),
     )
     top_left_fillet = make_fillet(
@@ -348,7 +348,7 @@ def _corner_fillets(
         translation=fc.Vector(
             obj.Clearance + obj.WallThickness,
             obj.Clearance + obj.WallThickness + ycomp_width,
-            -obj.LabelShelfStackingOffset,
+            -obj.LabelShelfStackingOffset if obj.StackingLip else 0,
         ),
     )
     bottom_left_fillet = make_fillet(
@@ -356,7 +356,7 @@ def _corner_fillets(
         translation=fc.Vector(
             obj.Clearance + obj.WallThickness,
             obj.Clearance + obj.WallThickness,
-            -obj.LabelShelfStackingOffset,
+            -obj.LabelShelfStackingOffset if obj.StackingLip else 0,
         ),
     )
 
