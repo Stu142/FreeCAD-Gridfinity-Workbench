@@ -264,7 +264,7 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
 
     funcfuse = utils.copy_and_translate(scoop, vec_list)
 
-    if obj.StackingLip:  # Scoop is offset from the wall
+    if obj.StackingLip and stacking_lip_offset.Value > 0:  # Scoop is offset from the wall
         scoopbox = Part.makeBox(
             stacking_lip_offset.Value,
             obj.yTotalWidth - obj.WallThickness * 2,
@@ -1184,13 +1184,13 @@ def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:
         fc.Vector(x4, y, 0),
         fc.Vector(x4, y, z4),
         fc.Vector(x5, y, z5),
-        fc.Vector(x5, y, 0),
+        fc.Vector(x1, y, z5),
     ]
     if obj.StackingLipThinStyle:
         st[4:] = [  # Modify the bottom section of the stacking lip profile
             fc.Vector(x3, y, 0),
-            fc.Vector(x5, y, (x5 - x3)),  # 45 degree chamfer under the lip
-            fc.Vector(x5, y, 0),
+            fc.Vector(x5, y, -abs(x5.Value - x3.Value)),  # 45 degree chamfer under the lip
+            fc.Vector(x1, y, -abs(x5.Value - x3.Value)),
         ]
 
     stacking_lip_profile = Part.Wire(Part.Shape(utils.loop(st)).Edges)

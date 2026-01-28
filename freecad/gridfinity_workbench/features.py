@@ -202,7 +202,7 @@ class StorageBin(FoundationGridfinity):
             obj.xTotalWidth - obj.WallThickness * 2,
             obj.yTotalWidth - obj.WallThickness * 2,
             0,
-            obj.BinOuterRadius - obj.WallThickness,
+            max(obj.BinOuterRadius - obj.WallThickness, 0.5 * unitmm),
         )
         bin_inside_shape.translate(
             fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
