@@ -77,6 +77,13 @@ def lid_properties(obj: fc.DocumentObject) -> None:
     ).HandleOffsetY = const.LID_HANDLE_OFFSET_Y
 
     obj.addProperty(
+        "App::PropertyAngle",
+        "HandleRotation",
+        "GridfinityLid",
+        "Handle rotation angle <br> <br> default = 0 deg",
+    ).HandleRotation = const.LID_HANDLE_ROTATION
+
+    obj.addProperty(
         "App::PropertyLength",
         "HandleCornerRadius",
         "GridfinityLid",
@@ -364,6 +371,8 @@ def _add_handle(
         0,
     )
     handle = _make_handle_shape(obj, center_x, center_y)
+    if obj.HandleRotation != 0:
+        handle.rotate(fc.Vector(center_x, center_y, 0), fc.Vector(0, 0, 1), obj.HandleRotation)
     handle = _apply_handle_top_fillet(handle, obj.HandleTopRadius)
     fused = lid_shape.fuse(handle)
     return _apply_handle_base_fillet(
