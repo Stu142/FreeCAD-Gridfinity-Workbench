@@ -8,7 +8,7 @@ import FreeCAD as fc  # noqa: N813
 import Part
 
 from . import baseplate_feature_construction as baseplate_feat
-from . import check_version, const, grid_initial_layout, label_shelf, utils
+from . import check_version, const, grid_initial_layout, label_shelf, lid_feature_construction as lid_feat, utils
 from . import feature_construction as feat
 from .custom_shape_features import (
     clean_up_layout,
@@ -333,6 +333,21 @@ class EcoBin(FoundationGridfinity):
             fuse_total = fuse_total.fuse(feat.make_label_shelf(obj, "eco"))
 
         return fuse_total.removeSplitter()
+
+
+class Lid(FoundationGridfinity):
+    """Gridfinity lid object with explicit parameters."""
+
+    def __init__(self, obj: fc.DocumentObject) -> None:
+        super().__init__(obj)
+
+        grid_initial_layout.rectangle_layout_properties(obj, baseplate_default=False)
+        lid_feat.lid_base_properties(obj)
+        lid_feat.lid_properties(obj)
+
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        grid_initial_layout.make_rectangle_layout(obj)
+        return lid_feat.make_lid_rect(obj)
 
 
 class Baseplate(FoundationGridfinity):
@@ -950,6 +965,38 @@ class CustomScrewTogetherBaseplate(FoundationGridfinity):
     def loads(self, state: dict) -> None:
         """Needed for JSON Serialization when opening a file containing gridfinity object."""
         self.layout = state["layout"]
+
+
+class LidFromSelection(FoundationGridfinity):
+    """Gridfinity lid object created from an existing bin selection."""
+
+    def __init__(self, obj: fc.DocumentObject, attachment: fc.DocumentObject) -> None:
+        super().__init__(obj)
+
+        obj.addProperty(
+            "App::PropertyLink",
+            "Attachment",
+            "Base",
+            "Object this lid is attached to.",
+            read_only=True,
+        ).Attachment = attachment
+
+        lid_feat.lid_properties(obj)
+        lid_feat.add_attachment_reference_properties(obj)
+        lid_feat.bind_attachment_expressions(obj)
+
+        obj.Proxy = self
+
+    def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
+        attachment = obj.Attachment
+        if attachment is None:
+            raise RuntimeError("Lid must be created from a Gridfinity bin selection.")
+
+        layout = getattr(getattr(attachment, "Proxy", None), "layout", None)
+        if layout is not None:
+            return lid_feat.make_lid_custom(obj, layout)
+
+        return lid_feat.make_lid_rect(obj)
 
 
 class StandaloneLabelShelf:
