@@ -1524,6 +1524,7 @@ def make_stacking_lip(
     stacking_lip = stacking_lip.translate(
         fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset),
     )
+
     return stacking_lip
 
 
@@ -1594,9 +1595,7 @@ def bin_solid_mid_section_properties(
     )
 
 
-def make_bin_solid_mid_section(
-    obj: fc.DocumentObject, bin_outside_shape: Part.Wire,
-) -> Part.Shape:
+def make_bin_solid_mid_section(obj: fc.DocumentObject, bin_outside_shape: Part.Wire) -> Part.Shape:
     """Generate bin solid mid section.
 
     Args:
