@@ -7,7 +7,6 @@ import FreeCAD as fc  # noqa: N813
 import Part
 
 from . import const, utils
-from . import gridfinity_types as gft
 from . import label_shelf as label_shelf_module
 
 unitmm = fc.Units.Quantity("1 mm")
@@ -82,7 +81,7 @@ def label_shelf_properties(obj: fc.DocumentObject, *, label_style_default: str) 
     ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
 
 
-def make_label_shelf(obj: gft.CompartmentsMixin, bintype: Literal["eco", "standard"]) -> Part.Shape:
+def make_label_shelf(obj: fc.DocumentObject, bintype: Literal["eco", "standard"]) -> Part.Shape:
     """Create label shelf."""
     if (
         bintype == "eco"
@@ -193,7 +192,7 @@ def scoop_properties(obj: fc.DocumentObject, *, scoop_default: bool) -> None:
     ).Scoop = scoop_default
 
 
-def make_scoop(obj: gft.ScoopMixin) -> Part.Shape:
+def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
     """Create scoop."""
     scooprad1 = obj.ScoopRadius + unitmm
     scooprad2 = obj.ScoopRadius + unitmm
@@ -311,7 +310,7 @@ def make_scoop(obj: gft.ScoopMixin) -> Part.Shape:
 
 
 def _corner_fillets(
-    obj: gft.CompartmentsMixin,
+    obj: fc.DocumentObject,
     xcomp_width: float,
     ycomp_width: float,
 ) -> Part.Shape:
@@ -385,7 +384,7 @@ def _corner_fillets(
 
 
 def _make_compartments_no_deviders(
-    obj: gft.CompartmentsMixin,
+    obj: fc.DocumentObject,
     func_fuse: Part.Shape,
 ) -> Part.Shape:
     # Fillet Bottom edges
@@ -401,7 +400,7 @@ def _make_compartments_no_deviders(
 
 
 def _make_compartments_with_deviders(
-    obj: gft.CompartmentsMixin,
+    obj: fc.DocumentObject,
     func_fuse: Part.Shape,
 ) -> Part.Shape:
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
@@ -532,7 +531,7 @@ def compartments_properties(obj: fc.DocumentObject, x_div_default: int, y_div_de
     )
 
 
-def make_compartments(obj: gft.CompartmentsMixin, bin_inside_solid: Part.Shape) -> Part.Shape:
+def make_compartments(obj: fc.DocumentObject, bin_inside_solid: Part.Shape) -> Part.Shape:
     """Create compartment cutout objects.
 
     Args:
@@ -580,7 +579,7 @@ def make_compartments(obj: gft.CompartmentsMixin, bin_inside_solid: Part.Shape) 
     return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-def make_bottom_hole_shape(obj: gft.HoleMixin) -> Part.Shape:
+def make_bottom_hole_shape(obj: fc.DocumentObject) -> Part.Shape:
     """Create bottom hole shape.
 
     Returns one combined shape containing of the different hole types.
@@ -674,7 +673,7 @@ def make_bottom_hole_shape(obj: gft.HoleMixin) -> Part.Shape:
     return bottom_hole_shape
 
 
-def _eco_bin_deviders(obj: gft.EcoCompartmentsMixin, xcomp_w: float, ycomp_w: float) -> Part.Shape:
+def _eco_bin_deviders(obj: fc.DocumentObject, xcomp_w: float, ycomp_w: float) -> Part.Shape:
     stackingoffset = -obj.LabelShelfStackingOffset if obj.StackingLip else zeromm
 
     xdivheight = obj.xDividerHeight if obj.xDividerHeight != 0 else obj.TotalHeight
@@ -723,7 +722,7 @@ def _eco_bin_deviders(obj: gft.EcoCompartmentsMixin, xcomp_w: float, ycomp_w: fl
     return assembly.translate(fc.Vector(obj.xGridSize / 2, obj.yGridSize / 2))
 
 
-def eco_error_check(obj: gft.EcoCompartmentsMixin) -> None:
+def eco_error_check(obj: fc.DocumentObject) -> None:
     """Check if eco dividers are possible with current parameters."""
     # Divider Minimum Height
 
@@ -820,7 +819,7 @@ def eco_compartments_properties(obj: fc.DocumentObject) -> None:
 
 
 def make_eco_compartments(
-    obj: gft.EcoCompartmentsMixin,
+    obj: fc.DocumentObject,
     layout: GridfinityLayout,
     bin_inside_solid: Part.Shape,
 ) -> Part.Shape:
@@ -1048,12 +1047,12 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
 
 
 def make_complex_bin_base(
-    obj: gft.BaseMixin,
+    obj: fc.DocumentObject,
     layout: GridfinityLayout,
 ) -> Part.Shape:
     """Creaet complex shaped bin base."""
     if obj.Baseplate:
-        obj = gft.cast(gft.BaseplateMixin, obj)
+        obj = fc.DocumentObject, obj)
         baseplate_size_adjustment = obj.BaseplateTopLedgeWidth - obj.Clearance
     else:
         baseplate_size_adjustment = zeromm
@@ -1228,7 +1227,7 @@ def bin_bottom_holes_properties(obj: fc.DocumentObject, *, magnet_holes_default:
 
 
 def make_bin_bottom_holes(
-    obj: gft.HoleMixin,
+    obj: fc.DocumentObject,
     layout: GridfinityLayout,
 ) -> Part.Shape:
     """Make bin bottom holes."""
@@ -1247,7 +1246,7 @@ def make_bin_bottom_holes(
     return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
-def _stacking_lip_profile(obj: gft.StackingLipMixin) -> Part.Wire:
+def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:
     """Create stacking lip profile wire."""
     ## Calculated Values
     obj.StackingLipTopChamfer = obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
@@ -1289,7 +1288,7 @@ def _stacking_lip_profile(obj: gft.StackingLipMixin) -> Part.Wire:
 
 
 def _stacking_lip_plate(
-    obj: gft.StackingLipMixin,
+    obj: fc.DocumentObject,
     layout: GridfinityLayout,
 ) -> Part.Shape:
     """Creaet complex shaped bin base."""
@@ -1433,7 +1432,7 @@ def stacking_lip_properties(
 
 
 def make_stacking_lip(
-    obj: gft.StackingLipMixin,
+    obj: fc.DocumentObject,
     layout: GridfinityLayout,
     bin_outside_shape: Part.Wire,
 ) -> Part.Shape:
@@ -1597,7 +1596,7 @@ def bin_solid_mid_section_properties(
 
 
 def make_bin_solid_mid_section(
-    obj: gft.SolidMidSectionMixin, bin_outside_shape: Part.Wire,
+    obj: fc.DocumentObject, bin_outside_shape: Part.Wire,
 ) -> Part.Shape:
     """Generate bin solid mid section.
 

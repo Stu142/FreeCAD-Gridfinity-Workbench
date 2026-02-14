@@ -18,13 +18,6 @@ from .custom_shape_features import (
     cut_outside_shape,
     vertical_edge_fillet,
 )
-from .gridfinity_types import (
-    BaseplateObject,
-    EcoBinObject,
-    FullBinObject,
-    StorageBinObject,
-    cast,
-)
 from .version import __version__
 
 
