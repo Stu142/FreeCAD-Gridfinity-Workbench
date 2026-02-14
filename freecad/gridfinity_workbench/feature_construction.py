@@ -1052,7 +1052,6 @@ def make_complex_bin_base(
 ) -> Part.Shape:
     """Creaet complex shaped bin base."""
     if obj.Baseplate:
-        obj = fc.DocumentObject, obj)
         baseplate_size_adjustment = obj.BaseplateTopLedgeWidth - obj.Clearance
     else:
         baseplate_size_adjustment = zeromm

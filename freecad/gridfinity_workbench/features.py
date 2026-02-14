@@ -146,7 +146,6 @@ class FullBin(FoundationGridfinity):
         feat.bin_base_values_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        obj = cast(FullBinObject, obj)
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -236,7 +235,6 @@ class StorageBin(FoundationGridfinity):
         feat.scoop_properties(obj, scoop_default=scoop_default)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        obj = cast(StorageBinObject, obj)
 
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
@@ -322,7 +320,6 @@ class EcoBin(FoundationGridfinity):
         feat.eco_compartments_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        obj = cast(EcoBinObject, obj)
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         bin_outside_shape = utils.create_rounded_rectangle(
@@ -389,7 +386,6 @@ class Baseplate(FoundationGridfinity):
         baseplate_feat.base_values_properties(obj)
 
     def generate_gridfinity_shape(self, obj: fc.DocumentObject) -> Part.Shape:
-        obj = cast(BaseplateObject, obj)
         layout = grid_initial_layout.make_rectangle_layout(obj)
 
         baseplate_outside_shape = utils.create_rounded_rectangle(
