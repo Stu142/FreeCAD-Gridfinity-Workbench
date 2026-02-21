@@ -73,13 +73,18 @@ class GridDialog(QDialog):
             self.offset + self.y * self.spacing,
         )
 
+        self.pen = None
+
     def _to_canvas_point(self, point: QPoint) -> QPoint:
         point.setY(-point.y())
         return self.origin_pos + self.spacing * point
 
     def _from_mouse_pos(self, point: QPoint) -> QPointF:
         relative_pos = point - (self.origin_pos + self.label.pos())
-        return QPointF(relative_pos.x(), -relative_pos.y()) / self.spacing
+        pos = QPointF(relative_pos.x(), -relative_pos.y()) / self.spacing
+        if pos.x() >= 0 and pos.x() < self.x and pos.y() >= 0 and pos.y() < self.y:
+            return pos
+        return None
 
     def _recompute(self) -> None:
         self.pixmap.fill(self.palette().color(QPalette.Window))
@@ -146,10 +151,27 @@ class GridDialog(QDialog):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: D102, N802
         pos = self._from_mouse_pos(event.localPos())
+        if pos is None:
+            return
         x = math.floor(pos.x())
         y = math.floor(pos.y())
-        if x >= 0 and x < self.x and y >= 0 and y < self.y:
-            self.grid_layout[x][y] ^= True
+        self.pen = not self.grid_layout[x][y]
+        self.grid_layout[x][y] = self.pen
+        self._recompute()
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: ARG002, D102, N802
+        self.pen = None
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: D102, N802
+        if self.pen is None:
+            return
+        pos = self._from_mouse_pos(event.localPos())
+        if pos is None:
+            return
+        x = math.floor(pos.x())
+        y = math.floor(pos.y())
+        if self.grid_layout[x][y] != self.pen:
+            self.grid_layout[x][y] = self.pen
             self._recompute()
 
 

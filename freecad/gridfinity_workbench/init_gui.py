@@ -9,6 +9,8 @@ from pathlib import Path
 import FreeCAD as fc  # noqa: N813
 import FreeCADGui as fcg  # noqa: N813
 
+from . import commands
+
 try:
     from FreeCADGui import Workbench
 except ImportError:
@@ -45,8 +47,6 @@ class GridfinityWorkbench(Workbench):
         This function is called at the first activation of the workbench.
         here is the place to import all the commands.
         """
-        from . import commands
-
         fc.Console.PrintMessage("switching to Gridfinity Workbench\n")
 
         workbench_commands = OrderedDict(
