@@ -25,13 +25,10 @@ def migrate_object_version(obj: fc.DocumentObject) -> None:  # noqa: C901
     if check_object_version(obj):
         return
 
-    def versiontuple(v: str) -> tuple[int, ...]:
-        return tuple(map(int, (v.split("."))))
+    ### v0.11.9 Changes ###
 
-    migrated = False
-    if versiontuple(obj.version) < versiontuple("0.11.9"):
-        migrated = True
-        # v0.11.9: Changes to the magnet properties.
+    if hasattr(obj, "MagnetHoles"):
+        # Add properties for the crush ribs to hold magnets.
         if not hasattr(obj, "CrushRibsCount"):
             obj.addProperty(
                 "App::PropertyInteger",
@@ -47,7 +44,7 @@ def migrate_object_version(obj: fc.DocumentObject) -> None:  # noqa: C901
                 "Waviness of crush ribs, from range [0, 1]",
             ).CrushRibsWaviness = (const.CRUSH_RIB_WAVINESS, 0, 1, 0.05)
 
-        # v0.11.9: MagnetRelief property was renamed to MagnetRemoveChannel
+        # MagnetRelief property was renamed to MagnetRemoveChannel
         if not hasattr(obj, "MagnetRemoveChannel"):
             obj.addProperty(
                 "App::PropertyBool",
@@ -58,39 +55,39 @@ def migrate_object_version(obj: fc.DocumentObject) -> None:  # noqa: C901
         if hasattr(obj, "MagnetRelief"):
             obj.removeProperty("MagnetRelief")
 
-    if versiontuple(obj.version) < versiontuple("0.12.0"):
-        migrated = True
-        # v0.12.0: calculation of UsableHeight was changed to use object Expressions.
+    ### v0.12.0 Changes ###
+
+    # Calculation of UsableHeight was changed to use object Expressions.
+    if hasattr(obj, "UsableHeight") and not obj.getExpression("UsableHeight"):
         obj.setExpression("UsableHeight", "TotalHeight - HeightUnitValue")
 
-        # v0.12.0: xGridUnits and yGridUnits were changed from int to float properties.
-        xgridunits = getattr(obj, "xGridUnits", None)
-        if xgridunits is None or isinstance(xgridunits, int):
-            obj.removeProperty("xGridUnits")
-            obj.addProperty(
-                "App::PropertyFloat",
-                "xGridUnits",
-                "Gridfinity",
-                "Number of grid units in the x direction <br> <br> default = 2",
-            ).xGridUnits = float(xgridunits or const.X_GRID_UNITS)
+    # xGridUnits and yGridUnits were changed from int to float properties.
+    if hasattr(obj, "xGridUnits") and isinstance(obj.xGridUnits, int):
+        xgridunits = obj.xGridUnits
+        obj.removeProperty("xGridUnits")
+        obj.addProperty(
+            "App::PropertyFloat",
+            "xGridUnits",
+            "Gridfinity",
+            "Number of grid units in the x direction <br> <br> default = 2",
+        ).xGridUnits = float(xgridunits)
 
-        ygridunits = getattr(obj, "yGridUnits", None)
-        if ygridunits is None or isinstance(ygridunits, int):
-            obj.removeProperty("yGridUnits")
-            obj.addProperty(
-                "App::PropertyFloat",
-                "yGridUnits",
-                "Gridfinity",
-                "Number of grid units in the y direction <br> <br> default = 2",
-            ).yGridUnits = float(ygridunits or const.Y_GRID_UNITS)
+    if hasattr(obj, "yGridUnits") and isinstance(obj.yGridUnits, int):
+        ygridunits = obj.yGridUnits
+        obj.removeProperty("yGridUnits")
+        obj.addProperty(
+            "App::PropertyFloat",
+            "yGridUnits",
+            "Gridfinity",
+            "Number of grid units in the y direction <br> <br> default = 2",
+        ).yGridUnits = float(ygridunits)
+
+    fc.Console.PrintLog(
+        f"Gridfinity Workbench v{__version__}: "
+        f"updating '{obj.Name}' object properties from version v{obj.version}.\n"
+        f"'{obj.Name}' will be saved with v{__version__} properties.\n",
+    )
 
     # Update the version property to the current version after updating the object.
     obj.version = __version__
-
-    if migrated:
-        obj.recompute()  # Force re-evaluation of expressions after updating properties.
-        fc.Console.PrintLog(
-            f"Gridfinity Workbench v{__version__}: "
-            f"updating '{obj.Name}' object properties from version v{obj.version}.\n"
-            f"'{obj.Name}' will be saved with v{__version__} properties.\n",
-        )
+    obj.recompute()  # Force re-evaluation of expressions after updating properties.
