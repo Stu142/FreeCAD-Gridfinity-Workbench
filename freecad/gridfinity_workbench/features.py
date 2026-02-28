@@ -205,7 +205,7 @@ class StorageBin(FoundationGridfinity):
             obj.xTotalWidth - obj.WallThickness * 2,
             obj.yTotalWidth - obj.WallThickness * 2,
             0,
-            obj.BinOuterRadius - obj.WallThickness,
+            max(obj.BinOuterRadius - obj.WallThickness, 0.5 * unitmm),
         )
         bin_inside_shape.translate(
             fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
@@ -999,12 +999,7 @@ class StandaloneLabelShelf:
 
     def execute(self, obj: Part.Feature) -> None:
         width = obj.Width
-        stacking_lip_offset = (
-            obj.Attachment.StackingLipTopChamfer
-            + obj.Attachment.StackingLipTopLedge
-            + obj.Attachment.StackingLipBottomChamfer
-            - obj.Attachment.WallThickness
-        )
+        stacking_lip_offset = feat.calc_stacking_lip_offset(obj.Attachment)
         # Check if the shelf is covered by a stacking lip
         check_point = obj.Placement.Base + obj.Placement.Rotation.multVec(
             fc.Vector(stacking_lip_offset / 2),
