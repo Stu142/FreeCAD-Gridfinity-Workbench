@@ -270,6 +270,7 @@ class EcoBin(FoundationGridfinity):
         feat.bin_base_values_properties(obj)
         feat.label_shelf_properties(obj, label_style_default="Standard")
         feat.eco_compartments_properties(obj)
+        feat.scoop_properties(obj, scoop_default=False)
 
         obj.setExpression("UsableHeight", "TotalHeight - HeightUnitValue")
 
@@ -309,7 +310,17 @@ class EcoBin(FoundationGridfinity):
         compartment_solid = face.extrude(
             fc.Vector(0, 0, obj.TotalHeight - obj.BaseProfileHeight - obj.BaseWallThickness),
         )
-        fuse_total = fuse_total.cut(feat.make_eco_compartments(obj, layout, compartment_solid))
+
+        # First cut eco compartments to create the interior spaces
+        eco_compartments = feat.make_eco_compartments(obj, layout, compartment_solid)
+        fuse_total = fuse_total.cut(eco_compartments)
+
+        # Now add scoop, but only where eco compartments exist (reversed logic)
+        if obj.Scoop:
+            scoop = feat.make_scoop(obj, usable_height=obj.TotalHeight - obj.BaseWallThickness)
+            # Only add scoop where compartments exist - use intersection to constrain
+            scoop_constrained = scoop.common(eco_compartments)
+            fuse_total = fuse_total.fuse(scoop_constrained)
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -602,6 +613,7 @@ class CustomEcoBin(FoundationGridfinity):
         feat.bin_base_values_properties(obj)
         feat.label_shelf_properties(obj, label_style_default="Off")
         feat.eco_compartments_properties(obj)
+        feat.scoop_properties(obj, scoop_default=False)
 
         obj.Proxy = self
 
@@ -657,10 +669,18 @@ class CustomEcoBin(FoundationGridfinity):
             inside_wall_solid_full_height,
             obj.BinOuterRadius - obj.WallThickness,
         )
+        # First cut eco compartments to create the interior spaces
         compartments = feat.make_eco_compartments(obj, layout, compartments_solid)
         inside_wall_negative = cut_outside_shape(obj, inside_wall_solid_full_height)
         compartments = compartments.cut(inside_wall_negative)
         fuse_total = fuse_total.cut(compartments)
+
+        # Now add scoop, but only where eco compartments exist (reversed logic)
+        if obj.Scoop:
+            scoop = feat.make_scoop(obj, usable_height=obj.TotalHeight - obj.BaseWallThickness)
+            # Only add scoop where compartments exist - use intersection to constrain
+            scoop_constrained = scoop.common(compartments)
+            fuse_total = fuse_total.fuse(scoop_constrained)
 
         if obj.LabelShelfStyle != "Off":
             label_shelf = feat.make_label_shelf(obj, "eco")
