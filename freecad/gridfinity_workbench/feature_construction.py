@@ -115,13 +115,7 @@ def make_label_shelf(obj: fc.DocumentObject, bintype: Literal["eco", "standard"]
         ydiv = 1
         length = obj.yTotalWidth - obj.WallThickness * 2
 
-    width = (
-        obj.StackingLipTopChamfer
-        + obj.StackingLipTopLedge
-        + obj.StackingLipBottomChamfer
-        + obj.LabelShelfWidth
-        - obj.WallThickness
-    )
+    width = calc_stacking_lip_offset(obj) + obj.LabelShelfWidth
     assert width >= 0
 
     thickness = obj.LabelShelfVerticalThickness
@@ -259,55 +253,53 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
         xdiv
     )
 
-    scoopbox = Part.makeBox(
-        obj.StackingLipBottomChamfer
-        + obj.StackingLipTopChamfer
-        + obj.StackingLipTopLedge
-        - obj.WallThickness,
-        obj.yTotalWidth - obj.WallThickness * 2,
-        obj.UsableHeight,
-        fc.Vector(
-            obj.xTotalWidth + obj.Clearance - obj.WallThickness,
-            obj.Clearance + obj.WallThickness,
-        ),
-        fc.Vector(0, 0, -1),
-    )
-
     scoop = face.extrude(fc.Vector(0, obj.yTotalWidth - obj.WallThickness * 2))
+
+    stacking_lip_offset = calc_stacking_lip_offset(obj)
 
     vec_list = []
     for x in range(xdiv):
-        if x == 0:
-            xtranslate = (
-                zeromm
-                - obj.WallThickness
-                + obj.StackingLipTopLedge
-                + obj.StackingLipTopChamfer
-                + obj.StackingLipBottomChamfer
-            )
-        else:
-            xtranslate = x * (compwidth + obj.DividerThickness)
+        xtranslate = stacking_lip_offset.Value if x == 0 else x * (compwidth + obj.DividerThickness)
         vec_list.append(fc.Vector(-xtranslate, obj.Clearance + obj.WallThickness))
 
     funcfuse = utils.copy_and_translate(scoop, vec_list)
-    funcfuse = funcfuse.fuse(scoopbox)
 
-    edges = [
-        edge
-        for edge in funcfuse.Edges
-        if abs(edge.Vertexes[0].Z - edge.Vertexes[1].Z) == obj.UsableHeight
-        and edge.Vertexes[0].X == edge.Vertexes[1].X
-    ]
+    if obj.StackingLip and stacking_lip_offset.Value > 0:  # Scoop is offset from the wall
+        scoopbox = Part.makeBox(
+            stacking_lip_offset.Value,
+            obj.yTotalWidth - obj.WallThickness * 2,
+            obj.UsableHeight,
+            fc.Vector(
+                obj.xTotalWidth + obj.Clearance - obj.WallThickness,
+                obj.Clearance + obj.WallThickness,
+            ),
+            fc.Vector(0, 0, -1),
+        )
+        funcfuse = funcfuse.fuse(scoopbox)
 
-    fuse_total = funcfuse.makeFillet(
-        obj.StackingLipBottomChamfer
-        + obj.StackingLipTopChamfer
-        + obj.StackingLipTopLedge
-        - obj.WallThickness
-        - 0.01 * unitmm,
-        edges,
-    )
-    return fuse_total.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
+        edges = [
+            edge
+            for edge in funcfuse.Edges
+            if abs(edge.Vertexes[0].Z - edge.Vertexes[1].Z) == obj.UsableHeight
+            and edge.Vertexes[0].X == edge.Vertexes[1].X
+        ]
+
+        funcfuse = funcfuse.makeFillet(stacking_lip_offset - 0.01 * unitmm, edges)
+    else:  # No stacking lip: Trim scoop to stop it extending outside the rounded bin corners
+        bin_outside_shape = utils.create_rounded_rectangle(
+            obj.xTotalWidth,
+            obj.yTotalWidth,
+            0,
+            obj.BinOuterRadius,
+        ).translate(
+            fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
+        )
+        bin_outside_solid = Part.Face(bin_outside_shape).extrude(
+            fc.Vector(0, 0, -obj.TotalHeight + obj.BaseProfileHeight),
+        )
+        funcfuse = funcfuse.common(bin_outside_solid)
+
+    return funcfuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
 
 def _corner_fillets(
@@ -340,7 +332,7 @@ def _corner_fillets(
         translation=fc.Vector(
             obj.Clearance + obj.WallThickness + xcomp_width,
             obj.Clearance + obj.WallThickness,
-            -obj.LabelShelfStackingOffset,
+            -obj.LabelShelfStackingOffset if obj.StackingLip else 0,
         ),
     )
     top_right_fillet = make_fillet(
@@ -348,7 +340,7 @@ def _corner_fillets(
         translation=fc.Vector(
             obj.Clearance + obj.WallThickness + xcomp_width,
             obj.Clearance + obj.WallThickness + ycomp_width,
-            -obj.LabelShelfStackingOffset,
+            -obj.LabelShelfStackingOffset if obj.StackingLip else 0,
         ),
     )
     top_left_fillet = make_fillet(
@@ -356,7 +348,7 @@ def _corner_fillets(
         translation=fc.Vector(
             obj.Clearance + obj.WallThickness,
             obj.Clearance + obj.WallThickness + ycomp_width,
-            -obj.LabelShelfStackingOffset,
+            -obj.LabelShelfStackingOffset if obj.StackingLip else 0,
         ),
     )
     bottom_left_fillet = make_fillet(
@@ -364,7 +356,7 @@ def _corner_fillets(
         translation=fc.Vector(
             obj.Clearance + obj.WallThickness,
             obj.Clearance + obj.WallThickness,
-            -obj.LabelShelfStackingOffset,
+            -obj.LabelShelfStackingOffset if obj.StackingLip else 0,
         ),
     )
 
@@ -1146,6 +1138,20 @@ def make_bin_bottom_holes(
     return shape
 
 
+def calc_stacking_lip_offset(obj: fc.DocumentObject) -> fc.Units.Quantity:
+    """Calculate width of stacking lip relative to the inside wall."""
+    return (
+        (
+            obj.StackingLipTopLedge
+            + obj.StackingLipTopChamfer
+            + (obj.StackingLipBottomChamfer if not obj.StackingLipThinStyle else zeromm)
+            - obj.WallThickness
+        )
+        if obj.StackingLip
+        else zeromm
+    )
+
+
 def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:
     """Create stacking lip profile wire."""
     ## Calculated Values
@@ -1178,8 +1184,14 @@ def _stacking_lip_profile(obj: fc.DocumentObject) -> Part.Wire:
         fc.Vector(x4, y, 0),
         fc.Vector(x4, y, z4),
         fc.Vector(x5, y, z5),
-        fc.Vector(x5, y, 0),
+        fc.Vector(x1, y, z5),
     ]
+    if obj.StackingLipThinStyle:
+        st[4:] = [  # Modify the bottom section of the stacking lip profile
+            fc.Vector(x3, y, 0),
+            fc.Vector(x5, y, -abs(x5.Value - x3.Value)),  # 45 degree chamfer under the lip
+            fc.Vector(x1, y, -abs(x5.Value - x3.Value)),
+        ]
 
     stacking_lip_profile = Part.Wire(Part.Shape(utils.loop(st)).Edges)
 
@@ -1205,6 +1217,14 @@ def stacking_lip_properties(
         "Gridfinity",
         "Toggle the stacking lip on or off",
     ).StackingLip = stacking_lip_default
+
+    ## Gridfinity Parameters
+    obj.addProperty(
+        "App::PropertyBool",
+        "StackingLipThinStyle",
+        "Gridfinity",
+        "Toggle the thin style stacking lip on or off",
+    ).StackingLipThinStyle = const.STACKING_LIP_THIN_STYLE
 
     ## Expert Only Parameters
     obj.addProperty(
