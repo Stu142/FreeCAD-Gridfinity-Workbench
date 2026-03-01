@@ -27,6 +27,19 @@ def migrate_object_version(obj: fc.DocumentObject) -> None:  # noqa: C901
 
     ### v0.11.9 Changes ###
 
+    if (
+        getattr(obj, "Baseplate", False)
+        and hasattr(obj, "MagnetHoles")
+        and not hasattr(obj, "MagnetHoleChamfer")
+    ):
+        # Add property for the magnet hole chamfer.
+        obj.addProperty(
+            "App::PropertyLength",
+            "MagnetHoleChamfer",
+            "GridfinityNonStandard",
+            "The depth at which magnet hole chamfer starts.",
+        ).MagnetHoleChamfer = 0.25
+
     if hasattr(obj, "MagnetHoles"):
         # Add properties for the crush ribs to hold magnets.
         if not hasattr(obj, "CrushRibsCount"):
