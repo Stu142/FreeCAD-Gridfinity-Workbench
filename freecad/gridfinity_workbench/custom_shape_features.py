@@ -76,6 +76,40 @@ def vertical_edge_fillet(
     return solid_shape.makeFillet(radius, edges)
 
 
+def _is_concave_edge(edge: Part.Edge, solid: Part.Shape) -> bool:
+    """Return true if edge is a concave edge."""
+    delta, tolerance = 1, 0.1
+    v0, v1 = edge.Vertexes[0], edge.Vertexes[1]
+    x, y, z = v0.X, v0.Y, min(v0.Z, v1.Z) + delta  # A point just above the bottom edge.
+    steps = [-delta, +delta]  # Size of steps to check around the edge.
+    # Test four points around the edge to see how many are inside the solid.
+    inside_count = sum(
+        solid.isInside(fc.Vector(x + xdelta, y + ydelta, z), tolerance, True)  # noqa: FBT003
+        for xdelta in steps
+        for ydelta in steps
+    )
+    # The edge is concave if exactly 3 of the 4 points around (x, y) are inside the solid.
+    return inside_count == 3  # noqa: PLR2004
+
+
+def vertical_edge_fillet_with_concave_edges(
+    solid_shape: Part.Shape,
+    convex_radius: float,
+    concave_radius: float,
+) -> Part.Shape:
+    """Fillet vertical Edges of input shape."""
+    edges = [edge for edge in solid_shape.Edges if edge.Vertexes[0].Z != edge.Vertexes[1].Z]
+    concave_edges, convex_edges = [], []
+    for edge in edges:
+        if _is_concave_edge(edge, solid_shape):
+            concave_edges.append(edge)
+        else:
+            convex_edges.append(edge)
+    solid_shape = solid_shape.makeFillet(convex_radius, convex_edges)
+    solid_shape = solid_shape.makeFillet(concave_radius, concave_edges)
+    return solid_shape
+
+
 def get_largest_top_wire(solid_shape: Part.Shape, zheight: float) -> Part.Wire:
     """Return the largest wire of the top face of a solid shape."""
     solid_shape = solid_shape.translate(fc.Vector(0, 0, zheight))
