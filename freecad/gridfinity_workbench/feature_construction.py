@@ -448,8 +448,16 @@ def _make_compartments_with_deviders(
         func_fuse = func_fuse.cut(xdiv)
     if ydiv:
         func_fuse = func_fuse.cut(ydiv)
+    if obj.yDividerHeight > 0 or obj.xDividerHeight > 0:
+        cus_x_div_height = obj.xDividerHeight if obj.xDividerHeight > 0 else obj.TotalHeight
+        cus_y_div_height = obj.yDividerHeight if obj.yDividerHeight > 0 else obj.TotalHeight
+        fillet_height = -obj.TotalHeight + min(cus_x_div_height, cus_y_div_height)
+    else:
+        fillet_height = 0
 
-    func_fuse = func_fuse.cut(_corner_fillets(obj, xcomp_w, ycomp_w))
+    func_fuse = func_fuse.cut(
+        _corner_fillets(obj, xcomp_w, ycomp_w).translate(fc.Vector(0, 0, fillet_height)),
+    )
 
     return func_fuse
 
@@ -848,8 +856,16 @@ def make_eco_compartments(
     )
     if obj.xDividers > 0 or obj.yDividers > 0:
         func_fuse = func_fuse.cut(_eco_bin_deviders(obj, xcomp_w, ycomp_w))
+    if obj.yDividerHeight > 0 or obj.xDividerHeight > 0:
+        cus_x_div_height = obj.xDividerHeight if obj.xDividerHeight > 0 else obj.TotalHeight
+        cus_y_div_height = obj.yDividerHeight if obj.yDividerHeight > 0 else obj.TotalHeight
+        fillet_height = -obj.TotalHeight + min(cus_x_div_height, cus_y_div_height)
+    else:
+        fillet_height = 0
 
-    func_fuse = func_fuse.cut(_corner_fillets(obj, xcomp_w, ycomp_w))
+    func_fuse = func_fuse.cut(
+        _corner_fillets(obj, xcomp_w, ycomp_w).translate(fc.Vector(0, 0, fillet_height)),
+    )
 
     return func_fuse.translate(fc.Vector(-obj.xLocationOffset, -obj.yLocationOffset))
 
