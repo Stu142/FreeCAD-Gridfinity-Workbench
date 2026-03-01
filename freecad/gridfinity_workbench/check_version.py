@@ -58,7 +58,7 @@ def migrate_object_version(obj: fc.DocumentObject) -> None:  # noqa: C901
     ### v0.12.0 Changes ###
 
     # Calculation of UsableHeight was changed to use object Expressions.
-    if hasattr(obj, "UsableHeight") and not obj.getExpression("UsableHeight"):
+    if hasattr(obj, "UsableHeight"):
         obj.setExpression("UsableHeight", "TotalHeight - HeightUnitValue")
 
     # xGridUnits and yGridUnits were changed from int to float properties.
@@ -81,6 +81,17 @@ def migrate_object_version(obj: fc.DocumentObject) -> None:  # noqa: C901
             "Gridfinity",
             "Number of grid units in the y direction <br> <br> default = 2",
         ).yGridUnits = float(ygridunits)
+
+    ### v0.12.1 Changes ###
+
+    # StackingLipThinStyle property was added to toggle the thin style stacking lip.
+    if hasattr(obj, "StackingLip") and not hasattr(obj, "StackingLipThinStyle"):
+        obj.addProperty(
+            "App::PropertyBool",
+            "StackingLipThinStyle",
+            "Gridfinity",
+            "Toggle the thin style stacking lip on or off",
+        ).StackingLipThinStyle = const.STACKING_LIP_THIN_STYLE
 
     fc.Console.PrintLog(
         f"Gridfinity Workbench v{__version__}: "
