@@ -17,6 +17,7 @@ from .custom_shape_features import (
     custom_shape_trim,
     cut_outside_shape,
     vertical_edge_fillet,
+    vertical_edge_fillet_with_concave_edges,
 )
 from .version import __version__
 
@@ -748,9 +749,10 @@ class CustomStorageBin(FoundationGridfinity):
         )
         compartments_solid = compartments_solid.cut(compartment_trim)
         compartments_solid = compartments_solid.removeSplitter()
-        compartments_solid = vertical_edge_fillet(
+        compartments_solid = vertical_edge_fillet_with_concave_edges(
             compartments_solid,
             obj.BinOuterRadius - obj.WallThickness,
+            obj.BinOuterRadius + obj.WallThickness,
         )
         compartments = feat.make_compartments(obj, compartments_solid)
 
