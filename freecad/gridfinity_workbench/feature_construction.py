@@ -1,5 +1,7 @@
 """Module containing gridfinity feature constructions."""
 
+from __future__ import annotations
+
 import math
 from typing import Literal
 
@@ -187,8 +189,24 @@ def scoop_properties(obj: fc.DocumentObject, *, scoop_default: bool) -> None:
     ).Scoop = scoop_default
 
 
-def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
-    """Create scoop."""
+def make_scoop(
+    obj: fc.DocumentObject,
+    *,
+    usable_height: None | fc.Units.Quantity = None,
+) -> Part.Shape:
+    """Create scoop.
+
+    Args:
+        obj: The object onto which to add the scoop.
+        usable_height: Override the obj's UsableHeight value (for EcoBins).
+
+    EcoBins are constructed in such a way that when the scoop is added, the
+    proper usable height (for correct geometry) has to be provided separately.
+
+    """
+    if usable_height is None:
+        usable_height = obj.UsableHeight
+
     scooprad1 = obj.ScoopRadius + unitmm
     scooprad2 = obj.ScoopRadius + unitmm
     scooprad3 = obj.ScoopRadius + unitmm
@@ -203,8 +221,8 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
         scooprad1 = xdivscoop - unitmm
     if obj.ScoopRadius > xcomp_w and obj.xDividers > 0:
         scooprad2 = xcomp_w - 2 * unitmm
-    if obj.ScoopRadius > obj.UsableHeight > 0:
-        scooprad3 = obj.UsableHeight - obj.LabelShelfStackingOffset
+    if obj.ScoopRadius > usable_height > 0:
+        scooprad3 = usable_height - obj.LabelShelfStackingOffset
 
     scooprad = min(obj.ScoopRadius, scooprad1, scooprad2, scooprad3)
 
@@ -214,17 +232,17 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
     v1 = fc.Vector(
         obj.xTotalWidth + obj.Clearance - obj.WallThickness,
         0,
-        -obj.UsableHeight + scooprad,
+        -usable_height + scooprad,
     )
     v2 = fc.Vector(
         obj.xTotalWidth + obj.Clearance - obj.WallThickness,
         0,
-        -obj.UsableHeight,
+        -usable_height,  # type: ignore[arg-type]
     )
     v3 = fc.Vector(
         obj.xTotalWidth + obj.Clearance - obj.WallThickness - scooprad,
         0,
-        -obj.UsableHeight,
+        -usable_height,  # type: ignore[arg-type]
     )
 
     l1 = Part.LineSegment(v1, v2)
@@ -237,7 +255,7 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
         - scooprad
         + scooprad * math.sin(math.pi / 4),
         0,
-        -obj.UsableHeight + scooprad - scooprad * math.sin(math.pi / 4),
+        -usable_height + scooprad - scooprad * math.sin(math.pi / 4),
     )
 
     c1 = Part.Arc(v1, vc1, v3)
@@ -268,7 +286,7 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
         scoopbox = Part.makeBox(
             stacking_lip_offset.Value,
             obj.yTotalWidth - obj.WallThickness * 2,
-            obj.UsableHeight,
+            usable_height,  # type: ignore[arg-type]
             fc.Vector(
                 obj.xTotalWidth + obj.Clearance - obj.WallThickness,
                 obj.Clearance + obj.WallThickness,
@@ -280,7 +298,7 @@ def make_scoop(obj: fc.DocumentObject) -> Part.Shape:
         edges = [
             edge
             for edge in funcfuse.Edges
-            if abs(edge.Vertexes[0].Z - edge.Vertexes[1].Z) == obj.UsableHeight
+            if abs(edge.Vertexes[0].Z - edge.Vertexes[1].Z) == usable_height
             and edge.Vertexes[0].X == edge.Vertexes[1].X
         ]
 
