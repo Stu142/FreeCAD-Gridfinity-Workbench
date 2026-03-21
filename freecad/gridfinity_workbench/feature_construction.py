@@ -955,35 +955,32 @@ def bin_base_values_properties(obj: fc.DocumentObject) -> None:
     )
 
 
-def make_complex_bin_base(
+def _make_single_cell_base_profile(
     obj: fc.DocumentObject,
-    layout: GridfinityLayout,
+    x_cell_size: fc.Units.Quantity,
+    y_cell_size: fc.Units.Quantity,
+    baseplate_size_adjustment: fc.Units.Quantity,
 ) -> Part.Shape:
-    """Creaet complex shaped bin base."""
-    if obj.Baseplate:
-        baseplate_size_adjustment = obj.BaseplateTopLedgeWidth - obj.Clearance
-    else:
-        baseplate_size_adjustment = 0 * unitmm
-
+    """Create a single gridfinity base cell profile centered at origin."""
     x_bt_cmf_width = (
-        (obj.xGridSize - obj.Clearance * 2)
+        (x_cell_size - obj.Clearance * 2)
         - 2 * obj.BaseProfileBottomChamfer
         - 2 * obj.BaseProfileTopChamfer
         - 2 * baseplate_size_adjustment
     )
     y_bt_cmf_width = (
-        (obj.yGridSize - obj.Clearance * 2)
+        (y_cell_size - obj.Clearance * 2)
         - 2 * obj.BaseProfileBottomChamfer
         - 2 * obj.BaseProfileTopChamfer
         - 2 * baseplate_size_adjustment
     )
     x_vert_width = (
-        (obj.xGridSize - obj.Clearance * 2)
+        (x_cell_size - obj.Clearance * 2)
         - 2 * obj.BaseProfileTopChamfer
         - 2 * baseplate_size_adjustment
     )
     y_vert_width = (
-        (obj.yGridSize - obj.Clearance * 2)
+        (y_cell_size - obj.Clearance * 2)
         - 2 * obj.BaseProfileTopChamfer
         - 2 * baseplate_size_adjustment
     )
@@ -995,7 +992,6 @@ def make_complex_bin_base(
         obj.BaseProfileBottomChamfer,
         obj.BinBottomRadius,
     )
-
     vertical_section = utils.rounded_rectangle_extrude(
         x_vert_width,
         y_vert_width,
@@ -1003,8 +999,6 @@ def make_complex_bin_base(
         obj.BaseProfileVerticalSection,
         obj.BinVerticalRadius,
     )
-    assembly = bottom_chamfer.fuse(vertical_section)
-
     top_chamfer = utils.rounded_rectangle_chamfer(
         x_vert_width,
         y_vert_width,
@@ -1013,13 +1007,74 @@ def make_complex_bin_base(
         obj.BinVerticalRadius,
     )
 
-    assembly = bottom_chamfer.multiFuse([vertical_section, top_chamfer])
+    return bottom_chamfer.multiFuse([vertical_section, top_chamfer])
 
+
+def _fractional_strip_specs(
+    obj: fc.DocumentObject,
+    *,
+    min_size: fc.Units.Quantity | None = None,
+):
+    """Yield (x_size, y_size, vecs) for each fractional grid strip of a rectangle-layout object.
+
+    Args:
+        obj: Document object with xGridUnits/yGridUnits properties.
+        min_size: If given, skip strips whose fractional dimension is smaller than this.
+
+    """
+    if not hasattr(obj, "xGridUnits"):
+        return
+
+    n_x = int(obj.xGridUnits + 1e-6)
+    n_y = int(obj.yGridUnits + 1e-6)
+    frac_x = obj.xGridUnits - n_x
+    frac_y = obj.yGridUnits - n_y
+    has_frac_x = frac_x > 1e-6
+    has_frac_y = frac_y > 1e-6
+    frac_x_size = frac_x * obj.xGridSize
+    frac_y_size = frac_y * obj.yGridSize
+    # Cell centers in fuse_total space (before the final translate by xGridSize/2 - xLocationOffset).
+    # Derivation: the strip must sit flush against the integer cells, so its right edge is at
+    # n_x*xGridSize and its width is frac_x*xGridSize, giving center = n_x*xGridSize - frac_x_size/2.
+    # Substituting frac_x_size = frac_x*xGridSize yields the expression below.
+    cx = n_x * obj.xGridSize + (frac_x - 1) * obj.xGridSize / 2
+    cy = n_y * obj.yGridSize + (frac_y - 1) * obj.yGridSize / 2
+
+    if has_frac_x and (min_size is None or frac_x_size >= min_size):
+        yield frac_x_size, obj.yGridSize, [fc.Vector(cx, j * obj.yGridSize) for j in range(n_y)]
+
+    if has_frac_y and (min_size is None or frac_y_size >= min_size):
+        yield obj.xGridSize, frac_y_size, [fc.Vector(i * obj.xGridSize, cy) for i in range(n_x)]
+
+    if has_frac_x and has_frac_y and (min_size is None or (frac_x_size >= min_size and frac_y_size >= min_size)):
+        yield frac_x_size, frac_y_size, [fc.Vector(cx, cy)]
+
+
+def make_complex_bin_base(
+    obj: fc.DocumentObject,
+    layout: GridfinityLayout,
+) -> Part.Shape:
+    """Create complex shaped bin base."""
+    if obj.Baseplate:
+        baseplate_size_adjustment = obj.BaseplateTopLedgeWidth - obj.Clearance
+    else:
+        baseplate_size_adjustment = 0 * unitmm
+
+    # Full-cell base profile (centered at origin)
+    assembly = _make_single_cell_base_profile(obj, obj.xGridSize, obj.yGridSize, baseplate_size_adjustment)
+
+    # Tile full integer cells
     fuse_total = utils.copy_in_layout(assembly, layout, obj.xGridSize, obj.yGridSize)
 
-    return fuse_total.translate(
+    # Add fractional strips (only for rectangle layout, not custom shapes)
+    for x_size, y_size, vecs in _fractional_strip_specs(obj):
+        profile = _make_single_cell_base_profile(obj, x_size, y_size, baseplate_size_adjustment)
+        fuse_total = fuse_total.fuse(utils.copy_and_translate(profile, vecs))
+
+    fuse_total.translate(
         fc.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset),
     )
+    return fuse_total
 
 
 def blank_bin_recessed_top_properties(obj: fc.DocumentObject) -> None:
@@ -1124,11 +1179,12 @@ def _make_holes_interface(obj: fc.DocumentObject) -> Part.Shape:
     return sq1_1.fuse(b1)
 
 
-def make_bin_bottom_holes(
+def _make_single_cell_holes(
     obj: fc.DocumentObject,
-    layout: GridfinityLayout,
+    x_cell_size: fc.Units.Quantity,
+    y_cell_size: fc.Units.Quantity,
 ) -> Part.Shape:
-    """Make bin bottom holes."""
+    """Create the hole set (magnet, screw, remove channel) for a single cell of given dimensions."""
     shapes = []
     if obj.MagnetHoles:
         shapes.append(magnet_hole_module.from_obj(obj))
@@ -1138,21 +1194,36 @@ def make_bin_bottom_holes(
         shapes.append(_make_holes_interface(obj))
     shape = utils.multi_fuse(shapes)
 
-    x_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
-    y_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
+    x_pos = x_cell_size / 2 - obj.MagnetHoleDistanceFromEdge
+    y_pos = y_cell_size / 2 - obj.MagnetHoleDistanceFromEdge
     shape = utils.copy_and_translate(shape, utils.corners(x_pos, y_pos, -obj.TotalHeight))
 
     if obj.MagnetHoles and obj.MagnetRemoveChannel:
-        remove_channel = magnet_hole_module.remove_channel(obj).translate(
+        channel = magnet_hole_module.remove_channel(obj, x_pos, y_pos).translate(
             fc.Vector(0, 0, -obj.TotalHeight),
         )
-        shape = shape.fuse(remove_channel)
+        shape = shape.fuse(channel)
 
+    return shape
+
+
+def make_bin_bottom_holes(
+    obj: fc.DocumentObject,
+    layout: GridfinityLayout,
+) -> Part.Shape:
+    """Make bin bottom holes."""
+    shape = _make_single_cell_holes(obj, obj.xGridSize, obj.yGridSize)
     shape = utils.copy_in_layout(shape, layout, obj.xGridSize, obj.yGridSize)
+
+    # Add fractional strips (only for rectangle layout, not custom shapes).
+    # Strips narrower than min_size can't geometrically contain holes at the standard offset.
+    min_size = 2 * obj.MagnetHoleDistanceFromEdge + obj.MagnetHoleDiameter
+    for x_size, y_size, vecs in _fractional_strip_specs(obj, min_size=min_size):
+        shape = shape.fuse(utils.copy_and_translate(_make_single_cell_holes(obj, x_size, y_size), vecs))
+
     shape.translate(
         fc.Vector(obj.xGridSize / 2 - obj.xLocationOffset, obj.yGridSize / 2 - obj.yLocationOffset),
     )
-
     return shape
 
 
