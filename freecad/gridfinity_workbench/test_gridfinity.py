@@ -266,26 +266,38 @@ class TestFractionalDimensions(TestWithDocument):
         self.assertGreater(obj.Shape.Volume, 0)
 
     def test_fractional_magnet_holes_volume_ordering(self) -> None:
-        """Magnet holes in fractional strip: vol(2.75,1) < vol(3,1) (holes subtract volume).
+        """Fractional strip wide enough for holes removes more volume than one that is not.
 
         xGridUnits=2.75 gives a fractional strip of 31.5mm > min_size (22.2mm),
-        so holes are actually placed in the fractional strip.
+        so holes are placed in the fractional strip.
+        xGridUnits=2.5 gives a fractional strip of 21mm < min_size (22.2mm),
+        so no holes are placed in the fractional strip.
+        The 2.75x1 bin therefore has more hole volume removed than the 2.5x1 bin.
         """
         fcg.Command.get("CreateBinBlank").run()
         obj = fcg.ActiveDocument.ActiveObject.Object
-        obj.MagnetHoles = True
+        obj.yGridUnits = 1.0
 
         obj.xGridUnits = 2.75
-        obj.yGridUnits = 1.0
+        obj.MagnetHoles = True
         obj.recompute()
-        vol_fractional = obj.Shape.Volume
-
-        obj.xGridUnits = 3.0
+        vol_275_holes = obj.Shape.Volume
+        obj.MagnetHoles = False
         obj.recompute()
-        vol_integer = obj.Shape.Volume
+        vol_275_no_holes = obj.Shape.Volume
+        removed_275 = vol_275_no_holes - vol_275_holes
 
-        # Integer bin has more base cells therefore more holes removed, so fractional > integer
-        self.assertGreater(vol_fractional, vol_integer)
+        obj.xGridUnits = 2.5
+        obj.MagnetHoles = True
+        obj.recompute()
+        vol_25_holes = obj.Shape.Volume
+        obj.MagnetHoles = False
+        obj.recompute()
+        vol_25_no_holes = obj.Shape.Volume
+        removed_25 = vol_25_no_holes - vol_25_holes
+
+        # 2.75x1 has fractional strip holes; 2.5x1 does not — more volume removed
+        self.assertGreater(removed_275, removed_25)
 
     def test_fractional_magnet_remove_channel_smoke(self) -> None:
         """xGridUnits=2.75 with MagnetRemoveChannel must not crash."""
