@@ -195,3 +195,119 @@ class TestVolumes(TestWithDocument):
         fcg.Command.get("CreateScrewTogetherBaseplate").run()
         obj = fcg.ActiveDocument.ActiveObject.Object
         self.assertAlmostEqual(obj.Shape.Volume, 22913.35535423545)
+
+    def test_bin_blank_integer_regression(self) -> None:
+        """2x2 integer bin volume must be unchanged after fractional changes."""
+        fcg.Command.get("CreateBinBlank").run()
+        obj = fcg.ActiveDocument.ActiveObject.Object
+        obj.MagnetHoles = False
+        obj.recompute()
+        self.assertAlmostEqual(obj.Shape.Volume, 288887.4126750665)
+
+
+class TestFractionalDimensions(TestWithDocument):
+    def _make_bin_blank(self, x_units: float, y_units: float) -> fc.DocumentObject:
+        fcg.Command.get("CreateBinBlank").run()
+        obj = fcg.ActiveDocument.ActiveObject.Object
+        obj.MagnetHoles = False
+        obj.xGridUnits = x_units
+        obj.yGridUnits = y_units
+        obj.recompute()
+        return obj
+
+    def test_fractional_x_smoke(self) -> None:
+        """xGridUnits=2.5 must not crash and produce geometry."""
+        obj = self._make_bin_blank(2.5, 1.0)
+        self.assertGreater(obj.Shape.Volume, 0)
+
+    def test_fractional_x_volume_ordering(self) -> None:
+        """vol(2,1) < vol(2.5,1) < vol(3,1)."""
+        vol_2 = self._make_bin_blank(2.0, 1.0).Shape.Volume
+        vol_25 = self._make_bin_blank(2.5, 1.0).Shape.Volume
+        vol_3 = self._make_bin_blank(3.0, 1.0).Shape.Volume
+        self.assertLess(vol_2, vol_25)
+        self.assertLess(vol_25, vol_3)
+
+    def test_fractional_y_volume_ordering(self) -> None:
+        """vol(1,2) < vol(1,2.5) < vol(1,3)."""
+        vol_2 = self._make_bin_blank(1.0, 2.0).Shape.Volume
+        vol_25 = self._make_bin_blank(1.0, 2.5).Shape.Volume
+        vol_3 = self._make_bin_blank(1.0, 3.0).Shape.Volume
+        self.assertLess(vol_2, vol_25)
+        self.assertLess(vol_25, vol_3)
+
+    def test_both_fractional_volume_ordering(self) -> None:
+        """vol(2,1) < vol(2.5,1.5) < vol(3,2)."""
+        vol_lo = self._make_bin_blank(2.0, 1.0).Shape.Volume
+        vol_mid = self._make_bin_blank(2.5, 1.5).Shape.Volume
+        vol_hi = self._make_bin_blank(3.0, 2.0).Shape.Volume
+        self.assertLess(vol_lo, vol_mid)
+        self.assertLess(vol_mid, vol_hi)
+
+    def test_fractional_centered_at_origin(self) -> None:
+        """2.5x1 bin centered at origin should have CenterOfGravity.x ≈ 0."""
+        fcg.Command.get("CreateBinBlank").run()
+        obj = fcg.ActiveDocument.ActiveObject.Object
+        obj.MagnetHoles = False
+        obj.xGridUnits = 2.5
+        obj.yGridUnits = 1.0
+        obj.GenerationLocation = "Centered at Origin"
+        obj.recompute()
+        # Per-cell clearance causes ~0.085mm asymmetry for fractional cells (each fractional
+        # cell requires full clearance on all sides to fit half-pitch grids); allow 0.1mm
+        self.assertAlmostEqual(obj.Shape.CenterOfGravity.x, 0, delta=0.1)
+
+    def test_fractional_x_magnet_holes_smoke(self) -> None:
+        """xGridUnits=2.5 with magnet holes must not crash."""
+        fcg.Command.get("CreateBinBlank").run()
+        obj = fcg.ActiveDocument.ActiveObject.Object
+        obj.MagnetHoles = True
+        obj.xGridUnits = 2.5
+        obj.yGridUnits = 1.0
+        obj.recompute()
+        self.assertGreater(obj.Shape.Volume, 0)
+
+    def test_fractional_magnet_holes_volume_ordering(self) -> None:
+        """Fractional strip wide enough for holes removes more volume than one that is not.
+
+        xGridUnits=2.75 gives a fractional strip of 31.5mm > min_size (22.2mm),
+        so holes are placed in the fractional strip.
+        xGridUnits=2.5 gives a fractional strip of 21mm < min_size (22.2mm),
+        so no holes are placed in the fractional strip.
+        The 2.75x1 bin therefore has more hole volume removed than the 2.5x1 bin.
+        """
+        fcg.Command.get("CreateBinBlank").run()
+        obj = fcg.ActiveDocument.ActiveObject.Object
+        obj.yGridUnits = 1.0
+
+        obj.xGridUnits = 2.75
+        obj.MagnetHoles = True
+        obj.recompute()
+        vol_275_holes = obj.Shape.Volume
+        obj.MagnetHoles = False
+        obj.recompute()
+        vol_275_no_holes = obj.Shape.Volume
+        removed_275 = vol_275_no_holes - vol_275_holes
+
+        obj.xGridUnits = 2.5
+        obj.MagnetHoles = True
+        obj.recompute()
+        vol_25_holes = obj.Shape.Volume
+        obj.MagnetHoles = False
+        obj.recompute()
+        vol_25_no_holes = obj.Shape.Volume
+        removed_25 = vol_25_no_holes - vol_25_holes
+
+        # 2.75x1 has fractional strip holes; 2.5x1 does not — more volume removed
+        self.assertGreater(removed_275, removed_25)
+
+    def test_fractional_magnet_remove_channel_smoke(self) -> None:
+        """xGridUnits=2.75 with MagnetRemoveChannel must not crash."""
+        fcg.Command.get("CreateBinBlank").run()
+        obj = fcg.ActiveDocument.ActiveObject.Object
+        obj.MagnetHoles = True
+        obj.MagnetRemoveChannel = True
+        obj.xGridUnits = 2.75
+        obj.yGridUnits = 1.0
+        obj.recompute()
+        self.assertGreater(obj.Shape.Volume, 0)

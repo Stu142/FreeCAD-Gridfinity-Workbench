@@ -202,10 +202,16 @@ def from_obj(obj: fc.DocumentObject) -> Part.Shape:
     return shape
 
 
-def remove_channel(obj: fc.DocumentObject) -> Part.Shape:
+def remove_channel(
+    obj: fc.DocumentObject,
+    x_hole_pos: fc.Units.Quantity | None = None,
+    y_hole_pos: fc.Units.Quantity | None = None,
+) -> Part.Shape:
     """Create a magnet remove channel shape for four magnets from object properties."""
-    x_hole_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
-    y_hole_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
+    if x_hole_pos is None:
+        x_hole_pos = obj.xGridSize / 2 - obj.MagnetHoleDistanceFromEdge
+    if y_hole_pos is None:
+        y_hole_pos = obj.yGridSize / 2 - obj.MagnetHoleDistanceFromEdge
     alpha = math.pi / 8
 
     r = obj.MagnetHoleDiameter / 2
