@@ -177,6 +177,45 @@ class CreatePartsBin(CreateCommand):
         )
 
 
+class CreateLid(CreateCommand):
+    def __init__(self) -> None:
+        super().__init__(
+            name="Lid",
+            gridfinity_function=features.Lid,
+            pixmap=ICONDIR / "Lid.svg",
+        )
+
+
+class CreateLidFromSelection(BaseCommand):
+    def __init__(self) -> None:
+        super().__init__(
+            name="LidFromSelection",
+            pixmap=ICONDIR / "Lid.svg",
+            menu_text="Gridfinity Lid From Selection",
+            tooltip="Create a Gridfinity lid from a selected bin.",
+        )
+
+    def IsActive(self) -> bool:
+        selection = fcg.Selection.getSelection()
+        return len(selection) == 1 and hasattr(selection[0], "Baseplate") and not selection[0].Baseplate
+
+    def Activated(self) -> None:
+        selection = fcg.Selection.getSelection()
+        if len(selection) != 1:
+            return
+        target_obj = selection[0]
+
+        obj = utils.new_object("Lid")
+        if fc.GuiUp:
+            view_object: fcg.ViewProviderDocumentObject = obj.ViewObject
+            ViewProviderGridfinity(view_object, str(self.pixmap))
+
+        features.LidFromSelection(obj, target_obj)
+
+        fc.ActiveDocument.recompute()
+        fcg.SendMsgToActiveView("ViewFit")
+
+
 class CreateBaseplate(CreateCommand):
     def __init__(self) -> None:
         super().__init__(
