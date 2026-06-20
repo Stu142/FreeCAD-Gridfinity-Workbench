@@ -36,8 +36,59 @@ class FoundationGridfinity:
 
         obj.Proxy = self
 
+    def add_property_if_missing(  # noqa: PLR0913
+        self,
+        obj: fc.DocumentObject,
+        default_value: object,
+        prop_type: str,
+        name: str,
+        group: str = "",
+        doc: str = "",
+        attr: int = 0,
+        read_only: bool = False,  # noqa: FBT001, FBT002
+        hidden: bool = False,  # noqa: FBT001, FBT002
+    ) -> None:
+        if name not in obj.PropertiesList:
+            obj = obj.addProperty(
+                type=prop_type,
+                name=name,
+                group=group,
+                doc=doc,
+                attr=attr,
+                read_only=read_only,
+                hidden=hidden,
+            )
+            setattr(obj, name, default_value)
+
     def onDocumentRestored(self, obj: fc.DocumentObject) -> None:  # noqa: N802
         check_version.migrate_object_version(obj)
+        if hasattr(obj, "StackingLip"):
+            self.add_property_if_missing(
+                obj,
+                const.STACKING_LIP_NOTCHES,
+                "App::PropertyBool",
+                "StackingLipNotches",
+                "GridfinityNonStandard",
+                "Toggle the notches on the stacking lip on or off",
+            )
+            self.add_property_if_missing(
+                obj,
+                const.STACKING_LIP_NOTCHES_CHAMFER,
+                "App::PropertyLength",
+                "StackingLipNotchesChamfer",
+                "GridfinityNonStandard",
+                "Chamfer on the notches of the Stacking lip<br>"
+                f" <br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_CHAMFER} mm ",
+            )
+            self.add_property_if_missing(
+                obj,
+                const.STACKING_LIP_NOTCHES_RECESS,
+                "App::PropertyLength",
+                "StackingLipNotchesRecess",
+                "GridfinityNonStandard",
+                "Recess of the notches of the Stacking lip<br> "
+                f"<br> 0 to disable<br> <br> default = {const.STACKING_LIP_NOTCHES_RECESS} mm ",
+            )
 
     def execute(self, fp: Part.Feature) -> None:
         gridfinity_shape = self.generate_gridfinity_shape(fp)
@@ -128,7 +179,7 @@ class FullBin(FoundationGridfinity):
             fuse_total = fuse_total.cut(feat.make_blank_bin_recessed_top(obj, bin_inside_shape))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout, bin_outside_shape))
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -220,7 +271,7 @@ class StorageBin(FoundationGridfinity):
         fuse_total = fuse_total.cut(feat.make_compartments(obj, compartments))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout, bin_outside_shape))
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
@@ -327,7 +378,7 @@ class EcoBin(FoundationGridfinity):
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
 
         if obj.StackingLip:
-            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, bin_outside_shape))
+            fuse_total = fuse_total.fuse(feat.make_stacking_lip(obj, layout, bin_outside_shape))
 
         if obj.LabelShelfStyle != "Off":
             fuse_total = fuse_total.fuse(feat.make_label_shelf(obj, "eco"))
