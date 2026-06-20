@@ -3,6 +3,7 @@
 import FreeCAD as fc  # noqa: N813
 
 from . import const
+from .utils import GridfinityLayout
 
 
 def _location_properties(obj: fc.DocumentObject) -> None:
@@ -154,7 +155,7 @@ def custom_shape_layout_properties(obj: fc.DocumentObject, *, baseplate_default:
         hidden=True,
     ).Baseplate = baseplate_default
 
-
+# def make_custom_shape_layout(obj: fc.DocumentObject, layout: GridfinityLayout) -> None:
 def make_custom_shape_layout(obj: fc.DocumentObject, layout: list[list[bool]]) -> None:
     """Calculate values for custom shape.
 
