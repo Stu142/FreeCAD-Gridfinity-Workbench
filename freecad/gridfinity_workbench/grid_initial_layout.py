@@ -12,7 +12,7 @@ def _location_properties(obj: fc.DocumentObject) -> None:
         "GenerationLocation",
         "Gridfinity",
         "Location of the bin. Change depending on how you want to customize",
-    ).GenerationLocation = ["Positive from Origin", "Centered at Origin"]
+    ).GenerationLocation = ["Positive from Origin", "Centered at Origin", "Centered along X Axis", "Centered along Y Axis"]
 
     obj.addProperty(
         "App::PropertyLength",
@@ -121,6 +121,20 @@ def make_rectangle_layout(obj: fc.DocumentObject) -> list[list[bool]]:
             obj.yLocationOffset = obj.yTotalWidth / 2
         else:
             obj.xLocationOffset = obj.xTotalWidth / 2 + obj.Clearance
+            obj.yLocationOffset = obj.yTotalWidth / 2 + obj.Clearance
+    elif obj.GenerationLocation == "Centered along X Axis":
+        if obj.Baseplate:
+            obj.xLocationOffset = obj.xTotalWidth / 2
+            obj.yLocationOffset = 0
+        else:
+            obj.xLocationOffset = obj.xTotalWidth / 2 + obj.Clearance
+            obj.yLocationOffset = obj.Clearance
+    elif obj.GenerationLocation == "Centered along Y Axis":
+        if obj.Baseplate:
+            obj.xLocationOffset = 0
+            obj.yLocationOffset = obj.yTotalWidth / 2
+        else:
+            obj.xLocationOffset = obj.Clearance
             obj.yLocationOffset = obj.yTotalWidth / 2 + obj.Clearance
     else:
         obj.xLocationOffset = 0
