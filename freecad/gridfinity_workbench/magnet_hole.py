@@ -40,14 +40,14 @@ def add_properties(
     obj.addProperty(
         "App::PropertyLength",
         "MagnetHoleDepth",
-        "GridfinityNonStandard",
+        const.SECTION_NAME_NON_STANDARD,
         "Depth of Magnet Holes <br> <br> default = 2.4 mm",
     ).MagnetHoleDepth = const.MAGNET_HOLE_DEPTH
 
     obj.addProperty(
         "App::PropertyLength",
         "MagnetHoleDiameter",
-        "GridfinityNonStandard",
+        const.SECTION_NAME_NON_STANDARD,
         (
             "Diameter of Magnet Holes. Press fit by default, increase to 6.5 mm if using glue."
             "For crush ribs, 5.7mm is recommended. <br> <br> default = 6.2 mm"
@@ -57,7 +57,7 @@ def add_properties(
     obj.addProperty(
         "App::PropertyEnumeration",
         "MagnetHolesShape",
-        "GridfinityNonStandard",
+        const.SECTION_NAME_NON_STANDARD,
         (
             "Shape of magnet holes, change to suit your printers capabilities which might require"
             "testing."
@@ -71,7 +71,7 @@ def add_properties(
         obj.addProperty(
             "App::PropertyLength",
             "MagnetHoleChamfer",
-            "GridfinityNonStandard",
+            const.SECTION_NAME_NON_STANDARD,
             "The depth at which magnet hole chamfer starts.",
         ).MagnetHoleChamfer = 0.25
 
@@ -79,21 +79,21 @@ def add_properties(
         obj.addProperty(
             "App::PropertyBool",
             "MagnetRemoveChannel",
-            "GridfinityNonStandard",
+            const.SECTION_NAME_NON_STANDARD,
             "Toggle the magnet remove channel on or off",
         ).MagnetRemoveChannel = False
 
     obj.addProperty(
         "App::PropertyInteger",
         "CrushRibsCount",
-        "GridfinityNonStandard",
+        const.SECTION_NAME_NON_STANDARD,
         "Number of crush ribs <br><br> default = 12",
     ).CrushRibsCount = const.CRUSH_RIB_N
 
     obj.addProperty(
         "App::PropertyFloatConstraint",
         "CrushRibsWaviness",
-        "GridfinityNonStandard",
+        const.SECTION_NAME_NON_STANDARD,
         "Waviness of crush ribs, from range [0, 1]",
     ).CrushRibsWaviness = (const.CRUSH_RIB_WAVINESS, 0, 1, 0.05)
 
@@ -101,7 +101,7 @@ def add_properties(
     obj.addProperty(
         "App::PropertyLength",
         "MagnetHoleDistanceFromEdge",
-        "zzExpertOnly",
+        const.SECTION_NAME_EXPERT_ONLY,
         "Distance of the magnet holes from bin edge <br> <br> default = 8.0 mm",
         read_only=True,
     ).MagnetHoleDistanceFromEdge = const.MAGNET_HOLE_DISTANCE_FROM_EDGE

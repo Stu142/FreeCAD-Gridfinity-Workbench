@@ -29,7 +29,7 @@ class FoundationGridfinity:
         obj.addProperty(
             "App::PropertyString",
             "version",
-            "version",
+            const.SECTION_NAME_VERSION,
             "Gridfinity Workbench Version",
             read_only=True,
         ).version = __version__
@@ -962,7 +962,7 @@ class StandaloneLabelShelf:
         obj.addProperty(
             "App::PropertyString",
             "version",
-            "version",
+            const.SECTION_NAME_VERSION,
             "Gridfinity Workbench Version",
             read_only=True,
         ).version = __version__
@@ -970,26 +970,26 @@ class StandaloneLabelShelf:
         obj.addProperty(
             "App::PropertyLength",
             "Width",
-            "GridfinityNonStandard",
+            const.SECTION_NAME_NON_STANDARD,
             "Width of the Label Shelf, how far it sticks out from the wall"
             " <br> <br> default = 12 mm",
         ).Width = const.LABEL_SHELF_WIDTH
         obj.addProperty(
             "App::PropertyLength",
             "Length",
-            "GridfinityNonStandard",
+            const.SECTION_NAME_NON_STANDARD,
             "Length of the Label Shelf, how long it is <br> <br> default = 42 mm",
         ).Length = const.LABEL_SHELF_LENGTH
         obj.addProperty(
             "App::PropertyAngle",
             "Angle",
-            "GridfinityNonStandard",
+            const.SECTION_NAME_NON_STANDARD,
             "Angle of the bottom part of the Label Shelf <br> <br> default = 45",
         ).Angle = const.LABEL_SHELF_ANGLE
         obj.addProperty(
             "App::PropertyLength",
             "LabelShelfVerticalThickness",
-            "zzExpertOnly",
+            const.SECTION_NAME_EXPERT_ONLY,
             "Vertical Thickness of the Label Shelf <br> <br> default = 2 mm",
         ).LabelShelfVerticalThickness = const.LABEL_SHELF_VERTICAL_THICKNESS
 

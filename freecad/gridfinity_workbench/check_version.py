@@ -36,14 +36,14 @@ def migrate_object_version(obj: fc.DocumentObject) -> None:  # noqa: C901
             obj.addProperty(
                 "App::PropertyInteger",
                 "CrushRibsCount",
-                "GridfinityNonStandard",
+                const.SECTION_NAME_NON_STANDARD,
                 "Number of crush ribs <br><br> default = 12",
             ).CrushRibsCount = const.CRUSH_RIB_N
         if not hasattr(obj, "CrushRibsWaviness"):
             obj.addProperty(
                 "App::PropertyFloatConstraint",
                 "CrushRibsWaviness",
-                "GridfinityNonStandard",
+                const.SECTION_NAME_NON_STANDARD,
                 "Waviness of crush ribs, from range [0, 1]",
             ).CrushRibsWaviness = (const.CRUSH_RIB_WAVINESS, 0, 1, 0.05)
 
@@ -52,7 +52,7 @@ def migrate_object_version(obj: fc.DocumentObject) -> None:  # noqa: C901
             obj.addProperty(
                 "App::PropertyBool",
                 "MagnetRemoveChannel",
-                "GridfinityNonStandard",
+                const.SECTION_NAME_NON_STANDARD,
                 "Toggle the magnet hole remove channel on or off, only used if magnet holes are on",
             ).MagnetRemoveChannel = getattr(obj, "MagnetRelief", False)
         if hasattr(obj, "MagnetRelief"):
@@ -70,7 +70,7 @@ def migrate_object_version(obj: fc.DocumentObject) -> None:  # noqa: C901
             obj.addProperty(
                 "App::PropertyFloat",
                 "xGridUnits",
-                "Gridfinity",
+                const.SECTION_NAME_MAIN,
                 "Number of grid units in the x direction <br> <br> default = 2",
             ).xGridUnits = float(xgridunits or const.X_GRID_UNITS)
 
@@ -80,7 +80,7 @@ def migrate_object_version(obj: fc.DocumentObject) -> None:  # noqa: C901
             obj.addProperty(
                 "App::PropertyFloat",
                 "yGridUnits",
-                "Gridfinity",
+                const.SECTION_NAME_MAIN,
                 "Number of grid units in the y direction <br> <br> default = 2",
             ).yGridUnits = float(ygridunits or const.Y_GRID_UNITS)
 

@@ -87,6 +87,9 @@ ECO_Y_DIVIDERS = 0
 
 BASEPLATE_BOTTOM_CHAMFER = 0.7
 BASEPLATE_VERTICAL_SECTION = 1.8
+# According to the Gridfinity specification, the baseplate top chamfer should
+# be 2.15mm, but is specified as 1.75mm here since by default a 0.4mm top
+# ledge is used, as opposed to no ledge shown in the Gridfinity specification.
 BASEPLATE_TOP_CHAMFER = 1.75
 BASEPLATE_TOP_LEDGE_WIDTH = 0.4
 
@@ -105,3 +108,11 @@ MAGNET_BASE_HOLE = 3
 CONNECTION_HOLE_DIAMETER = 3.2
 MAGNET_BOTTOM_CHAMFER = 2
 BASE_THICKNESS = 6.4
+
+# Property section names
+SECTION_NAME_MAIN = "Gridfinity"
+SECTION_NAME_NON_STANDARD = "GridfinityNonStandard"
+SECTION_NAME_REFERENCE_PARAMETERS = "ReferenceParameters"
+SECTION_NAME_VERSION = "version"
+SECTION_NAME_EXPERT_ONLY = "zzExpertOnly"
+SECTION_NAME_HIDDEN = "ShouldBeHidden"
