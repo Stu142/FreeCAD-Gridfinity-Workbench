@@ -93,7 +93,7 @@ def screw_bottom_chamfer_properties(obj: fc.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyLength",
         "MagnetBottomChamfer",
-        "zzExpertOnly",
+        const.SECTION_NAME_EXPERT_ONLY,
         "Chamfer of screwholes on the bottom of the baseplate, allows the use of countersuck"
         "m3 screws in the bottom up to a bin <br> <br> default = 3 mm",
     ).MagnetBottomChamfer = const.MAGNET_BOTTOM_CHAMFER
@@ -316,7 +316,7 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyLength",
         "BaseProfileHeight",
-        "ReferenceParameters",
+        const.SECTION_NAME_REFERENCE_PARAMETERS,
         "Height of the Gridfinity Base Profile",
         read_only=True,
     )
@@ -325,7 +325,7 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyLength",
         "BaseProfileBottomChamfer",
-        "zzExpertOnly",
+        const.SECTION_NAME_EXPERT_ONLY,
         "height of chamfer in bottom of bin base profile <br> <br> default = 0.8 mm",
         read_only=True,
     ).BaseProfileBottomChamfer = const.BASEPLATE_BOTTOM_CHAMFER
@@ -333,7 +333,7 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyLength",
         "BaseProfileVerticalSection",
-        "zzExpertOnly",
+        const.SECTION_NAME_EXPERT_ONLY,
         "Height of the vertical section in bin base profile",
         read_only=True,
     ).BaseProfileVerticalSection = const.BASEPLATE_VERTICAL_SECTION
@@ -341,15 +341,19 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyLength",
         "BaseProfileTopChamfer",
-        "zzExpertOnly",
+        const.SECTION_NAME_EXPERT_ONLY,
         "Height of the top chamfer in the bin base profile",
         read_only=True,
-    ).BaseProfileTopChamfer = const.BASEPLATE_TOP_CHAMFER
+    # TODO: Where a Baseplate Top Ledge Width other than 0.4mm is specified (e.g. 0.0mm
+    #       to match the Gridfinity specification), the BaseProfileTopChamfer value needs
+    #       to be automatically increased by the difference (e.g. a 0.0mm top ledge should
+    #       result in a 2.15mm top chamfer instead of 1.75mm).
+    ).BaseProfileTopChamfer = const.BASEPLATE_TOP_CHAMFER # + const.BASEPLATE_TOP_LEDGE_WIDTH
 
     obj.addProperty(
         "App::PropertyLength",
         "BinOuterRadius",
-        "zzExpertOnly",
+        const.SECTION_NAME_EXPERT_ONLY,
         "Outer radius of the bin",
         read_only=True,
     ).BinOuterRadius = const.BASEPLATE_OUTER_RADIUS
@@ -357,7 +361,7 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyLength",
         "BinVerticalRadius",
-        "zzExpertOnly",
+        const.SECTION_NAME_EXPERT_ONLY,
         "Radius of the base profile Vertical section",
         read_only=True,
     ).BinVerticalRadius = const.BASEPLATE_VERTICAL_RADIUS
@@ -365,7 +369,7 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyLength",
         "BinBottomRadius",
-        "zzExpertOnly",
+        const.SECTION_NAME_EXPERT_ONLY,
         "bottom of bin corner radius",
         read_only=True,
     ).BinBottomRadius = const.BASEPLATE_BOTTOM_RADIUS
@@ -373,16 +377,19 @@ def base_values_properties(obj: fc.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyLength",
         "Clearance",
-        "zzExpertOnly",
+        const.SECTION_NAME_EXPERT_ONLY,
         "The Clearance between bin and baseplate <br> <br>default = 0.25 mm",
     ).Clearance = const.CLEARANCE
 
     obj.addProperty(
         "App::PropertyLength",
         "BaseplateTopLedgeWidth",
-        "zzExpertOnly",
-        "Top ledge of baseplate, doubled between grids <br> <br> default = 0.4 mm",
-        read_only=True,
+        const.SECTION_NAME_NON_STANDARD,
+        "Top ledge of baseplate, doubled between grids <br> <br> default = 0.4 mm (Gridfinity specification = 0.0 mm)",
+        # This property was previously read-only and in the Expert Only section, but is
+        # now configurable to allow matching to the Gridfinity specification of 0.0mm
+        # which gives a baseplate with a top chamfer to a sharp edge.
+        read_only=False
     ).BaseplateTopLedgeWidth = const.BASEPLATE_TOP_LEDGE_WIDTH
 
     ## Expressions

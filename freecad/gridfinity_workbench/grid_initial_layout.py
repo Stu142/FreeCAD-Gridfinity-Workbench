@@ -10,14 +10,14 @@ def _location_properties(obj: fc.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyEnumeration",
         "GenerationLocation",
-        "Gridfinity",
+        const.SECTION_NAME_MAIN,
         "Location of the bin. Change depending on how you want to customize",
     ).GenerationLocation = ["Positive from Origin", "Centered at Origin"]
 
     obj.addProperty(
         "App::PropertyLength",
         "xLocationOffset",
-        "ShouldBeHidden",
+        const.SECTION_NAME_HIDDEN,
         "changing bin location in the x direction",
         hidden=True,
     )
@@ -25,7 +25,7 @@ def _location_properties(obj: fc.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyLength",
         "yLocationOffset",
-        "ShouldBeHidden",
+        const.SECTION_NAME_HIDDEN,
         "changing bin location in the y direction",
         hidden=True,
     )
@@ -36,7 +36,7 @@ def _total_width_properties(obj: fc.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyLength",
         "xTotalWidth",
-        "ReferenceParameters",
+        const.SECTION_NAME_REFERENCE_PARAMETERS,
         "total width of Gridfinity object in x direction",
         read_only=True,
     )
@@ -44,7 +44,7 @@ def _total_width_properties(obj: fc.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyLength",
         "yTotalWidth",
-        "ReferenceParameters",
+        const.SECTION_NAME_REFERENCE_PARAMETERS,
         "total width of Gridfinity object in y direction",
         read_only=True,
     )
@@ -55,14 +55,14 @@ def _grid_size_properties(obj: fc.DocumentObject) -> None:
     obj.addProperty(
         "App::PropertyLength",
         "xGridSize",
-        "zzExpertOnly",
+        const.SECTION_NAME_EXPERT_ONLY,
         "Size of each grid in x direction <br> <br> default = 42 mm",
     ).xGridSize = const.X_GRID_SIZE
 
     obj.addProperty(
         "App::PropertyLength",
         "yGridSize",
-        "zzExpertOnly",
+        const.SECTION_NAME_EXPERT_ONLY,
         "Size of each grid in y direction <br> <br> default = 42 mm",
     ).yGridSize = const.Y_GRID_SIZE
 
@@ -83,13 +83,13 @@ def rectangle_layout_properties(obj: fc.DocumentObject, *, baseplate_default: bo
     obj.addProperty(
         "App::PropertyFloat",
         "xGridUnits",
-        "Gridfinity",
+        const.SECTION_NAME_MAIN,
         "Number of grid units in the x direction <br> <br> default = 2",
     ).xGridUnits = const.X_GRID_UNITS
     obj.addProperty(
         "App::PropertyFloat",
         "yGridUnits",
-        "Gridfinity",
+        const.SECTION_NAME_MAIN,
         "Number of grid units in the y direction <br> <br> default = 2",
     ).yGridUnits = const.Y_GRID_UNITS
 
@@ -97,7 +97,7 @@ def rectangle_layout_properties(obj: fc.DocumentObject, *, baseplate_default: bo
     obj.addProperty(
         "App::PropertyBool",
         "Baseplate",
-        "ShouldBeHidden",
+        const.SECTION_NAME_HIDDEN,
         "Is the Gridfinity Object a baseplate",
         hidden=True,
     ).Baseplate = baseplate_default
@@ -149,7 +149,7 @@ def custom_shape_layout_properties(obj: fc.DocumentObject, *, baseplate_default:
     obj.addProperty(
         "App::PropertyBool",
         "Baseplate",
-        "ShouldBeHidden",
+        const.SECTION_NAME_HIDDEN,
         "Is the Gridfinity Object a baseplate",
         hidden=True,
     ).Baseplate = baseplate_default
