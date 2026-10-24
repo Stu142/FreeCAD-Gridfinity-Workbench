@@ -8,6 +8,7 @@ import FreeCAD as fc  # noqa: N813
 import Part
 
 from . import const, utils
+from . import properties
 
 unitmm = fc.Units.Quantity("1 mm")
 
@@ -169,7 +170,7 @@ def from_obj(obj: fc.DocumentObject) -> Part.Shape:
     hole_shape = obj.MagnetHolesShape
     radius = obj.MagnetHoleDiameter / 2
     depth = obj.MagnetHoleDepth
-    chamfer_depth = obj.MagnetHoleChamfer if hasattr(obj, "MagnetHoleChamfer") else None
+    chamfer_depth = properties.get(obj, "MagnetHoleChamfer")
 
     if hole_shape == "Hex":
         shape = _hex_shape(radius)
