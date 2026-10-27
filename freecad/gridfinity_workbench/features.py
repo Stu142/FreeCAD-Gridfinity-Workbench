@@ -111,11 +111,28 @@ class FullBin(FoundationGridfinity):
             fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
         )
 
+        inside_shape_x_width = obj.xTotalWidth - obj.WallThickness * 2
+        inside_shape_y_width = obj.yTotalWidth - obj.WallThickness * 2
+        bin_outer_radius = obj.BinOuterRadius - obj.WallThickness
+
+        recessed_thick_wall = hasattr(obj, "RecessedTopThickWall") and getattr(obj, "RecessedTopThickWall")
+        if recessed_thick_wall:
+            stacking_lip_top_chamfer = obj.BaseProfileTopChamfer - obj.Clearance - obj.StackingLipTopLedge
+            # adjustment distance required is 0.9mm for a stacking lip thin style, assuming default values
+            thick_wall_adjustment_distance = obj.StackingLipTopLedge + stacking_lip_top_chamfer - obj.WallThickness
+            # adjustment distance is greater by the stacking lip bottom chamfer distance for the stacking lip thick style
+            if not hasattr(obj, "StackingLipThinStyle") or not getattr(obj, "StackingLipThinStyle"):
+                thick_wall_adjustment_distance += obj.StackingLipBottomChamfer
+
+            inside_shape_x_width -= thick_wall_adjustment_distance * 2
+            inside_shape_y_width -= thick_wall_adjustment_distance * 2
+            bin_outer_radius -= thick_wall_adjustment_distance
+
         bin_inside_shape = utils.create_rounded_rectangle(
-            obj.xTotalWidth - obj.WallThickness * 2,
-            obj.yTotalWidth - obj.WallThickness * 2,
+            inside_shape_x_width,
+            inside_shape_y_width,
             0,
-            obj.BinOuterRadius - obj.WallThickness,
+            bin_outer_radius
         )
         bin_inside_shape.translate(
             fc.Vector(obj.xTotalWidth / 2 + obj.Clearance, obj.yTotalWidth / 2 + obj.Clearance),
@@ -132,6 +149,9 @@ class FullBin(FoundationGridfinity):
 
         if obj.ScrewHoles or obj.MagnetHoles:
             fuse_total = fuse_total.cut(feat.make_bin_bottom_holes(obj, layout))
+
+        # merge faces to clean up outer and inner wall surfaces
+        fuse_total = fuse_total.removeSplitter()
 
         return fuse_total
 
